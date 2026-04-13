@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Ceyhun\\OneDrive\\Desktop\\marketplace\\api\\api.csproj": {}
+    "C:\\PROJECTS\\marketplace\\api\\api.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Ceyhun\\OneDrive\\Desktop\\marketplace\\api\\api.csproj": {
+    "C:\\PROJECTS\\marketplace\\api\\api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Ceyhun\\OneDrive\\Desktop\\marketplace\\api\\api.csproj",
+        "projectUniqueName": "C:\\PROJECTS\\marketplace\\api\\api.csproj",
         "projectName": "api",
-        "projectPath": "C:\\Users\\Ceyhun\\OneDrive\\Desktop\\marketplace\\api\\api.csproj",
+        "projectPath": "C:\\PROJECTS\\marketplace\\api\\api.csproj",
         "packagesPath": "C:\\Users\\Ceyhun\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Ceyhun\\OneDrive\\Desktop\\marketplace\\api\\obj\\",
+        "outputPath": "C:\\PROJECTS\\marketplace\\api\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Ceyhun\\AppData\\Roaming\\NuGet\\NuGet.Config"

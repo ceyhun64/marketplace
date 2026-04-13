@@ -13,6 +13,8 @@
 │       ├── api.csproj.nuget.g.targets
 │       ├── project.assets.json
 │       └── project.nuget.cache
+├── docker.compose.yml
+├── marketplace.sln
 ├── project_tree.txt
 └── web
     ├── .gitignore
