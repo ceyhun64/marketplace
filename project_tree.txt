@@ -14,11 +14,30 @@
 │   ├── Controllers
 │   ├── Domain
 │   │   ├── Entities
+│   │   │   ├── Category.cs
+│   │   │   ├── Courier.cs
+│   │   │   ├── MerchantProfile.cs
+│   │   │   ├── Order.cs
+│   │   │   ├── OrderItem.cs
+│   │   │   ├── Plugin.cs
+│   │   │   ├── Product.cs
+│   │   │   ├── ProductOffer.cs
+│   │   │   ├── Shipment.cs
+│   │   │   ├── ShipmentStatusHistory.cs
+│   │   │   ├── Subscription.cs
+│   │   │   └── User.cs
 │   │   └── Enums
+│   │       ├── OrderSource.cs
+│   │       ├── OrderStatus.cs
+│   │       ├── PlanType.cs
+│   │       ├── ShipmentStatus.cs
+│   │       ├── ShippingRate.cs
+│   │       └── UserRole.cs
 │   ├── Infrastructure
 │   │   ├── Hubs
 │   │   ├── Jobs
 │   │   ├── Persistence
+│   │   │   └── AppDbContext.cs
 │   │   └── Services
 │   ├── Program.cs
 │   └── Properties
