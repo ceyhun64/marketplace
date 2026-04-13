@@ -1,0 +1,20 @@
+# .NET
+api/bin/
+api/obj/
+api/*.user
+api/.vs/
+api/appsettings.Production.json
+
+# Next.js
+web/.next/
+web/node_modules/
+web/.env.local
+web/.env.production
+
+# Genel
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,15 @@
+├── api
+│   ├── Program.cs
+│   ├── Properties
+│   │   └── launchSettings.json
+│   ├── api.csproj
+│   ├── api.http
+│   ├── appsettings.Development.json
+│   ├── appsettings.json
+│   └── obj
+│       ├── api.csproj.nuget.dgspec.json
+│       ├── api.csproj.nuget.g.props
+│       ├── api.csproj.nuget.g.targets
+│       ├── project.assets.json
+│       └── project.nuget.cache
+└── web
