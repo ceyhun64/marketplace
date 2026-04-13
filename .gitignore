@@ -1,20 +1,64 @@
-# .NET
-api/bin/
-api/obj/
-api/*.user
-api/.vs/
-api/appsettings.Production.json
+# ===========================
+# .NET / C#
+# ===========================
+**/bin/
+**/obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+*.nupkg
+*.snupkg
+**/logs/
+*.log
 
-# Next.js
+# ===========================
+# Environment & Secrets
+# ===========================
+.env
+**/.env
+**/.env.local
+**/.env*.local
+**/appsettings.Development.json
+**/appsettings.*.json
+!**/appsettings.json
+
+# ===========================
+# Next.js / Node
+# ===========================
 web/.next/
 web/node_modules/
-web/.env.local
-web/.env.production
+web/out/
+web/.vercel/
+web/npm-debug.log*
+web/yarn-debug.log*
+web/yarn-error.log*
+web/.pnpm-debug.log*
 
-# Genel
-.env
-.env.*
-!.env.example
-*.log
-.DS_Store
+# ===========================
+# Redis / DB
+# ===========================
+*.db
+*.sqlite
+dump.rdb
+
+# ===========================
+# IDE / OS
+# ===========================
+.idea/
+.vscode/
+*.DS_Store
 Thumbs.db
+desktop.ini
+
+# ===========================
+# Test & Coverage
+# ===========================
+**/TestResults/
+**/coverage/
+*.coverage
+*.coveragexml
+
+api/Properties/launchSettings.json
+api/api.http
