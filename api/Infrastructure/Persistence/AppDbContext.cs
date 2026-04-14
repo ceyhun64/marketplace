@@ -29,6 +29,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
         modelBuilder.Entity<MerchantProfile>().HasIndex(m => m.Slug).IsUnique();
         modelBuilder.Entity<Shipment>().HasIndex(s => s.TrackingNumber).IsUnique();
+        modelBuilder
+            .Entity<Subscription>()
+            .HasOne(s => s.Merchant)
+            .WithOne(m => m.Subscription)
+            .HasForeignKey<Subscription>(s => s.MerchantId);
 
         // Enum → string dönüşümleri
         modelBuilder.Entity<User>().Property(u => u.Role).HasConversion<string>();

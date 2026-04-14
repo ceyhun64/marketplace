@@ -9,9 +9,12 @@
 │   ├── appsettings.json
 │   ├── Common
 │   │   ├── DTOs
+│   │   │   └── AuthDTOs.cs
 │   │   ├── Mappings
 │   │   └── Validators
+│   │       └── AuthValidator.cs
 │   ├── Controllers
+│   │   └── AuthController.cs
 │   ├── Domain
 │   │   ├── Entities
 │   │   │   ├── Category.cs
@@ -44,14 +47,26 @@
 │   │   │   ├── AppDbContext.cs
 │   │   │   └── DataSeeder.cs
 │   │   └── Services
+│   │       ├── BuyBoxService.cs
 │   │       ├── CurrentUserService.cs
+│   │       ├── FulfillmentService.cs
+│   │       ├── IBuyBoxService.cs
 │   │       ├── ICurrentUserService.cs
 │   │       ├── IFulfillmentService.cs
+│   │       ├── ILabelGeneratorService.cs
 │   │       ├── INotificationService.cs
 │   │       ├── IPaymentService.cs
+│   │       ├── IShippingCalculatorService.cs
 │   │       ├── ITokenService.cs
+│   │       ├── LabelGeneratorService.cs
 │   │       ├── NotificationService.cs
+│   │       ├── PaymentService.cs
+│   │       ├── ShippingCalculatorService.cs
 │   │       └── TokenService.cs
+│   ├── Migrations
+│   │   ├── 20260414080937_FixSubscriptionRelationship.cs
+│   │   ├── 20260414080937_FixSubscriptionRelationship.Designer.cs
+│   │   └── AppDbContextModelSnapshot.cs
 │   ├── Program.cs
 │   └── Properties
 │       └── launchSettings.json

@@ -19,7 +19,6 @@ public class MerchantProfile
     public int HandlingHours { get; set; } = 24;
     public bool IsActive { get; set; } = true;
     public bool IsSuspended { get; set; } = false;
-    public Guid? SubscriptionId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
