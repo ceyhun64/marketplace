@@ -16,7 +16,6 @@ using Microsoft.OpenApi.Models;
 using Serilog;
 using StackExchange.Redis;
 
-// ── Serilog Bootstrap Logger ─────────────────────────────────────────────────
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 
 try
@@ -24,24 +23,23 @@ try
     var builder = WebApplication.CreateBuilder(args);
     var config = builder.Configuration;
 
-    // ── Serilog (full) ────────────────────────────────────────────────────────
+    // ── Serilog ───────────────────────────────────────────────────────────────
     builder.Host.UseSerilog(
         (ctx, lc) =>
             lc.ReadFrom.Configuration(ctx.Configuration).Enrich.FromLogContext().WriteTo.Console()
     );
 
-    // ── Database — PostgreSQL + EF Core ──────────────────────────────────────
+    // ── PostgreSQL + EF Core ──────────────────────────────────────────────────
     builder.Services.AddDbContext<AppDbContext>(opt => opt.UseNpgsql(config["DATABASE_URL"]));
 
     // ── Redis Cache ───────────────────────────────────────────────────────────
     builder.Services.AddStackExchangeRedisCache(opt => opt.Configuration = config["REDIS_URL"]);
 
-    // Bare Redis multiplexer (used by SignalR backplane & BuyBoxService)
     builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
         ConnectionMultiplexer.Connect(config["REDIS_URL"]!)
     );
 
-    // ── Authentication — JWT Bearer ───────────────────────────────────────────
+    // ── JWT Bearer ────────────────────────────────────────────────────────────
     builder
         .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(opt =>
@@ -60,7 +58,6 @@ try
                 ClockSkew = TimeSpan.Zero,
             };
 
-            // SignalR: JWT token query-string fallback
             opt.Events = new JwtBearerEvents
             {
                 OnMessageReceived = ctx =>
@@ -74,7 +71,7 @@ try
             };
         });
 
-    // ── Authorization — RBAC Policies ────────────────────────────────────────
+    // ── RBAC Policies ─────────────────────────────────────────────────────────
     builder.Services.AddAuthorization(opt =>
     {
         opt.AddPolicy("AdminOnly", p => p.RequireRole("Admin"));
@@ -84,34 +81,27 @@ try
         opt.AddPolicy("AdminOrMerchant", p => p.RequireRole("Admin", "Merchant"));
     });
 
-    // ── MediatR — CQRS ───────────────────────────────────────────────────────
+    // ── MediatR ───────────────────────────────────────────────────────────────
     builder.Services.AddMediatR(cfg =>
         cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly())
     );
 
     // ── AutoMapper ────────────────────────────────────────────────────────────
-    builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
-
+    builder.Services.AddAutoMapper(cfg => cfg.AddMaps(AppDomain.CurrentDomain.GetAssemblies()));
     // ── FluentValidation ──────────────────────────────────────────────────────
     builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-    builder.Services.AddFluentValidationAutoValidation();
 
-    // ── Hangfire — Background Jobs (PostgreSQL storage) ───────────────────────
+    // ── Hangfire ──────────────────────────────────────────────────────────────
     builder.Services.AddHangfire(c =>
         c.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
             .UseSimpleAssemblyNameTypeSerializer()
             .UseRecommendedSerializerSettings()
             .UsePostgreSqlStorage(o => o.UseNpgsqlConnection(config["DATABASE_URL"]))
     );
-
     builder.Services.AddHangfireServer();
 
-    // ── SignalR — Real-time Tracking ─────────────────────────────────────────
-    // Redis backplane: comment out the .AddStackExchangeRedis(...) call
-    // for single-server deployments and re-enable for multi-node scale-out.
-    builder.Services.AddSignalR()
-        // .AddStackExchangeRedis(config["REDIS_URL"]!)
-    ;
+    // ── SignalR ───────────────────────────────────────────────────────────────
+    builder.Services.AddSignalR();
 
     // ── Rate Limiting ─────────────────────────────────────────────────────────
     builder.Services.AddMemoryCache();
@@ -141,7 +131,7 @@ try
     builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
     builder.Services.AddInMemoryRateLimiting();
 
-    // ── CORS — Next.js Frontend ───────────────────────────────────────────────
+    // ── CORS ──────────────────────────────────────────────────────────────────
     builder.Services.AddCors(opt =>
         opt.AddPolicy(
             "Frontend",
@@ -153,7 +143,7 @@ try
         )
     );
 
-    // ── Application Services (DI) ─────────────────────────────────────────────
+    // ── Application Services ──────────────────────────────────────────────────
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
     builder.Services.AddScoped<ITokenService, TokenService>();
@@ -164,13 +154,13 @@ try
     builder.Services.AddScoped<IBuyBoxService, BuyBoxService>();
     builder.Services.AddScoped<IPaymentService, PaymentService>();
 
-    // ── Hangfire Jobs (transient — Hangfire resolves per execution) ───────────
+    // ── Hangfire Jobs ─────────────────────────────────────────────────────────
     builder.Services.AddTransient<OrderStatusJob>();
     builder.Services.AddTransient<NotificationJob>();
 
     // ── Controllers + Swagger ─────────────────────────────────────────────────
     builder.Services.AddControllers();
-    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddEndpointsApiExplorer(); // Swashbuckle için gerekli
     builder.Services.AddSwaggerGen(c =>
     {
         c.SwaggerDoc(
@@ -216,7 +206,7 @@ try
     var app = builder.Build();
     // ─────────────────────────────────────────────────────────────────────────
 
-    // ── Auto-migrate + seed on startup ───────────────────────────────────────
+    // ── Migrate + Seed ────────────────────────────────────────────────────────
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -225,35 +215,21 @@ try
     }
 
     // ── Middleware Pipeline ───────────────────────────────────────────────────
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Marketplace API v1"));
-    }
-    else
-    {
-        // Swagger also available in production (password-protect via Nginx if needed)
-        app.UseSwagger();
-        app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Marketplace API v1"));
+    app.UseSwagger();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Marketplace API v1"));
 
+    if (!app.Environment.IsDevelopment())
         app.UseHsts();
-    }
 
     app.UseHttpsRedirection();
     app.UseSerilogRequestLogging();
     app.UseIpRateLimiting();
     app.UseCors("Frontend");
-
     app.UseAuthentication();
     app.UseAuthorization();
 
-    // ── Controllers ───────────────────────────────────────────────────────────
     app.MapControllers();
-
-    // ── SignalR Hub ───────────────────────────────────────────────────────────
     app.MapHub<TrackingHub>("/hubs/tracking");
-
-    // ── Hangfire Dashboard (Admin only) ──────────────────────────────────────
     app.MapHangfireDashboard(
         "/hangfire",
         new DashboardOptions { Authorization = new[] { new HangfireAdminAuthFilter() } }
@@ -264,13 +240,13 @@ try
         "check-overdue-shipments",
         job => job.RunAsync(),
         "*/5 * * * *"
-    ); // every 5 minutes
+    );
 
     RecurringJob.AddOrUpdate<NotificationJob>(
         "process-pending-notifications",
         job => job.RunAsync(),
         "* * * * *"
-    ); // every minute
+    );
 
     await app.RunAsync();
 }
