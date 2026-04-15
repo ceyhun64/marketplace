@@ -250,6 +250,8 @@ public class AdminController : ControllerBase
         return Ok(couriers);
     }
 
+
+
     /// <summary>Kurye hesabı oluştur</summary>
     [HttpPost("couriers")]
     public async Task<IActionResult> CreateCourier([FromBody] CreateCourierDto dto)

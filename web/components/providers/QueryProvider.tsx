@@ -1,4 +1,3 @@
-// web/components/providers/QueryProvider.tsx
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -10,9 +9,8 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 1000 * 60, // 1 dakika
+            staleTime: 30 * 1000, // 30sn
             retry: 1,
-            refetchOnWindowFocus: false,
           },
         },
       }),

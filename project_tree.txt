@@ -113,6 +113,8 @@
     ├── components
     │   ├── layout
     │   │   └── Sidebar.tsx
+    │   ├── providers
+    │   │   └── QueryProvider.tsx
     │   └── ui
     │       ├── accordion.tsx
     │       ├── alert-dialog.tsx
@@ -175,6 +177,9 @@
     │   └── use-mobile.ts
     ├── lib
     │   ├── api.ts
+    │   ├── auth.ts
+    │   ├── fetch.ts
+    │   ├── signalr.ts
     │   └── utils.ts
     ├── middleware.ts
     ├── next-env.d.ts
@@ -188,5 +193,11 @@
     │   ├── next.svg
     │   ├── vercel.svg
     │   └── window.svg
+    ├── queries
+    │   ├── useBuyBox.ts
+    │   ├── useMerchant.ts
+    │   ├── useOrders.ts
+    │   ├── useProducts.ts
+    │   └── useTracking.ts
     ├── README.md
     └── tsconfig.json

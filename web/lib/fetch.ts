@@ -2,7 +2,7 @@
 // Sadece Server Components ve Route Handlers'ta kullan
 // Client Components'te bu dosyayı IMPORT ETME
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5010";
 
 type FetchOptions = RequestInit & {
   revalidate?: number | false;

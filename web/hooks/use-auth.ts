@@ -1,42 +1,31 @@
-// web/hooks/use-auth.ts
 "use client";
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import api from "@/lib/api";
-import {
-  saveTokens,
-  clearTokens,
-  getUserFromToken,
-  type AuthUser,
-} from "@/lib/auth";
+import { setTokens, clearTokens, getRoleFromToken } from "@/lib/auth";
 
-interface LoginDto {
+export interface AuthUser {
+  id: string;
   email: string;
-  password: string;
-}
-
-interface RegisterDto {
-  email: string;
-  password: string;
   name: string;
-  phone: string;
-}
-
-interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
+  role: "Admin" | "Merchant" | "Courier" | "Customer";
+  merchantId?: string;
 }
 
 interface AuthState {
   user: AuthUser | null;
   isLoading: boolean;
-  isAuthenticated: boolean;
-
-  login: (dto: LoginDto) => Promise<void>;
-  register: (dto: RegisterDto) => Promise<void>;
+  error: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  register: (data: {
+    email: string;
+    password: string;
+    name: string;
+    phone: string;
+  }) => Promise<void>;
   logout: () => Promise<void>;
-  initFromStorage: () => void;
+  clearError: () => void;
 }
 
 export const useAuth = create<AuthState>()(
@@ -44,41 +33,46 @@ export const useAuth = create<AuthState>()(
     (set) => ({
       user: null,
       isLoading: false,
-      isAuthenticated: false,
+      error: null,
 
-      initFromStorage: () => {
-        if (typeof window === "undefined") return;
-        const token = localStorage.getItem("access_token");
-        if (token) {
-          const user = getUserFromToken(token);
-          if (user) set({ user, isAuthenticated: true });
+      login: async (email, password) => {
+        set({ isLoading: true, error: null });
+        try {
+          const { data } = await api.post("/api/auth/login", {
+            email,
+            password,
+          });
+          const { accessToken, refreshToken } = data;
+
+          // Cookie'ye yaz — middleware artık okuyabilir
+          setTokens(accessToken, refreshToken);
+
+          // .NET'in uzun claim adını destekleyen helper kullan
+          const role = getRoleFromToken(accessToken);
+          if (!role) throw new Error("Token'da rol bulunamadı");
+
+          const meRes = await api.get("/api/auth/me");
+          set({ user: meRes.data, isLoading: false });
+        } catch (err: unknown) {
+          const msg =
+            (err as { response?: { data?: { message?: string } } })?.response
+              ?.data?.message ?? "Giriş başarısız";
+          set({ error: msg, isLoading: false });
+          throw err;
         }
       },
 
-      login: async (dto) => {
-        set({ isLoading: true });
+      register: async (data) => {
+        set({ isLoading: true, error: null });
         try {
-          const { data } = await api.post<AuthResponse>("/api/auth/login", dto);
-          saveTokens(data);
-          const user = getUserFromToken(data.accessToken);
-          set({ user, isAuthenticated: true });
-        } finally {
+          await api.post("/api/auth/register", data);
           set({ isLoading: false });
-        }
-      },
-
-      register: async (dto) => {
-        set({ isLoading: true });
-        try {
-          const { data } = await api.post<AuthResponse>(
-            "/api/auth/register",
-            dto,
-          );
-          saveTokens(data);
-          const user = getUserFromToken(data.accessToken);
-          set({ user, isAuthenticated: true });
-        } finally {
-          set({ isLoading: false });
+        } catch (err: unknown) {
+          const msg =
+            (err as { response?: { data?: { message?: string } } })?.response
+              ?.data?.message ?? "Kayıt başarısız";
+          set({ error: msg, isLoading: false });
+          throw err;
         }
       },
 
@@ -86,20 +80,18 @@ export const useAuth = create<AuthState>()(
         try {
           await api.post("/api/auth/logout");
         } catch {
-          // Sunucu hatası olsa bile local'i temizle
+          // sessizce geç
         } finally {
-          clearTokens();
-          set({ user: null, isAuthenticated: false });
+          clearTokens(); // cookie'leri sil
+          set({ user: null });
         }
       },
+
+      clearError: () => set({ error: null }),
     }),
     {
-      name: "auth-storage",
-      // Sadece user objesini persist et, token'lar localStorage'da ayrı
-      partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-      }),
+      name: "auth-store",
+      partialize: (s) => ({ user: s.user }),
     },
   ),
 );

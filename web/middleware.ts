@@ -1,20 +1,22 @@
-// web/middleware.ts
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-const PROTECTED_ROUTES: Record<string, string[]> = {
+const PROTECTED: Record<string, string[]> = {
   "/admin": ["Admin"],
-  "/merchant": ["Merchant", "Admin"],
-  "/courier": ["Courier", "Admin"],
+  "/merchant": ["Merchant"],
+  "/courier": ["Courier"],
 };
 
-function getRoleFromToken(token: string): string | null {
+/**
+ * .NET Identity JWT'de rol claim'i iki farklı key ile gelebilir:
+ * 1. Kısa: "role"
+ * 2. Uzun: "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+ */
+function parseJwtRole(token: string): string | null {
   try {
-    const payload = JSON.parse(
-      Buffer.from(token.split(".")[1], "base64url").toString(),
-    );
+    const payload = JSON.parse(atob(token.split(".")[1]));
     return (
       payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ??
+      payload["role"] ??
       null
     );
   } catch {
@@ -22,31 +24,32 @@ function getRoleFromToken(token: string): string | null {
   }
 }
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
 
-  // Hangi korumalı prefix'e giriyor?
-  const matchedPrefix = Object.keys(PROTECTED_ROUTES).find((prefix) =>
+  const matchedPrefix = Object.keys(PROTECTED).find((prefix) =>
     pathname.startsWith(prefix),
   );
 
   if (!matchedPrefix) return NextResponse.next();
 
-  const token = request.cookies.get("access_token")?.value;
+  // Token artık cookie'de — middleware bunu doğrudan okuyabilir
+  const token = req.cookies.get("access_token")?.value;
 
-  // Token yoksa login'e yönlendir
   if (!token) {
-    const loginUrl = new URL("/auth/login", request.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+    const url = req.nextUrl.clone();
+    url.pathname = "/auth/login";
+    url.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(url);
   }
 
-  // Rol kontrolü
-  const role = getRoleFromToken(token);
-  const allowedRoles = PROTECTED_ROUTES[matchedPrefix];
+  const role = parseJwtRole(token);
+  const allowed = PROTECTED[matchedPrefix];
 
-  if (!role || !allowedRoles.includes(role)) {
-    return NextResponse.redirect(new URL("/unauthorized", request.url));
+  if (!role || !allowed.includes(role)) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/unauthorized";
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();

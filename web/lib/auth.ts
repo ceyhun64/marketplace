@@ -1,89 +1,85 @@
-// web/lib/auth.ts
+// lib/auth.ts — Token storage helpers (cookie-based, middleware uyumlu)
 
-export type UserRole = "Admin" | "Merchant" | "Courier" | "Customer";
+const ACCESS_TOKEN_KEY = "access_token";
+const REFRESH_TOKEN_KEY = "refresh_token";
 
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-}
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  name: string;
-  role: UserRole;
-  merchantId?: string;
-}
-
-// ── Token Storage ──────────────────────────────────────────────────────────
-
-export function saveTokens(tokens: AuthTokens) {
+/** Cookie yazar — middleware server-side okuyabilsin diye HttpOnly değil, ama Secure+SameSite */
+function setCookie(name: string, value: string, days = 7) {
   if (typeof window === "undefined") return;
-  localStorage.setItem("access_token", tokens.accessToken);
-  localStorage.setItem("refresh_token", tokens.refreshToken);
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  // HttpOnly yazamayız (JS erişemez), ama middleware edge runtime cookie okur
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
 }
 
-export function clearTokens() {
+function getCookie(name: string): string | null {
+  if (typeof window === "undefined") return null;
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${name}=`));
+  return match ? decodeURIComponent(match.split("=")[1]) : null;
+}
+
+function deleteCookie(name: string) {
   if (typeof window === "undefined") return;
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
 }
 
 export function getAccessToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("access_token");
+  return getCookie(ACCESS_TOKEN_KEY);
 }
 
 export function getRefreshToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("refresh_token");
+  return getCookie(REFRESH_TOKEN_KEY);
 }
 
-// ── JWT Decode (hafif, library gerektirmez) ────────────────────────────────
-
-function base64UrlDecode(str: string): string {
-  const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
-  return decodeURIComponent(
-    atob(base64)
-      .split("")
-      .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-      .join(""),
-  );
+export function setTokens(accessToken: string, refreshToken: string): void {
+  // Access token: 15 dakika ama cookie 1 gün — refresh ile yenilenecek
+  setCookie(ACCESS_TOKEN_KEY, accessToken, 1);
+  setCookie(REFRESH_TOKEN_KEY, refreshToken, 7);
 }
 
-export function decodeToken(token: string): Record<string, unknown> | null {
+export function clearTokens(): void {
+  deleteCookie(ACCESS_TOKEN_KEY);
+  deleteCookie(REFRESH_TOKEN_KEY);
+}
+
+export function isTokenExpired(token: string): boolean {
   try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    return JSON.parse(base64UrlDecode(parts[1])) as Record<string, unknown>;
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+}
+
+export interface TokenPayload {
+  sub: string;
+  email: string;
+  // .NET Identity'nin uzun claim adı veya kısa "role"
+  role?: "Admin" | "Merchant" | "Courier" | "Customer";
+  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"?: string;
+  merchantId?: string;
+  exp: number;
+}
+
+export function parseToken(token: string): TokenPayload | null {
+  try {
+    return JSON.parse(atob(token.split(".")[1])) as TokenPayload;
   } catch {
     return null;
   }
 }
 
-export function getUserFromToken(token: string): AuthUser | null {
-  const payload = decodeToken(token);
+/** Hem kısa hem uzun .NET claim'ini destekler */
+export function getRoleFromToken(
+  token: string,
+): "Admin" | "Merchant" | "Courier" | "Customer" | null {
+  const payload = parseToken(token);
   if (!payload) return null;
-
-  return {
-    id: payload[
-      "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
-    ] as string,
-    email: payload[
-      "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
-    ] as string,
-    name: (payload[
-      "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
-    ] ?? "") as string,
-    role: payload[
-      "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-    ] as UserRole,
-    merchantId: payload["merchantId"] as string | undefined,
-  };
-}
-
-export function isTokenExpired(token: string): boolean {
-  const payload = decodeToken(token);
-  if (!payload?.exp) return true;
-  return (payload.exp as number) * 1000 < Date.now();
+  const role =
+    payload.role ??
+    (payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] as
+      | string
+      | undefined);
+  return (role as "Admin" | "Merchant" | "Courier" | "Customer") ?? null;
 }

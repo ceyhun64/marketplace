@@ -5,7 +5,7 @@ import * as signalR from "@microsoft/signalr";
 import { getAccessToken } from "./auth";
 
 const HUB_URL =
-  process.env.NEXT_PUBLIC_SIGNALR_HUB ?? "http://localhost:5000/hubs/tracking";
+  process.env.NEXT_PUBLIC_SIGNALR_HUB ?? "http://localhost:5010/hubs/tracking";
 
 let connection: signalR.HubConnection | null = null;
 
