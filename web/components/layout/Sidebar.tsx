@@ -35,6 +35,23 @@ export function Sidebar({ links, role }: SidebarProps) {
     router.push("/auth/login");
   };
 
+  const isActive = (href: string) => {
+    // Tam eşleşme her zaman aktif
+    if (pathname === href) return true;
+    // Dashboard root linkleri (/merchant, /admin, /courier):
+    // sadece tam eşleşmede aktif — startsWith kullanma
+    const rootPaths = links
+      .map((l) => l.href)
+      .filter((h) => {
+        const segments = h.split("/").filter(Boolean);
+        return segments.length === 1;
+      });
+    if (rootPaths.includes(href)) return false;
+    // Alt sayfalar: pathname'in href ile başladığını
+    // VE hemen ardından / veya son karakter olduğunu kontrol et
+    return pathname.startsWith(href + "/") || pathname.startsWith(href);
+  };
+
   return (
     <aside className="fixed left-0 top-0 h-screen w-60 bg-white border-r border-gray-200 flex flex-col">
       {/* Logo */}
@@ -51,9 +68,7 @@ export function Sidebar({ links, role }: SidebarProps) {
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {links.map(({ href, label, icon }) => {
-          const active =
-            href === pathname ||
-            (href !== "/" + role.toLowerCase() && pathname.startsWith(href));
+          const active = isActive(href);
           return (
             <Link
               key={href}

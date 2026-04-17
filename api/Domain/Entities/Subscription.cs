@@ -1,3 +1,4 @@
+// Subscription.cs — MerchantId FK ile tek yön:
 using api.Domain.Enums;
 
 namespace api.Domain.Entities;
@@ -5,7 +6,7 @@ namespace api.Domain.Entities;
 public class Subscription
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid MerchantId { get; set; }
+    public Guid MerchantId { get; set; } // FK → MerchantProfile.Id
     public PlanType Plan { get; set; } = PlanType.Basic;
     public decimal MonthlyPrice { get; set; }
     public bool IsActive { get; set; } = true;
@@ -16,6 +17,5 @@ public class Subscription
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation
     public MerchantProfile Merchant { get; set; } = null!;
 }

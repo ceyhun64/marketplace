@@ -1,18 +1,44 @@
+├── .github
+│   └── workflows
+│       └── deploy.yml
 ├── .gitignore
 ├── api
 │   ├── api.csproj
 │   ├── api.http
 │   ├── Application
 │   │   ├── Commands
+│   │   │   ├── Categories
+│   │   │   │   └── CreateCategoryCommand.cs
+│   │   │   ├── Merchants
+│   │   │   │   └── CreateMerchantCommand.cs
+│   │   │   ├── Offers
+│   │   │   │   ├── CreateOfferCommand.cs
+│   │   │   │   └── UpdateOfferCommand.cs
+│   │   │   └── Products
+│   │   │       ├── ApproveProductCommand.cs
+│   │   │       └── CreateProductCommand.cs
 │   │   └── Queries
+│   │       ├── Offers
+│   │       │   └── GetMerchantOffersQuery.cs
+│   │       └── Products
+│   │           ├── GetMerchantProductsQuery.cs
+│   │           └── GetProductsQuery.cs
 │   ├── appsettings.Development.json
 │   ├── appsettings.json
 │   ├── Common
 │   │   ├── DTOs
-│   │   │   └── AuthDTOs.cs
+│   │   │   ├── AuthDTOs.cs
+│   │   │   ├── CategoryDTOs.cs
+│   │   │   ├── MerchantDTOs.cs
+│   │   │   ├── ProductDTOs.cs
+│   │   │   └── ResponseDTOs.cs
 │   │   ├── Mappings
+│   │   │   └── MappingProfile.cs
 │   │   └── Validators
-│   │       └── AuthValidator.cs
+│   │       ├── AuthValidator.cs
+│   │       ├── CategoryValidator.cs
+│   │       ├── MerchantValidator.cs
+│   │       └── ProductValidator.cs
 │   ├── Controllers
 │   │   ├── AdminController.cs
 │   │   ├── AuthController.cs
@@ -20,6 +46,7 @@
 │   │   ├── MerchantsController.cs
 │   │   ├── ProductsController.cs
 │   │   └── StoreController.cs
+│   ├── DockerFile
 │   ├── Domain
 │   │   ├── Entities
 │   │   │   ├── Category.cs
@@ -51,6 +78,11 @@
 │   │   ├── Persistence
 │   │   │   ├── AppDbContext.cs
 │   │   │   └── DataSeeder.cs
+│   │   ├── Repositories
+│   │   │   ├── IProductRepository.cs
+│   │   │   ├── IRepository.cs
+│   │   │   ├── ProductRepository.cs
+│   │   │   └── Repository.cs
 │   │   └── Services
 │   │       ├── BuyBoxService.cs
 │   │       ├── CurrentUserService.cs
@@ -71,20 +103,32 @@
 │   ├── Migrations
 │   │   ├── 20260414080937_FixSubscriptionRelationship.cs
 │   │   ├── 20260414080937_FixSubscriptionRelationship.Designer.cs
+│   │   ├── 20260416130409_UpdatePendingChanges.cs
+│   │   ├── 20260416130409_UpdatePendingChanges.Designer.cs
 │   │   └── AppDbContextModelSnapshot.cs
 │   ├── Program.cs
 │   └── Properties
 │       └── launchSettings.json
+├── docker-compose.prod.yml
 ├── docker-compose.yml
 ├── marketplace.sln
+├── nginx
+│   └── conf.d
+│       └── marketplace.conf
 ├── project_tree.txt
 ├── system_architecture.html
 └── web
     ├── .gitignore
     ├── app
     │   ├── admin
+    │   │   ├── categories
+    │   │   │   └── page.tsx
+    │   │   ├── couriers
+    │   │   │   └── page.tsx
     │   │   ├── layout.tsx
     │   │   ├── merchants
+    │   │   │   └── page.tsx
+    │   │   ├── orders
     │   │   │   └── page.tsx
     │   │   ├── page.tsx
     │   │   └── products
@@ -96,7 +140,9 @@
     │   │       └── page.tsx
     │   ├── courier
     │   │   ├── layout.tsx
-    │   │   └── page.tsx
+    │   │   ├── page.tsx
+    │   │   └── shipments
+    │   │       └── page.tsx
     │   ├── favicon.ico
     │   ├── globals.css
     │   ├── layout.tsx
@@ -104,6 +150,8 @@
     │   │   ├── catalogue
     │   │   │   └── page.tsx
     │   │   ├── layout.tsx
+    │   │   ├── offers
+    │   │   │   └── page.tsx
     │   │   ├── orders
     │   │   │   └── page.tsx
     │   │   └── page.tsx
@@ -112,7 +160,15 @@
     │       └── page.tsx
     ├── components
     │   ├── layout
+    │   │   ├── Footer.tsx
+    │   │   ├── Navbar.tsx
     │   │   └── Sidebar.tsx
+    │   ├── modules
+    │   │   └── home
+    │   │       ├── CategoryGrid.tsx
+    │   │       ├── FeaturedProducts.tsx
+    │   │       ├── FeaturedStores.tsx
+    │   │       └── HeroSection.tsx
     │   ├── providers
     │   │   └── QueryProvider.tsx
     │   └── ui
@@ -172,9 +228,12 @@
     │       ├── toggle.tsx
     │       └── tooltip.tsx
     ├── components.json
+    ├── DockerFile
     ├── hooks
     │   ├── use-auth.ts
-    │   └── use-mobile.ts
+    │   ├── use-cart.ts
+    │   ├── use-mobile.ts
+    │   └── use-tracking.ts
     ├── lib
     │   ├── api.ts
     │   ├── auth.ts

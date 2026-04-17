@@ -21,7 +21,7 @@ export default function MerchantDashboardPage() {
 
   useEffect(() => {
     api
-      .get<MerchantStats>("/api/analytics/merchant/sales")
+      .get<MerchantStats>("/api/merchants/analytics")
       .then((r) => setStats(r.data))
       .catch(() => setStats(null))
       .finally(() => setLoading(false));

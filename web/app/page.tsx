@@ -1,65 +1,147 @@
-import Image from "next/image";
+// app/page.tsx — Public Marketplace Homepage
+// Server Component (no "use client" needed at top level)
 
-export default function Home() {
+import HeroSection from "@/components/modules/home/HeroSection";
+import CategoryGrid from "@/components/modules/home/CategoryGrid";
+import FeaturedProducts from "@/components/modules/home/FeaturedProducts";
+import FeaturedStores from "@/components/modules/home/FeaturedStores";
+
+// Server-side fetch for categories (ISR — revalidates every 60s)
+// async function getCategories() {
+//   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
+//     next: { revalidate: 60 },
+//   });
+//   if (!res.ok) return [];
+//   return res.json();
+// }
+
+export const metadata = {
+  title: "Pazaryeri — Binlerce Satıcı, Tek Platform",
+  description:
+    "Güvenilir satıcılardan en iyi fiyatı bul. Marketplace ve bağımsız e-mağazaların gücünü bir arada keşfet.",
+  openGraph: {
+    title: "Pazaryeri — Binlerce Satıcı, Tek Platform",
+    description: "Güvenilir satıcılardan en iyi fiyatı bul.",
+    type: "website",
+  },
+};
+
+export default async function HomePage() {
+  // Uncomment when API is ready:
+  // const categories = await getCategories();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main>
+      {/* 1. Hero — bold editorial search + stats */}
+      <HeroSection />
+
+      {/* 2. Category grid */}
+      <CategoryGrid
+      // categories={categories}  // pass real data from API when ready
+      />
+
+      {/* 3. Featured products with tabs */}
+      <FeaturedProducts />
+
+      {/* 4. Featured stores + seller CTA */}
+      <FeaturedStores />
+
+      {/* 5. Trust / how it works section */}
+      <HowItWorksSection />
+    </main>
+  );
+}
+
+// Inline simple section — can be extracted to its own component later
+function HowItWorksSection() {
+  const steps = [
+    {
+      number: "01",
+      title: "Ürünü bul",
+      description:
+        "Binlerce ürün arasından arama yap, kategorilere göz at, en iyi fiyatı bul.",
+      color: "#C84B2F",
+    },
+    {
+      number: "02",
+      title: "Güvenle öde",
+      description:
+        "iyzico altyapısıyla 256-bit SSL şifreleme. Kredi kartı, havale, kapıda ödeme.",
+      color: "#1A4A6B",
+    },
+    {
+      number: "03",
+      title: "Takip et",
+      description:
+        "Siparişini gerçek zamanlı takip et. Kurye konumunu canlı olarak gör.",
+      color: "#2D7A4F",
+    },
+    {
+      number: "04",
+      title: "Teslim al",
+      description:
+        "Ortalama 24 saatte kapında. Express seçeneğiyle aynı gün teslimat.",
+      color: "#8B5E1A",
+    },
+  ];
+
+  return (
+    <section className="py-16 lg:py-20 bg-[#0D0D0D]">
+      <div className="max-w-[1200px] mx-auto px-5 lg:px-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2.5 mb-4">
+            <div className="w-6 h-[2px] bg-[#C84B2F]" />
+            <span className="font-mono text-[10px] uppercase tracking-[3px] text-[#7A7060]">
+              Nasıl Çalışır
+            </span>
+            <div className="w-6 h-[2px] bg-[#C84B2F]" />
+          </div>
+          <h2
+            className="text-[#F5F2EB] text-[28px] lg:text-[36px] leading-tight"
+            style={{ fontFamily: "'DM Serif Display', serif" }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Alışveriş bu kadar basit.
+          </h2>
         </div>
-      </main>
-    </div>
+
+        {/* Steps grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          {steps.map((step) => (
+            <div
+              key={step.number}
+              className="relative bg-[#F5F2EB]/[0.04] border border-[#F5F2EB]/8 rounded-sm p-6 hover:border-[#F5F2EB]/16 transition-colors group"
+            >
+              {/* Number */}
+              <div
+                className="font-mono text-[40px] font-bold leading-none mb-4 opacity-20 group-hover:opacity-30 transition-opacity"
+                style={{
+                  color: step.color,
+                  fontFamily: "'DM Serif Display', serif",
+                }}
+              >
+                {step.number}
+              </div>
+
+              {/* Color accent */}
+              <div
+                className="w-8 h-[2px] mb-4 rounded-full transition-all duration-300 group-hover:w-12"
+                style={{ backgroundColor: step.color }}
+              />
+
+              <h3
+                className="text-[#F5F2EB] text-[17px] mb-3 leading-tight"
+                style={{ fontFamily: "'DM Serif Display', serif" }}
+              >
+                {step.title}
+              </h3>
+              <p className="text-[#7A7060] text-[13px] leading-relaxed">
+                {step.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

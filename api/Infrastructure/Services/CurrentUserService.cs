@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 
 namespace api.Infrastructure.Services;
 
@@ -11,8 +12,26 @@ public class CurrentUserService : ICurrentUserService
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public string? UserId =>
-        _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-    public string? UserRole =>
-        _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Role);
+    public Guid UserId
+    {
+        get
+        {
+            var value = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
+            return Guid.TryParse(value, out var id) ? id : Guid.Empty;
+        }
+    }
+
+    public string Role =>
+        _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+
+    public Guid? MerchantId
+    {
+        get
+        {
+            var value = _httpContextAccessor.HttpContext?.User.FindFirstValue("MerchantId");
+            return Guid.TryParse(value, out var id) ? id : null;
+        }
+    }
 }

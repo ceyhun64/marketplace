@@ -29,6 +29,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
         modelBuilder.Entity<MerchantProfile>().HasIndex(m => m.Slug).IsUnique();
         modelBuilder.Entity<Shipment>().HasIndex(s => s.TrackingNumber).IsUnique();
+        // AppDbContext.cs OnModelCreating içine ekle:
         modelBuilder
             .Entity<Subscription>()
             .HasOne(s => s.Merchant)

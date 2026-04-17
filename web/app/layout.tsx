@@ -1,19 +1,49 @@
-// web/app/layout.tsx
+// app/layout.tsx — Root layout
+// Add Navbar + Footer to all public pages
+
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { DM_Sans, DM_Serif_Display, Space_Mono } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
+import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const dmSans = DM_Sans({
   subsets: ["latin"],
+  variable: "--font-dm-sans",
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+});
+
+const dmSerifDisplay = DM_Serif_Display({
+  subsets: ["latin"],
+  variable: "--font-dm-serif",
+  weight: ["400"],
+  display: "swap",
+});
+
+const spaceMono = Space_Mono({
+  subsets: ["latin"],
+  variable: "--font-space-mono",
+  weight: ["400", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Marketplace Platform",
-  description: "Multi-tenant marketplace & fulfillment",
+  title: {
+    default: "Pazaryeri — Binlerce Satıcı, Tek Platform",
+    template: "%s | Pazaryeri",
+  },
+  description:
+    "Güvenilir satıcılardan en iyi fiyatı bul. Marketplace ve bağımsız e-mağazaların gücünü bir arada keşfet.",
 };
+
+function isPublicRoute(pathname?: string) {
+  if (!pathname) return true;
+  const dashboardPrefixes = ["/admin", "/merchant", "/courier"];
+  return !dashboardPrefixes.some((p) => pathname.startsWith(p));
+}
 
 export default function RootLayout({
   children,
@@ -21,9 +51,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="tr">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <QueryProvider>{children}</QueryProvider>
+    <html
+      lang="tr"
+      className={`${dmSans.variable} ${dmSerifDisplay.variable} ${spaceMono.variable}`}
+    >
+      <body
+        className="bg-[#F5F2EB] text-[#0D0D0D] antialiased"
+        style={{ fontFamily: "var(--font-dm-sans), sans-serif" }}
+      >
+        <QueryProvider>
+          <Navbar />
+          {children}
+          <Footer />
+          <Toaster position="bottom-right" richColors />
+        </QueryProvider>
       </body>
     </html>
   );

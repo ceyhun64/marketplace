@@ -27,6 +27,8 @@ interface Offer {
   price: number;
   stock: number;
   isActive: boolean;
+  publishToMarket?: boolean;
+  publishToStore?: boolean;
   createdAt: string;
 }
 
@@ -88,10 +90,19 @@ export default function MerchantCataloguePage() {
   }
 
   useEffect(() => {
-    if (activeTab === "products" && products.length === 0) {
+    if (activeTab === "products") {
       fetchProducts();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
+
+  // Yeni teklif oluştur — önce ürünleri yüklediğimizden emin ol
+  async function openOfferForm() {
+    if (products.length === 0) {
+      await fetchProducts();
+    }
+    setShowOfferForm(true);
+  }
 
   async function handleCreateOffer(e: React.FormEvent) {
     e.preventDefault();
@@ -106,9 +117,10 @@ export default function MerchantCataloguePage() {
       setShowOfferForm(false);
       setOfferForm({ productId: "", price: "", stock: "" });
       await fetchAll();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setOfferFormError(
-        err?.response?.data?.message ?? "Teklif oluşturulamadı.",
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Teklif oluşturulamadı.",
       );
     } finally {
       setOfferFormLoading(false);
@@ -120,6 +132,22 @@ export default function MerchantCataloguePage() {
       await api.patch(`/merchant/offers/${id}`, { isActive: !isActive });
       setOffers((prev) =>
         prev.map((o) => (o.id === id ? { ...o, isActive: !isActive } : o)),
+      );
+    } catch {
+      alert("Güncelleme başarısız.");
+    }
+  }
+
+  // Marketplace / E-store toggle
+  async function handlePublishToggle(
+    id: string,
+    field: "publishToMarket" | "publishToStore",
+    current: boolean,
+  ) {
+    try {
+      await api.patch(`/merchant/offers/${id}`, { [field]: !current });
+      setOffers((prev) =>
+        prev.map((o) => (o.id === id ? { ...o, [field]: !current } : o)),
       );
     } catch {
       alert("Güncelleme başarısız.");
@@ -149,9 +177,10 @@ export default function MerchantCataloguePage() {
       setShowProductForm(false);
       setProductForm({ name: "", description: "", categoryId: "" });
       await fetchProducts();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setProductFormError(
-        err?.response?.data?.message ?? "Ürün oluşturulamadı.",
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Ürün oluşturulamadı.",
       );
     } finally {
       setProductFormLoading(false);
@@ -192,7 +221,7 @@ export default function MerchantCataloguePage() {
         </div>
       )}
 
-      {/* OFFERS TAB */}
+      {/* ─── OFFERS TAB ─────────────────────────────────────────────────────── */}
       {activeTab === "offers" && (
         <>
           <div className="flex justify-between items-center mb-4">
@@ -200,7 +229,7 @@ export default function MerchantCataloguePage() {
               Aktif Teklifler
             </h2>
             <button
-              onClick={() => setShowOfferForm(true)}
+              onClick={openOfferForm}
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
             >
               + Yeni Teklif
@@ -231,16 +260,18 @@ export default function MerchantCataloguePage() {
                       className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Ürün seçin...</option>
-                      {products.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
+                      {products
+                        .filter((p) => p.isApproved)
+                        .map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
                     </select>
-                    {products.length === 0 && (
+                    {products.filter((p) => p.isApproved).length === 0 && (
                       <p className="text-xs text-gray-400 mt-1">
-                        Önce &quot;Ürünlerim&quot; sekmesinden ürün eklemeniz
-                        gerekiyor.
+                        Önce &quot;Ürünlerim&quot; sekmesinden onaylı ürün
+                        eklemeniz gerekiyor.
                       </p>
                     )}
                   </div>
@@ -322,6 +353,8 @@ export default function MerchantCataloguePage() {
                     <th className="pb-3 font-medium">Fiyat</th>
                     <th className="pb-3 font-medium">Stok</th>
                     <th className="pb-3 font-medium">Durum</th>
+                    <th className="pb-3 font-medium">Marketplace</th>
+                    <th className="pb-3 font-medium">E-Mağaza</th>
                     <th className="pb-3 font-medium">Eklenme</th>
                     <th className="pb-3 font-medium">İşlemler</th>
                   </tr>
@@ -347,6 +380,66 @@ export default function MerchantCataloguePage() {
                         >
                           {offer.isActive ? "Aktif" : "Pasif"}
                         </span>
+                      </td>
+                      {/* Marketplace toggle */}
+                      <td className="py-3">
+                        <button
+                          onClick={() =>
+                            handlePublishToggle(
+                              offer.id,
+                              "publishToMarket",
+                              offer.publishToMarket ?? false,
+                            )
+                          }
+                          title={
+                            offer.publishToMarket
+                              ? "Marketplace'den kaldır"
+                              : "Marketplace'e yayınla"
+                          }
+                          className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors ${
+                            offer.publishToMarket
+                              ? "bg-blue-600"
+                              : "bg-gray-200"
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                              offer.publishToMarket
+                                ? "translate-x-5"
+                                : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </td>
+                      {/* E-store toggle */}
+                      <td className="py-3">
+                        <button
+                          onClick={() =>
+                            handlePublishToggle(
+                              offer.id,
+                              "publishToStore",
+                              offer.publishToStore ?? false,
+                            )
+                          }
+                          title={
+                            offer.publishToStore
+                              ? "E-mağazadan kaldır"
+                              : "E-mağazaya yayınla"
+                          }
+                          className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors ${
+                            offer.publishToStore
+                              ? "bg-purple-600"
+                              : "bg-gray-200"
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                              offer.publishToStore
+                                ? "translate-x-5"
+                                : "translate-x-1"
+                            }`}
+                          />
+                        </button>
                       </td>
                       <td className="py-3 text-gray-400">
                         {new Date(offer.createdAt).toLocaleDateString("tr-TR")}
@@ -378,7 +471,7 @@ export default function MerchantCataloguePage() {
         </>
       )}
 
-      {/* PRODUCTS TAB */}
+      {/* ─── PRODUCTS TAB ────────────────────────────────────────────────────── */}
       {activeTab === "products" && (
         <>
           <div className="flex justify-between items-center mb-4">

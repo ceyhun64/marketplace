@@ -28,13 +28,11 @@ public class MerchantsController : ControllerBase
     [HttpGet("profile")]
     public async Task<IActionResult> GetProfile()
     {
-        if (!Guid.TryParse(_currentUser.UserId, out var userId))
-            return Unauthorized();
-
+        // YENİ: Dönüştürme işlemini sildik, doğrudan UserId'yi kullanıyoruz.
         var merchant = await _db
             .MerchantProfiles.Include(m => m.User)
             .Include(m => m.Subscription)
-            .FirstOrDefaultAsync(m => m.UserId == userId);
+            .FirstOrDefaultAsync(m => m.UserId == _currentUser.UserId);
 
         if (merchant == null)
             return NotFound(new { message = "Merchant profili bulunamadı." });
@@ -69,10 +67,10 @@ public class MerchantsController : ControllerBase
     [HttpPut("profile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
     {
-        if (!Guid.TryParse(_currentUser.UserId, out var userId))
-            return Unauthorized();
-
-        var merchant = await _db.MerchantProfiles.FirstOrDefaultAsync(m => m.UserId == userId);
+        // YENİ: Dönüştürme işlemini sildik.
+        var merchant = await _db.MerchantProfiles.FirstOrDefaultAsync(m =>
+            m.UserId == _currentUser.UserId
+        );
 
         if (merchant == null)
             return NotFound();
@@ -85,6 +83,7 @@ public class MerchantsController : ControllerBase
         merchant.BannerUrl = dto.BannerUrl ?? merchant.BannerUrl;
 
         await _db.SaveChangesAsync();
+
         return Ok(
             new
             {
@@ -545,11 +544,9 @@ public class MerchantsController : ControllerBase
         return Ok(invoices);
     }
 
-    // _currentUser.UserId string ise Guid.Parse ile karşılaştır
+    // _currentUser.UserId zaten uygun tipte olduğu için direkt karşılaştırıyoruz
     private async Task<MerchantProfile?> GetCurrentMerchantAsync() =>
-        await _db.MerchantProfiles.FirstOrDefaultAsync(m =>
-            m.UserId == Guid.Parse(_currentUser.UserId)
-        );
+        await _db.MerchantProfiles.FirstOrDefaultAsync(m => m.UserId == _currentUser.UserId);
 }
 
 // ── DTOs ────────────────────────────────────────────────────────────────────

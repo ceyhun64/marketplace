@@ -147,20 +147,17 @@ public class AuthController : ControllerBase
 
     // ── GET /api/auth/me ──────────────────────────────────────────────────────
     /// <summary>JWT token'dan mevcut kullanıcı bilgisini döner.</summary>
+    // ── GET /api/auth/me ──────────────────────────────────────────────────────
     [HttpGet("me")]
     [Authorize]
     [ProducesResponseType(typeof(UserInfoResponse), 200)]
     public async Task<IActionResult> Me()
     {
-        // String olan UserId'yi Guid'e çeviriyoruz
-        if (!Guid.TryParse(_currentUser.UserId, out var currentGuid))
-        {
-            return Unauthorized();
-        }
-
+        // ESKİ HALİ: Guid.TryParse kontrolünü siliyoruz.
+        // YENİ HALİ: Doğrudan _currentUser.UserId kullanarak sorgu atıyoruz.
         var user = await _db
             .Users.Include(u => u.MerchantProfile)
-            .FirstOrDefaultAsync(u => u.Id == currentGuid && !u.IsDeleted);
+            .FirstOrDefaultAsync(u => u.Id == _currentUser.UserId && !u.IsDeleted);
 
         if (user is null)
             return NotFound();

@@ -21,7 +21,8 @@ interface AuthState {
   register: (data: {
     email: string;
     password: string;
-    name: string;
+    firstName: string;
+    lastName: string;
     phone: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
@@ -68,9 +69,22 @@ export const useAuth = create<AuthState>()(
           await api.post("/api/auth/register", data);
           set({ isLoading: false });
         } catch (err: unknown) {
+          const responseData = (
+            err as {
+              response?: {
+                data?: { message?: string; errors?: Record<string, string[]> };
+              };
+            }
+          )?.response?.data;
+
+          // FluentValidation hataları errors objesi döner
           const msg =
-            (err as { response?: { data?: { message?: string } } })?.response
-              ?.data?.message ?? "Kayıt başarısız";
+            responseData?.message ??
+            (responseData?.errors
+              ? Object.values(responseData.errors).flat()[0]
+              : null) ??
+            "Kayıt başarısız";
+
           set({ error: msg, isLoading: false });
           throw err;
         }
