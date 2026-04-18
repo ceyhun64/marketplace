@@ -3,12 +3,13 @@
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 
-/** Cookie yazar — middleware server-side okuyabilsin diye HttpOnly değil, ama Secure+SameSite */
 function setCookie(name: string, value: string, days = 7) {
   if (typeof window === "undefined") return;
   const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  // HttpOnly yazamayız (JS erişemez), ama middleware edge runtime cookie okur
-  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+  // JWT zaten URL-safe karakterler içerir, encodeURIComponent KULLANMA
+  document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax${
+    location.protocol === "https:" ? "; Secure" : ""
+  }`;
 }
 
 function getCookie(name: string): string | null {
@@ -16,7 +17,8 @@ function getCookie(name: string): string | null {
   const match = document.cookie
     .split("; ")
     .find((row) => row.startsWith(`${name}=`));
-  return match ? decodeURIComponent(match.split("=")[1]) : null;
+  // indexOf ile böl — değerin içinde '=' (base64 padding) olabilir
+  return match ? match.substring(match.indexOf("=") + 1) : null;
 }
 
 function deleteCookie(name: string) {
@@ -33,7 +35,6 @@ export function getRefreshToken(): string | null {
 }
 
 export function setTokens(accessToken: string, refreshToken: string): void {
-  // Access token: 15 dakika ama cookie 1 gün — refresh ile yenilenecek
   setCookie(ACCESS_TOKEN_KEY, accessToken, 1);
   setCookie(REFRESH_TOKEN_KEY, refreshToken, 7);
 }
@@ -55,7 +56,6 @@ export function isTokenExpired(token: string): boolean {
 export interface TokenPayload {
   sub: string;
   email: string;
-  // .NET Identity'nin uzun claim adı veya kısa "role"
   role?: "Admin" | "Merchant" | "Courier" | "Customer";
   "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"?: string;
   merchantId?: string;
@@ -70,7 +70,6 @@ export function parseToken(token: string): TokenPayload | null {
   }
 }
 
-/** Hem kısa hem uzun .NET claim'ini destekler */
 export function getRoleFromToken(
   token: string,
 ): "Admin" | "Merchant" | "Courier" | "Customer" | null {

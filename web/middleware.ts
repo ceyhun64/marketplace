@@ -4,6 +4,10 @@ const PROTECTED: Record<string, string[]> = {
   "/admin": ["Admin"],
   "/merchant": ["Merchant"],
   "/courier": ["Courier"],
+  // Customer sayfaları — giriş yapmış herhangi bir rol erişebilir
+  "/orders": ["Admin", "Merchant", "Courier", "Customer"],
+  "/checkout": ["Admin", "Merchant", "Courier", "Customer"],
+  "/profile": ["Admin", "Merchant", "Courier", "Customer"],
 };
 
 /**
@@ -56,5 +60,12 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/merchant/:path*", "/courier/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/merchant/:path*",
+    "/courier/:path*",
+    "/orders/:path*",
+    "/checkout/:path*",
+    "/profile/:path*",
+  ],
 };
