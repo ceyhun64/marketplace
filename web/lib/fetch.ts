@@ -77,3 +77,11 @@ export async function fetchStatic<T>(path: string): Promise<T> {
 
   return res.json() as Promise<T>;
 }
+
+/**
+ * Server Fetch Helper — mağaza ve ürün verisi için
+ */
+export const serverFetch = {
+  product: (id: string) => fetchISR(`/api/products/${id}`),
+  storeProducts: (slug: string) => fetchISR(`/api/store/${slug}/products`),
+};

@@ -1,8 +1,13 @@
 namespace api.Infrastructure.Services;
+using api.Common.DTOs;
 
 public interface IPaymentService
 {
-    Task<string> InitializeCheckoutAsync(Guid orderId);
-    Task<bool> HandleWebhookAsync(string payload, string signature);
-    Task<bool> RefundAsync(Guid orderId, decimal amount);
+    Task<ServiceResult<PaymentCheckoutResponseDto>> InitiateCheckoutAsync(
+        PaymentCheckoutRequestDto request
+    );
+    Task<ServiceResult<Guid>> HandleCallbackAsync(IyzicoCallbackDto callback);
+    Task HandleWebhookAsync(IyzicoWebhookDto webhook);
+    Task<ServiceResult<bool>> RefundAsync(Guid orderId, RefundRequestDto request);
+    Task<PaymentStatusDto?> GetPaymentStatusAsync(Guid orderId);
 }

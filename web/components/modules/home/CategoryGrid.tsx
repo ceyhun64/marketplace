@@ -1,11 +1,23 @@
+"use client";
+
 import Link from "next/link";
+import {
+  Cpu,
+  Shirt,
+  Home,
+  Gamepad2,
+  Baby,
+  Sparkles,
+  Truck,
+  ShoppingBasket,
+} from "lucide-react";
 
 interface Category {
   id: string;
   name: string;
   slug: string;
   productCount: number;
-  icon: string;
+  icon: React.ReactNode;
   color: string;
 }
 
@@ -15,7 +27,7 @@ const MOCK_CATEGORIES: Category[] = [
     name: "Elektronik",
     slug: "elektronik",
     productCount: 4200,
-    icon: "⚡",
+    icon: <Cpu className="w-6 h-6" />,
     color: "#1A4A6B",
   },
   {
@@ -23,7 +35,7 @@ const MOCK_CATEGORIES: Category[] = [
     name: "Moda & Giyim",
     slug: "moda",
     productCount: 8900,
-    icon: "👗",
+    icon: <Shirt className="w-6 h-6" />,
     color: "#C84B2F",
   },
   {
@@ -31,114 +43,93 @@ const MOCK_CATEGORIES: Category[] = [
     name: "Ev & Yaşam",
     slug: "ev-yasam",
     productCount: 3100,
-    icon: "🏠",
+    icon: <Home className="w-6 h-6" />,
     color: "#2D7A4F",
   },
   {
     id: "4",
-    name: "Spor & Outdoor",
-    slug: "spor",
-    productCount: 2400,
-    icon: "🏃",
-    color: "#8B5E1A",
+    name: "Hızlı Market",
+    slug: "market",
+    productCount: 1500,
+    icon: <ShoppingBasket className="w-6 h-6" />,
+    color: "#EAB308",
   },
   {
     id: "5",
-    name: "Kitap & Kırtasiye",
-    slug: "kitap",
-    productCount: 5600,
-    icon: "📚",
-    color: "#1A4A6B",
+    name: "Kozmetik",
+    slug: "kozmetik",
+    productCount: 3800,
+    icon: <Sparkles className="w-6 h-6" />,
+    color: "#D946EF",
   },
   {
     id: "6",
-    name: "Kozmetik & Bakım",
-    slug: "kozmetik",
-    productCount: 3800,
-    icon: "✨",
-    color: "#C84B2F",
-  },
-  {
-    id: "7",
     name: "Oyun & Hobi",
     slug: "oyun",
     productCount: 1900,
-    icon: "🎮",
-    color: "#2D7A4F",
+    icon: <Gamepad2 className="w-6 h-6" />,
+    color: "#6366F1",
   },
   {
-    id: "8",
+    id: "7",
     name: "Bebek & Çocuk",
     slug: "bebek",
     productCount: 2700,
-    icon: "🧸",
-    color: "#8B5E1A",
+    icon: <Baby className="w-6 h-6" />,
+    color: "#F97316",
+  },
+  {
+    id: "8",
+    name: "Kurye / Lojistik",
+    slug: "lojistik",
+    productCount: 120,
+    icon: <Truck className="w-6 h-6" />,
+    color: "#0D0D0D",
   },
 ];
 
-interface CategoryGridProps {
-  categories?: Category[];
-}
-
-export default function CategoryGrid({
-  categories = MOCK_CATEGORIES,
-}: CategoryGridProps) {
+export default function CategoryGrid({ categories = MOCK_CATEGORIES }) {
   return (
-    <section className="py-16 lg:py-20 bg-[#F5F2EB]">
-      <div className="max-w-[1200px] mx-auto px-5 lg:px-8">
-        <div className="flex items-end justify-between mb-10">
-          <div>
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-6 h-[2px] bg-[#0D0D0D]" />
-              <span className="font-mono text-[10px] uppercase tracking-[3px] text-[#7A7060]">
-                Kategoriler
+    <section className="py-16 lg:py-24 bg-[#F5F2EB]">
+      <div className="max-w-[1300px] mx-auto px-6 lg:px-12">
+        {/* Header Bölümü */}
+        <div className="flex items-end justify-between mb-12">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="w-8 h-[2px] bg-[#C84B2F]" />
+              <span className="font-mono text-[10px] uppercase tracking-[4px] text-[#7A7060] font-bold">
+                Ekosistemi Keşfet
               </span>
             </div>
-            <h2 className="text-[#0D0D0D] text-[28px] lg:text-[36px] leading-tight font-serif">
+            <h2 className="text-[#0D0D0D] text-4xl lg:text-5xl font-serif font-bold tracking-tight">
               Ne arıyorsun?
             </h2>
           </div>
           <Link
             href="/categories"
-            className="hidden sm:flex items-center gap-2 font-mono text-[11px] uppercase tracking-[2px] text-[#7A7060] hover:text-[#C84B2F] transition-colors pb-1 border-b border-transparent hover:border-[#C84B2F]"
+            className="hidden sm:flex items-center gap-3 font-mono text-xs uppercase tracking-widest text-[#0D0D0D] hover:text-[#C84B2F] transition-all group"
           >
-            Tümünü gör
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+            Tüm Kategoriler
+            <div className="w-8 h-8 rounded-full border border-black/5 flex items-center justify-center group-hover:bg-[#C84B2F] group-hover:text-white transition-all">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </div>
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 lg:gap-4">
+        {/* Grid Alanı */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {categories.map((cat, index) => (
             <CategoryCard key={cat.id} category={cat} index={index} />
           ))}
-        </div>
-
-        <div className="mt-6 sm:hidden text-center">
-          <Link
-            href="/categories"
-            className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[2px] text-[#7A7060] hover:text-[#C84B2F] transition-colors border-b border-[#0D0D0D]/20 pb-1"
-          >
-            Tüm kategoriler
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </Link>
         </div>
       </div>
     </section>
@@ -155,40 +146,55 @@ function CategoryCard({
   return (
     <Link
       href={`/categories/${category.slug}`}
-      className="group relative bg-white border border-[#0D0D0D]/10 rounded-sm overflow-hidden hover:border-[#0D0D0D]/30 hover:shadow-[4px_4px_0_0_#0D0D0D08] transition-all duration-200"
+      className="group relative bg-white/60 backdrop-blur-sm border border-black/[0.03] rounded-[32px] p-8 transition-all duration-500 hover:bg-white hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.08)] hover:-translate-y-2 overflow-hidden"
     >
+      {/* İkon Konteynırı */}
       <div
-        className="h-[3px] w-full transition-all duration-300 group-hover:h-[4px]"
-        style={{ backgroundColor: category.color }}
-      />
-      <div className="p-5">
+        className="relative w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 shadow-sm"
+        style={{
+          backgroundColor: `${category.color}10`,
+          color: category.color,
+        }}
+      >
+        {category.icon}
+        {/* Arka planda parlayan hafif glow efekti */}
         <div
-          className="w-12 h-12 rounded-sm flex items-center justify-center text-2xl mb-4 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3"
-          style={{ backgroundColor: `${category.color}12` }}
-        >
-          {category.icon}
-        </div>
-        <h3 className="font-semibold text-[#0D0D0D] text-[14px] mb-1 group-hover:text-[#C84B2F] transition-colors leading-snug">
+          className="absolute inset-0 blur-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-full"
+          style={{ backgroundColor: category.color }}
+        />
+      </div>
+
+      <div className="relative z-10">
+        <h3 className="font-bold text-[#0D0D0D] text-xl mb-2 group-hover:text-[#C84B2F] transition-colors">
           {category.name}
         </h3>
-        <div className="font-mono text-[10px] uppercase tracking-wider text-[#7A7060]">
-          {category.productCount.toLocaleString("tr-TR")} ürün
+        <p className="text-[#7A7060] text-sm font-medium opacity-80">
+          {category.productCount.toLocaleString("tr-TR")} Ürün Listelendi
+        </p>
+      </div>
+
+      {/* Modern Sağ Üst Ok */}
+      <div className="absolute top-8 right-8 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg"
+          style={{ backgroundColor: category.color }}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+          >
+            <path d="M7 17L17 7M17 7H7M17 7V17" />
+          </svg>
         </div>
       </div>
-      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0">
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={category.color}
-          strokeWidth="2.5"
-        >
-          <path d="M5 12h14M12 5l7 7-7 7" />
-        </svg>
-      </div>
+
+      {/* Arka plan sıra numarası dekorasyonu */}
       <div
-        className="absolute bottom-3 right-4 font-mono text-[32px] font-bold leading-none opacity-[0.04] select-none pointer-events-none"
+        className="absolute -bottom-4 -right-2 font-serif text-[80px] font-bold leading-none opacity-[0.02] group-hover:opacity-[0.05] transition-opacity select-none pointer-events-none italic"
         style={{ color: category.color }}
       >
         {String(index + 1).padStart(2, "0")}

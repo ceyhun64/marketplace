@@ -26,7 +26,6 @@ interface Offer {
   productName: string;
   price: number;
   stock: number;
-  isActive: boolean;
   publishToMarket?: boolean;
   publishToStore?: boolean;
   createdAt: string;
@@ -37,10 +36,14 @@ export default function MerchantCataloguePage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeTab, setActiveTab] = useState<"offers" | "products">("offers");
-  const [loading, setLoading] = useState(true);
+
+  // FIX 3 — Products tab'ına ayrı loading state
+  const [offersLoading, setOffersLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(false);
+
   const [error, setError] = useState("");
 
-  // Offer form
+  // ── Offer form ──────────────────────────────────────────────────────────────
   const [showOfferForm, setShowOfferForm] = useState(false);
   const [offerForm, setOfferForm] = useState({
     productId: "",
@@ -50,7 +53,16 @@ export default function MerchantCataloguePage() {
   const [offerFormError, setOfferFormError] = useState("");
   const [offerFormLoading, setOfferFormLoading] = useState(false);
 
-  // Product form
+  // FIX 1 — Edit offer modal (inline fiyat/stok düzenleme)
+  const [editingOffer, setEditingOffer] = useState<{
+    id: string;
+    price: string;
+    stock: string;
+  } | null>(null);
+  const [editFormError, setEditFormError] = useState("");
+  const [editFormLoading, setEditFormLoading] = useState(false);
+
+  // ── Product form ────────────────────────────────────────────────────────────
   const [showProductForm, setShowProductForm] = useState(false);
   const [productForm, setProductForm] = useState({
     name: "",
@@ -60,12 +72,14 @@ export default function MerchantCataloguePage() {
   const [productFormError, setProductFormError] = useState("");
   const [productFormLoading, setProductFormLoading] = useState(false);
 
+  // ── Initial load ────────────────────────────────────────────────────────────
   useEffect(() => {
-    fetchAll();
+    fetchOffersAndCategories();
   }, []);
 
-  async function fetchAll() {
-    setLoading(true);
+  async function fetchOffersAndCategories() {
+    setOffersLoading(true);
+    setError("");
     try {
       const [offersRes, categoriesRes] = await Promise.all([
         api.get("/merchant/offers"),
@@ -76,27 +90,32 @@ export default function MerchantCataloguePage() {
     } catch {
       setError("Veriler yüklenemedi.");
     } finally {
-      setLoading(false);
+      setOffersLoading(false);
     }
   }
 
+  // FIX 2 — Doğru endpoint: GET /merchant/products (backend'de expose edilmiş olmalı)
   async function fetchProducts() {
+    setProductsLoading(true);
+    setError("");
     try {
       const res = await api.get("/merchant/products");
       setProducts(res.data);
     } catch {
       setError("Ürünler yüklenemedi.");
+    } finally {
+      setProductsLoading(false);
     }
   }
 
   useEffect(() => {
-    if (activeTab === "products") {
+    if (activeTab === "products" && products.length === 0) {
       fetchProducts();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  // Yeni teklif oluştur — önce ürünleri yüklediğimizden emin ol
+  // ── Offer form open — ürün listesi hazır olsun ───────────────────────────
   async function openOfferForm() {
     if (products.length === 0) {
       await fetchProducts();
@@ -104,6 +123,7 @@ export default function MerchantCataloguePage() {
     setShowOfferForm(true);
   }
 
+  // ── Create offer ─────────────────────────────────────────────────────────
   async function handleCreateOffer(e: React.FormEvent) {
     e.preventDefault();
     setOfferFormError("");
@@ -116,7 +136,7 @@ export default function MerchantCataloguePage() {
       });
       setShowOfferForm(false);
       setOfferForm({ productId: "", price: "", stock: "" });
-      await fetchAll();
+      await fetchOffersAndCategories();
     } catch (err: unknown) {
       setOfferFormError(
         (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -127,33 +147,61 @@ export default function MerchantCataloguePage() {
     }
   }
 
-  async function handleToggleOffer(id: string, isActive: boolean) {
+  // FIX 1 — Edit offer: PUT /merchant/offers/{id} ile fiyat+stok güncelle
+  async function handleEditOffer(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingOffer) return;
+    setEditFormError("");
+    setEditFormLoading(true);
     try {
-      await api.patch(`/merchant/offers/${id}`, { isActive: !isActive });
+      await api.put(`/merchant/offers/${editingOffer.id}`, {
+        price: parseFloat(editingOffer.price),
+        stock: parseInt(editingOffer.stock),
+      });
       setOffers((prev) =>
-        prev.map((o) => (o.id === id ? { ...o, isActive: !isActive } : o)),
+        prev.map((o) =>
+          o.id === editingOffer.id
+            ? {
+                ...o,
+                price: parseFloat(editingOffer.price),
+                stock: parseInt(editingOffer.stock),
+              }
+            : o,
+        ),
       );
-    } catch {
-      alert("Güncelleme başarısız.");
+      setEditingOffer(null);
+    } catch (err: unknown) {
+      setEditFormError(
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Güncelleme başarısız.",
+      );
+    } finally {
+      setEditFormLoading(false);
     }
   }
 
-  // Marketplace / E-store toggle
+  // ── Publish toggles ──────────────────────────────────────────────────────
   async function handlePublishToggle(
     id: string,
     field: "publishToMarket" | "publishToStore",
     current: boolean,
   ) {
+    // Optimistic update
+    setOffers((prev) =>
+      prev.map((o) => (o.id === id ? { ...o, [field]: !current } : o)),
+    );
     try {
-      await api.patch(`/merchant/offers/${id}`, { [field]: !current });
-      setOffers((prev) =>
-        prev.map((o) => (o.id === id ? { ...o, [field]: !current } : o)),
-      );
+      await api.patch(`/merchant/offers/${id}/publish`, { [field]: !current });
     } catch {
+      // Rollback on failure
+      setOffers((prev) =>
+        prev.map((o) => (o.id === id ? { ...o, [field]: current } : o)),
+      );
       alert("Güncelleme başarısız.");
     }
   }
 
+  // ── Delete offer ─────────────────────────────────────────────────────────
   async function handleDeleteOffer(id: string) {
     if (!confirm("Bu teklifi silmek istediğinize emin misiniz?")) return;
     try {
@@ -164,12 +212,17 @@ export default function MerchantCataloguePage() {
     }
   }
 
+  // FIX 2 — Ürün talebi: doğru endpoint. Admin ürün oluşturur (POST /products),
+  // merchant sadece talep gönderir. Backend'e göre endpoint'i ayarla:
+  // Eğer merchant kendi adına talep gönderiyorsa => POST /merchant/products
+  // Eğer admin endpoint'i kullanılıyorsa => POST /products (Admin policy gerekir)
+  // Şu an /merchant/products kullanıyoruz — backend'de bu route varsa çalışır.
   async function handleCreateProduct(e: React.FormEvent) {
     e.preventDefault();
     setProductFormError("");
     setProductFormLoading(true);
     try {
-      await api.post("/products", {
+      await api.post("/merchant/products", {
         name: productForm.name,
         description: productForm.description,
         categoryId: productForm.categoryId,
@@ -180,13 +233,14 @@ export default function MerchantCataloguePage() {
     } catch (err: unknown) {
       setProductFormError(
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Ürün oluşturulamadı.",
+          ?.message ?? "Ürün talebi gönderilemedi.",
       );
     } finally {
       setProductFormLoading(false);
     }
   }
 
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Katalog Yönetimi</h1>
@@ -221,7 +275,9 @@ export default function MerchantCataloguePage() {
         </div>
       )}
 
-      {/* ─── OFFERS TAB ─────────────────────────────────────────────────────── */}
+      {/* ═══════════════════════════════════════════════════════════════════════
+          OFFERS TAB
+          ═══════════════════════════════════════════════════════════════════ */}
       {activeTab === "offers" && (
         <>
           <div className="flex justify-between items-center mb-4">
@@ -236,7 +292,7 @@ export default function MerchantCataloguePage() {
             </button>
           </div>
 
-          {/* Offer form modal */}
+          {/* ── Create offer modal ─────────────────────────────────────────── */}
           {showOfferForm && (
             <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
               <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
@@ -335,8 +391,86 @@ export default function MerchantCataloguePage() {
             </div>
           )}
 
-          {loading ? (
-            <p className="text-gray-400 text-sm">Yükleniyor...</p>
+          {/* FIX 1 — Edit offer modal ──────────────────────────────────────── */}
+          {editingOffer && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
+                <h3 className="text-lg font-semibold mb-4">Teklif Düzenle</h3>
+                <form onSubmit={handleEditOffer} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Fiyat (₺)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      required
+                      value={editingOffer.price}
+                      onChange={(e) =>
+                        setEditingOffer({
+                          ...editingOffer,
+                          price: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Stok
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      required
+                      value={editingOffer.stock}
+                      onChange={(e) =>
+                        setEditingOffer({
+                          ...editingOffer,
+                          stock: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  {editFormError && (
+                    <p className="text-sm text-red-600">{editFormError}</p>
+                  )}
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingOffer(null);
+                        setEditFormError("");
+                      }}
+                      className="px-4 py-2 text-sm text-gray-600 border rounded hover:bg-gray-50"
+                    >
+                      İptal
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={editFormLoading}
+                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {editFormLoading ? "Kaydediliyor..." : "Güncelle"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Offers table */}
+          {offersLoading ? (
+            <div className="space-y-2 mt-2">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-10 bg-gray-100 rounded animate-pulse"
+                />
+              ))}
+            </div>
           ) : offers.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
               <p className="text-lg">Henüz teklifiniz yok.</p>
@@ -352,7 +486,6 @@ export default function MerchantCataloguePage() {
                     <th className="pb-3 font-medium">Ürün</th>
                     <th className="pb-3 font-medium">Fiyat</th>
                     <th className="pb-3 font-medium">Stok</th>
-                    <th className="pb-3 font-medium">Durum</th>
                     <th className="pb-3 font-medium">Marketplace</th>
                     <th className="pb-3 font-medium">E-Mağaza</th>
                     <th className="pb-3 font-medium">Eklenme</th>
@@ -370,17 +503,7 @@ export default function MerchantCataloguePage() {
                         })}
                       </td>
                       <td className="py-3">{offer.stock}</td>
-                      <td className="py-3">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            offer.isActive
-                              ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
-                        >
-                          {offer.isActive ? "Aktif" : "Pasif"}
-                        </span>
-                      </td>
+
                       {/* Marketplace toggle */}
                       <td className="py-3">
                         <button
@@ -411,6 +534,7 @@ export default function MerchantCataloguePage() {
                           />
                         </button>
                       </td>
+
                       {/* E-store toggle */}
                       <td className="py-3">
                         <button
@@ -441,18 +565,25 @@ export default function MerchantCataloguePage() {
                           />
                         </button>
                       </td>
+
                       <td className="py-3 text-gray-400">
                         {new Date(offer.createdAt).toLocaleDateString("tr-TR")}
                       </td>
+
                       <td className="py-3">
                         <div className="flex gap-2">
+                          {/* FIX 1 — Düzenle butonu */}
                           <button
                             onClick={() =>
-                              handleToggleOffer(offer.id, offer.isActive)
+                              setEditingOffer({
+                                id: offer.id,
+                                price: String(offer.price),
+                                stock: String(offer.stock),
+                              })
                             }
                             className="text-xs text-blue-600 hover:underline"
                           >
-                            {offer.isActive ? "Pasife Al" : "Aktife Al"}
+                            Düzenle
                           </button>
                           <button
                             onClick={() => handleDeleteOffer(offer.id)}
@@ -471,7 +602,9 @@ export default function MerchantCataloguePage() {
         </>
       )}
 
-      {/* ─── PRODUCTS TAB ────────────────────────────────────────────────────── */}
+      {/* ═══════════════════════════════════════════════════════════════════════
+          PRODUCTS TAB
+          ═══════════════════════════════════════════════════════════════════ */}
       {activeTab === "products" && (
         <>
           <div className="flex justify-between items-center mb-4">
@@ -484,7 +617,7 @@ export default function MerchantCataloguePage() {
             </button>
           </div>
 
-          {/* Product form modal */}
+          {/* ── Product form modal ─────────────────────────────────────────── */}
           {showProductForm && (
             <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
               <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
@@ -576,7 +709,17 @@ export default function MerchantCataloguePage() {
             </div>
           )}
 
-          {products.length === 0 ? (
+          {/* FIX 3 — Products loading skeleton */}
+          {productsLoading ? (
+            <div className="space-y-2 mt-2">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-10 bg-gray-100 rounded animate-pulse"
+                />
+              ))}
+            </div>
+          ) : products.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
               <p className="text-lg">Henüz onaylı ürününüz yok.</p>
               <p className="text-sm mt-1">

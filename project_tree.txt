@@ -9,17 +9,27 @@
 │   │   ├── Commands
 │   │   │   ├── Categories
 │   │   │   │   └── CreateCategoryCommand.cs
+│   │   │   ├── Fulfillment
+│   │   │   │   ├── AssignCourierCommand.cs
+│   │   │   │   └── GenerateLabelCommand.cs
 │   │   │   ├── Merchants
 │   │   │   │   └── CreateMerchantCommand.cs
 │   │   │   ├── Offers
 │   │   │   │   ├── CreateOfferCommand.cs
 │   │   │   │   └── UpdateOfferCommand.cs
+│   │   │   ├── Orders
+│   │   │   │   ├── CreateOrderCommand.cs
+│   │   │   │   └── UpdateOrderStatusCommand.cs
 │   │   │   └── Products
 │   │   │       ├── ApproveProductCommand.cs
 │   │   │       └── CreateProductCommand.cs
 │   │   └── Queries
+│   │       ├── Analytics
+│   │       │   └── GetMerchantStatsQuery.cs
 │   │       ├── Offers
 │   │       │   └── GetMerchantOffersQuery.cs
+│   │       ├── Orders
+│   │       │   └── GetOrderTrackingQuery.cs
 │   │       └── Products
 │   │           ├── GetMerchantProductsQuery.cs
 │   │           └── GetProductsQuery.cs
@@ -27,25 +37,41 @@
 │   ├── appsettings.json
 │   ├── Common
 │   │   ├── DTOs
+│   │   │   ├── AnalyticsDTOs.cs
 │   │   │   ├── AuthDTOs.cs
+│   │   │   ├── BuyBoxDTOs.cs
 │   │   │   ├── CategoryDTOs.cs
+│   │   │   ├── CourierDTOs.cs
 │   │   │   ├── MerchantDTOs.cs
+│   │   │   ├── OfferDTOs.cs
+│   │   │   ├── OrderDTOs.cs
+│   │   │   ├── PaymentDTOs.cs
 │   │   │   ├── ProductDTOs.cs
-│   │   │   └── ResponseDTOs.cs
+│   │   │   ├── ResponseDTOs.cs
+│   │   │   ├── ShipmentDTOs.cs
+│   │   │   └── SubscriptionDTOs.cs
 │   │   ├── Mappings
 │   │   │   └── MappingProfile.cs
 │   │   └── Validators
 │   │       ├── AuthValidator.cs
 │   │       ├── CategoryValidator.cs
 │   │       ├── MerchantValidator.cs
+│   │       ├── OfferValidator.cs
+│   │       ├── OrderValidator.cs
 │   │       └── ProductValidator.cs
 │   ├── Controllers
 │   │   ├── AdminController.cs
+│   │   ├── AnalyticsController.cs
 │   │   ├── AuthController.cs
 │   │   ├── CategoriesController.cs
+│   │   ├── CouriersController.cs
+│   │   ├── FulfillmentController.cs
 │   │   ├── MerchantsController.cs
+│   │   ├── OrderController.cs
+│   │   ├── PaymentsController.cs
 │   │   ├── ProductsController.cs
-│   │   └── StoreController.cs
+│   │   ├── StoreController.cs
+│   │   └── SubscriptionsController.cs
 │   ├── DockerFile
 │   ├── Domain
 │   │   ├── Entities
@@ -87,6 +113,7 @@
 │   │       ├── BuyBoxService.cs
 │   │       ├── CurrentUserService.cs
 │   │       ├── FulfillmentService.cs
+│   │       ├── IAnalyticsSubscriptionCourierServices.cs
 │   │       ├── IBuyBoxService.cs
 │   │       ├── ICurrentUserService.cs
 │   │       ├── IFulfillmentService.cs
@@ -98,6 +125,7 @@
 │   │       ├── LabelGeneratorService.cs
 │   │       ├── NotificationService.cs
 │   │       ├── PaymentService.cs
+│   │       ├── ServiceResult.cs
 │   │       ├── ShippingCalculatorService.cs
 │   │       └── TokenService.cs
 │   ├── Migrations
@@ -105,6 +133,8 @@
 │   │   ├── 20260414080937_FixSubscriptionRelationship.Designer.cs
 │   │   ├── 20260416130409_UpdatePendingChanges.cs
 │   │   ├── 20260416130409_UpdatePendingChanges.Designer.cs
+│   │   ├── 20260419102935_AddShipmentUpdatedAt.cs
+│   │   ├── 20260419102935_AddShipmentUpdatedAt.Designer.cs
 │   │   └── AppDbContextModelSnapshot.cs
 │   ├── Program.cs
 │   └── Properties
@@ -138,6 +168,8 @@
     │   │   │   └── page.tsx
     │   │   └── register
     │   │       └── page.tsx
+    │   ├── checkout
+    │   │   └── page.tsx
     │   ├── courier
     │   │   ├── layout.tsx
     │   │   ├── page.tsx
@@ -155,7 +187,21 @@
     │   │   ├── orders
     │   │   │   └── page.tsx
     │   │   └── page.tsx
+    │   ├── not-found.tsx
+    │   ├── orders
+    │   │   ├── page.tsx
+    │   │   └── [id]
+    │   │       └── tracking
+    │   │           └── page.tsx
     │   ├── page.tsx
+    │   ├── profile
+    │   │   └── page.tsx
+    │   ├── store
+    │   │   └── [slug]
+    │   │       ├── page.tsx
+    │   │       └── product
+    │   │           └── [id]
+    │   │               └── page.tsx
     │   └── unauthorized
     │       └── page.tsx
     ├── components
@@ -164,11 +210,15 @@
     │   │   ├── Navbar.tsx
     │   │   └── Sidebar.tsx
     │   ├── modules
-    │   │   └── home
-    │   │       ├── CategoryGrid.tsx
-    │   │       ├── FeaturedProducts.tsx
-    │   │       ├── FeaturedStores.tsx
-    │   │       └── HeroSection.tsx
+    │   │   ├── home
+    │   │   │   ├── CategoryGrid.tsx
+    │   │   │   ├── FeaturedProducts.tsx
+    │   │   │   ├── FeaturedStores.tsx
+    │   │   │   └── HeroSection.tsx
+    │   │   └── store
+    │   │       ├── AddToCartButton.tsx
+    │   │       ├── StoreHeader.tsx
+    │   │       └── StoreProductGrid.tsx
     │   ├── providers
     │   │   └── QueryProvider.tsx
     │   └── ui

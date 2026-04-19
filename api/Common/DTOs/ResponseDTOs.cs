@@ -22,6 +22,25 @@ public record ProductDto(
     DateTime CreatedAt
 );
 
+public class ApiResponse<T>
+{
+    public bool Success { get; set; }
+    public string? Message { get; set; }
+    public T? Data { get; set; }
+
+    public ApiResponse(T data)
+    {
+        Success = true;
+        Data = data;
+    }
+
+    public ApiResponse(string message)
+    {
+        Success = false;
+        Message = message;
+    }
+}
+
 // ── Offer ────────────────────────────────────────────────────────────────────
 public record OfferDto(
     Guid Id,
@@ -46,33 +65,4 @@ public record MerchantDto(
     bool IsActive,
     int HandlingHours,
     DateTime? CreatedAt
-);
-
-// ── Order ────────────────────────────────────────────────────────────────────
-public record OrderDto(
-    Guid Id,
-    string CustomerName,
-    string CustomerEmail,
-    string MerchantName,
-    List<OrderItemDto> Items,
-    decimal TotalAmount,
-    string Status,
-    string Source,
-    string ShippingRate,
-    DateTime CreatedAt
-);
-
-public record OrderItemDto(Guid Id, string ProductName, int Quantity, decimal UnitPrice);
-
-// ── Courier ───────────────────────────────────────────────────────────────────
-public record CourierDto(
-    Guid Id,
-    Guid UserId,
-    string Name,
-    string Email,
-    string? Phone,
-    bool IsActive,
-    int ActiveShipmentCount,
-    int TotalDelivered,
-    DateTime CreatedAt
 );

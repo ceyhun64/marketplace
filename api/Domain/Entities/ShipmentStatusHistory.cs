@@ -10,7 +10,7 @@ public class ShipmentStatusHistory
     public string? Note { get; set; }
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime ChangedAt { get; set; } = DateTime.UtcNow; // ← CreatedAt → ChangedAt (FulfillmentService ile uyumlu)
 
     // Navigation
     public Shipment Shipment { get; set; } = null!;

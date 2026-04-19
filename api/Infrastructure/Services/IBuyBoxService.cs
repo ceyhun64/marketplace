@@ -1,10 +1,22 @@
+using api.Common.DTOs;
+
 namespace api.Infrastructure.Services;
 
 public interface IBuyBoxService
 {
-    /// <summary>
-    /// Returns the winning ProductOffer ID for a given product
-    /// based on price, rating, ETA, and stock availability.
-    /// </summary>
-    Task<Guid?> GetWinningOfferAsync(Guid productId, double customerLat, double customerLng);
+    /// <summary>En iyi teklifi (Buy Box kazananı) döner. Müşteri koordinatı
+    /// verilirse ETA hesabı ona göre yapılır, verilmezse sabit 48 saat kullanılır.</summary>
+    Task<BuyBoxOfferDto?> GetWinningOfferAsync(
+        Guid productId,
+        double? customerLat = null,
+        double? customerLng = null
+    );
+
+    /// <summary>Ürünün tüm aktif tekliflerini fiyata göre sıralı döner
+    /// (ProductDetail sayfasındaki "Diğer Satıcılar" listesi için).</summary>
+    Task<List<BuyBoxOfferDto>> GetAllOffersAsync(
+        Guid productId,
+        double? customerLat = null,
+        double? customerLng = null
+    );
 }

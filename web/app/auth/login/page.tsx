@@ -4,6 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,9 +20,9 @@ export default function LoginPage() {
     clearError();
     try {
       await login(email, password);
-      // Middleware zaten yönlendiriyor ama fallback olarak:
       const { user } = useAuth.getState();
       if (!user) return;
+
       const roleRoutes: Record<string, string> = {
         Admin: "/admin",
         Merchant: "/merchant",
@@ -27,89 +31,102 @@ export default function LoginPage() {
       };
       router.push(roleRoutes[user.role] ?? "/");
     } catch {
-      // error state useAuth içinde set edildi
+      // Hata durumu useAuth içinde yönetiliyor
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        {/* Header */}
-        <div className="mb-8">
-          <Link
-            href="/"
-            className="text-lg font-bold text-gray-900 tracking-tight"
-          >
-            Marketplace
-          </Link>
-          <h1 className="mt-6 text-2xl font-semibold text-gray-900">
-            Giriş Yap
-          </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Hesabın yok mu?{" "}
-            <Link
-              href="/auth/register"
-              className="text-gray-900 font-medium underline underline-offset-2"
+    <div className="min-h-screen bg-[#F5F2EB] flex items-center justify-center p-6">
+      {/* Dekoratif Arka Plan Elementleri */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-[#C84B2F]/5 blur-[120px]" />
+        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-[#1A4A6B]/5 blur-[120px]" />
+      </div>
+
+      <div className="w-full max-w-[440px] relative">
+        {/* Logo / Brand */}
+        
+        {/* Login Card */}
+        <div className="bg-white/80 backdrop-blur-xl border border-black/[0.03] rounded-[40px] p-8 md:p-10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)]">
+          <div className="mb-8">
+            <h1 className="text-3xl font-serif font-bold text-black mb-2">
+              Hoş Geldiniz
+            </h1>
+            <p className="text-[#7A7060] text-sm">
+              Devam etmek için hesabınıza erişin veya{" "}
+              <Link
+                href="/auth/register"
+                className="text-black font-bold hover:text-[#C84B2F] transition-colors underline decoration-black/10 underline-offset-4"
+              >
+                yeni bir hesap oluşturun.
+              </Link>
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="px-5 py-4 bg-red-50 border border-red-100 rounded-2xl text-[13px] text-red-600 font-medium animate-in fade-in slide-in-from-top-1">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[#7A7060] ml-1">
+                E-Posta Adresi
+              </Label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="ceyhun@example.com"
+                className="h-14 rounded-2xl border-black/[0.05] bg-white/50 focus:bg-white focus:ring-black/5 transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between ml-1">
+                <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[#7A7060]">
+                  Şifre
+                </Label>
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-[11px] font-bold text-[#7A7060] hover:text-black transition-colors uppercase tracking-wider"
+                >
+                  Unuttum?
+                </Link>
+              </div>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+                className="h-14 rounded-2xl border-black/[0.05] bg-white/50 focus:bg-white focus:ring-black/5 transition-all"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-14 bg-black hover:bg-[#C84B2F] text-white rounded-2xl font-bold text-sm uppercase tracking-[2px] transition-all group"
             >
-              Kayıt ol
-            </Link>
-          </p>
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <span className="flex items-center gap-2">
+                  Giriş Yap
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </span>
+              )}
+            </Button>
+          </form>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-700 uppercase tracking-wide">
-              E-posta
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              placeholder="ornek@mail.com"
-              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-gray-700 uppercase tracking-wide">
-                Şifre
-              </label>
-              <Link
-                href="/auth/forgot-password"
-                className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
-              >
-                Şifremi unuttum
-              </Link>
-            </div>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              placeholder="••••••••"
-              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-2"
-          >
-            {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
-          </button>
-        </form>
+        {/* Footer Info */}
+        <p className="mt-8 text-center text-[10px] text-[#7A7060] font-mono uppercase tracking-widest opacity-60">
+          Güvenli giriş sistemi &bull; 256-bit SSL Koruma
+        </p>
       </div>
     </div>
   );

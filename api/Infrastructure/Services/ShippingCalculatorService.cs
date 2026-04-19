@@ -25,7 +25,7 @@ public class ShippingCalculatorService : IShippingCalculatorService
 
     /// <summary>
     /// ETA = now + handlingHours + transit time.
-    /// Express: avg 80 km/h equivalent, Regular: 50 km/h + 20 % buffer.
+    /// Express: avg 80 km/h equivalent, Regular: 50 km/h + 20% buffer.
     /// </summary>
     public DateTime CalculateEta(
         double merchantLat,
@@ -44,6 +44,25 @@ public class ShippingCalculatorService : IShippingCalculatorService
         double transitHours = (distanceKm / avgSpeedKmH) * bufferMultiplier;
 
         return DateTime.UtcNow.AddHours(handlingHours).AddHours(transitHours);
+    }
+
+    /// <summary>
+    /// ETA'yı saat olarak döner — /api/fulfillment/calculate-eta endpoint'i için.
+    /// Express minimum 4, Regular minimum 24 saat garantisi vardır.
+    /// </summary>
+    public int CalculateEtaHours( // ← EKLENDİ
+        double merchantLat,
+        double merchantLng,
+        double destLat,
+        double destLng,
+        int handlingHours,
+        ShippingRate rate
+    )
+    {
+        var eta = CalculateEta(merchantLat, merchantLng, destLat, destLng, handlingHours, rate);
+        var hours = (int)Math.Ceiling((eta - DateTime.UtcNow).TotalHours);
+        var minimum = rate == ShippingRate.Express ? 4 : 24;
+        return Math.Max(hours, minimum);
     }
 
     private static double ToRad(double degrees) => degrees * (Math.PI / 180.0);

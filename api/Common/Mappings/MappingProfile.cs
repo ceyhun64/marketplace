@@ -76,7 +76,7 @@ public class MappingProfile : Profile
         // ── Courier ───────────────────────────────────────────────────────────
         CreateMap<Courier, CourierDto>()
             .ForMember(
-                d => d.Name,
+                d => d.FullName,
                 o => o.MapFrom(s => s.User != null ? s.User.Email : string.Empty)
             )
             .ForMember(

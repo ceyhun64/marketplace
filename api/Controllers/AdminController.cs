@@ -1,3 +1,4 @@
+using api.Common.DTOs;
 using api.Domain.Entities;
 using api.Domain.Enums;
 using api.Infrastructure.Persistence;
@@ -250,8 +251,6 @@ public class AdminController : ControllerBase
         return Ok(couriers);
     }
 
-
-
     /// <summary>Kurye hesabı oluştur</summary>
     [HttpPost("couriers")]
     public async Task<IActionResult> CreateCourier([FromBody] CreateCourierDto dto)
@@ -456,7 +455,5 @@ public record UpdateMerchantDto(
     double? Longitude,
     int? HandlingHours
 );
-
-public record CreateCourierDto(string Email, string Password);
 
 public record UpdateStatusDto(string Status);

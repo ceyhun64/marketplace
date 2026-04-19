@@ -4,4 +4,5 @@ public interface ILabelGeneratorService
 {
     /// <summary>Generates a PDF shipping label and returns raw bytes.</summary>
     Task<byte[]> GenerateLabelAsync(Guid shipmentId);
+    Task<string> GenerateAndUploadLabelAsync(api.Domain.Entities.Shipment shipment);
 }

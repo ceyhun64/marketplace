@@ -1,3 +1,5 @@
+using api.Infrastructure.Services; // ✅ Bu eksikti
+
 namespace api.Infrastructure.Services;
 
 public interface ICurrentUserService

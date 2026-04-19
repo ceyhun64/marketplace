@@ -95,6 +95,9 @@ namespace api.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("UserId1")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("VehicleType")
                         .IsRequired()
                         .HasColumnType("text");
@@ -102,6 +105,9 @@ namespace api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId1")
                         .IsUnique();
 
                     b.ToTable("Couriers");
@@ -268,8 +274,9 @@ namespace api.Migrations
                     b.Property<decimal>("ShippingAmount")
                         .HasColumnType("numeric");
 
-                    b.Property<int>("ShippingRate")
-                        .HasColumnType("integer");
+                    b.Property<string>("ShippingRate")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Source")
                         .IsRequired()
@@ -280,7 +287,7 @@ namespace api.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal>("TotalAmount")
-                        .HasColumnType("numeric");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -318,7 +325,7 @@ namespace api.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("numeric");
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -431,7 +438,7 @@ namespace api.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("numeric");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uuid");
@@ -466,6 +473,9 @@ namespace api.Migrations
                     b.Property<Guid?>("CourierId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("CourierId1")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -486,9 +496,14 @@ namespace api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CourierId");
+
+                    b.HasIndex("CourierId1");
 
                     b.HasIndex("OrderId")
                         .IsUnique();
@@ -505,7 +520,7 @@ namespace api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("ChangedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<double?>("Latitude")
@@ -520,14 +535,15 @@ namespace api.Migrations
                     b.Property<Guid>("ShipmentId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ShipmentId");
 
-                    b.ToTable("ShipmentStatusHistory");
+                    b.ToTable("ShipmentStatusHistories");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.Subscription", b =>
@@ -650,10 +666,14 @@ namespace api.Migrations
             modelBuilder.Entity("api.Domain.Entities.Courier", b =>
                 {
                     b.HasOne("api.Domain.Entities.User", "User")
-                        .WithOne("Courier")
+                        .WithOne()
                         .HasForeignKey("api.Domain.Entities.Courier", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("api.Domain.Entities.User", null)
+                        .WithOne("Courier")
+                        .HasForeignKey("api.Domain.Entities.Courier", "UserId1");
 
                     b.Navigation("User");
                 });
@@ -704,7 +724,7 @@ namespace api.Migrations
                     b.HasOne("api.Domain.Entities.ProductOffer", "Offer")
                         .WithMany()
                         .HasForeignKey("OfferId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("api.Domain.Entities.Order", "Order")
@@ -759,8 +779,13 @@ namespace api.Migrations
             modelBuilder.Entity("api.Domain.Entities.Shipment", b =>
                 {
                     b.HasOne("api.Domain.Entities.Courier", "Courier")
+                        .WithMany()
+                        .HasForeignKey("CourierId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("api.Domain.Entities.Courier", null)
                         .WithMany("Shipments")
-                        .HasForeignKey("CourierId");
+                        .HasForeignKey("CourierId1");
 
                     b.HasOne("api.Domain.Entities.Order", "Order")
                         .WithOne("Shipment")
