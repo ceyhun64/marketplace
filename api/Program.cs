@@ -18,6 +18,19 @@ using StackExchange.Redis;
 
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 
+// ── Helper: postgresql:// URL → Npgsql connection string ─────────────────────
+static string ToNpgsql(string url)
+{
+    var uri = new Uri(url);
+    var userInfo = uri.UserInfo.Split(':');
+    var host = uri.Host;
+    var port = uri.Port > 0 ? uri.Port : 5432;
+    var db = uri.AbsolutePath.TrimStart('/');
+    var user = userInfo[0];
+    var pass = userInfo.Length > 1 ? userInfo[1] : "";
+    return $"Host={host};Port={port};Database={db};Username={user};Password={pass};SSL Mode=Require;Trust Server Certificate=true";
+}
+
 try
 {
     var builder = WebApplication.CreateBuilder(args);
@@ -30,7 +43,8 @@ try
     );
 
     // ── PostgreSQL + EF Core ──────────────────────────────────────────────────
-    builder.Services.AddDbContext<AppDbContext>(opt => opt.UseNpgsql(config["DATABASE_URL"]));
+    var npgsqlConn = ToNpgsql(config["DATABASE_URL"]!);
+    builder.Services.AddDbContext<AppDbContext>(opt => opt.UseNpgsql(npgsqlConn));
 
     // ── Redis Cache ───────────────────────────────────────────────────────────
     builder.Services.AddStackExchangeRedisCache(opt => opt.Configuration = config["REDIS_URL"]);
@@ -88,6 +102,7 @@ try
 
     // ── AutoMapper ────────────────────────────────────────────────────────────
     builder.Services.AddAutoMapper(cfg => cfg.AddMaps(AppDomain.CurrentDomain.GetAssemblies()));
+
     // ── FluentValidation ──────────────────────────────────────────────────────
     builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
@@ -96,7 +111,7 @@ try
         c.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
             .UseSimpleAssemblyNameTypeSerializer()
             .UseRecommendedSerializerSettings()
-            .UsePostgreSqlStorage(o => o.UseNpgsqlConnection(config["DATABASE_URL"]))
+            .UsePostgreSqlStorage(o => o.UseNpgsqlConnection(npgsqlConn))
     );
     builder.Services.AddHangfireServer();
 
@@ -160,7 +175,7 @@ try
 
     // ── Controllers + Swagger ─────────────────────────────────────────────────
     builder.Services.AddControllers();
-    builder.Services.AddEndpointsApiExplorer(); // Swashbuckle için gerekli
+    builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(c =>
     {
         c.SwaggerDoc(
