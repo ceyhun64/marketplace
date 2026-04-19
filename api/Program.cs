@@ -157,16 +157,9 @@ try
     builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
     builder.Services.AddInMemoryRateLimiting();
 
-    // ── CORS ──────────────────────────────────────────────────────────────────
+    // ── CORS — geliştirme aşaması: tüm originlere izin ver ───────────────────
     builder.Services.AddCors(opt =>
-        opt.AddPolicy(
-            "Frontend",
-            p =>
-                p.WithOrigins(config["FRONTEND_URL"]!)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowCredentials()
-        )
+        opt.AddPolicy("Frontend", p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod())
     );
 
     // ── Application Services ──────────────────────────────────────────────────
