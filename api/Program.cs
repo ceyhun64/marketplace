@@ -31,6 +31,17 @@ static string ToNpgsql(string url)
     return $"Host={host};Port={port};Database={db};Username={user};Password={pass};SSL Mode=Require;Trust Server Certificate=true";
 }
 
+// ── Helper: redis:// URL → StackExchange.Redis connection string ──────────────
+static string ToRedis(string url)
+{
+    var uri = new Uri(url);
+    var host = uri.Host;
+    var port = uri.Port > 0 ? uri.Port : 6379;
+    var password = uri.UserInfo.Contains(':') ? uri.UserInfo.Split(':')[1] : uri.UserInfo;
+
+    return string.IsNullOrEmpty(password) ? $"{host}:{port}" : $"{host}:{port},password={password}";
+}
+
 try
 {
     var builder = WebApplication.CreateBuilder(args);
@@ -47,10 +58,10 @@ try
     builder.Services.AddDbContext<AppDbContext>(opt => opt.UseNpgsql(npgsqlConn));
 
     // ── Redis Cache ───────────────────────────────────────────────────────────
-    builder.Services.AddStackExchangeRedisCache(opt => opt.Configuration = config["REDIS_URL"]);
-
+    var redisConn = ToRedis(config["REDIS_URL"]!);
+    builder.Services.AddStackExchangeRedisCache(opt => opt.Configuration = redisConn);
     builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
-        ConnectionMultiplexer.Connect(config["REDIS_URL"]!)
+        ConnectionMultiplexer.Connect(redisConn)
     );
 
     // ── JWT Bearer ────────────────────────────────────────────────────────────
