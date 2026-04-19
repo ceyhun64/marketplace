@@ -169,9 +169,13 @@ export function StoreProductGrid({
                         offerId: offer.id,
                         productId: offer.productId,
                         productName: offer.productName,
-                        image: offer.productImages[0] ?? "",
-                        price: offer.price,
+                        productImage: offer.productImages[0] ?? "", // image → productImage
+                        merchantId: "", // API'den gelmiyor, StoreOffer'a ekle veya boş bırak
+                        merchantStoreName: "", // aynı şekilde
                         merchantSlug: storeSlug,
+                        price: offer.price,
+                        stock: offer.stock,
+                        source: "ESTORE",
                       })
                     }
                   >

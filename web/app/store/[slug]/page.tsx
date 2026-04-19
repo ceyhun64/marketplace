@@ -33,15 +33,12 @@ interface StoreOffer {
   categoryName?: string;
 }
 
-export async function generateMetadata({
-  params,
-}: StorePageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: StorePageProps): Promise<Metadata> {
   try {
-    const store = (await serverFetch.store(params.slug)) as StorProfile;
+    const store = await serverFetch.store(params.slug) as StorProfile;
     return {
       title: `${store.storeName} | Mağaza`,
-      description:
-        store.description ?? `${store.storeName} mağazasının tüm ürünleri`,
+      description: store.description ?? `${store.storeName} mağazasının tüm ürünleri`,
       openGraph: {
         title: store.storeName,
         description: store.description,

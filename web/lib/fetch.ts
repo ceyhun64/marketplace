@@ -83,5 +83,6 @@ export async function fetchStatic<T>(path: string): Promise<T> {
  */
 export const serverFetch = {
   product: (id: string) => fetchISR(`/api/products/${id}`),
+  store: (slug: string) => fetchISR(`/api/store/${slug}`),
   storeProducts: (slug: string) => fetchISR(`/api/store/${slug}/products`),
 };
