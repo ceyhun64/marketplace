@@ -3,38 +3,37 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 const FOOTER_LINKS = {
   marketplace: {
-    title: "Keşfet",
+    title: "Discover",
     links: [
-      { label: "Tüm Kategoriler", href: "/categories" },
-      { label: "Öne Çıkan Mağazalar", href: "/stores" },
-      { label: "Fırsatlar & Kampanyalar", href: "/deals" },
-      { label: "Yeni Ürünler", href: "/new" },
-      { label: "En Çok Satanlar", href: "/bestsellers" },
+      { label: "All Categories", href: "/categories" },
+      { label: "Featured Stores", href: "/stores" },
+      { label: "Deals & Campaigns", href: "/deals" },
+      { label: "New Arrivals", href: "/new" },
+      { label: "Best Sellers", href: "/bestsellers" },
     ],
   },
   sellers: {
-    title: "Satıcılar İçin",
+    title: "For Sellers",
     links: [
-      { label: "Satıcı Ol", href: "/auth/register?role=merchant" },
+      { label: "Become a Seller", href: "/auth/register?role=merchant" },
       { label: "Merchant Dashboard", href: "/merchant" },
-      { label: "Abonelik Planları", href: "/subscriptions/plans" },
+      { label: "Subscription Plans", href: "/subscriptions/plans" },
       { label: "Plugin Marketplace", href: "/plugins" },
-      { label: "Satıcı Rehberi", href: "/seller-guide" },
+      { label: "Seller Guide", href: "/seller-guide" },
     ],
   },
   support: {
-    title: "Destek",
+    title: "Support",
     links: [
-      { label: "Sık Sorulan Sorular", href: "/faq" },
-      { label: "Sipariş Takibi", href: "/track" },
-      { label: "İade & Değişim", href: "/returns" },
-      { label: "İletişim", href: "/contact" },
-      { label: "Gizlilik Politikası", href: "/privacy" },
+      { label: "FAQ", href: "/faq" },
+      { label: "Order Tracking", href: "/track" },
+      { label: "Returns & Exchanges", href: "/returns" },
+      { label: "Contact Us", href: "/contact" },
+      { label: "Privacy Policy", href: "/privacy" },
     ],
   },
 };
@@ -87,16 +86,16 @@ export default function Footer() {
                 </svg>
               </div>
               <span className="text-[#F5F2EB] text-2xl font-bold font-serif tracking-tight">
-                Pazar<span className="text-[#C84B2F]">yeri</span>
+                Market<span className="text-[#C84B2F]">place</span>
               </span>
             </Link>
 
             <p className="text-[#7A7060] text-[14px] leading-relaxed mb-8 max-w-[260px]">
-              Dijital ticaretin yeni nesil buluşma noktası. Güvenle al, keyifle
-              sat.
+              The next-generation meeting point of digital commerce. Buy with
+              confidence, sell with joy.
             </p>
 
-            {/* Social Icons - Modern & Minimal */}
+            {/* Social Icons */}
             <div className="flex gap-2">
               {[
                 { label: "Instagram", href: "#", icon: <InstagramIcon /> },
@@ -136,29 +135,29 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Newsletter Section - Floating Style */}
+        {/* Newsletter Section */}
         <div className="mt-20 p-8 md:p-10 bg-white/[0.03] border border-white/10 rounded-[32px] backdrop-blur-sm">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
             <div className="max-w-md">
               <h4 className="text-[#F5F2EB] text-2xl mb-2 font-serif font-bold">
-                Elite Club'a katılın
+                Join the Elite Club
               </h4>
               <p className="text-[#7A7060] text-[14px]">
-                En yeni mağazalar ve size özel fırsatlar haftalık olarak
-                e-postanızda.
+                The newest stores and exclusive deals delivered to your inbox
+                every week.
               </p>
             </div>
             <div className="flex items-center w-full lg:w-auto bg-black/20 p-1.5 rounded-full border border-white/10 focus-within:border-[#C84B2F] transition-all">
               <Input
                 type="email"
-                placeholder="E-posta adresiniz"
+                placeholder="Your email address"
                 className="flex-1 lg:w-[300px] bg-transparent border-0 text-[#F5F2EB] placeholder:text-[#4A4030] focus-visible:ring-0 h-10 px-4"
               />
               <Button
                 type="button"
                 className="rounded-full bg-[#C84B2F] hover:bg-[#a83a20] text-white font-bold text-[11px] uppercase tracking-wider px-8 h-10 transition-transform active:scale-95 shadow-lg shadow-[#C84B2F]/20"
               >
-                Abone Ol
+                Subscribe
               </Button>
             </div>
           </div>
@@ -167,10 +166,10 @@ export default function Footer() {
         {/* Stats Strip */}
         <div className="mt-16 pt-10 border-t border-white/5 grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
-            { value: "2.4K+", label: "Aktif Satıcı" },
-            { value: "48K+", label: "Benzersiz Ürün" },
-            { value: "180K", label: "Mutlu Müşteri" },
-            { value: "4.8/5", label: "Memnuniyet" },
+            { value: "2.4K+", label: "Active Sellers" },
+            { value: "48K+", label: "Unique Products" },
+            { value: "180K", label: "Happy Customers" },
+            { value: "4.8/5", label: "Satisfaction" },
           ].map((stat) => (
             <div key={stat.label} className="text-center md:text-left">
               <div className="text-[#F5F2EB] text-xl font-bold font-serif mb-1">
@@ -187,10 +186,10 @@ export default function Footer() {
       {/* Bottom Legal Bar */}
       <div className="w-full max-w-[1100px] mt-8 px-4 flex flex-col md:flex-row items-center justify-between gap-6 opacity-60">
         <p className="font-mono text-[10px] tracking-[2px] text-[#0D0D0D] uppercase font-bold">
-          © {currentYear} Pazaryeri Studio
+          © {currentYear} Marketplace Studio
         </p>
         <div className="flex items-center gap-6">
-          {["Gizlilik", "Şartlar", "Çerezler"].map((item) => (
+          {["Privacy", "Terms", "Cookies"].map((item) => (
             <Link
               key={item}
               href="#"
@@ -216,7 +215,6 @@ export default function Footer() {
   );
 }
 
-// Icon Components aynı kalıyor...
 function InstagramIcon() {
   return (
     <svg

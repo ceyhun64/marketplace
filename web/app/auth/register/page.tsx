@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, Loader2, UserPlus, ShieldCheck } from "lucide-react";
+import { ArrowRight, Loader2, UserPlus } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -31,16 +31,18 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.password !== form.confirm) {
-      setValidationError("Şifreler birbiriyle eşleşmiyor.");
+      setValidationError("Passwords do not match.");
       return;
     }
     if (form.password.length < 8) {
-      setValidationError("Güvenliğiniz için şifre en az 8 karakter olmalıdır.");
+      setValidationError(
+        "Password must be at least 8 characters for your security.",
+      );
       return;
     }
     if (!/[A-Z]/.test(form.password) || !/[0-9]/.test(form.password)) {
       setValidationError(
-        "Şifre en az bir büyük harf ve bir rakam içermelidir.",
+        "Password must contain at least one uppercase letter and one number.",
       );
       return;
     }
@@ -54,7 +56,7 @@ export default function RegisterPage() {
       });
       router.push("/auth/login?registered=1");
     } catch {
-      // Hata store üzerinden yönetiliyor
+      // Error is managed via store
     }
   };
 
@@ -62,24 +64,21 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-[#F5F2EB] flex items-center justify-center p-6 py-12">
-      {/* Arka Plan Dekorasyonu */}
+      {/* Background Decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] rounded-full bg-[#C84B2F]/5 blur-[100px]" />
         <div className="absolute bottom-[20%] left-[10%] w-[30%] h-[30%] rounded-full bg-[#1A4A6B]/5 blur-[100px]" />
       </div>
 
       <div className="w-full max-w-[550px] relative">
-        {/* Brand Header */}
-     
-
         {/* Register Card */}
         <div className="bg-white/80 backdrop-blur-xl border border-black/[0.03] rounded-[40px] p-8 md:p-12 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)]">
           <div className="mb-10 text-center">
             <h1 className="text-3xl font-serif font-bold text-black mb-3">
-              Yeni Hesap Oluştur
+              Create New Account
             </h1>
             <p className="text-[#7A7060] text-sm">
-              Premium alışveriş deneyimine katılmak için bilgilerinizi girin.
+              Enter your details to join the premium shopping experience.
             </p>
           </div>
 
@@ -93,27 +92,27 @@ export default function RegisterPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="space-y-2">
                 <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[#7A7060] ml-1">
-                  Ad
+                  First Name
                 </Label>
                 <Input
                   name="firstName"
                   value={form.firstName}
                   onChange={handleChange}
                   required
-                  placeholder="Ahmet"
+                  placeholder="John"
                   className="h-12 rounded-xl border-black/[0.05] bg-white/50 focus:bg-white transition-all"
                 />
               </div>
               <div className="space-y-2">
                 <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[#7A7060] ml-1">
-                  Soyad
+                  Last Name
                 </Label>
                 <Input
                   name="lastName"
                   value={form.lastName}
                   onChange={handleChange}
                   required
-                  placeholder="Yılmaz"
+                  placeholder="Smith"
                   className="h-12 rounded-xl border-black/[0.05] bg-white/50 focus:bg-white transition-all"
                 />
               </div>
@@ -121,7 +120,7 @@ export default function RegisterPage() {
 
             <div className="space-y-2">
               <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[#7A7060] ml-1">
-                E-Posta
+                Email
               </Label>
               <Input
                 name="email"
@@ -129,14 +128,14 @@ export default function RegisterPage() {
                 value={form.email}
                 onChange={handleChange}
                 required
-                placeholder="ornek@mail.com"
+                placeholder="example@mail.com"
                 className="h-12 rounded-xl border-black/[0.05] bg-white/50 focus:bg-white transition-all"
               />
             </div>
 
             <div className="space-y-2">
               <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[#7A7060] ml-1">
-                Telefon
+                Phone
               </Label>
               <Input
                 name="phone"
@@ -144,7 +143,7 @@ export default function RegisterPage() {
                 value={form.phone}
                 onChange={handleChange}
                 required
-                placeholder="05XX XXX XX XX"
+                placeholder="+1 (555) 000-0000"
                 className="h-12 rounded-xl border-black/[0.05] bg-white/50 focus:bg-white transition-all"
               />
             </div>
@@ -152,7 +151,7 @@ export default function RegisterPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="space-y-2">
                 <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[#7A7060] ml-1">
-                  Şifre
+                  Password
                 </Label>
                 <Input
                   name="password"
@@ -166,7 +165,7 @@ export default function RegisterPage() {
               </div>
               <div className="space-y-2">
                 <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[#7A7060] ml-1">
-                  Tekrar
+                  Confirm
                 </Label>
                 <Input
                   name="confirm"
@@ -189,7 +188,7 @@ export default function RegisterPage() {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <span className="flex items-center gap-2">
-                  Hesabımı Oluştur
+                  Create My Account
                   <UserPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
                 </span>
               )}
@@ -198,12 +197,12 @@ export default function RegisterPage() {
 
           <div className="mt-8 pt-8 border-t border-black/[0.03] text-center">
             <p className="text-sm text-[#7A7060]">
-              Zaten üye misiniz?{" "}
+              Already a member?{" "}
               <Link
                 href="/auth/login"
                 className="text-black font-bold hover:text-[#C84B2F] transition-colors inline-flex items-center gap-1 group"
               >
-                Giriş yapın
+                Sign in
                 <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
               </Link>
             </p>
@@ -211,7 +210,7 @@ export default function RegisterPage() {
         </div>
 
         <p className="mt-8 text-center text-[10px] text-[#7A7060] font-mono uppercase tracking-[3px] opacity-50">
-          Kişisel verileriniz 256-bit şifreleme ile korunmaktadır
+          Your personal data is protected with 256-bit encryption
         </p>
       </div>
     </div>

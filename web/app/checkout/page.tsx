@@ -21,10 +21,10 @@ interface ETAResult {
   regularPrice: number;
 }
 
-// Basit cart store — gerçek projede Zustand use-cart.ts'ten gelir
+// Simple cart store — in real project comes from Zustand use-cart.ts
 function useCart() {
   const [items] = useState<CartItem[]>([
-    // Demo verisi — gerçekte store'dan gelir
+    // Demo data — actually comes from store
   ]);
   return { items };
 }
@@ -102,11 +102,11 @@ export default function CheckoutPage() {
 
   function validate() {
     const e: Partial<typeof form> = {};
-    if (!form.fullName.trim()) e.fullName = "Ad Soyad gerekli";
-    if (!form.phone.trim()) e.phone = "Telefon gerekli";
-    if (!form.city) e.city = "Şehir seçin";
-    if (!form.district.trim()) e.district = "İlçe gerekli";
-    if (!form.address.trim()) e.address = "Adres gerekli";
+    if (!form.fullName.trim()) e.fullName = "Full name required";
+    if (!form.phone.trim()) e.phone = "Phone required";
+    if (!form.city) e.city = "Select city";
+    if (!form.district.trim()) e.district = "District required";
+    if (!form.address.trim()) e.address = "Address required";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -128,7 +128,7 @@ export default function CheckoutPage() {
       });
       router.push(`/orders/${data.orderId}/tracking`);
     } catch {
-      alert("Sipariş oluşturulamadı. Lütfen tekrar deneyin.");
+      alert("Order could not be created. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -171,7 +171,7 @@ export default function CheckoutPage() {
       {/* Header */}
       <div className="border-b border-gray-200 bg-white">
         <div className="max-w-5xl mx-auto px-4 py-5 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">Ödeme</h1>
+          <h1 className="text-xl font-bold text-gray-900">Checkout</h1>
           {/* Steps */}
           <div className="flex items-center gap-2 text-xs font-mono">
             {(["address", "shipping", "payment"] as const).map((s, idx) => (
@@ -189,10 +189,10 @@ export default function CheckoutPage() {
                 >
                   {idx + 1}.{" "}
                   {s === "address"
-                    ? "Adres"
+                    ? "Address"
                     : s === "shipping"
-                      ? "Kargo"
-                      : "Ödeme"}
+                      ? "Shipping"
+                      : "Payment"}
                 </span>
                 {idx < 2 && <span className="text-gray-200">›</span>}
               </span>
@@ -209,24 +209,24 @@ export default function CheckoutPage() {
             {step === "address" && (
               <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <h2 className="font-semibold text-gray-900 mb-5">
-                  Teslimat Adresi
+                  Delivery Address
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <Field
-                      label="Ad Soyad"
+                      label="Full Name"
                       name="fullName"
-                      placeholder="Adınız Soyadınız"
+                      placeholder="Your First and Last Name"
                     />
                   </div>
                   <Field
-                    label="Telefon"
+                    label="Phone"
                     name="phone"
                     placeholder="05XX XXX XX XX"
                   />
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Şehir
+                      City
                     </label>
                     <select
                       value={form.city}
@@ -239,7 +239,7 @@ export default function CheckoutPage() {
                           : "border-gray-200 focus:border-gray-900"
                       }`}
                     >
-                      <option value="">Şehir seçin</option>
+                      <option value="">Select city</option>
                       {CITIES.map((c) => (
                         <option key={c} value={c}>
                           {c}
@@ -250,10 +250,14 @@ export default function CheckoutPage() {
                       <p className="text-xs text-red-500 mt-1">{errors.city}</p>
                     )}
                   </div>
-                  <Field label="İlçe" name="district" placeholder="İlçe" />
+                  <Field
+                    label="District"
+                    name="district"
+                    placeholder="District"
+                  />
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Açık Adres
+                      Detailed Address
                     </label>
                     <textarea
                       value={form.address}
@@ -261,7 +265,7 @@ export default function CheckoutPage() {
                         setForm((f) => ({ ...f, address: e.target.value }))
                       }
                       rows={3}
-                      placeholder="Mahalle, Sokak, No, Daire..."
+                      placeholder="Neighborhood, Street, No, Apartment..."
                       className={`w-full border rounded-lg px-3 py-2.5 text-sm outline-none resize-none transition-colors ${
                         errors.address
                           ? "border-red-400"
@@ -275,7 +279,7 @@ export default function CheckoutPage() {
                     )}
                   </div>
                   <Field
-                    label="Posta Kodu"
+                    label="Postal Code"
                     name="zipCode"
                     placeholder="34XXX"
                   />
@@ -286,7 +290,7 @@ export default function CheckoutPage() {
                   }}
                   className="mt-6 w-full py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
                 >
-                  Kargo Seçimine Geç →
+                  Proceed to Shipping Selection →
                 </button>
               </div>
             )}
@@ -295,12 +299,14 @@ export default function CheckoutPage() {
             {step === "shipping" && (
               <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="font-semibold text-gray-900">Kargo Seçimi</h2>
+                  <h2 className="font-semibold text-gray-900">
+                    Shipping Selection
+                  </h2>
                   <button
                     onClick={() => setStep("address")}
                     className="text-xs text-gray-400 hover:text-gray-700"
                   >
-                    ← Adresi Düzenle
+                    ← Edit Address
                   </button>
                 </div>
 
@@ -308,7 +314,7 @@ export default function CheckoutPage() {
                   <div className="text-center py-8">
                     <div className="w-6 h-6 border-2 border-gray-900 border-t-transparent rounded-full animate-spin mx-auto" />
                     <p className="text-sm text-gray-500 mt-2">
-                      ETA hesaplanıyor...
+                      Calculating ETA...
                     </p>
                   </div>
                 ) : (
@@ -325,19 +331,19 @@ export default function CheckoutPage() {
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="font-semibold text-gray-900">
-                            ⚡ Ekspres Kargo
+                            ⚡ Express Shipping
                           </p>
                           <p className="text-sm text-gray-500 mt-0.5">
                             {eta
                               ? new Date(eta.expressEta).toLocaleDateString(
-                                  "tr-TR",
+                                  "en-US",
                                   {
                                     weekday: "long",
                                     day: "numeric",
                                     month: "long",
                                   },
-                                ) + " teslim"
-                              : "1-2 iş günü"}
+                                ) + " delivery"
+                              : "1-2 business days"}
                           </p>
                         </div>
                         <div className="text-right">
@@ -346,7 +352,7 @@ export default function CheckoutPage() {
                           </p>
                           {shippingRate === "Express" && (
                             <p className="text-xs text-green-600 mt-0.5">
-                              ✓ Seçildi
+                              ✓ Selected
                             </p>
                           )}
                         </div>
@@ -365,19 +371,19 @@ export default function CheckoutPage() {
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="font-semibold text-gray-900">
-                            📦 Standart Kargo
+                            📦 Standard Shipping
                           </p>
                           <p className="text-sm text-gray-500 mt-0.5">
                             {eta
                               ? new Date(eta.regularEta).toLocaleDateString(
-                                  "tr-TR",
+                                  "en-US",
                                   {
                                     weekday: "long",
                                     day: "numeric",
                                     month: "long",
                                   },
-                                ) + " teslim"
-                              : "3-5 iş günü"}
+                                ) + " delivery"
+                              : "3-5 business days"}
                           </p>
                         </div>
                         <div className="text-right">
@@ -386,7 +392,7 @@ export default function CheckoutPage() {
                           </p>
                           {shippingRate === "Regular" && (
                             <p className="text-xs text-green-600 mt-0.5">
-                              ✓ Seçildi
+                              ✓ Selected
                             </p>
                           )}
                         </div>
@@ -399,7 +405,7 @@ export default function CheckoutPage() {
                   onClick={() => setStep("payment")}
                   className="mt-6 w-full py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
                 >
-                  Ödemeye Geç →
+                  Proceed to Payment →
                 </button>
               </div>
             )}
@@ -408,37 +414,37 @@ export default function CheckoutPage() {
             {step === "payment" && (
               <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="font-semibold text-gray-900">Ödeme</h2>
+                  <h2 className="font-semibold text-gray-900">Payment</h2>
                   <button
                     onClick={() => setStep("shipping")}
                     className="text-xs text-gray-400 hover:text-gray-700"
                   >
-                    ← Kargoyu Değiştir
+                    ← Change Shipping
                   </button>
                 </div>
 
                 {/* iyzico embed gelecek */}
                 <div className="border border-dashed border-gray-200 rounded-xl p-8 text-center mb-6">
                   <p className="text-gray-400 text-sm">
-                    iyzico ödeme formu burada görüntülenecek
+                    iyzico payment form will be displayed here
                   </p>
                   <p className="text-xs text-gray-300 mt-1 font-mono">
                     POST /api/payments/checkout → token → iyzico JS SDK
                   </p>
                 </div>
 
-                {/* Demo: direkt sipariş oluştur */}
+                {/* Demo: create order directly */}
                 <button
                   onClick={handleSubmit}
                   disabled={submitting}
                   className="w-full py-3 bg-gray-900 text-white rounded-lg font-bold hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitting
-                    ? "İşleniyor..."
-                    : `₺${total.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} Öde`}
+                    ? "Processing..."
+                    : `Pay ₺${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
                 </button>
                 <p className="text-xs text-gray-400 text-center mt-2">
-                  Güvenli ödeme · 256-bit SSL şifrelemesi
+                  Secure payment · 256-bit SSL encryption
                 </p>
               </div>
             )}
@@ -448,12 +454,12 @@ export default function CheckoutPage() {
           <div className="space-y-4">
             <div className="bg-white rounded-xl border border-gray-200 p-5 sticky top-4">
               <h2 className="font-semibold text-gray-900 mb-4">
-                Sipariş Özeti
+                Order Summary
               </h2>
 
               {items.length === 0 ? (
                 <p className="text-sm text-gray-400 text-center py-4">
-                  Sepet boş
+                  Cart is empty
                 </p>
               ) : (
                 <div className="space-y-3 mb-4">
@@ -477,7 +483,7 @@ export default function CheckoutPage() {
                         </p>
                       </div>
                       <p className="text-sm font-medium text-gray-900 flex-shrink-0">
-                        ₺{(item.price * item.quantity).toLocaleString("tr-TR")}
+                        ₺{(item.price * item.quantity).toLocaleString("en-US")}
                       </p>
                     </div>
                   ))}
@@ -486,13 +492,13 @@ export default function CheckoutPage() {
 
               <div className="border-t border-gray-100 pt-4 space-y-2">
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>Ara Toplam</span>
-                  <span>₺{subtotal.toLocaleString("tr-TR")}</span>
+                  <span>Subtotal</span>
+                  <span>₺{subtotal.toLocaleString("en-US")}</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>
-                    Kargo ({shippingRate === "Express" ? "Ekspres" : "Standart"}
-                    )
+                    Shipping (
+                    {shippingRate === "Express" ? "Express" : "Standard"})
                   </span>
                   <span>
                     {shippingCost > 0 ? `₺${shippingCost.toFixed(2)}` : "—"}

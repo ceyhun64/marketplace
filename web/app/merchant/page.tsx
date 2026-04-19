@@ -29,12 +29,12 @@ export default function MerchantDashboardPage() {
 
   const cards = [
     {
-      label: "Toplam Sipariş",
+      label: "Total Orders",
       value: stats?.totalOrders,
       color: "text-blue-700 bg-blue-50",
     },
     {
-      label: "Bekleyen",
+      label: "Pending",
       value: stats?.pendingOrders,
       color: "text-yellow-700 bg-yellow-50",
     },
@@ -46,7 +46,7 @@ export default function MerchantDashboardPage() {
       color: "text-green-700 bg-green-50",
     },
     {
-      label: "Aktif Teklif",
+      label: "Active Offers",
       value: stats?.totalOffers,
       color: "text-purple-700 bg-purple-50",
     },
@@ -56,9 +56,11 @@ export default function MerchantDashboardPage() {
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">
-          Hoş geldin{user?.name ? `, ${user.name}` : ""}
+          Welcome{user?.name ? `, ${user.name}` : ""}
         </h1>
-        <p className="text-sm text-gray-500 mt-1">Mağazanızın güncel durumu</p>
+        <p className="text-sm text-gray-500 mt-1">
+          Current status of your store
+        </p>
       </div>
 
       {loading ? (
@@ -98,7 +100,7 @@ export default function MerchantDashboardPage() {
             Katalog & Teklifler →
           </p>
           <p className="text-sm text-gray-500 mt-1">
-            Ürün fiyatlarını, stoklarını ve yayın durumlarını yönet
+            Manage product prices, stock levels and publication status
           </p>
         </Link>
         <Link
@@ -106,10 +108,10 @@ export default function MerchantDashboardPage() {
           className="bg-white border border-gray-200 rounded-xl p-5 hover:border-gray-400 transition-colors group"
         >
           <p className="font-semibold text-gray-900 group-hover:text-gray-700">
-            Gelen Siparişler →
+            Incoming Orders →
           </p>
           <p className="text-sm text-gray-500 mt-1">
-            Yeni siparişleri görüntüle ve hazırlığını onayla
+            View new orders and confirm preparation
           </p>
         </Link>
       </div>

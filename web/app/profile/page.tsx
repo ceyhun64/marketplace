@@ -68,11 +68,11 @@ export default function ProfilePage() {
   async function savePassword() {
     setPwError("");
     if (passwords.next !== passwords.confirm) {
-      setPwError("Şifreler eşleşmiyor");
+      setPwError("Passwords do not match");
       return;
     }
     if (passwords.next.length < 8) {
-      setPwError("Şifre en az 8 karakter olmalı");
+      setPwError("Password must be at least 8 characters");
       return;
     }
     setSaving(true);
@@ -85,16 +85,16 @@ export default function ProfilePage() {
       setPasswords({ current: "", next: "", confirm: "" });
       setTimeout(() => setPwSaved(false), 2000);
     } catch {
-      setPwError("Mevcut şifre yanlış");
+      setPwError("Current password is incorrect");
     } finally {
       setSaving(false);
     }
   }
 
   const TABS: { key: Tab; label: string }[] = [
-    { key: "info", label: "Kişisel Bilgiler" },
-    { key: "password", label: "Şifre" },
-    { key: "addresses", label: "Adreslerim" },
+    { key: "info", label: "Personal Information" },
+    { key: "password", label: "Password" },
+    { key: "addresses", label: "My Addresses" },
   ];
 
   return (

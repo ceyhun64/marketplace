@@ -31,34 +31,32 @@ export default function LoginPage() {
       };
       router.push(roleRoutes[user.role] ?? "/");
     } catch {
-      // Hata durumu useAuth içinde yönetiliyor
+      // Error is managed inside useAuth
     }
   };
 
   return (
     <div className="min-h-screen bg-[#F5F2EB] flex items-center justify-center p-6">
-      {/* Dekoratif Arka Plan Elementleri */}
+      {/* Decorative Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-[#C84B2F]/5 blur-[120px]" />
         <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-[#1A4A6B]/5 blur-[120px]" />
       </div>
 
       <div className="w-full max-w-[440px] relative">
-        {/* Logo / Brand */}
-        
         {/* Login Card */}
         <div className="bg-white/80 backdrop-blur-xl border border-black/[0.03] rounded-[40px] p-8 md:p-10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)]">
           <div className="mb-8">
             <h1 className="text-3xl font-serif font-bold text-black mb-2">
-              Hoş Geldiniz
+              Welcome Back
             </h1>
             <p className="text-[#7A7060] text-sm">
-              Devam etmek için hesabınıza erişin veya{" "}
+              Access your account to continue or{" "}
               <Link
                 href="/auth/register"
                 className="text-black font-bold hover:text-[#C84B2F] transition-colors underline decoration-black/10 underline-offset-4"
               >
-                yeni bir hesap oluşturun.
+                create a new account.
               </Link>
             </p>
           </div>
@@ -72,14 +70,14 @@ export default function LoginPage() {
 
             <div className="space-y-2">
               <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[#7A7060] ml-1">
-                E-Posta Adresi
+                Email Address
               </Label>
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="ceyhun@example.com"
+                placeholder="you@example.com"
                 className="h-14 rounded-2xl border-black/[0.05] bg-white/50 focus:bg-white focus:ring-black/5 transition-all"
               />
             </div>
@@ -87,13 +85,13 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between ml-1">
                 <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[#7A7060]">
-                  Şifre
+                  Password
                 </Label>
                 <Link
                   href="/auth/forgot-password"
                   className="text-[11px] font-bold text-[#7A7060] hover:text-black transition-colors uppercase tracking-wider"
                 >
-                  Unuttum?
+                  Forgot?
                 </Link>
               </div>
               <Input
@@ -115,7 +113,7 @@ export default function LoginPage() {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <span className="flex items-center gap-2">
-                  Giriş Yap
+                  Sign In
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </span>
               )}
@@ -125,7 +123,7 @@ export default function LoginPage() {
 
         {/* Footer Info */}
         <p className="mt-8 text-center text-[10px] text-[#7A7060] font-mono uppercase tracking-widest opacity-60">
-          Güvenli giriş sistemi &bull; 256-bit SSL Koruma
+          Secure login system &bull; 256-bit SSL Protection
         </p>
       </div>
     </div>

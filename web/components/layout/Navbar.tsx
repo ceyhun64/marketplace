@@ -44,17 +44,17 @@ interface CurrentUser {
   initials?: string;
 }
 
-// ─── Hooks (Stublar - Gerçek logic ile değiştirin) ────────────────────────────
+// ─── Hooks (Stubs - Replace with real logic) ──────────────────────────────────
 
 function useAuth() {
   return {
-    user: null as CurrentUser | null, // Test için burayı mocklayabilirsiniz
+    user: null as CurrentUser | null, // You can mock this for testing
     logout: async () => {},
   };
 }
 
 function useCartCount(): number {
-  return 3; // Örnek sayı
+  return 3; // Example count
 }
 
 function useNotifications() {
@@ -73,16 +73,16 @@ function useNotifications() {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PUBLIC_NAV = [
-  { label: "Kategoriler", href: "/categories" },
-  { label: "Mağazalar", href: "/stores" },
-  { label: "Fırsatlar", href: "/deals" },
+  { label: "Categories", href: "/categories" },
+  { label: "Stores", href: "/stores" },
+  { label: "Deals", href: "/deals" },
 ];
 
 const ROLE_LABELS: Record<UserRole, string> = {
-  customer: "Müşteri",
-  merchant: "Satıcı",
+  customer: "Customer",
+  merchant: "Seller",
   admin: "Admin",
-  courier: "Kurye",
+  courier: "Courier",
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -173,7 +173,7 @@ export default function Navbar() {
             <Link href="/" className="flex items-center gap-3 shrink-0 group">
               <LogoMark />
               <span className="hidden sm:block text-[#0D0D0D] text-xl font-bold font-serif tracking-tight">
-                Pazar<span className="text-[#C84B2F]">yeri</span>
+                Market<span className="text-[#C84B2F]">place</span>
               </span>
             </Link>
 
@@ -213,7 +213,7 @@ export default function Navbar() {
                     ref={searchRef}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Ürün keşfedin..."
+                    placeholder="Discover products..."
                     className="border-0 bg-transparent text-xs focus-visible:ring-0 h-9 p-0"
                   />
                   <X
@@ -273,14 +273,14 @@ export default function Navbar() {
                         </p>
                       </div>
                       <DropdownMenuItem className="rounded-xl py-2 cursor-pointer focus:bg-black/5">
-                        <User className="w-4 h-4 mr-2" /> Profilim
+                        <User className="w-4 h-4 mr-2" /> My Profile
                       </DropdownMenuItem>
                       <DropdownMenuItem className="rounded-xl py-2 cursor-pointer focus:bg-black/5">
-                        <ClipboardList className="w-4 h-4 mr-2" /> Siparişlerim
+                        <ClipboardList className="w-4 h-4 mr-2" /> My Orders
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-black/5" />
                       <DropdownMenuItem className="rounded-xl py-2 cursor-pointer text-[#C84B2F] focus:bg-[#FDF0EC]">
-                        <LogOut className="w-4 h-4 mr-2" /> Çıkış Yap
+                        <LogOut className="w-4 h-4 mr-2" /> Sign Out
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -289,7 +289,7 @@ export default function Navbar() {
                     asChild
                     className="h-10 px-6 rounded-full bg-[#0D0D0D] text-white hover:bg-[#C84B2F] transition-all text-xs font-bold shadow-lg shadow-black/10"
                   >
-                    <Link href="/auth/login">Giriş Yap</Link>
+                    <Link href="/auth/login">Sign In</Link>
                   </Button>
                 )}
               </div>

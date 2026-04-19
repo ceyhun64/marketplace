@@ -15,11 +15,11 @@ interface Shipment {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  COURIER_ASSIGNED: "Atandı — Teslim Al",
-  PICKED_UP: "Teslim Alındı",
-  IN_TRANSIT: "Yolda",
-  OUT_FOR_DELIVERY: "Teslimat Noktasında",
-  DELIVERED: "Teslim Edildi",
+  COURIER_ASSIGNED: "Assigned — Pick Up",
+  PICKED_UP: "Picked Up",
+  IN_TRANSIT: "In Transit",
+  OUT_FOR_DELIVERY: "Out for Delivery",
+  DELIVERED: "Delivered",
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -62,19 +62,17 @@ export default function CourierDashboardPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Sevkiyatlarım</h1>
+        <h1 className="text-2xl font-bold text-gray-900">My Shipments</h1>
         <p className="text-sm text-gray-500 mt-1">
-          {active.length} aktif · {done.length} teslim edildi
+          {active.length} active · {done.length} delivered
         </p>
       </div>
 
       {loading ? (
-        <div className="p-8 text-center text-sm text-gray-400">
-          Yükleniyor...
-        </div>
+        <div className="p-8 text-center text-sm text-gray-400">Loading...</div>
       ) : shipments.length === 0 ? (
         <div className="p-8 text-center text-sm text-gray-400 bg-white border border-gray-200 rounded-xl">
-          Atanmış sevkiyat yok
+          No assigned shipments
         </div>
       ) : (
         <div className="space-y-3">
@@ -104,7 +102,7 @@ export default function CourierDashboardPage() {
                     {s.deliveryAddress}
                   </p>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    ETA: {new Date(s.estimatedDelivery).toLocaleString("tr-TR")}
+                    ETA: {new Date(s.estimatedDelivery).toLocaleString("en-US")}
                   </p>
                 </div>
 
@@ -116,7 +114,7 @@ export default function CourierDashboardPage() {
                       rel="noreferrer"
                       className="text-xs text-blue-600 hover:underline"
                     >
-                      Etiketi Yazdır
+                      Print Label
                     </a>
                   )}
                   {s.status === "COURIER_ASSIGNED" && (
@@ -124,7 +122,7 @@ export default function CourierDashboardPage() {
                       onClick={() => handlePickup(s.id)}
                       className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors"
                     >
-                      Teslim Aldım ✓
+                      Picked Up ✓
                     </button>
                   )}
                   {(s.status === "PICKED_UP" || s.status === "IN_TRANSIT") && (
@@ -132,7 +130,7 @@ export default function CourierDashboardPage() {
                       onClick={() => handleDeliver(s.id)}
                       className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-green-700 transition-colors"
                     >
-                      Teslim Ettim ✓
+                      Delivered ✓
                     </button>
                   )}
                 </div>

@@ -4,8 +4,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, DM_Serif_Display, Space_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 
@@ -32,11 +31,11 @@ const spaceMono = Space_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Pazaryeri — Binlerce Satıcı, Tek Platform",
-    template: "%s | Pazaryeri",
+    default: "Marketplace — Thousands of Sellers, One Platform",
+    template: "%s | Marketplace",
   },
   description:
-    "Güvenilir satıcılardan en iyi fiyatı bul. Marketplace ve bağımsız e-mağazaların gücünü bir arada keşfet.",
+    "Find the best price from trusted sellers. Discover the power of a marketplace and independent e-stores combined.",
 };
 
 function isPublicRoute(pathname?: string) {
@@ -52,7 +51,7 @@ export default function RootLayout({
 }) {
   return (
     <html
-      lang="tr"
+      lang="en"
       className={`${dmSans.variable} ${dmSerifDisplay.variable} ${spaceMono.variable}`}
     >
       <body
@@ -60,9 +59,7 @@ export default function RootLayout({
         style={{ fontFamily: "var(--font-dm-sans), sans-serif" }}
       >
         <QueryProvider>
-          <Navbar />
           {children}
-          <Footer />
           <Toaster position="bottom-right" richColors />
         </QueryProvider>
       </body>

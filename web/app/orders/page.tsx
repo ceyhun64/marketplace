@@ -38,53 +38,53 @@ const STATUS_META: Record<
   OrderStatus,
   { label: string; color: string; bg: string; step: number }
 > = {
-  Pending: { label: "Beklemede", color: "#92400e", bg: "#fef3c7", step: 0 },
+  Pending: { label: "Pending", color: "#92400e", bg: "#fef3c7", step: 0 },
   PaymentConfirmed: {
-    label: "Ödeme Onaylandı",
+    label: "Payment Confirmed",
     color: "#1e40af",
     bg: "#dbeafe",
     step: 1,
   },
   LabelGenerated: {
-    label: "Etiket Oluşturuldu",
+    label: "Label Generated",
     color: "#5b21b6",
     bg: "#ede9fe",
     step: 2,
   },
   CourierAssigned: {
-    label: "Kurye Atandı",
+    label: "Courier Assigned",
     color: "#0e7490",
     bg: "#cffafe",
     step: 3,
   },
   PickedUp: {
-    label: "Teslim Alındı",
+    label: "Picked Up",
     color: "#0f766e",
     bg: "#ccfbf1",
     step: 4,
   },
-  InTransit: { label: "Yolda", color: "#1d4ed8", bg: "#dbeafe", step: 5 },
+  InTransit: { label: "In Transit", color: "#1d4ed8", bg: "#dbeafe", step: 5 },
   OutForDelivery: {
-    label: "Dağıtımda",
+    label: "Out for Delivery",
     color: "#7c3aed",
     bg: "#f3e8ff",
     step: 6,
   },
   Delivered: {
-    label: "Teslim Edildi",
+    label: "Delivered",
     color: "#15803d",
     bg: "#dcfce7",
     step: 7,
   },
-  Failed: { label: "Başarısız", color: "#b91c1c", bg: "#fee2e2", step: -1 },
-  Cancelled: { label: "İptal", color: "#6b7280", bg: "#f3f4f6", step: -1 },
+  Failed: { label: "Failed", color: "#b91c1c", bg: "#fee2e2", step: -1 },
+  Cancelled: { label: "Cancelled", color: "#6b7280", bg: "#f3f4f6", step: -1 },
 };
 
 const FILTER_TABS: { key: string; label: string }[] = [
-  { key: "all", label: "Tümü" },
-  { key: "active", label: "Aktif" },
-  { key: "Delivered", label: "Teslim Edildi" },
-  { key: "Cancelled", label: "İptal / Başarısız" },
+  { key: "all", label: "All" },
+  { key: "active", label: "Active" },
+  { key: "Delivered", label: "Delivered" },
+  { key: "Cancelled", label: "Cancelled / Failed" },
 ];
 
 function statusMatch(status: OrderStatus, filter: string): boolean {
@@ -118,9 +118,9 @@ export default function OrdersPage() {
       <div className="border-b border-gray-200 bg-white">
         <div className="max-w-3xl mx-auto px-4 py-6">
           <p className="text-xs text-gray-400 uppercase tracking-widest mb-1 font-mono">
-            Hesabım
+            My Account
           </p>
-          <h1 className="text-2xl font-bold text-gray-900">Siparişlerim</h1>
+          <h1 className="text-2xl font-bold text-gray-900">My Orders</h1>
         </div>
       </div>
 
@@ -155,12 +155,12 @@ export default function OrdersPage() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-4xl mb-3">📦</div>
-            <p className="text-gray-500">Bu kategoride sipariş bulunamadı.</p>
+            <p className="text-gray-500">No orders found in this category.</p>
             <Link
               href="/"
               className="inline-block mt-4 text-sm text-gray-900 underline underline-offset-2"
             >
-              Alışverişe başla →
+              Start shopping →
             </Link>
           </div>
         ) : (
@@ -193,14 +193,14 @@ export default function OrdersPage() {
                           </span>
                           <span className="text-xs text-gray-400">
                             {order.source === "Marketplace"
-                              ? "Pazaryeri"
-                              : "E-Mağaza"}
+                              ? "Marketplace"
+                              : "E-Store"}
                           </span>
                           <span className="text-xs text-gray-400">·</span>
                           <span className="text-xs text-gray-400">
                             {order.shippingRate === "Express"
-                              ? "⚡ Ekspres"
-                              : "📦 Standart"}
+                              ? "⚡ Express"
+                              : "📦 Standard"}
                           </span>
                         </div>
                         <p className="text-sm text-gray-700 truncate">
@@ -209,12 +209,12 @@ export default function OrdersPage() {
                             .map((i) => `${i.productName} ×${i.quantity}`)
                             .join(", ")}
                           {order.items.length > 2 &&
-                            ` +${order.items.length - 2} ürün daha`}
+                            ` +${order.items.length - 2} more items`}
                         </p>
                         <p className="text-xs text-gray-400 mt-1 font-mono">
                           #{order.id.slice(0, 8).toUpperCase()} ·{" "}
                           {new Date(order.createdAt).toLocaleDateString(
-                            "tr-TR",
+                            "en-US",
                             {
                               day: "numeric",
                               month: "long",

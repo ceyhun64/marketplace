@@ -20,8 +20,8 @@ const MOCK_STORES: Store[] = [
     id: "1",
     name: "TechStore TR",
     slug: "techstore-tr",
-    description: "Güncel elektronik ürünlerde en iyi fiyat garantisi.",
-    categoryFocus: "Elektronik",
+    description: "Best price guarantee on the latest electronics.",
+    categoryFocus: "Electronics",
     productCount: 1240,
     rating: 4.8,
     reviewCount: 2340,
@@ -31,10 +31,10 @@ const MOCK_STORES: Store[] = [
   },
   {
     id: "2",
-    name: "Doğa Beauty",
-    slug: "doga-beauty",
-    description: "%100 doğal, cruelty-free cilt ve saç bakım ürünleri.",
-    categoryFocus: "Kozmetik",
+    name: "Nature Beauty",
+    slug: "nature-beauty",
+    description: "100% natural, cruelty-free skin and hair care products.",
+    categoryFocus: "Cosmetics",
     productCount: 340,
     rating: 4.9,
     reviewCount: 1890,
@@ -44,10 +44,10 @@ const MOCK_STORES: Store[] = [
   },
   {
     id: "3",
-    name: "Ev Dekor Plus",
-    slug: "ev-dekor-plus",
-    description: "Modern ve minimalist ev dekorasyon çözümleri.",
-    categoryFocus: "Ev & Yaşam",
+    name: "Home Decor Plus",
+    slug: "home-decor-plus",
+    description: "Modern and minimalist home decoration solutions.",
+    categoryFocus: "Home & Living",
     productCount: 890,
     rating: 4.7,
     reviewCount: 956,
@@ -59,8 +59,8 @@ const MOCK_STORES: Store[] = [
     id: "4",
     name: "SportLife",
     slug: "sportlife",
-    description: "Profesyonel ve amatör sporcu ekipmanları.",
-    categoryFocus: "Spor",
+    description: "Equipment for professional and amateur athletes.",
+    categoryFocus: "Sports",
     productCount: 670,
     rating: 4.6,
     reviewCount: 1240,
@@ -80,20 +80,20 @@ export default function FeaturedStores() {
             <div className="flex items-center gap-2.5 mb-3">
               <div className="w-6 h-[2px] bg-[#1A4A6B]" />
               <span className="font-mono text-[10px] uppercase tracking-[3px] text-[#7A7060]">
-                Öne Çıkan Mağazalar
+                Featured Stores
               </span>
             </div>
             <h2 className="text-[#0D0D0D] text-[28px] lg:text-[36px] leading-tight font-serif">
-              Güvenilir satıcılar,
+              Trusted sellers,
               <br className="hidden sm:block" />
-              doğrulanmış kalite.
+              verified quality.
             </h2>
           </div>
           <Link
             href="/stores"
             className="hidden sm:flex items-center gap-2 font-mono text-[11px] uppercase tracking-[2px] text-[#7A7060] hover:text-[#1A4A6B] transition-colors pb-1 border-b border-transparent hover:border-[#1A4A6B]"
           >
-            Tüm mağazalar
+            All stores
             <svg
               width="12"
               height="12"
@@ -148,7 +148,6 @@ export default function FeaturedStores() {
                     />
                   </svg>
                 </div>
-
                 <div className="relative z-10 flex flex-col h-full p-7">
                   <div
                     className="w-10 h-[3px] rounded-full mb-6 transition-all duration-300 group-hover:w-16"
@@ -160,14 +159,13 @@ export default function FeaturedStores() {
                   >
                     {store.emoji}
                   </div>
-
                   <div className="flex-1">
                     <div
                       className="font-mono text-[9px] uppercase tracking-[2px] mb-2"
                       style={{ color: store.accentColor }}
                     >
                       {store.categoryFocus} ·{" "}
-                      {store.productCount.toLocaleString("tr-TR")} ürün
+                      {store.productCount.toLocaleString("en-US")} products
                     </div>
                     <h3 className="text-[#F5F2EB] text-[22px] leading-tight mb-3 font-serif">
                       {store.name}
@@ -176,7 +174,6 @@ export default function FeaturedStores() {
                       {store.description}
                     </p>
                   </div>
-
                   <div className="flex items-center justify-between mt-6 pt-5 border-t border-[#F5F2EB]/10">
                     <div className="flex items-center gap-2">
                       <span className="text-yellow-400 text-sm">★</span>
@@ -184,12 +181,11 @@ export default function FeaturedStores() {
                         {store.rating}
                       </span>
                       <span className="text-[#7A7060] text-[11px]">
-                        ({store.reviewCount.toLocaleString("tr-TR")}{" "}
-                        değerlendirme)
+                        ({store.reviewCount.toLocaleString("en-US")} reviews)
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-[#F5F2EB] font-mono text-[11px] uppercase tracking-wider">
-                      Ziyaret Et
+                      Visit
                       <svg
                         width="12"
                         height="12"
@@ -243,7 +239,7 @@ export default function FeaturedStores() {
                       style={{ color: store.accentColor }}
                     >
                       {store.categoryFocus} ·{" "}
-                      {store.productCount.toLocaleString("tr-TR")} ürün
+                      {store.productCount.toLocaleString("en-US")} products
                     </div>
                     <p className="text-[#7A7060] text-[12px] leading-relaxed line-clamp-2">
                       {store.description}
@@ -252,13 +248,13 @@ export default function FeaturedStores() {
                 </div>
                 <div className="flex items-center justify-between mt-4 pt-3.5 border-t border-[#0D0D0D]/6">
                   <span className="text-[#7A7060] text-[11px]">
-                    {store.reviewCount.toLocaleString("tr-TR")} değerlendirme
+                    {store.reviewCount.toLocaleString("en-US")} reviews
                   </span>
                   <span
                     className="font-mono text-[10px] uppercase tracking-wider flex items-center gap-1.5 transition-colors"
                     style={{ color: store.accentColor }}
                   >
-                    Mağazaya Git
+                    Visit Store
                     <svg
                       width="10"
                       height="10"
@@ -281,11 +277,11 @@ export default function FeaturedStores() {
         <div className="mt-8 bg-[#1A4A6B] rounded-sm p-6 lg:p-8 flex flex-col sm:flex-row items-center justify-between gap-5">
           <div>
             <div className="font-mono text-[10px] uppercase tracking-[3px] text-[#F5F2EB]/50 mb-2">
-              Satıcılar için
+              For Sellers
             </div>
             <h3 className="text-[#F5F2EB] text-[22px] leading-tight font-serif">
-              Kendi e-mağazanı kur, <br className="hidden sm:block" />
-              milyonlara ulaş.
+              Open your own e-store, <br className="hidden sm:block" />
+              reach millions.
             </h3>
           </div>
           <Button
@@ -293,7 +289,7 @@ export default function FeaturedStores() {
             className="shrink-0 bg-[#F5F2EB] text-[#0D0D0D] font-mono text-[11px] uppercase tracking-[2px] hover:bg-[#C84B2F] hover:text-[#F5F2EB] transition-colors rounded-sm px-7 py-3.5 h-auto"
           >
             <Link href="/auth/register?role=merchant">
-              Satıcı Ol
+              Become a Seller
               <svg
                 width="14"
                 height="14"

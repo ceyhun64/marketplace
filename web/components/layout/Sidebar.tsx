@@ -36,10 +36,10 @@ export function Sidebar({ links, role }: SidebarProps) {
   };
 
   const isActive = (href: string) => {
-    // Tam eşleşme her zaman aktif
+    // Exact match is always active
     if (pathname === href) return true;
-    // Dashboard root linkleri (/merchant, /admin, /courier):
-    // sadece tam eşleşmede aktif — startsWith kullanma
+    // Dashboard root links (/merchant, /admin, /courier):
+    // only active on exact match — don't use startsWith
     const rootPaths = links
       .map((l) => l.href)
       .filter((h) => {
@@ -47,8 +47,8 @@ export function Sidebar({ links, role }: SidebarProps) {
         return segments.length === 1;
       });
     if (rootPaths.includes(href)) return false;
-    // Alt sayfalar: pathname'in href ile başladığını
-    // VE hemen ardından / veya son karakter olduğunu kontrol et
+    // Sub-pages: check that pathname starts with href
+    // AND is immediately followed by / or is the last character
     return pathname.startsWith(href + "/") || pathname.startsWith(href);
   };
 
@@ -97,7 +97,7 @@ export function Sidebar({ links, role }: SidebarProps) {
           onClick={handleLogout}
           className="w-full text-left text-xs text-red-500 hover:text-red-700 transition-colors"
         >
-          Çıkış Yap →
+          Sign Out →
         </button>
       </div>
     </aside>

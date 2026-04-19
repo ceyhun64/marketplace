@@ -24,10 +24,11 @@ export default function NotFound() {
 
       <div className="text-center -mt-4">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Sayfa bulunamadı
+          Page not found
         </h1>
         <p className="text-gray-500 text-sm max-w-sm">
-          Aradığınız sayfa taşınmış, silinmiş ya da hiç var olmamış olabilir.
+          The page you're looking for may have been moved, deleted, or never
+          existed.
         </p>
       </div>
 
@@ -36,13 +37,13 @@ export default function NotFound() {
           href={homeHref}
           className="px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
         >
-          Ana Sayfaya Dön
+          Back to Home
         </Link>
         <button
           onClick={() => window.history.back()}
           className="px-5 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-gray-400 transition-colors"
         >
-          ← Geri Git
+          ← Go Back
         </button>
       </div>
     </div>

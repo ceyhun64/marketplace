@@ -27,8 +27,8 @@ const MOCK_PRODUCTS: ProductOffer[] = [
   {
     id: "1",
     productId: "p1",
-    productName: "Kablosuz Bluetooth Kulaklık Pro",
-    categoryName: "Elektronik",
+    productName: "Wireless Bluetooth Headphones Pro",
+    categoryName: "Electronics",
     merchantName: "TechStore TR",
     merchantSlug: "techstore-tr",
     price: 899,
@@ -38,30 +38,30 @@ const MOCK_PRODUCTS: ProductOffer[] = [
     stock: 45,
     imageEmoji: "🎧",
     isBuyBox: true,
-    eta: "Yarın",
+    eta: "Tomorrow",
   },
   {
     id: "2",
     productId: "p2",
-    productName: "Organik Pamuk Atlet Seti",
-    categoryName: "Moda",
-    merchantName: "Doğal Giyim",
-    merchantSlug: "dogal-giyim",
+    productName: "Organic Cotton Athletic Set",
+    categoryName: "Fashion",
+    merchantName: "Natural Wear",
+    merchantSlug: "natural-wear",
     price: 249,
     rating: 4.6,
     reviewCount: 89,
     stock: 120,
     imageEmoji: "👕",
     isBuyBox: true,
-    eta: "2-3 gün",
+    eta: "2-3 days",
   },
   {
     id: "3",
     productId: "p3",
-    productName: "Seramik Kahve Fincanı Seti",
-    categoryName: "Ev & Yaşam",
-    merchantName: "Ev Dekor Plus",
-    merchantSlug: "ev-dekor-plus",
+    productName: "Ceramic Coffee Cup Set",
+    categoryName: "Home & Living",
+    merchantName: "Home Decor Plus",
+    merchantSlug: "home-decor-plus",
     price: 349,
     originalPrice: 499,
     rating: 4.9,
@@ -69,13 +69,13 @@ const MOCK_PRODUCTS: ProductOffer[] = [
     stock: 28,
     imageEmoji: "☕",
     isBuyBox: true,
-    eta: "Bugün",
+    eta: "Today",
   },
   {
     id: "4",
     productId: "p4",
-    productName: "Profesyonel Yoga Matı 6mm",
-    categoryName: "Spor",
+    productName: "Professional Yoga Mat 6mm",
+    categoryName: "Sports",
     merchantName: "SportLife",
     merchantSlug: "sportlife",
     price: 599,
@@ -84,13 +84,13 @@ const MOCK_PRODUCTS: ProductOffer[] = [
     stock: 67,
     imageEmoji: "🧘",
     isBuyBox: true,
-    eta: "2-3 gün",
+    eta: "2-3 days",
   },
   {
     id: "5",
     productId: "p5",
-    productName: "Mekanik Klavye RGB Aydınlatmalı",
-    categoryName: "Elektronik",
+    productName: "Mechanical Keyboard RGB Backlit",
+    categoryName: "Electronics",
     merchantName: "PC World",
     merchantSlug: "pc-world",
     price: 1299,
@@ -100,30 +100,30 @@ const MOCK_PRODUCTS: ProductOffer[] = [
     stock: 15,
     imageEmoji: "⌨️",
     isBuyBox: true,
-    eta: "3-4 gün",
+    eta: "3-4 days",
   },
   {
     id: "6",
     productId: "p6",
-    productName: "Doğal Argan Yağlı Şampuan",
-    categoryName: "Kozmetik",
-    merchantName: "Doğa Beauty",
-    merchantSlug: "doga-beauty",
+    productName: "Natural Argan Oil Shampoo",
+    categoryName: "Cosmetics",
+    merchantName: "Nature Beauty",
+    merchantSlug: "nature-beauty",
     price: 129,
     rating: 4.6,
     reviewCount: 328,
     stock: 200,
     imageEmoji: "🧴",
     isBuyBox: true,
-    eta: "Yarın",
+    eta: "Tomorrow",
   },
   {
     id: "7",
     productId: "p7",
-    productName: "Çocuk Ahşap Bulmaca Seti",
-    categoryName: "Oyun & Hobi",
-    merchantName: "Oyun Dünyası",
-    merchantSlug: "oyun-dunyasi",
+    productName: "Kids Wooden Puzzle Set",
+    categoryName: "Gaming & Hobbies",
+    merchantName: "Toy World",
+    merchantSlug: "toy-world",
     price: 189,
     originalPrice: 259,
     rating: 4.8,
@@ -131,30 +131,30 @@ const MOCK_PRODUCTS: ProductOffer[] = [
     stock: 53,
     imageEmoji: "🧩",
     isBuyBox: true,
-    eta: "2-3 gün",
+    eta: "2-3 days",
   },
   {
     id: "8",
     productId: "p8",
-    productName: "Minimalist Deri Cüzdan",
-    categoryName: "Moda",
-    merchantName: "Deri Ustalığı",
-    merchantSlug: "deri-ustaligi",
+    productName: "Minimalist Leather Wallet",
+    categoryName: "Fashion",
+    merchantName: "Leather Craft",
+    merchantSlug: "leather-craft",
     price: 449,
     rating: 4.7,
     reviewCount: 167,
     stock: 38,
     imageEmoji: "👜",
     isBuyBox: true,
-    eta: "Yarın",
+    eta: "Tomorrow",
   },
 ];
 
 const TABS = [
-  { value: "featured", label: "Öne Çıkanlar" },
-  { value: "bestsellers", label: "En Çok Satanlar" },
-  { value: "new", label: "Yeni Gelenler" },
-  { value: "deals", label: "Fırsatlar" },
+  { value: "featured", label: "Featured" },
+  { value: "bestsellers", label: "Best Sellers" },
+  { value: "new", label: "New Arrivals" },
+  { value: "deals", label: "Deals" },
 ];
 
 export default function FeaturedProducts() {
@@ -177,19 +177,18 @@ export default function FeaturedProducts() {
             <div className="flex items-center gap-2.5 mb-3">
               <div className="w-6 h-[2px] bg-[#C84B2F]" />
               <span className="font-mono text-[10px] uppercase tracking-[3px] text-[#7A7060]">
-                Seçilmiş Ürünler
+                Curated Products
               </span>
             </div>
             <h2 className="text-[#0D0D0D] text-[28px] lg:text-[36px] leading-tight font-serif">
-              Bugün ne keşfedeceksin?
+              What will you discover today?
             </h2>
           </div>
-
           <Link
             href="/products"
             className="hidden sm:flex items-center gap-2 font-mono text-[11px] uppercase tracking-[2px] text-[#7A7060] hover:text-[#C84B2F] transition-colors pb-1 border-b border-transparent hover:border-[#C84B2F] shrink-0"
           >
-            Tüm ürünler
+            All products
             <svg
               width="12"
               height="12"
@@ -238,7 +237,7 @@ export default function FeaturedProducts() {
             className="border-2 border-[#0D0D0D] text-[#0D0D0D] font-mono text-[11px] uppercase tracking-[2px] hover:bg-[#0D0D0D] hover:text-[#F5F2EB] transition-colors rounded-sm px-8 py-3.5 h-auto"
           >
             <Link href="/products">
-              Daha Fazla Ürün Gör
+              View More Products
               <svg
                 width="14"
                 height="14"
@@ -279,20 +278,18 @@ function ProductCard({
           <span className="transition-transform duration-300 group-hover:scale-110 select-none">
             {product.imageEmoji}
           </span>
-
           <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
             {discount > 0 && (
               <Badge className="font-mono text-[9px] bg-[#C84B2F] text-white px-1.5 py-0.5 rounded-sm h-auto">
-                -%{discount}
+                -{discount}%
               </Badge>
             )}
             {product.stock < 20 && (
               <Badge className="font-mono text-[9px] bg-[#8B5E1A] text-white px-1.5 py-0.5 rounded-sm h-auto">
-                Son {product.stock}
+                Only {product.stock} left
               </Badge>
             )}
           </div>
-
           {product.isBuyBox && (
             <div className="absolute bottom-2.5 right-2.5">
               <Badge className="font-mono text-[8px] bg-[#2D7A4F] text-white px-1.5 py-0.5 rounded-sm h-auto uppercase tracking-wider">
@@ -303,11 +300,10 @@ function ProductCard({
         </div>
       </Link>
 
-      {/* Wishlist button */}
       <button
         onClick={onWishlist}
         className="absolute top-2.5 right-2.5 w-7 h-7 bg-white/90 backdrop-blur-sm border border-[#0D0D0D]/10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:border-[#C84B2F]"
-        aria-label="Favorilere ekle"
+        aria-label="Add to wishlist"
       >
         <svg
           width="12"
@@ -367,22 +363,21 @@ function ProductCard({
         <div className="flex items-end justify-between">
           <div>
             <div className="text-[#0D0D0D] text-[17px] font-bold leading-none font-serif">
-              ₺{product.price.toLocaleString("tr-TR")}
+              ₺{product.price.toLocaleString("en-US")}
             </div>
             {product.originalPrice && (
               <div className="text-[10px] text-[#7A7060] line-through mt-0.5">
-                ₺{product.originalPrice.toLocaleString("tr-TR")}
+                ₺{product.originalPrice.toLocaleString("en-US")}
               </div>
             )}
             <div className="font-mono text-[9px] text-[#2D7A4F] mt-1 uppercase tracking-wider">
-              {product.eta} teslim
+              {product.eta} delivery
             </div>
           </div>
-
           <Button
             size="sm"
             className="w-8 h-8 p-0 bg-[#0D0D0D] text-[#F5F2EB] rounded-sm hover:bg-[#C84B2F] transition-colors"
-            aria-label="Sepete ekle"
+            aria-label="Add to cart"
           >
             <svg
               width="14"

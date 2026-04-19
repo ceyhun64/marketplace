@@ -5,6 +5,8 @@ import HeroSection from "@/components/modules/home/HeroSection";
 import CategoryGrid from "@/components/modules/home/CategoryGrid";
 import FeaturedProducts from "@/components/modules/home/FeaturedProducts";
 import FeaturedStores from "@/components/modules/home/FeaturedStores";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 
 // Server-side fetch for categories (ISR — revalidates every 60s)
 // async function getCategories() {
@@ -16,12 +18,12 @@ import FeaturedStores from "@/components/modules/home/FeaturedStores";
 // }
 
 export const metadata = {
-  title: "Pazaryeri — Binlerce Satıcı, Tek Platform",
+  title: "Marketplace — Thousands of Sellers, One Platform",
   description:
-    "Güvenilir satıcılardan en iyi fiyatı bul. Marketplace ve bağımsız e-mağazaların gücünü bir arada keşfet.",
+    "Find the best price from trusted sellers. Discover the power of a marketplace and independent e-stores combined.",
   openGraph: {
-    title: "Pazaryeri — Binlerce Satıcı, Tek Platform",
-    description: "Güvenilir satıcılardan en iyi fiyatı bul.",
+    title: "Marketplace — Thousands of Sellers, One Platform",
+    description: "Find the best price from trusted sellers.",
     type: "website",
   },
 };
@@ -32,6 +34,7 @@ export default async function HomePage() {
 
   return (
     <main>
+      <Navbar />
       {/* 1. Hero — bold editorial search + stats */}
       <HeroSection />
 
@@ -48,6 +51,7 @@ export default async function HomePage() {
 
       {/* 5. Trust / how it works section */}
       <HowItWorksSection />
+      <Footer />
     </main>
   );
 }
@@ -57,30 +61,30 @@ function HowItWorksSection() {
   const steps = [
     {
       number: "01",
-      title: "Ürünü bul",
+      title: "Find the product",
       description:
-        "Binlerce ürün arasından arama yap, kategorilere göz at, en iyi fiyatı bul.",
+        "Search through thousands of products, browse categories, and find the best price.",
       color: "#C84B2F",
     },
     {
       number: "02",
-      title: "Güvenle öde",
+      title: "Pay securely",
       description:
-        "iyzico altyapısıyla 256-bit SSL şifreleme. Kredi kartı, havale, kapıda ödeme.",
+        "256-bit SSL encryption powered by iyzico. Credit card, bank transfer, or cash on delivery.",
       color: "#1A4A6B",
     },
     {
       number: "03",
-      title: "Takip et",
+      title: "Track your order",
       description:
-        "Siparişini gerçek zamanlı takip et. Kurye konumunu canlı olarak gör.",
+        "Track your order in real time. See your courier's location live.",
       color: "#2D7A4F",
     },
     {
       number: "04",
-      title: "Teslim al",
+      title: "Receive delivery",
       description:
-        "Ortalama 24 saatte kapında. Express seçeneğiyle aynı gün teslimat.",
+        "At your door in an average of 24 hours. Same-day delivery with the Express option.",
       color: "#8B5E1A",
     },
   ];
@@ -93,7 +97,7 @@ function HowItWorksSection() {
           <div className="inline-flex items-center gap-2.5 mb-4">
             <div className="w-6 h-[2px] bg-[#C84B2F]" />
             <span className="font-mono text-[10px] uppercase tracking-[3px] text-[#7A7060]">
-              Nasıl Çalışır
+              How It Works
             </span>
             <div className="w-6 h-[2px] bg-[#C84B2F]" />
           </div>
@@ -101,7 +105,7 @@ function HowItWorksSection() {
             className="text-[#F5F2EB] text-[28px] lg:text-[36px] leading-tight"
             style={{ fontFamily: "'DM Serif Display', serif" }}
           >
-            Alışveriş bu kadar basit.
+            Shopping is this simple.
           </h2>
         </div>
 

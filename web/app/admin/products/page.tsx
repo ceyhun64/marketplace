@@ -46,11 +46,13 @@ export default function AdminProductsPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Ürünler</h1>
-          <p className="text-sm text-gray-500 mt-1">Master katalog yönetimi</p>
+          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Master catalog management
+          </p>
         </div>
         <button className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
-          + Ürün Ekle
+          + Add Product
         </button>
       </div>
 
@@ -65,7 +67,7 @@ export default function AdminProductsPage() {
                 : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
             }`}
           >
-            {t === "all" ? "Tüm Ürünler" : "Onay Bekleyen"}
+            {t === "all" ? "All Products" : "Pending Approval"}
           </button>
         ))}
       </div>
@@ -73,23 +75,23 @@ export default function AdminProductsPage() {
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-sm text-gray-400">
-            Yükleniyor...
+            Loading...
           </div>
         ) : products.length === 0 ? (
           <div className="p-8 text-center text-sm text-gray-400">
-            Ürün bulunamadı
+            No products found
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
               <tr>
                 {[
-                  "Ürün Adı",
-                  "Kategori",
-                  "Teklif Sayısı",
-                  "Durum",
-                  "Eklenme",
-                  "İşlem",
+                  "Product Name",
+                  "Category",
+                  "Offer Count",
+                  "Status",
+                  "Added",
+                  "Action",
                 ].map((h) => (
                   <th key={h} className="px-4 py-3 text-left font-medium">
                     {h}

@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { serverFetch } from "@/lib/fetch";
 import { StoreHeader } from "@/components/modules/store/StoreHeader";
 import { StoreProductGrid } from "@/components/modules/store/StoreProductGrid";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 
 interface StorePageProps {
   params: { slug: string };
@@ -33,12 +35,15 @@ interface StoreOffer {
   categoryName?: string;
 }
 
-export async function generateMetadata({ params }: StorePageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: StorePageProps): Promise<Metadata> {
   try {
-    const store = await serverFetch.store(params.slug) as StorProfile;
+    const store = (await serverFetch.store(params.slug)) as StorProfile;
     return {
       title: `${store.storeName} | Mağaza`,
-      description: store.description ?? `${store.storeName} mağazasının tüm ürünleri`,
+      description:
+        store.description ?? `${store.storeName} mağazasının tüm ürünleri`,
       openGraph: {
         title: store.storeName,
         description: store.description,
@@ -64,11 +69,15 @@ export default async function StorePage({ params }: StorePageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <StoreHeader store={store} />
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <StoreProductGrid storeSlug={params.slug} offers={offers} />
+    <>
+    <Navbar />
+      <div className="min-h-screen bg-background">
+        <StoreHeader store={store} />
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <StoreProductGrid storeSlug={params.slug} offers={offers} />
+        </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 }

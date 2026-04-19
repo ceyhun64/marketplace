@@ -88,7 +88,7 @@ export default function MerchantCataloguePage() {
       setOffers(offersRes.data);
       setCategories(categoriesRes.data);
     } catch {
-      setError("Veriler yüklenemedi.");
+      setError("Data could not be loaded.");
     } finally {
       setOffersLoading(false);
     }
@@ -102,7 +102,7 @@ export default function MerchantCataloguePage() {
       const res = await api.get("/merchant/products");
       setProducts(res.data);
     } catch {
-      setError("Ürünler yüklenemedi.");
+      setError("Products could not be loaded.");
     } finally {
       setProductsLoading(false);
     }
@@ -140,7 +140,7 @@ export default function MerchantCataloguePage() {
     } catch (err: unknown) {
       setOfferFormError(
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Teklif oluşturulamadı.",
+          ?.message ?? "Offer could not be created.",
       );
     } finally {
       setOfferFormLoading(false);
@@ -173,7 +173,7 @@ export default function MerchantCataloguePage() {
     } catch (err: unknown) {
       setEditFormError(
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Güncelleme başarısız.",
+          ?.message ?? "Update failed.",
       );
     } finally {
       setEditFormLoading(false);
@@ -197,18 +197,18 @@ export default function MerchantCataloguePage() {
       setOffers((prev) =>
         prev.map((o) => (o.id === id ? { ...o, [field]: current } : o)),
       );
-      alert("Güncelleme başarısız.");
+      alert("Update failed.");
     }
   }
 
   // ── Delete offer ─────────────────────────────────────────────────────────
   async function handleDeleteOffer(id: string) {
-    if (!confirm("Bu teklifi silmek istediğinize emin misiniz?")) return;
+    if (!confirm("Are you sure you want to delete this offer?")) return;
     try {
       await api.delete(`/merchant/offers/${id}`);
       setOffers((prev) => prev.filter((o) => o.id !== id));
     } catch {
-      alert("Silme başarısız.");
+      alert("Deletion failed.");
     }
   }
 
@@ -233,7 +233,7 @@ export default function MerchantCataloguePage() {
     } catch (err: unknown) {
       setProductFormError(
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Ürün talebi gönderilemedi.",
+          ?.message ?? "Product request could not be sent.",
       );
     } finally {
       setProductFormLoading(false);
@@ -243,7 +243,7 @@ export default function MerchantCataloguePage() {
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Katalog Yönetimi</h1>
+      <h1 className="text-2xl font-bold mb-6">Catalogue Management</h1>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 border-b">
@@ -255,7 +255,7 @@ export default function MerchantCataloguePage() {
           }`}
           onClick={() => setActiveTab("offers")}
         >
-          Tekliflerim
+          My Offers
         </button>
         <button
           className={`pb-2 px-4 font-medium transition-colors ${
@@ -265,7 +265,7 @@ export default function MerchantCataloguePage() {
           }`}
           onClick={() => setActiveTab("products")}
         >
-          Ürünlerim
+          My Products
         </button>
       </div>
 
