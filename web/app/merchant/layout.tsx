@@ -9,7 +9,6 @@ const merchantLinks = [
   },
   { href: "/merchant/orders", label: "Siparişler", icon: "shopping-cart" },
   { href: "/merchant/analytics", label: "Analitik", icon: "bar-chart-2" },
-  { href: "/merchant/subscription", label: "Abonelik", icon: "credit-card" },
 ];
 
 export default function MerchantLayout({
