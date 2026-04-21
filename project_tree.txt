@@ -72,7 +72,7 @@
 │   │   ├── ProductsController.cs
 │   │   ├── StoreController.cs
 │   │   └── SubscriptionsController.cs
-│   ├── DockerFile
+│   ├── Dockerfile
 │   ├── Domain
 │   │   ├── Entities
 │   │   │   ├── Category.cs
@@ -148,9 +148,12 @@
 ├── project_tree.txt
 ├── system_architecture.html
 └── web
+    ├── .env.local
     ├── .gitignore
     ├── app
     │   ├── admin
+    │   │   ├── analytics
+    │   │   │   └── page.tsx
     │   │   ├── categories
     │   │   │   └── page.tsx
     │   │   ├── couriers
@@ -163,6 +166,9 @@
     │   │   ├── page.tsx
     │   │   └── products
     │   │       └── page.tsx
+    │   ├── api
+    │   │   └── upload
+    │   │       └── route.ts
     │   ├── auth
     │   │   ├── login
     │   │   │   └── page.tsx
@@ -179,6 +185,8 @@
     │   ├── globals.css
     │   ├── layout.tsx
     │   ├── merchant
+    │   │   ├── analytics
+    │   │   │   └── page.tsx
     │   │   ├── catalogue
     │   │   │   └── page.tsx
     │   │   ├── layout.tsx
@@ -210,6 +218,11 @@
     │   │   ├── Navbar.tsx
     │   │   └── Sidebar.tsx
     │   ├── modules
+    │   │   ├── admin
+    │   │   │   └── products
+    │   │   │       ├── AddProductModal.tsx
+    │   │   │       ├── ProductsTable.tsx
+    │   │   │       └── types.ts
     │   │   ├── home
     │   │   │   ├── CategoryGrid.tsx
     │   │   │   ├── FeaturedProducts.tsx
@@ -247,6 +260,7 @@
     │       ├── empty.tsx
     │       ├── field.tsx
     │       ├── hover-card.tsx
+    │       ├── imageUploader.tsx
     │       ├── input-group.tsx
     │       ├── input-otp.tsx
     │       ├── input.tsx
@@ -254,6 +268,7 @@
     │       ├── kbd.tsx
     │       ├── label.tsx
     │       ├── menubar.tsx
+    │       ├── multiImageUploader.tsx
     │       ├── native-select.tsx
     │       ├── navigation-menu.tsx
     │       ├── pagination.tsx
@@ -278,15 +293,17 @@
     │       ├── toggle.tsx
     │       └── tooltip.tsx
     ├── components.json
-    ├── DockerFile
+    ├── Dockerfile
     ├── hooks
     │   ├── use-auth.ts
     │   ├── use-cart.ts
+    │   ├── use-cloudinary-upload.ts
     │   ├── use-mobile.ts
     │   └── use-tracking.ts
     ├── lib
     │   ├── api.ts
     │   ├── auth.ts
+    │   ├── cloudinary.ts
     │   ├── fetch.ts
     │   ├── signalr.ts
     │   └── utils.ts

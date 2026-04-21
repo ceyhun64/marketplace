@@ -1,775 +1,733 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  categoryId: string;
-  categoryName: string;
-  isApproved: boolean;
-  createdAt: string;
-  offerCount?: number;
-}
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+import {
+  Plus,
+  Search,
+  Package,
+  Globe,
+  Store,
+  TrendingUp,
+  DollarSign,
+  Pencil,
+  Trash2,
+  Image as ImageIcon,
+} from "lucide-react";
 
 interface Offer {
   id: string;
   productId: string;
   productName: string;
+  productImages: string[];
+  productCategoryName?: string;
   price: number;
   stock: number;
-  publishToMarket?: boolean;
-  publishToStore?: boolean;
-  createdAt: string;
+  publishToMarket: boolean;
+  publishToStore: boolean;
+  rating: number;
+  isDeleted: boolean;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  parentId?: string;
 }
 
 export default function MerchantCataloguePage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [offers, setOffers] = useState<Offer[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [activeTab, setActiveTab] = useState<"offers" | "products">("offers");
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [addOpen, setAddOpen] = useState(false);
+  const [editOffer, setEditOffer] = useState<Offer | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
-  // FIX 3 — Products tab'ına ayrı loading state
-  const [offersLoading, setOffersLoading] = useState(true);
-  const [productsLoading, setProductsLoading] = useState(false);
-
-  const [error, setError] = useState("");
-
-  // ── Offer form ──────────────────────────────────────────────────────────────
-  const [showOfferForm, setShowOfferForm] = useState(false);
-  const [offerForm, setOfferForm] = useState({
-    productId: "",
-    price: "",
-    stock: "",
-  });
-  const [offerFormError, setOfferFormError] = useState("");
-  const [offerFormLoading, setOfferFormLoading] = useState(false);
-
-  // FIX 1 — Edit offer modal (inline fiyat/stok düzenleme)
-  const [editingOffer, setEditingOffer] = useState<{
-    id: string;
-    price: string;
-    stock: string;
-  } | null>(null);
-  const [editFormError, setEditFormError] = useState("");
-  const [editFormLoading, setEditFormLoading] = useState(false);
-
-  // ── Product form ────────────────────────────────────────────────────────────
-  const [showProductForm, setShowProductForm] = useState(false);
   const [productForm, setProductForm] = useState({
     name: "",
     description: "",
     categoryId: "",
+    subcategoryId: "",
+    tags: "",
+    images: [] as string[],
   });
-  const [productFormError, setProductFormError] = useState("");
-  const [productFormLoading, setProductFormLoading] = useState(false);
+  const [imageInput, setImageInput] = useState("");
+  const [offerForm, setOfferForm] = useState({
+    price: "",
+    stock: "",
+    publishToMarket: false,
+    publishToStore: true,
+  });
+  const [editForm, setEditForm] = useState({ price: "", stock: "" });
 
-  // ── Initial load ────────────────────────────────────────────────────────────
-  useEffect(() => {
-    fetchOffersAndCategories();
-  }, []);
+  const { data: offersData, isLoading } = useQuery({
+    queryKey: ["merchant-offers"],
+    queryFn: async () => {
+      const res = await api.get("/api/merchant/offers");
+      return res.data;
+    },
+  });
 
-  async function fetchOffersAndCategories() {
-    setOffersLoading(true);
-    setError("");
-    try {
-      const [offersRes, categoriesRes] = await Promise.all([
-        api.get("/merchant/offers"),
-        api.get("/categories"),
-      ]);
-      setOffers(offersRes.data);
-      setCategories(categoriesRes.data);
-    } catch {
-      setError("Data could not be loaded.");
-    } finally {
-      setOffersLoading(false);
-    }
-  }
+  const { data: categoriesData } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const res = await api.get("/api/categories");
+      return res.data;
+    },
+  });
 
-  // FIX 2 — Doğru endpoint: GET /merchant/products (backend'de expose edilmiş olmalı)
-  async function fetchProducts() {
-    setProductsLoading(true);
-    setError("");
-    try {
-      const res = await api.get("/merchant/products");
-      setProducts(res.data);
-    } catch {
-      setError("Products could not be loaded.");
-    } finally {
-      setProductsLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    if (activeTab === "products" && products.length === 0) {
-      fetchProducts();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
-
-  // ── Offer form open — ürün listesi hazır olsun ───────────────────────────
-  async function openOfferForm() {
-    if (products.length === 0) {
-      await fetchProducts();
-    }
-    setShowOfferForm(true);
-  }
-
-  // ── Create offer ─────────────────────────────────────────────────────────
-  async function handleCreateOffer(e: React.FormEvent) {
-    e.preventDefault();
-    setOfferFormError("");
-    setOfferFormLoading(true);
-    try {
-      await api.post("/merchant/offers", {
-        productId: offerForm.productId,
-        price: parseFloat(offerForm.price),
-        stock: parseInt(offerForm.stock),
-      });
-      setShowOfferForm(false);
-      setOfferForm({ productId: "", price: "", stock: "" });
-      await fetchOffersAndCategories();
-    } catch (err: unknown) {
-      setOfferFormError(
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Offer could not be created.",
-      );
-    } finally {
-      setOfferFormLoading(false);
-    }
-  }
-
-  // FIX 1 — Edit offer: PUT /merchant/offers/{id} ile fiyat+stok güncelle
-  async function handleEditOffer(e: React.FormEvent) {
-    e.preventDefault();
-    if (!editingOffer) return;
-    setEditFormError("");
-    setEditFormLoading(true);
-    try {
-      await api.put(`/merchant/offers/${editingOffer.id}`, {
-        price: parseFloat(editingOffer.price),
-        stock: parseInt(editingOffer.stock),
-      });
-      setOffers((prev) =>
-        prev.map((o) =>
-          o.id === editingOffer.id
-            ? {
-                ...o,
-                price: parseFloat(editingOffer.price),
-                stock: parseInt(editingOffer.stock),
-              }
-            : o,
-        ),
-      );
-      setEditingOffer(null);
-    } catch (err: unknown) {
-      setEditFormError(
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Update failed.",
-      );
-    } finally {
-      setEditFormLoading(false);
-    }
-  }
-
-  // ── Publish toggles ──────────────────────────────────────────────────────
-  async function handlePublishToggle(
-    id: string,
-    field: "publishToMarket" | "publishToStore",
-    current: boolean,
-  ) {
-    // Optimistic update
-    setOffers((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, [field]: !current } : o)),
-    );
-    try {
-      await api.patch(`/merchant/offers/${id}/publish`, { [field]: !current });
-    } catch {
-      // Rollback on failure
-      setOffers((prev) =>
-        prev.map((o) => (o.id === id ? { ...o, [field]: current } : o)),
-      );
-      alert("Update failed.");
-    }
-  }
-
-  // ── Delete offer ─────────────────────────────────────────────────────────
-  async function handleDeleteOffer(id: string) {
-    if (!confirm("Are you sure you want to delete this offer?")) return;
-    try {
-      await api.delete(`/merchant/offers/${id}`);
-      setOffers((prev) => prev.filter((o) => o.id !== id));
-    } catch {
-      alert("Deletion failed.");
-    }
-  }
-
-  // FIX 2 — Ürün talebi: doğru endpoint. Admin ürün oluşturur (POST /products),
-  // merchant sadece talep gönderir. Backend'e göre endpoint'i ayarla:
-  // Eğer merchant kendi adına talep gönderiyorsa => POST /merchant/products
-  // Eğer admin endpoint'i kullanılıyorsa => POST /products (Admin policy gerekir)
-  // Şu an /merchant/products kullanıyoruz — backend'de bu route varsa çalışır.
-  async function handleCreateProduct(e: React.FormEvent) {
-    e.preventDefault();
-    setProductFormError("");
-    setProductFormLoading(true);
-    try {
-      await api.post("/merchant/products", {
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const productRes = await api.post("/api/products", {
         name: productForm.name,
         description: productForm.description,
-        categoryId: productForm.categoryId,
+        categoryId: productForm.subcategoryId || productForm.categoryId,
+        images: productForm.images,
+        tags: productForm.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
       });
-      setShowProductForm(false);
-      setProductForm({ name: "", description: "", categoryId: "" });
-      await fetchProducts();
-    } catch (err: unknown) {
-      setProductFormError(
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Product request could not be sent.",
-      );
-    } finally {
-      setProductFormLoading(false);
-    }
-  }
+      const productId = productRes.data?.id || productRes.data?.productId;
 
-  // ── Render ───────────────────────────────────────────────────────────────
+      await api.post("/api/merchant/offers", {
+        productId,
+        price: parseFloat(offerForm.price),
+        stock: parseInt(offerForm.stock),
+        publishToMarket: offerForm.publishToMarket,
+        publishToStore: offerForm.publishToStore,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Ürün ve teklif başarıyla oluşturuldu");
+      queryClient.invalidateQueries({ queryKey: ["merchant-offers"] });
+      setAddOpen(false);
+      setProductForm({
+        name: "",
+        description: "",
+        categoryId: "",
+        subcategoryId: "",
+        tags: "",
+        images: [],
+      });
+      setOfferForm({
+        price: "",
+        stock: "",
+        publishToMarket: false,
+        publishToStore: true,
+      });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Ürün oluşturulamadı");
+    },
+  });
+
+  const updateOfferMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: object }) =>
+      api.put(`/api/merchant/offers/${id}`, data),
+    onSuccess: () => {
+      toast.success("Teklif güncellendi");
+      queryClient.invalidateQueries({ queryKey: ["merchant-offers"] });
+      setEditOpen(false);
+    },
+    onError: () => toast.error("Güncellenemedi"),
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: ({
+      id,
+      publishToMarket,
+      publishToStore,
+    }: {
+      id: string;
+      publishToMarket: boolean;
+      publishToStore: boolean;
+    }) =>
+      api.patch(`/api/merchant/offers/${id}/publish`, {
+        publishToMarket,
+        publishToStore,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["merchant-offers"] });
+    },
+    onError: () => toast.error("Güncelleme başarısız"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/merchant/offers/${id}`),
+    onSuccess: () => {
+      toast.success("Teklif kaldırıldı");
+      queryClient.invalidateQueries({ queryKey: ["merchant-offers"] });
+    },
+    onError: () => toast.error("Kaldırılamadı"),
+  });
+
+  const offers: Offer[] = offersData?.items || offersData || [];
+  const categories: Category[] = categoriesData?.items || categoriesData || [];
+  const rootCategories = categories.filter((c) => !c.parentId);
+  const subCategories = categories.filter(
+    (c) => c.parentId === productForm.categoryId,
+  );
+  const filtered = offers.filter(
+    (o) =>
+      !search || o.productName?.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const stats = {
+    total: offers.length,
+    inMarket: offers.filter((o) => o.publishToMarket).length,
+    inStore: offers.filter((o) => o.publishToStore).length,
+    totalStock: offers.reduce((sum, o) => sum + (o.stock || 0), 0),
+  };
+
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Catalogue Management</h1>
-
-      {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b">
-        <button
-          className={`pb-2 px-4 font-medium transition-colors ${
-            activeTab === "offers"
-              ? "border-b-2 border-blue-600 text-blue-600"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-          onClick={() => setActiveTab("offers")}
-        >
-          My Offers
-        </button>
-        <button
-          className={`pb-2 px-4 font-medium transition-colors ${
-            activeTab === "products"
-              ? "border-b-2 border-blue-600 text-blue-600"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-          onClick={() => setActiveTab("products")}
-        >
-          My Products
-        </button>
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Ürün Kataloğum</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Ürünlerinizi ve fiyatlarınızı yönetin
+          </p>
+        </div>
+        <Button onClick={() => setAddOpen(true)} className="gap-2">
+          <Plus className="w-4 h-4" />
+          Ürün Ekle
+        </Button>
       </div>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">
-          {error}
-        </div>
-      )}
+      <div className="grid grid-cols-4 gap-4">
+        {[
+          {
+            label: "Toplam Ürün",
+            value: stats.total,
+            icon: Package,
+            color: "text-blue-600",
+          },
+          {
+            label: "Marketplace'de",
+            value: stats.inMarket,
+            icon: Globe,
+            color: "text-green-600",
+          },
+          {
+            label: "E-Mağazada",
+            value: stats.inStore,
+            icon: Store,
+            color: "text-purple-600",
+          },
+          {
+            label: "Toplam Stok",
+            value: stats.totalStock,
+            icon: TrendingUp,
+            color: "text-orange-500",
+          },
+        ].map((s) => (
+          <Card key={s.label}>
+            <CardContent className="p-4 flex items-center gap-3">
+              <s.icon className={`w-8 h-8 ${s.color}`} />
+              <div>
+                <p className="text-2xl font-bold">{s.value}</p>
+                <p className="text-xs text-gray-500">{s.label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-      {/* ═══════════════════════════════════════════════════════════════════════
-          OFFERS TAB
-          ═══════════════════════════════════════════════════════════════════ */}
-      {activeTab === "offers" && (
-        <>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-700">
-              Aktif Teklifler
-            </h2>
-            <button
-              onClick={openOfferForm}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
-            >
-              + Yeni Teklif
-            </button>
+      <Card>
+        <CardContent className="p-0">
+          <div className="p-4 border-b">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Ürün ara..."
+                className="pl-9"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
           </div>
 
-          {/* ── Create offer modal ─────────────────────────────────────────── */}
-          {showOfferForm && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-                <h3 className="text-lg font-semibold mb-4">
-                  Yeni Teklif Oluştur
-                </h3>
-                <form onSubmit={handleCreateOffer} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Ürün
-                    </label>
-                    <select
-                      required
-                      value={offerForm.productId}
-                      onChange={(e) =>
-                        setOfferForm({
-                          ...offerForm,
-                          productId: e.target.value,
-                        })
-                      }
-                      className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Ürün seçin...</option>
-                      {products
-                        .filter((p) => p.isApproved)
-                        .map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))}
-                    </select>
-                    {products.filter((p) => p.isApproved).length === 0 && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        Önce &quot;Ürünlerim&quot; sekmesinden onaylı ürün
-                        eklemeniz gerekiyor.
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Fiyat (₺)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      required
-                      value={offerForm.price}
-                      onChange={(e) =>
-                        setOfferForm({ ...offerForm, price: e.target.value })
-                      }
-                      className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Stok
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      required
-                      value={offerForm.stock}
-                      onChange={(e) =>
-                        setOfferForm({ ...offerForm, stock: e.target.value })
-                      }
-                      className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="0"
-                    />
-                  </div>
-                  {offerFormError && (
-                    <p className="text-sm text-red-600">{offerFormError}</p>
-                  )}
-                  <div className="flex gap-2 justify-end">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowOfferForm(false);
-                        setOfferFormError("");
-                      }}
-                      className="px-4 py-2 text-sm text-gray-600 border rounded hover:bg-gray-50"
-                    >
-                      İptal
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={offerFormLoading}
-                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {offerFormLoading ? "Kaydediliyor..." : "Kaydet"}
-                    </button>
-                  </div>
-                </form>
-              </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
             </div>
-          )}
-
-          {/* FIX 1 — Edit offer modal ──────────────────────────────────────── */}
-          {editingOffer && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
-                <h3 className="text-lg font-semibold mb-4">Teklif Düzenle</h3>
-                <form onSubmit={handleEditOffer} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Fiyat (₺)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      required
-                      value={editingOffer.price}
-                      onChange={(e) =>
-                        setEditingOffer({
-                          ...editingOffer,
-                          price: e.target.value,
-                        })
-                      }
-                      className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Stok
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      required
-                      value={editingOffer.stock}
-                      onChange={(e) =>
-                        setEditingOffer({
-                          ...editingOffer,
-                          stock: e.target.value,
-                        })
-                      }
-                      className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  {editFormError && (
-                    <p className="text-sm text-red-600">{editFormError}</p>
-                  )}
-                  <div className="flex gap-2 justify-end">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditingOffer(null);
-                        setEditFormError("");
-                      }}
-                      className="px-4 py-2 text-sm text-gray-600 border rounded hover:bg-gray-50"
-                    >
-                      İptal
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={editFormLoading}
-                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {editFormLoading ? "Kaydediliyor..." : "Güncelle"}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* Offers table */}
-          {offersLoading ? (
-            <div className="space-y-2 mt-2">
-              {[...Array(4)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-10 bg-gray-100 rounded animate-pulse"
-                />
-              ))}
-            </div>
-          ) : offers.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
-              <p className="text-lg">Henüz teklifiniz yok.</p>
-              <p className="text-sm mt-1">
-                &quot;Yeni Teklif&quot; butonuyla ilk teklifinizi ekleyin.
-              </p>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+              <Package className="w-12 h-12 mb-3 opacity-30" />
+              <p className="text-sm">Henüz ürün yok</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => setAddOpen(true)}
+              >
+                İlk Ürünü Ekle
+              </Button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-gray-500">
-                    <th className="pb-3 font-medium">Ürün</th>
-                    <th className="pb-3 font-medium">Fiyat</th>
-                    <th className="pb-3 font-medium">Stok</th>
-                    <th className="pb-3 font-medium">Marketplace</th>
-                    <th className="pb-3 font-medium">E-Mağaza</th>
-                    <th className="pb-3 font-medium">Eklenme</th>
-                    <th className="pb-3 font-medium">İşlemler</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {offers.map((offer) => (
-                    <tr key={offer.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 font-medium">{offer.productName}</td>
-                      <td className="py-3">
-                        {offer.price.toLocaleString("tr-TR", {
-                          style: "currency",
-                          currency: "TRY",
-                        })}
-                      </td>
-                      <td className="py-3">{offer.stock}</td>
-
-                      {/* Marketplace toggle */}
-                      <td className="py-3">
-                        <button
-                          onClick={() =>
-                            handlePublishToggle(
-                              offer.id,
-                              "publishToMarket",
-                              offer.publishToMarket ?? false,
-                            )
-                          }
-                          title={
-                            offer.publishToMarket
-                              ? "Marketplace'den kaldır"
-                              : "Marketplace'e yayınla"
-                          }
-                          className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors ${
-                            offer.publishToMarket
-                              ? "bg-blue-600"
-                              : "bg-gray-200"
-                          }`}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                              offer.publishToMarket
-                                ? "translate-x-5"
-                                : "translate-x-1"
-                            }`}
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50">
+                  <TableHead>Ürün</TableHead>
+                  <TableHead>Fiyat</TableHead>
+                  <TableHead>Stok</TableHead>
+                  <TableHead>Marketplace</TableHead>
+                  <TableHead>E-Mağaza</TableHead>
+                  <TableHead>Rating</TableHead>
+                  <TableHead className="w-20">İşlem</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((offer) => (
+                  <TableRow key={offer.id} className="hover:bg-gray-50">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        {offer.productImages?.[0] ? (
+                          <img
+                            src={offer.productImages[0]}
+                            alt={offer.productName}
+                            className="w-10 h-10 object-cover rounded-lg border"
                           />
-                        </button>
-                      </td>
-
-                      {/* E-store toggle */}
-                      <td className="py-3">
-                        <button
-                          onClick={() =>
-                            handlePublishToggle(
-                              offer.id,
-                              "publishToStore",
-                              offer.publishToStore ?? false,
-                            )
-                          }
-                          title={
-                            offer.publishToStore
-                              ? "E-mağazadan kaldır"
-                              : "E-mağazaya yayınla"
-                          }
-                          className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors ${
-                            offer.publishToStore
-                              ? "bg-purple-600"
-                              : "bg-gray-200"
-                          }`}
+                        ) : (
+                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <ImageIcon className="w-4 h-4 text-gray-400" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-medium text-sm">
+                            {offer.productName}
+                          </p>
+                          {offer.productCategoryName && (
+                            <p className="text-xs text-gray-400">
+                              {offer.productCategoryName}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <DollarSign className="w-3 h-3 text-gray-400" />
+                        <span className="font-semibold text-sm">
+                          {offer.price?.toLocaleString("tr-TR", {
+                            minimumFractionDigits: 2,
+                          })}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={
+                          offer.stock > 10
+                            ? "border-green-200 text-green-700"
+                            : offer.stock > 0
+                              ? "border-orange-200 text-orange-700"
+                              : "border-red-200 text-red-700"
+                        }
+                      >
+                        {offer.stock} adet
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={offer.publishToMarket}
+                        onCheckedChange={(checked) =>
+                          toggleMutation.mutate({
+                            id: offer.id,
+                            publishToMarket: checked,
+                            publishToStore: offer.publishToStore,
+                          })
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={offer.publishToStore}
+                        onCheckedChange={(checked) =>
+                          toggleMutation.mutate({
+                            id: offer.id,
+                            publishToMarket: offer.publishToMarket,
+                            publishToStore: checked,
+                          })
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-0.5">
+                        <span className="text-yellow-500 text-xs">★</span>
+                        <span className="text-xs text-gray-600">
+                          {offer.rating?.toFixed(1) || "—"}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 w-7 p-0"
+                          onClick={() => {
+                            setEditOffer(offer);
+                            setEditForm({
+                              price: offer.price?.toString(),
+                              stock: offer.stock?.toString(),
+                            });
+                            setEditOpen(true);
+                          }}
                         >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                              offer.publishToStore
-                                ? "translate-x-5"
-                                : "translate-x-1"
-                            }`}
-                          />
-                        </button>
-                      </td>
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 w-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                          onClick={() => {
+                            if (
+                              confirm(
+                                "Bu teklifi kaldırmak istediğinizden emin misiniz?",
+                              )
+                            )
+                              deleteMutation.mutate(offer.id);
+                          }}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
-                      <td className="py-3 text-gray-400">
-                        {new Date(offer.createdAt).toLocaleDateString("tr-TR")}
-                      </td>
-
-                      <td className="py-3">
-                        <div className="flex gap-2">
-                          {/* FIX 1 — Düzenle butonu */}
+      {/* Add Dialog */}
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent className="sm:max-w-[580px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Ürün & Teklif Ekle</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5 py-2">
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                Ürün Bilgileri
+              </p>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label>Ürün Adı *</Label>
+                  <Input
+                    placeholder="Örn: iPhone 15 Pro Max"
+                    value={productForm.name}
+                    onChange={(e) =>
+                      setProductForm((f) => ({ ...f, name: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Açıklama *</Label>
+                  <Textarea
+                    rows={2}
+                    placeholder="Ürün açıklaması..."
+                    value={productForm.description}
+                    onChange={(e) =>
+                      setProductForm((f) => ({
+                        ...f,
+                        description: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Kategori *</Label>
+                    <Select
+                      value={productForm.categoryId}
+                      onValueChange={(v) =>
+                        setProductForm((f) => ({
+                          ...f,
+                          categoryId: v,
+                          subcategoryId: "",
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seçin" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {rootCategories.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {subCategories.length > 0 && (
+                    <div className="space-y-1.5">
+                      <Label>Alt Kategori</Label>
+                      <Select
+                        value={productForm.subcategoryId}
+                        onValueChange={(v) =>
+                          setProductForm((f) => ({ ...f, subcategoryId: v }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Alt kategori" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {subCategories.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Etiketler</Label>
+                  <Input
+                    placeholder="teknoloji, telefon (virgülle)"
+                    value={productForm.tags}
+                    onChange={(e) =>
+                      setProductForm((f) => ({ ...f, tags: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Görseller</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Görsel URL..."
+                      value={imageInput}
+                      onChange={(e) => setImageInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && imageInput.trim()) {
+                          setProductForm((f) => ({
+                            ...f,
+                            images: [...f.images, imageInput.trim()],
+                          }));
+                          setImageInput("");
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (imageInput.trim()) {
+                          setProductForm((f) => ({
+                            ...f,
+                            images: [...f.images, imageInput.trim()],
+                          }));
+                          setImageInput("");
+                        }
+                      }}
+                    >
+                      Ekle
+                    </Button>
+                  </div>
+                  {productForm.images.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {productForm.images.map((img, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded text-xs"
+                        >
+                          <span className="truncate max-w-[100px]">
+                            {img.split("/").pop()}
+                          </span>
                           <button
+                            className="text-gray-400 hover:text-red-500"
                             onClick={() =>
-                              setEditingOffer({
-                                id: offer.id,
-                                price: String(offer.price),
-                                stock: String(offer.stock),
-                              })
+                              setProductForm((f) => ({
+                                ...f,
+                                images: f.images.filter((_, idx) => idx !== i),
+                              }))
                             }
-                            className="text-xs text-blue-600 hover:underline"
                           >
-                            Düzenle
-                          </button>
-                          <button
-                            onClick={() => handleDeleteOffer(offer.id)}
-                            className="text-xs text-red-500 hover:underline"
-                          >
-                            Sil
+                            ×
                           </button>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════════════════
-          PRODUCTS TAB
-          ═══════════════════════════════════════════════════════════════════ */}
-      {activeTab === "products" && (
-        <>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-700">Ürünlerim</h2>
-            <button
-              onClick={() => setShowProductForm(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
-            >
-              + Yeni Ürün Talebi
-            </button>
-          </div>
-
-          {/* ── Product form modal ─────────────────────────────────────────── */}
-          {showProductForm && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-                <h3 className="text-lg font-semibold mb-2">Yeni Ürün Talebi</h3>
-                <p className="text-xs text-gray-500 mb-4">
-                  Ürün talebi admin onayına gönderilecektir.
-                </p>
-                <form onSubmit={handleCreateProduct} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Ürün Adı
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={productForm.name}
-                      onChange={(e) =>
-                        setProductForm({ ...productForm, name: e.target.value })
-                      }
-                      className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Ürün adını girin"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Açıklama
-                    </label>
-                    <textarea
-                      required
-                      rows={3}
-                      value={productForm.description}
-                      onChange={(e) =>
-                        setProductForm({
-                          ...productForm,
-                          description: e.target.value,
-                        })
-                      }
-                      className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                      placeholder="Ürün açıklaması"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Kategori
-                    </label>
-                    <select
-                      required
-                      value={productForm.categoryId}
-                      onChange={(e) =>
-                        setProductForm({
-                          ...productForm,
-                          categoryId: e.target.value,
-                        })
-                      }
-                      className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Kategori seçin...</option>
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
                       ))}
-                    </select>
-                  </div>
-                  {productFormError && (
-                    <p className="text-sm text-red-600">{productFormError}</p>
+                    </div>
                   )}
-                  <div className="flex gap-2 justify-end">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowProductForm(false);
-                        setProductFormError("");
-                      }}
-                      className="px-4 py-2 text-sm text-gray-600 border rounded hover:bg-gray-50"
-                    >
-                      İptal
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={productFormLoading}
-                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {productFormLoading ? "Gönderiliyor..." : "Talep Gönder"}
-                    </button>
-                  </div>
-                </form>
+                </div>
               </div>
             </div>
-          )}
 
-          {/* FIX 3 — Products loading skeleton */}
-          {productsLoading ? (
-            <div className="space-y-2 mt-2">
-              {[...Array(4)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-10 bg-gray-100 rounded animate-pulse"
-                />
-              ))}
-            </div>
-          ) : products.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
-              <p className="text-lg">Henüz onaylı ürününüz yok.</p>
-              <p className="text-sm mt-1">
-                &quot;Yeni Ürün Talebi&quot; ile admin onayına gönderin.
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                Fiyat & Stok
               </p>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Fiyat (₺) *</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={offerForm.price}
+                      onChange={(e) =>
+                        setOfferForm((f) => ({ ...f, price: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Stok *</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      value={offerForm.stock}
+                      onChange={(e) =>
+                        setOfferForm((f) => ({ ...f, stock: e.target.value }))
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium">E-Mağazamda Göster</p>
+                    <p className="text-xs text-gray-400">
+                      Kendi mağaza sayfanızda yayınlansın
+                    </p>
+                  </div>
+                  <Switch
+                    checked={offerForm.publishToStore}
+                    onCheckedChange={(v) =>
+                      setOfferForm((f) => ({ ...f, publishToStore: v }))
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium">Marketplace'e Yayınla</p>
+                    <p className="text-xs text-gray-400">
+                      Genel pazaryerinde görünsün (Pro+ gerekir)
+                    </p>
+                  </div>
+                  <Switch
+                    checked={offerForm.publishToMarket}
+                    onCheckedChange={(v) =>
+                      setOfferForm((f) => ({ ...f, publishToMarket: v }))
+                    }
+                  />
+                </div>
+              </div>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-gray-500">
-                    <th className="pb-3 font-medium">Ürün Adı</th>
-                    <th className="pb-3 font-medium">Kategori</th>
-                    <th className="pb-3 font-medium">Teklif Sayısı</th>
-                    <th className="pb-3 font-medium">Durum</th>
-                    <th className="pb-3 font-medium">Eklenme</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.map((product) => (
-                    <tr key={product.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 font-medium">{product.name}</td>
-                      <td className="py-3 text-gray-500">
-                        {product.categoryName}
-                      </td>
-                      <td className="py-3">{product.offerCount ?? 0}</td>
-                      <td className="py-3">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            product.isApproved
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
-                          {product.isApproved ? "Onaylandı" : "Beklemede"}
-                        </span>
-                      </td>
-                      <td className="py-3 text-gray-400">
-                        {new Date(product.createdAt).toLocaleDateString(
-                          "tr-TR",
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddOpen(false)}>
+              İptal
+            </Button>
+            <Button
+              onClick={() => createMutation.mutate()}
+              disabled={
+                createMutation.isPending ||
+                !productForm.name ||
+                !productForm.description ||
+                !productForm.categoryId ||
+                !offerForm.price ||
+                !offerForm.stock
+              }
+            >
+              {createMutation.isPending ? "Ekleniyor..." : "Ürünü Ekle"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-[380px]">
+          <DialogHeader>
+            <DialogTitle>Teklif Düzenle — {editOffer?.productName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Fiyat (₺)</Label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={editForm.price}
+                onChange={(e) =>
+                  setEditForm((f) => ({ ...f, price: e.target.value }))
+                }
+              />
             </div>
-          )}
-        </>
-      )}
+            <div className="space-y-1.5">
+              <Label>Stok</Label>
+              <Input
+                type="number"
+                min="0"
+                value={editForm.stock}
+                onChange={(e) =>
+                  setEditForm((f) => ({ ...f, stock: e.target.value }))
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>
+              İptal
+            </Button>
+            <Button
+              onClick={() =>
+                editOffer &&
+                updateOfferMutation.mutate({
+                  id: editOffer.id,
+                  data: {
+                    price: parseFloat(editForm.price),
+                    stock: parseInt(editForm.stock),
+                  },
+                })
+              }
+              disabled={updateOfferMutation.isPending}
+            >
+              {updateOfferMutation.isPending ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

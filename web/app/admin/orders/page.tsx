@@ -1,285 +1,550 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { toast } from "sonner";
+import {
+  Plus,
+  MoreHorizontal,
+  Search,
+  Store,
+  User,
+  Ban,
+  CheckCircle,
+  Building2,
+  ShoppingBag,
+  TrendingUp,
+} from "lucide-react";
 
-interface Order {
+interface Merchant {
   id: string;
-  customerName: string;
-  customerEmail: string;
-  merchantName: string;
-  items: { productName: string; quantity: number; unitPrice: number }[];
-  totalAmount: number;
-  status: string;
-  source: "MARKETPLACE" | "ESTORE";
-  shippingRate: "EXPRESS" | "REGULAR";
+  storeName: string;
+  slug: string;
+  email: string;
+  customDomain?: string;
+  domainVerified: boolean;
+  isSuspended: boolean;
+  subscriptionPlan?: string;
+  productCount?: number;
+  totalSales?: number;
   createdAt: string;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "Bekliyor",
-  PAYMENT_CONFIRMED: "Ödeme Onaylı",
-  LABEL_GENERATED: "Etiket Hazır",
-  COURIER_ASSIGNED: "Kurye Atandı",
-  PICKED_UP: "Teslim Alındı",
-  IN_TRANSIT: "Yolda",
-  DELIVERED: "Teslim Edildi",
-  FAILED: "Başarısız",
-};
+interface CreateMerchantForm {
+  storeName: string;
+  email: string;
+  password: string;
+  phone?: string;
+  slug?: string;
+}
 
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: "bg-yellow-100 text-yellow-700",
-  PAYMENT_CONFIRMED: "bg-blue-100 text-blue-700",
-  LABEL_GENERATED: "bg-indigo-100 text-indigo-700",
-  COURIER_ASSIGNED: "bg-purple-100 text-purple-700",
-  PICKED_UP: "bg-orange-100 text-orange-700",
-  IN_TRANSIT: "bg-sky-100 text-sky-700",
-  DELIVERED: "bg-green-100 text-green-700",
-  FAILED: "bg-red-100 text-red-700",
-};
+export default function AdminMerchantsPage() {
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [selectedMerchant, setSelectedMerchant] = useState<Merchant | null>(
+    null,
+  );
+  const [form, setForm] = useState<CreateMerchantForm>({
+    storeName: "",
+    email: "",
+    password: "",
+    phone: "",
+    slug: "",
+  });
+  const [setupForm, setSetupForm] = useState({
+    storeName: "",
+    slug: "",
+    description: "",
+  });
 
-const ALL_STATUSES = Object.keys(STATUS_LABELS);
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-merchants", search],
+    queryFn: async () => {
+      const res = await api.get("/api/admin/merchants", { params: { search } });
+      return res.data;
+    },
+  });
 
-export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [newStatus, setNewStatus] = useState("");
-  const [updating, setUpdating] = useState(false);
+  const createMutation = useMutation({
+    mutationFn: (data: CreateMerchantForm) =>
+      api.post("/api/admin/merchants", data),
+    onSuccess: () => {
+      toast.success("Merchant başarıyla oluşturuldu");
+      queryClient.invalidateQueries({ queryKey: ["admin-merchants"] });
+      setCreateOpen(false);
+      setForm({ storeName: "", email: "", password: "", phone: "", slug: "" });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Merchant oluşturulamadı");
+    },
+  });
 
-  async function load() {
-    setLoading(true);
-    try {
-      const params = statusFilter !== "all" ? `?status=${statusFilter}` : "";
-      const res = await api.get<Order[]>(`/orders/admin/all${params}`);
-      setOrders(Array.isArray(res.data) ? res.data : []);
-    } catch {
-      setOrders([]);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const suspendMutation = useMutation({
+    mutationFn: (id: string) => api.post(`/api/admin/merchants/${id}/suspend`),
+    onSuccess: () => {
+      toast.success("Merchant durumu güncellendi");
+      queryClient.invalidateQueries({ queryKey: ["admin-merchants"] });
+    },
+    onError: () => toast.error("İşlem başarısız"),
+  });
 
-  useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
+  const setupMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: object }) =>
+      api.post(`/api/admin/merchants/${id}/setup`, data),
+    onSuccess: () => {
+      toast.success("Mağaza kurulumu tamamlandı");
+      queryClient.invalidateQueries({ queryKey: ["admin-merchants"] });
+      setSetupOpen(false);
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Kurulum başarısız");
+    },
+  });
 
-  async function handleStatusUpdate() {
-    if (!selectedOrder || !newStatus) return;
-    setUpdating(true);
-    try {
-      await api.patch(`/orders/${selectedOrder.id}/status`, {
-        status: newStatus,
-      });
-      setSelectedOrder(null);
-      await load();
-    } catch {
-      alert("Durum güncellenemedi.");
-    } finally {
-      setUpdating(false);
-    }
-  }
+  const merchants: Merchant[] = data?.items || data || [];
 
-  const filters = [
-    { value: "all", label: "Tümü" },
-    { value: "PENDING", label: "Bekliyor" },
-    { value: "PAYMENT_CONFIRMED", label: "Ödeme Onaylı" },
-    { value: "IN_TRANSIT", label: "Yolda" },
-    { value: "DELIVERED", label: "Teslim Edildi" },
-    { value: "FAILED", label: "Başarısız" },
-  ];
+  const filtered = merchants.filter(
+    (m) =>
+      !search ||
+      m.storeName?.toLowerCase().includes(search.toLowerCase()) ||
+      m.email?.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const stats = {
+    total: merchants.length,
+    active: merchants.filter((m) => !m.isSuspended).length,
+    suspended: merchants.filter((m) => m.isSuspended).length,
+    withDomain: merchants.filter((m) => m.customDomain).length,
+  };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Sipariş Yönetimi</h1>
-        <p className="text-sm text-gray-500 mt-1">Tüm platform siparişleri</p>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Merchants</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Platform üzerindeki tüm satıcıları yönetin
+          </p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)} className="gap-2">
+          <Plus className="w-4 h-4" />
+          Yeni Merchant
+        </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {filters.map((f) => (
-          <button
-            key={f.value}
-            onClick={() => setStatusFilter(f.value)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              statusFilter === f.value
-                ? "bg-gray-900 text-white"
-                : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
-            }`}
-          >
-            {f.label}
-          </button>
+      {/* Stats */}
+      <div className="grid grid-cols-4 gap-4">
+        {[
+          {
+            label: "Toplam Merchant",
+            value: stats.total,
+            icon: Building2,
+            color: "text-blue-600",
+          },
+          {
+            label: "Aktif",
+            value: stats.active,
+            icon: CheckCircle,
+            color: "text-green-600",
+          },
+          {
+            label: "Askıda",
+            value: stats.suspended,
+            icon: Ban,
+            color: "text-red-600",
+          },
+          {
+            label: "Özel Domain",
+            value: stats.withDomain,
+            icon: TrendingUp,
+            color: "text-purple-600",
+          },
+        ].map((s) => (
+          <Card key={s.label}>
+            <CardContent className="p-4 flex items-center gap-3">
+              <s.icon className={`w-8 h-8 ${s.color}`} />
+              <div>
+                <p className="text-2xl font-bold">{s.value}</p>
+                <p className="text-xs text-gray-500">{s.label}</p>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* Status Update Modal */}
-      {selectedOrder && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-1">Durum Güncelle</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              Sipariş #{selectedOrder.id.slice(0, 8).toUpperCase()}
-            </p>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Mevcut Durum
-              </label>
-              <span
-                className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                  STATUS_COLORS[selectedOrder.status] ??
-                  "bg-gray-100 text-gray-600"
-                }`}
-              >
-                {STATUS_LABELS[selectedOrder.status] ?? selectedOrder.status}
-              </span>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Yeni Durum
-              </label>
-              <select
-                value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-              >
-                <option value="">Durum seçin...</option>
-                {ALL_STATUSES.filter((s) => s !== selectedOrder.status).map(
-                  (s) => (
-                    <option key={s} value={s}>
-                      {STATUS_LABELS[s]}
-                    </option>
-                  ),
-                )}
-              </select>
-            </div>
-
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => {
-                  setSelectedOrder(null);
-                  setNewStatus("");
-                }}
-                className="px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50"
-              >
-                İptal
-              </button>
-              <button
-                onClick={handleStatusUpdate}
-                disabled={!newStatus || updating}
-                className="px-4 py-2 text-sm bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50"
-              >
-                {updating ? "Güncelleniyor..." : "Güncelle"}
-              </button>
+      {/* Search */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Merchant adı veya email ile ara..."
+                className="pl-9"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Orders Table */}
-      {loading ? (
-        <div className="p-8 text-center text-gray-400 text-sm bg-white border border-gray-200 rounded-xl">
-          Yükleniyor...
-        </div>
-      ) : orders.length === 0 ? (
-        <div className="p-12 text-center text-gray-400 bg-white border border-gray-200 rounded-xl">
-          <p className="text-lg">Sipariş bulunamadı.</p>
-        </div>
-      ) : (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b bg-gray-50">
-                <tr>
-                  <th className="text-left px-5 py-3 font-medium text-gray-500">
-                    Sipariş No
-                  </th>
-                  <th className="text-left px-5 py-3 font-medium text-gray-500">
-                    Müşteri
-                  </th>
-                  <th className="text-left px-5 py-3 font-medium text-gray-500">
-                    Satıcı
-                  </th>
-                  <th className="text-left px-5 py-3 font-medium text-gray-500">
-                    Kaynak
-                  </th>
-                  <th className="text-left px-5 py-3 font-medium text-gray-500">
-                    Durum
-                  </th>
-                  <th className="text-left px-5 py-3 font-medium text-gray-500">
-                    Tutar
-                  </th>
-                  <th className="text-left px-5 py-3 font-medium text-gray-500">
-                    Tarih
-                  </th>
-                  <th className="text-left px-5 py-3 font-medium text-gray-500">
-                    İşlem
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order) => (
-                  <tr key={order.id} className="border-b hover:bg-gray-50">
-                    <td className="px-5 py-4 font-mono text-xs font-medium">
-                      #{order.id.slice(0, 8).toUpperCase()}
-                    </td>
-                    <td className="px-5 py-4">
-                      <p className="font-medium">{order.customerName}</p>
-                      <p className="text-xs text-gray-400">
-                        {order.customerEmail}
-                      </p>
-                    </td>
-                    <td className="px-5 py-4 text-gray-600">
-                      {order.merchantName}
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                        {order.source === "MARKETPLACE"
-                          ? "Marketplace"
-                          : "E-Mağaza"}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full font-medium ${
-                          STATUS_COLORS[order.status] ??
-                          "bg-gray-100 text-gray-600"
-                        }`}
+        </CardHeader>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+              <Building2 className="w-12 h-12 mb-3 opacity-30" />
+              <p className="text-sm">Henüz merchant yok</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => setCreateOpen(true)}
+              >
+                İlk Merchant'ı Ekle
+              </Button>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50">
+                  <TableHead>Mağaza</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Plan</TableHead>
+                  <TableHead>Domain</TableHead>
+                  <TableHead>Ürün</TableHead>
+                  <TableHead>Durum</TableHead>
+                  <TableHead>Kayıt</TableHead>
+                  <TableHead className="w-10" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((merchant) => (
+                  <TableRow key={merchant.id} className="hover:bg-gray-50">
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                          {merchant.storeName?.charAt(0)?.toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">
+                            {merchant.storeName}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            /{merchant.slug}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-gray-600">
+                      {merchant.email}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={
+                          merchant.subscriptionPlan === "Enterprise"
+                            ? "border-purple-300 text-purple-700 bg-purple-50"
+                            : merchant.subscriptionPlan === "Pro"
+                              ? "border-blue-300 text-blue-700 bg-blue-50"
+                              : "border-gray-300 text-gray-600"
+                        }
                       >
-                        {STATUS_LABELS[order.status] ?? order.status}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 font-semibold">
-                      {order.totalAmount.toLocaleString("tr-TR", {
-                        style: "currency",
-                        currency: "TRY",
-                      })}
-                    </td>
-                    <td className="px-5 py-4 text-gray-400 text-xs">
-                      {new Date(order.createdAt).toLocaleString("tr-TR")}
-                    </td>
-                    <td className="px-5 py-4">
-                      <button
-                        onClick={() => {
-                          setSelectedOrder(order);
-                          setNewStatus("");
-                        }}
-                        className="text-xs text-blue-600 hover:underline"
+                        {merchant.subscriptionPlan || "Basic"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {merchant.customDomain ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-gray-700 text-xs truncate max-w-[120px]">
+                            {merchant.customDomain}
+                          </span>
+                          {merchant.domainVerified ? (
+                            <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0" />
+                          ) : (
+                            <span className="text-xs text-orange-500">!</span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-xs">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <ShoppingBag className="w-3 h-3 text-gray-400" />
+                        <span className="text-sm">
+                          {merchant.productCount ?? 0}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={
+                          merchant.isSuspended
+                            ? "bg-red-100 text-red-700 border-red-200"
+                            : "bg-green-100 text-green-700 border-green-200"
+                        }
+                        variant="outline"
                       >
-                        Durum Güncelle
-                      </button>
-                    </td>
-                  </tr>
+                        {merchant.isSuspended ? "Askıda" : "Aktif"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-gray-400">
+                      {new Date(merchant.createdAt).toLocaleDateString("tr-TR")}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-8 h-8 p-0"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedMerchant(merchant);
+                              setSetupForm({
+                                storeName: merchant.storeName,
+                                slug: merchant.slug,
+                                description: "",
+                              });
+                              setSetupOpen(true);
+                            }}
+                          >
+                            <Store className="w-4 h-4 mr-2" />
+                            Mağaza Kur / Düzenle
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className={
+                              merchant.isSuspended
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }
+                            onClick={() => suspendMutation.mutate(merchant.id)}
+                          >
+                            {merchant.isSuspended ? (
+                              <>
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Aktifleştir
+                              </>
+                            ) : (
+                              <>
+                                <Ban className="w-4 h-4 mr-2" />
+                                Askıya Al
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Create Merchant Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>Yeni Merchant Oluştur</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="storeName">Mağaza Adı *</Label>
+              <Input
+                id="storeName"
+                placeholder="Örn: Tech Store"
+                value={form.storeName}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    storeName: e.target.value,
+                    slug: e.target.value
+                      .toLowerCase()
+                      .replace(/\s+/g, "-")
+                      .replace(/[^a-z0-9-]/g, ""),
+                  }))
+                }
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="slug">Mağaza URL Slug</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500 whitespace-nowrap">
+                  /store/
+                </span>
+                <Input
+                  id="slug"
+                  placeholder="tech-store"
+                  value={form.slug}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, slug: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="merchant@example.com"
+                value={form.email}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, email: e.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="password">Şifre *</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="En az 8 karakter"
+                value={form.password}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, password: e.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="phone">Telefon</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="+90 5xx xxx xx xx"
+                value={form.phone}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, phone: e.target.value }))
+                }
+              />
+            </div>
           </div>
-        </div>
-      )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>
+              İptal
+            </Button>
+            <Button
+              onClick={() => createMutation.mutate(form)}
+              disabled={
+                createMutation.isPending ||
+                !form.storeName ||
+                !form.email ||
+                !form.password
+              }
+            >
+              {createMutation.isPending ? "Oluşturuluyor..." : "Oluştur"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Store Setup Dialog */}
+      <Dialog open={setupOpen} onOpenChange={setSetupOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>
+              Mağaza Kur — {selectedMerchant?.storeName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Mağaza Adı</Label>
+              <Input
+                value={setupForm.storeName}
+                onChange={(e) =>
+                  setSetupForm((f) => ({ ...f, storeName: e.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>URL Slug</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500 whitespace-nowrap">
+                  /store/
+                </span>
+                <Input
+                  value={setupForm.slug}
+                  onChange={(e) =>
+                    setSetupForm((f) => ({ ...f, slug: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Mağaza Açıklaması</Label>
+              <Input
+                placeholder="Kısa mağaza tanımı..."
+                value={setupForm.description}
+                onChange={(e) =>
+                  setSetupForm((f) => ({ ...f, description: e.target.value }))
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSetupOpen(false)}>
+              İptal
+            </Button>
+            <Button
+              onClick={() =>
+                selectedMerchant &&
+                setupMutation.mutate({
+                  id: selectedMerchant.id,
+                  data: setupForm,
+                })
+              }
+              disabled={setupMutation.isPending}
+            >
+              {setupMutation.isPending ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

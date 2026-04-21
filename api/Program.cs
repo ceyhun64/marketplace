@@ -19,7 +19,7 @@ using StackExchange.Redis;
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 
 // ── Helper: postgresql:// URL → Npgsql connection string ─────────────────────
-static string ToNpgsql(string url)
+static string ToNpgsql(string url, bool isDevelopment)
 {
     var uri = new Uri(url);
     var userInfo = uri.UserInfo.Split(':');
@@ -28,7 +28,9 @@ static string ToNpgsql(string url)
     var db = uri.AbsolutePath.TrimStart('/');
     var user = userInfo[0];
     var pass = userInfo.Length > 1 ? userInfo[1] : "";
-    return $"Host={host};Port={port};Database={db};Username={user};Password={pass};SSL Mode=Require;Trust Server Certificate=true";
+    var sslMode = isDevelopment ? "Disable" : "Require";
+    var trustCert = isDevelopment ? "" : ";Trust Server Certificate=true";
+    return $"Host={host};Port={port};Database={db};Username={user};Password={pass};SSL Mode={sslMode}{trustCert}";
 }
 
 // ── Helper: redis:// URL → StackExchange.Redis connection string ──────────────
@@ -54,7 +56,7 @@ try
     );
 
     // ── PostgreSQL + EF Core ──────────────────────────────────────────────────
-    var npgsqlConn = ToNpgsql(config["DATABASE_URL"]!);
+    var npgsqlConn = ToNpgsql(config["DATABASE_URL"]!, builder.Environment.IsDevelopment());
     builder.Services.AddDbContext<AppDbContext>(opt => opt.UseNpgsql(npgsqlConn));
 
     // ── Redis Cache ───────────────────────────────────────────────────────────
@@ -178,7 +180,17 @@ try
     builder.Services.AddTransient<NotificationJob>();
 
     // ── Controllers + Swagger ─────────────────────────────────────────────────
-    builder.Services.AddControllers();
+    builder
+        .Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.ReferenceHandler = System
+                .Text
+                .Json
+                .Serialization
+                .ReferenceHandler
+                .IgnoreCycles;
+        });
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(c =>
     {

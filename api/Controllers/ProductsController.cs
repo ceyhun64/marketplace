@@ -267,6 +267,14 @@ public class ProductsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
+        // Token'dan kullanıcı ID'sini oku
+        var userIdStr =
+            User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+            return Unauthorized(new { message = "Kullanıcı kimliği alınamadı." });
+
         var category = await _db.Categories.FindAsync(dto.CategoryId);
         if (category == null)
             return BadRequest(new { message = "Kategori bulunamadı." });
@@ -280,12 +288,27 @@ public class ProductsController : ControllerBase
             Images = dto.Images ?? [],
             Tags = dto.Tags ?? [],
             CreatedAt = DateTime.UtcNow,
+            CreatedById = userId, // ✅
         };
 
         _db.Products.Add(product);
         await _db.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = product.Id },
+            new
+            {
+                product.Id,
+                product.Name,
+                product.Description,
+                product.CategoryId,
+                product.Images,
+                product.Tags,
+                product.CreatedAt,
+                product.IsApproved,
+            }
+        );
     }
 
     /// <summary>Ürün güncelle — Admin</summary>
