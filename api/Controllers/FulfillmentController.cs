@@ -20,8 +20,6 @@ public class FulfillmentController(
     IShippingCalculatorService shippingCalculator
 ) : ControllerBase
 {
-    // ─── ADMIN ─────────────────────────────────────────────────
-
     [HttpGet]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> GetAll(
@@ -37,11 +35,8 @@ public class FulfillmentController(
             .Include(s => s.StatusHistory)
             .AsQueryable();
 
-        if (
-            !string.IsNullOrEmpty(status)
-            && Enum.TryParse<ShipmentStatus>(status, out var parsedStatus)
-        )
-            query = query.Where(s => s.Status == parsedStatus);
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<ShipmentStatus>(status, out var ps))
+            query = query.Where(s => s.Status == ps);
 
         if (courierId.HasValue)
             query = query.Where(s => s.CourierId == courierId.Value);
@@ -106,18 +101,16 @@ public class FulfillmentController(
             .FirstOrDefaultAsync(c => c.Id == dto.CourierId);
         if (courier == null)
             return NotFound(new { message = "Kurye bulunamadı." });
-
         if (!courier.IsActive)
             return BadRequest(new { message = "Kurye aktif değil." });
 
         shipment.CourierId = courier.Id;
         shipment.Status = ShipmentStatus.CourierAssigned;
-        // UpdatedAt kaldırıldı — Shipment entity'sinde bu alan yok
+        shipment.UpdatedAt = DateTime.UtcNow;
 
         db.ShipmentStatusHistories.Add(
             new ShipmentStatusHistory
             {
-                Id = Guid.NewGuid(),
                 ShipmentId = shipment.Id,
                 Status = ShipmentStatus.CourierAssigned,
                 Note = $"Kurye atandı: {courier.User.FirstName} {courier.User.LastName}",
@@ -136,6 +129,7 @@ public class FulfillmentController(
         var shipment = await db
             .Shipments.Include(s => s.StatusHistory)
             .FirstOrDefaultAsync(s => s.Id == id);
+
         if (shipment == null)
             return NotFound();
 
@@ -150,13 +144,7 @@ public class FulfillmentController(
     [Authorize(Policy = "AdminOrCourier")]
     public async Task<IActionResult> GetLabel(Guid id)
     {
-        var shipment = await db
-            .Shipments.Include(s => s.Order)
-                .ThenInclude(o => o.Items)
-                    .ThenInclude(i => i.Offer)
-                        .ThenInclude(o => o.Merchant)
-            .FirstOrDefaultAsync(s => s.Id == id);
-
+        var shipment = await db.Shipments.FindAsync(id);
         if (shipment == null)
             return NotFound();
 
@@ -173,24 +161,17 @@ public class FulfillmentController(
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> GenerateLabel(Guid id)
     {
-        var shipment = await db
-            .Shipments.Include(s => s.Order)
-                .ThenInclude(o => o.Items)
-                    .ThenInclude(i => i.Offer)
-                        .ThenInclude(o => o.Merchant)
-            .FirstOrDefaultAsync(s => s.Id == id);
-
+        var shipment = await db.Shipments.FindAsync(id);
         if (shipment == null)
             return NotFound();
 
         var pdfBytes = await labelGenerator.GenerateLabelAsync(shipment.Id);
         shipment.LabelUrl = $"/api/fulfillment/{id}/label";
+        shipment.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
 
         return File(pdfBytes, "application/pdf", $"label-{shipment.TrackingNumber}.pdf");
     }
-
-    // ─── COURIER ───────────────────────────────────────────────
 
     [HttpGet("courier/my-shipments")]
     [Authorize(Policy = "CourierOnly")]
@@ -205,11 +186,8 @@ public class FulfillmentController(
             .Include(s => s.Order)
             .Where(s => s.CourierId == courier.Id);
 
-        if (
-            !string.IsNullOrEmpty(status)
-            && Enum.TryParse<ShipmentStatus>(status, out var parsedStatus)
-        )
-            query = query.Where(s => s.Status == parsedStatus);
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<ShipmentStatus>(status, out var ps))
+            query = query.Where(s => s.Status == ps);
 
         var shipments = await query.OrderByDescending(s => s.CreatedAt).ToListAsync();
         return Ok(shipments.Select(MapToDto));
@@ -226,6 +204,7 @@ public class FulfillmentController(
         var shipment = await db
             .Shipments.Include(s => s.StatusHistory)
             .FirstOrDefaultAsync(s => s.Id == id && s.CourierId == courier.Id);
+
         if (shipment == null)
             return NotFound();
 
@@ -249,17 +228,18 @@ public class FulfillmentController(
         var shipment = await db
             .Shipments.Include(s => s.StatusHistory)
             .FirstOrDefaultAsync(s => s.Id == id && s.CourierId == courier.Id);
+
         if (shipment == null)
             return NotFound();
 
-        var note =
-            dto.RecipientName != null ? $"Teslim alan: {dto.RecipientName}" : "Teslim edildi";
-        await fulfillmentService.TransitionStatusAsync(shipment, ShipmentStatus.Delivered, note);
+        await fulfillmentService.TransitionStatusAsync(
+            shipment,
+            ShipmentStatus.Delivered,
+            dto.RecipientName != null ? $"Teslim alan: {dto.RecipientName}" : "Teslim edildi"
+        );
 
         return Ok(new { message = "Teslim edildi olarak işaretlendi." });
     }
-
-    // ─── PUBLIC ────────────────────────────────────────────────
 
     [HttpGet("calculate-eta")]
     [AllowAnonymous]
@@ -274,11 +254,10 @@ public class FulfillmentController(
         if (merchant == null)
             return NotFound(new { message = "Merchant bulunamadı." });
 
-        var rate = Enum.TryParse<ShippingRate>(shippingRate, out var parsedRate)
-            ? parsedRate
+        var rate = Enum.TryParse<ShippingRate>(shippingRate, out var pr)
+            ? pr
             : ShippingRate.Regular;
 
-        // ✅ Düzeltildi: CalculateDistance → CalculateDistanceKm, doğru imza
         var distanceKm = shippingCalculator.CalculateDistanceKm(
             merchant.Latitude,
             merchant.Longitude,
@@ -286,7 +265,6 @@ public class FulfillmentController(
             destLng
         );
 
-        // ✅ Düzeltildi: merchant lat/lng artık geçiliyor
         var estimatedHours = shippingCalculator.CalculateEtaHours(
             merchant.Latitude,
             merchant.Longitude,
@@ -296,20 +274,44 @@ public class FulfillmentController(
             rate
         );
 
-        var estimatedDate = DateTime.UtcNow.AddHours(estimatedHours);
-
         return Ok(
             new EtaResponseDto
             {
                 EstimatedHours = estimatedHours,
-                EstimatedDeliveryDate = estimatedDate,
+                EstimatedDeliveryDate = DateTime.UtcNow.AddHours(estimatedHours),
                 DistanceKm = Math.Round(distanceKm, 2),
                 ShippingRate = shippingRate,
             }
         );
     }
 
-    // ─── HELPERS ───────────────────────────────────────────────
+    [HttpGet("events/{trackingNo}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetTrackingEvents(string trackingNo)
+    {
+        var shipment = await db
+            .Shipments.Include(s => s.StatusHistory)
+            .FirstOrDefaultAsync(s => s.TrackingNumber == trackingNo);
+
+        if (shipment == null)
+            return NotFound(new { message = "Takip numarası bulunamadı." });
+
+        return Ok(
+            new
+            {
+                trackingNo,
+                status = shipment.Status.ToString(),
+                events = shipment
+                    .StatusHistory.OrderByDescending(h => h.ChangedAt)
+                    .Select(h => new
+                    {
+                        status = h.Status.ToString(),
+                        h.Note,
+                        h.ChangedAt,
+                    }),
+            }
+        );
+    }
 
     private static ShipmentDto MapToDto(Shipment s) =>
         new()

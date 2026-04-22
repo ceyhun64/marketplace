@@ -15,19 +15,16 @@ public class CreateOrderCommandHandler
 {
     private readonly AppDbContext _context;
     private readonly ICurrentUserService _currentUser;
-    private readonly IShippingCalculatorService _shippingCalculator;
     private readonly IFulfillmentService _fulfillmentService;
 
     public CreateOrderCommandHandler(
         AppDbContext context,
         ICurrentUserService currentUser,
-        IShippingCalculatorService shippingCalculator,
         IFulfillmentService fulfillmentService
     )
     {
         _context = context;
         _currentUser = currentUser;
-        _shippingCalculator = shippingCalculator;
         _fulfillmentService = fulfillmentService;
     }
 
@@ -37,26 +34,41 @@ public class CreateOrderCommandHandler
     )
     {
         var dto = request.Request;
+        var productIds = dto.Items.Select(i => i.ProductId).ToList();
 
-        // Teklifleri doğrula ve stok kontrolü
-        var offerIds = dto.Items.Select(i => i.OfferId).ToList();
-        var offers = await _context
-            .ProductOffers.Include(o => o.Merchant)
-            .Include(o => o.Product)
-            .Where(o => offerIds.Contains(o.Id))
+        var products = await _context
+            .Products.Include(p => p.Merchant)
+            .Where(p => productIds.Contains(p.Id) && !p.IsDeleted)
             .ToListAsync(cancellationToken);
 
         foreach (var item in dto.Items)
         {
-            var offer = offers.FirstOrDefault(o => o.Id == item.OfferId);
-            if (offer == null)
-                return ServiceResult<OrderDto>.Fail($"Teklif bulunamadı: {item.OfferId}");
-            if (offer.Stock < item.Quantity)
-                return ServiceResult<OrderDto>.Fail($"Yetersiz stok: {offer.Product.Name}");
+            var product = products.FirstOrDefault(p => p.Id == item.ProductId);
+            if (product == null)
+                return ServiceResult<OrderDto>.Fail($"Ürün bulunamadı: {item.ProductId}");
+            if (product.Stock < item.Quantity)
+                return ServiceResult<OrderDto>.Fail($"Yetersiz stok: {product.Name}");
         }
 
         var shippingRate = Enum.Parse<ShippingRate>(dto.ShippingRate, ignoreCase: true);
         var source = Enum.Parse<OrderSource>(dto.Source, ignoreCase: true);
+
+        var orderItems = dto
+            .Items.Select(i =>
+            {
+                var product = products.First(p => p.Id == i.ProductId);
+                return new OrderItem
+                {
+                    Id = Guid.NewGuid(),
+                    ProductId = product.Id,
+                    MerchantId = product.MerchantId,
+                    ProductName = product.Name,
+                    ProductImage = product.Images.FirstOrDefault(),
+                    UnitPrice = product.Price,
+                    Quantity = i.Quantity,
+                };
+            })
+            .ToList();
 
         var order = new Order
         {
@@ -65,61 +77,48 @@ public class CreateOrderCommandHandler
             Source = source,
             Status = OrderStatus.Pending,
             ShippingRate = shippingRate,
+            TotalAmount = orderItems.Sum(i => i.UnitPrice * i.Quantity),
             RecipientName = dto.ShippingAddress.FullName,
             RecipientPhone = dto.ShippingAddress.Phone,
             AddressLine = dto.ShippingAddress.AddressLine,
             City = dto.ShippingAddress.City,
             District = dto.ShippingAddress.District,
             PostalCode = dto.ShippingAddress.PostalCode,
+            Items = orderItems,
             CreatedAt = DateTime.UtcNow,
-            Items = dto
-                .Items.Select(i =>
-                {
-                    var offer = offers.First(o => o.Id == i.OfferId);
-                    return new OrderItem
-                    {
-                        Id = Guid.NewGuid(),
-                        OfferId = i.OfferId,
-                        Quantity = i.Quantity,
-                        UnitPrice = offer.Price,
-                    };
-                })
-                .ToList(),
+            UpdatedAt = DateTime.UtcNow,
         };
-
-        order.TotalAmount = order.Items.Sum(i => i.UnitPrice * i.Quantity);
 
         _context.Orders.Add(order);
 
         // Stok düş
         foreach (var item in dto.Items)
         {
-            var offer = offers.First(o => o.Id == item.OfferId);
-            offer.Stock -= item.Quantity;
+            var product = products.First(p => p.Id == item.ProductId);
+            product.Stock -= item.Quantity;
+            product.UpdatedAt = DateTime.UtcNow;
         }
 
         await _context.SaveChangesAsync(cancellationToken);
-
-        // Shipment kaydı oluştur
         await _fulfillmentService.CreateShipmentForOrderAsync(order);
 
-        var orderDto = new OrderDto
-        {
-            Id = order.Id,
-            Status = order.Status.ToString(),
-            TotalAmount = order.TotalAmount,
-            ShippingRate = order.ShippingRate.ToString(),
-            CreatedAt = order.CreatedAt,
-            Items = order
-                .Items.Select(i => new OrderItemDto
-                {
-                    OfferId = i.OfferId,
-                    Quantity = i.Quantity,
-                    UnitPrice = i.UnitPrice,
-                })
-                .ToList(),
-        };
-
-        return ServiceResult<OrderDto>.Ok(orderDto);
+        return ServiceResult<OrderDto>.Ok(
+            new OrderDto
+            {
+                Id = order.Id,
+                Status = order.Status.ToString(),
+                TotalAmount = order.TotalAmount,
+                ShippingRate = order.ShippingRate.ToString(),
+                CreatedAt = order.CreatedAt,
+                Items = orderItems
+                    .Select(i => new OrderItemDto
+                    {
+                        ProductId = i.ProductId,
+                        Quantity = i.Quantity,
+                        UnitPrice = i.UnitPrice,
+                    })
+                    .ToList(),
+            }
+        );
     }
 }

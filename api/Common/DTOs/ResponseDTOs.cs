@@ -8,19 +8,6 @@ public record UserDto(Guid Id, string Email, string Role, bool IsVerified, Guid?
 // ── Category ─────────────────────────────────────────────────────────────────
 public record CategoryDto(Guid Id, string Name, string Slug, Guid? ParentId, string? ParentName);
 
-// ── Product ───────────────────────────────────────────────────────────────────
-public record ProductDto(
-    Guid Id,
-    string Name,
-    string Description,
-    Guid CategoryId,
-    string CategoryName,
-    List<string> Images,
-    List<string> Tags,
-    bool IsApproved,
-    int OfferCount,
-    DateTime CreatedAt
-);
 
 public class ApiResponse<T>
 {

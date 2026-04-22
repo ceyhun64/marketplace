@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Star, Package, ShoppingCart, Clock } from "lucide-react";
-import  {AddToCartButton}  from "@/components/modules/store/AddToCartButton";
+import { AddToCartButton } from "@/components/modules/store/AddToCartButton";
 
 interface Props {
   params: { slug: string; id: string };
@@ -178,14 +178,12 @@ export default async function StoreProductPage({ params }: Props) {
                 </div>
 
                 <AddToCartButton
-                  offer={{
-                    offerId: storeOffer.id,
-                    productId: product.id,
-                    productName: product.name,
-                    image: product.images[0] ?? "",
-                    price: storeOffer.price,
-                    merchantSlug: params.slug,
-                  }}
+                  offerId={storeOffer.id}
+                  productId={product.id}
+                  productName={product.name}
+                  image={product.images[0] ?? ""}
+                  price={storeOffer.price}
+                  merchantId={params.slug} // ya da gerçek merchantId varsa onu kullan
                   disabled={storeOffer.stock === 0}
                 />
               </>

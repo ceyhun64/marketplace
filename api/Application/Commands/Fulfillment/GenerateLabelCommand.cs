@@ -33,8 +33,8 @@ public class GenerateLabelCommandHandler
                 .ThenInclude(o => o.Customer)
             .Include(s => s.Order)
                 .ThenInclude(o => o.Items)
-                    .ThenInclude(i => i.Offer)
-                        .ThenInclude(o => o.Merchant)
+                    .ThenInclude(i => i.Product) // i.Offer → i.Product
+                        .ThenInclude(p => p.Merchant) // o.Merchant → p.Merchant
             .FirstOrDefaultAsync(s => s.Id == request.ShipmentId, cancellationToken);
 
         if (shipment == null)

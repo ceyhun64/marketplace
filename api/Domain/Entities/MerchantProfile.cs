@@ -1,6 +1,3 @@
-// MerchantProfile.cs — SubscriptionId FK KALDIRILDI, navigation korundu:
-using api.Domain.Enums;
-
 namespace api.Domain.Entities;
 
 public class MerchantProfile
@@ -12,6 +9,8 @@ public class MerchantProfile
     public string? Description { get; set; }
     public string? LogoUrl { get; set; }
     public string? BannerUrl { get; set; }
+    public string? CustomDomain { get; set; }
+    public bool DomainVerified { get; set; } = false;
     public string? Address { get; set; }
     public string? City { get; set; }
     public string? Country { get; set; } = "TR";
@@ -25,6 +24,6 @@ public class MerchantProfile
 
     // Navigation
     public User User { get; set; } = null!;
-    public Subscription? Subscription { get; set; } // ← SubscriptionId FK YOK, sadece navigation
-    public ICollection<ProductOffer> Offers { get; set; } = new List<ProductOffer>();
+    public Subscription? Subscription { get; set; }
+    public ICollection<Product> Products { get; set; } = new List<Product>();
 }

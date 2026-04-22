@@ -5,29 +5,79 @@ import { ShoppingCart, Check } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "@/hooks/use-cart";
 
-interface CartItem {
+export interface CartItem {
   offerId: string;
   productId: string;
   productName: string;
-  image: string;
+  productImage?: string; // image → productImage
   price: number;
-  merchantSlug: string;
+  merchantId: string; // eksikti
+  merchantStoreName?: string;
+  stock?: number;
+  source?: string;
+  merchantSlug?: string;
 }
 
 interface AddToCartButtonProps {
-  offer: CartItem;
+  offerId: string;
+  productId: string;
+  productName: string;
+  price: number;
+  merchantId: string;
+  image?: string;
+  variant?: "default" | "small";
   disabled?: boolean;
 }
 
-export function AddToCartButton({ offer, disabled }: AddToCartButtonProps) {
+export function AddToCartButton({
+  offerId,
+  productId,
+  productName,
+  price,
+  merchantId,
+  image,
+  variant = "default",
+  disabled,
+}: AddToCartButtonProps) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
 
   const handleAdd = () => {
-    addItem(offer as any);
+    addItem({
+      offerId,
+      productId,
+      productName,
+      productImage: image,
+      price,
+      merchantId,
+    });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   };
+
+  if (variant === "small") {
+    return (
+      <Button
+        size="sm"
+        variant="outline"
+        className="gap-1.5 text-xs"
+        disabled={disabled || added}
+        onClick={handleAdd}
+      >
+        {added ? (
+          <>
+            <Check className="h-3 w-3" />
+            Eklendi
+          </>
+        ) : (
+          <>
+            <ShoppingCart className="h-3 w-3" />
+            Ekle
+          </>
+        )}
+      </Button>
+    );
+  }
 
   return (
     <Button

@@ -1,6 +1,6 @@
 using api.Common.DTOs;
 using api.Infrastructure.Persistence;
-using api.Infrastructure.Services; // ✅ Bu eksik
+using api.Infrastructure.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,47 +27,45 @@ public class GetOrderTrackingQueryHandler
     {
         var order = await _context
             .Orders.Include(o => o.Shipment)
-                .ThenInclude(s => s.StatusHistory)
+                .ThenInclude(s => s!.StatusHistory) // ← s! ekle
             .Include(o => o.Shipment)
-                .ThenInclude(s => s.Courier)
-                    .ThenInclude(c => c.User)
+                .ThenInclude(s => s!.Courier) // ← s! ekle
+                    .ThenInclude(c => c!.User) // ← c! ekle
             .FirstOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken);
 
         if (order == null)
             return ServiceResult<OrderTrackingDto>.Fail("Sipariş bulunamadı.");
 
-        // Müşteri sadece kendi siparişini görebilir
         if (_currentUser.Role == "Customer" && order.CustomerId != _currentUser.UserId)
-            return ServiceResult<OrderTrackingDto>.Fail("Bu siparişe erişim yetkiniz yok.");
+            return ServiceResult<OrderTrackingDto>.Fail("Erişim yetkiniz yok.");
 
-        var shipment = order.Shipment;
-        var tracking = new OrderTrackingDto
-        {
-            OrderId = order.Id,
-            OrderStatus = order.Status.ToString(),
-            TrackingNumber = shipment?.TrackingNumber,
-            ShipmentStatus = shipment?.Status.ToString(),
-            EstimatedDelivery = shipment?.EstimatedDelivery,
-            LabelUrl = shipment?.LabelUrl,
-            CourierName =
-                shipment?.Courier?.User != null
-                    ? $"{shipment.Courier.User.FirstName} {shipment.Courier.User.LastName}".Trim()
-                    : null,
-            CourierPhone = shipment?.Courier?.User?.Phone,
-            // ✅ Yeni — ShipmentDTOs.cs'deki ShipmentStatusHistoryDto'nun alanı ChangedAt
-            StatusHistory =
-                shipment
-                    ?.StatusHistory.OrderByDescending(h => h.ChangedAt)
-                    .Select(h => new ShipmentStatusHistoryDto
-                    {
-                        Status = h.Status.ToString(),
-                        Note = h.Note,
-                        ChangedAt = h.ChangedAt,
-                    })
-                    .ToList()
-                ?? new List<ShipmentStatusHistoryDto>(),
-        };
+        var s = order.Shipment;
 
-        return ServiceResult<OrderTrackingDto>.Ok(tracking);
+        return ServiceResult<OrderTrackingDto>.Ok(
+            new OrderTrackingDto
+            {
+                OrderId = order.Id,
+                OrderStatus = order.Status.ToString(),
+                TrackingNumber = s?.TrackingNumber,
+                ShipmentStatus = s?.Status.ToString(),
+                EstimatedDelivery = s?.EstimatedDelivery,
+                LabelUrl = s?.LabelUrl,
+                CourierName =
+                    s?.Courier?.User != null
+                        ? $"{s.Courier.User.FirstName} {s.Courier.User.LastName}".Trim()
+                        : null,
+                CourierPhone = s?.Courier?.User?.Phone,
+                StatusHistory =
+                    s?.StatusHistory.OrderByDescending(h => h.ChangedAt)
+                        .Select(h => new ShipmentStatusHistoryDto
+                        {
+                            Status = h.Status.ToString(),
+                            Note = h.Note,
+                            ChangedAt = h.ChangedAt,
+                        })
+                        .ToList()
+                    ?? new(),
+            }
+        );
     }
 }

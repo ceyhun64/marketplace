@@ -32,6 +32,15 @@ export interface ProductFilters {
   sort?: string;
 }
 
+export interface CreateProductRequest {
+  name: string;
+  description: string;
+  categoryId: string;
+  images: string[];
+  tags: string[];
+  // Varsa fiyat vb. alanları buraya ekleyebilirsin
+}
+
 // ── Query Keys ─────────────────────────────────────────────────────────────
 export const productKeys = {
   all: ["products"] as const,
@@ -76,6 +85,18 @@ export function useProduct(id: string) {
   });
 }
 
+export function useUpdateProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      ...body
+    }: { id: string } & Partial<CreateProductRequest>) =>
+      api.put<Product>(`/api/products/${id}`, body),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() }),
+  });
+}
 export function useFeaturedProducts(limit = 8) {
   return useQuery({
     queryKey: productKeys.featured(),

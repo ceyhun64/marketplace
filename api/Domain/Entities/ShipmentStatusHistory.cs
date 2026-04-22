@@ -8,9 +8,9 @@ public class ShipmentStatusHistory
     public Guid ShipmentId { get; set; }
     public ShipmentStatus Status { get; set; }
     public string? Note { get; set; }
-    public double? Latitude { get; set; }
-    public double? Longitude { get; set; }
-    public DateTime ChangedAt { get; set; } = DateTime.UtcNow; // ← CreatedAt → ChangedAt (FulfillmentService ile uyumlu)
+    public string? Location { get; set; }
+    public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
+    public Guid? CreatedById { get; set; }
 
     // Navigation
     public Shipment Shipment { get; set; } = null!;

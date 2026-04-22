@@ -3,15 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 
-export interface MerchantProfile {
-  id: string;
-  storeName: string;
-  slug: string;
-  latitude: number;
-  longitude: number;
-  handlingHours: number;
-  subscriptionPlan: "BASIC" | "PRO" | "ENTERPRISE";
-}
+import type { MerchantProfile } from "@/types/entities";
 
 export interface MerchantOffer {
   id: string;

@@ -7,15 +7,14 @@ export interface CartItem {
   offerId: string;
   productId: string;
   productName: string;
-  productImage: string;
-  merchantId: string;
-  merchantStoreName: string;
-  merchantSlug: string;
+  productImage?: string; // opsiyonel
   price: number;
   quantity: number;
-  stock: number;
-  /** MARKETPLACE veya ESTORE */
-  source: "MARKETPLACE" | "ESTORE";
+  merchantId: string;
+  merchantStoreName?: string; // opsiyonel
+  stock?: number; // opsiyonel
+  source?: string; // opsiyonel
+  merchantSlug?: string; // opsiyonel
 }
 
 export type ShippingRate = "EXPRESS" | "REGULAR";
@@ -57,12 +56,14 @@ export const useCart = create<CartState>()(
 
       // ── Computed ─────────────────────────────────────────────────────────
 
-      totalItems: () => get().items.reduce((sum, item) => sum + item.quantity, 0),
+      totalItems: () =>
+        get().items.reduce((sum, item) => sum + item.quantity, 0),
 
       subtotal: () =>
         get().items.reduce((sum, item) => sum + item.price * item.quantity, 0),
 
-      shippingCost: () => (get().items.length > 0 ? SHIPPING_COSTS[get().shippingRate] : 0),
+      shippingCost: () =>
+        get().items.length > 0 ? SHIPPING_COSTS[get().shippingRate] : 0,
 
       total: () => get().subtotal() + get().shippingCost(),
 
@@ -70,16 +71,18 @@ export const useCart = create<CartState>()(
 
       addItem: (newItem) =>
         set((state) => {
-          const existing = state.items.find((i) => i.offerId === newItem.offerId);
+          const existing = state.items.find(
+            (i) => i.offerId === newItem.offerId,
+          );
 
           if (existing) {
-            // Stok kontrolü
             const nextQty = existing.quantity + 1;
-            if (nextQty > existing.stock) return state;
+            if (existing.stock !== undefined && nextQty > existing.stock)
+              return state;
 
             return {
               items: state.items.map((i) =>
-                i.offerId === newItem.offerId ? { ...i, quantity: nextQty } : i
+                i.offerId === newItem.offerId ? { ...i, quantity: nextQty } : i,
               ),
             };
           }
@@ -103,8 +106,13 @@ export const useCart = create<CartState>()(
           return {
             items: state.items.map((i) => {
               if (i.offerId !== offerId) return i;
-              // Stok sınırını aşamaz
-              return { ...i, quantity: Math.min(quantity, i.stock) };
+              return {
+                ...i,
+                quantity:
+                  i.stock !== undefined
+                    ? Math.min(quantity, i.stock)
+                    : quantity,
+              };
             }),
           };
         }),
@@ -126,8 +134,8 @@ export const useCart = create<CartState>()(
         items: state.items,
         shippingRate: state.shippingRate,
       }),
-    }
-  )
+    },
+  ),
 );
 
 // ── Convenience selectors ─────────────────────────────────────────────────────

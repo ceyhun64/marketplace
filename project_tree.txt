@@ -1,65 +1,64 @@
-├── .github
-│   └── workflows
+================================================================
+PROJE MİMARİSİ VE DOSYA YAPISI
+Oluşturulma Tarihi: 22.04.2026 16:34:02
+Kapsam: Tam Proje Haritası
+================================================================
+
+. (Root)
+├── .github/
+│   └── workflows/
 │       └── deploy.yml
 ├── .gitignore
-├── api
+├── api/
 │   ├── api.csproj
 │   ├── api.http
-│   ├── Application
-│   │   ├── Commands
-│   │   │   ├── Categories
+│   ├── Application/
+│   │   ├── Commands/
+│   │   │   ├── Categories/
 │   │   │   │   └── CreateCategoryCommand.cs
-│   │   │   ├── Fulfillment
+│   │   │   ├── Fulfillment/
 │   │   │   │   ├── AssignCourierCommand.cs
 │   │   │   │   └── GenerateLabelCommand.cs
-│   │   │   ├── Merchants
+│   │   │   ├── Merchants/
 │   │   │   │   └── CreateMerchantCommand.cs
-│   │   │   ├── Offers
-│   │   │   │   ├── CreateOfferCommand.cs
-│   │   │   │   └── UpdateOfferCommand.cs
-│   │   │   ├── Orders
+│   │   │   ├── Orders/
 │   │   │   │   ├── CreateOrderCommand.cs
 │   │   │   │   └── UpdateOrderStatusCommand.cs
-│   │   │   └── Products
+│   │   │   └── Products/
 │   │   │       ├── ApproveProductCommand.cs
 │   │   │       └── CreateProductCommand.cs
-│   │   └── Queries
-│   │       ├── Analytics
+│   │   └── Queries/
+│   │       ├── Analytics/
 │   │       │   └── GetMerchantStatsQuery.cs
-│   │       ├── Offers
-│   │       │   └── GetMerchantOffersQuery.cs
-│   │       ├── Orders
+│   │       ├── Orders/
 │   │       │   └── GetOrderTrackingQuery.cs
-│   │       └── Products
+│   │       └── Products/
 │   │           ├── GetMerchantProductsQuery.cs
 │   │           └── GetProductsQuery.cs
 │   ├── appsettings.Development.json
 │   ├── appsettings.json
-│   ├── Common
-│   │   ├── DTOs
+│   ├── Common/
+│   │   ├── DTOs/
 │   │   │   ├── AnalyticsDTOs.cs
 │   │   │   ├── AuthDTOs.cs
-│   │   │   ├── BuyBoxDTOs.cs
 │   │   │   ├── CategoryDTOs.cs
 │   │   │   ├── CourierDTOs.cs
 │   │   │   ├── MerchantDTOs.cs
-│   │   │   ├── OfferDTOs.cs
 │   │   │   ├── OrderDTOs.cs
 │   │   │   ├── PaymentDTOs.cs
 │   │   │   ├── ProductDTOs.cs
 │   │   │   ├── ResponseDTOs.cs
 │   │   │   ├── ShipmentDTOs.cs
 │   │   │   └── SubscriptionDTOs.cs
-│   │   ├── Mappings
+│   │   ├── Mappings/
 │   │   │   └── MappingProfile.cs
-│   │   └── Validators
+│   │   └── Validators/
 │   │       ├── AuthValidator.cs
 │   │       ├── CategoryValidator.cs
 │   │       ├── MerchantValidator.cs
-│   │       ├── OfferValidator.cs
 │   │       ├── OrderValidator.cs
 │   │       └── ProductValidator.cs
-│   ├── Controllers
+│   ├── Controllers/
 │   │   ├── AdminController.cs
 │   │   ├── AnalyticsController.cs
 │   │   ├── AuthController.cs
@@ -73,54 +72,53 @@
 │   │   ├── StoreController.cs
 │   │   └── SubscriptionsController.cs
 │   ├── Dockerfile
-│   ├── Domain
-│   │   ├── Entities
+│   ├── Domain/
+│   │   ├── Entities/
 │   │   │   ├── Category.cs
 │   │   │   ├── Courier.cs
 │   │   │   ├── MerchantProfile.cs
 │   │   │   ├── Order.cs
 │   │   │   ├── OrderItem.cs
-│   │   │   ├── Plugin.cs
 │   │   │   ├── Product.cs
-│   │   │   ├── ProductOffer.cs
 │   │   │   ├── Shipment.cs
 │   │   │   ├── ShipmentStatusHistory.cs
 │   │   │   ├── Subscription.cs
 │   │   │   └── User.cs
-│   │   └── Enums
+│   │   └── Enums/
 │   │       ├── OrderSource.cs
 │   │       ├── OrderStatus.cs
 │   │       ├── PlanType.cs
 │   │       ├── ShipmentStatus.cs
 │   │       ├── ShippingRate.cs
 │   │       └── UserRole.cs
-│   ├── Infrastructure
-│   │   ├── Hubs
+│   ├── Infrastructure/
+│   │   ├── Hubs/
 │   │   │   └── TrackingHub.cs
-│   │   ├── Jobs
+│   │   ├── Jobs/
 │   │   │   ├── HangfireAdminAuthFilter.cs
 │   │   │   ├── NotificationJob.cs
 │   │   │   └── OrderStatusJob.cs
-│   │   ├── Persistence
+│   │   ├── Persistence/
 │   │   │   ├── AppDbContext.cs
 │   │   │   └── DataSeeder.cs
-│   │   ├── Repositories
+│   │   ├── Repositories/
 │   │   │   ├── IProductRepository.cs
 │   │   │   ├── IRepository.cs
 │   │   │   ├── ProductRepository.cs
 │   │   │   └── Repository.cs
-│   │   └── Services
-│   │       ├── BuyBoxService.cs
+│   │   └── Services/
+│   │       ├── CourierService.cs
 │   │       ├── CurrentUserService.cs
 │   │       ├── FulfillmentService.cs
-│   │       ├── IAnalyticsSubscriptionCourierServices.cs
-│   │       ├── IBuyBoxService.cs
+│   │       ├── IAnalyticsService.cs
+│   │       ├── ICourierService.cs
 │   │       ├── ICurrentUserService.cs
 │   │       ├── IFulfillmentService.cs
 │   │       ├── ILabelGeneratorService.cs
 │   │       ├── INotificationService.cs
 │   │       ├── IPaymentService.cs
 │   │       ├── IShippingCalculatorService.cs
+│   │       ├── ISubscriptionService.cs
 │   │       ├── ITokenService.cs
 │   │       ├── LabelGeneratorService.cs
 │   │       ├── NotificationService.cs
@@ -128,113 +126,168 @@
 │   │       ├── ServiceResult.cs
 │   │       ├── ShippingCalculatorService.cs
 │   │       └── TokenService.cs
-│   ├── Migrations
+│   ├── Migrations/
 │   │   ├── 20260414080937_FixSubscriptionRelationship.cs
 │   │   ├── 20260414080937_FixSubscriptionRelationship.Designer.cs
 │   │   ├── 20260416130409_UpdatePendingChanges.cs
 │   │   ├── 20260416130409_UpdatePendingChanges.Designer.cs
 │   │   ├── 20260419102935_AddShipmentUpdatedAt.cs
 │   │   ├── 20260419102935_AddShipmentUpdatedAt.Designer.cs
+│   │   ├── 20260422081758_FixModelChanges.cs
+│   │   ├── 20260422081758_FixModelChanges.Designer.cs
+│   │   ├── 20260422082130_FixShadowProperties.cs
+│   │   ├── 20260422082130_FixShadowProperties.Designer.cs
 │   │   └── AppDbContextModelSnapshot.cs
 │   ├── Program.cs
-│   └── Properties
+│   └── Properties/
 │       └── launchSettings.json
 ├── docker-compose.prod.yml
 ├── docker-compose.yml
 ├── marketplace.sln
-├── nginx
-│   └── conf.d
+├── nginx/
+│   └── conf.d/
 │       └── marketplace.conf
 ├── project_tree.txt
 ├── system_architecture.html
-└── web
+└── web/
     ├── .env.local
     ├── .gitignore
-    ├── app
-    │   ├── admin
-    │   │   ├── analytics
+    ├── app/
+    │   ├── admin/
+    │   │   ├── analytics/
     │   │   │   └── page.tsx
-    │   │   ├── categories
+    │   │   ├── categories/
     │   │   │   └── page.tsx
-    │   │   ├── couriers
+    │   │   ├── couriers/
+    │   │   │   └── page.tsx
+    │   │   ├── fulfillment/
     │   │   │   └── page.tsx
     │   │   ├── layout.tsx
-    │   │   ├── merchants
-    │   │   │   └── page.tsx
-    │   │   ├── orders
+    │   │   ├── merchants/
+    │   │   │   ├── page.tsx
+    │   │   │   └── [id]/
+    │   │   │       └── store-setup/
+    │   │   │           └── page.tsx
+    │   │   ├── orders/
     │   │   │   └── page.tsx
     │   │   ├── page.tsx
-    │   │   └── products
+    │   │   ├── products/
+    │   │   │   ├── page.tsx
+    │   │   │   └── pending/
+    │   │   │       └── page.tsx
+    │   │   └── subscription/
     │   │       └── page.tsx
-    │   ├── api
-    │   │   └── upload
+    │   ├── api/
+    │   │   └── upload/
     │   │       └── route.ts
-    │   ├── auth
-    │   │   ├── login
+    │   ├── auth/
+    │   │   ├── forgot-password/
     │   │   │   └── page.tsx
-    │   │   └── register
+    │   │   ├── login/
+    │   │   │   └── page.tsx
+    │   │   ├── register/
+    │   │   │   └── page.tsx
+    │   │   └── reset-password/
     │   │       └── page.tsx
-    │   ├── checkout
+    │   ├── category/
+    │   │   └── [slug]/
+    │   │       └── page.tsx
+    │   ├── checkout/
     │   │   └── page.tsx
-    │   ├── courier
+    │   ├── courier/
     │   │   ├── layout.tsx
     │   │   ├── page.tsx
-    │   │   └── shipments
-    │   │       └── page.tsx
+    │   │   └── shipments/
+    │   │       ├── page.tsx
+    │   │       └── [id]/
+    │   │           └── page.tsx
     │   ├── favicon.ico
     │   ├── globals.css
     │   ├── layout.tsx
-    │   ├── merchant
-    │   │   ├── analytics
+    │   ├── merchant/
+    │   │   ├── analytics/
     │   │   │   └── page.tsx
-    │   │   ├── catalogue
+    │   │   ├── catalogue/
+    │   │   │   └── page.tsx
+    │   │   ├── invoices/
     │   │   │   └── page.tsx
     │   │   ├── layout.tsx
-    │   │   ├── offers
+    │   │   ├── orders/
     │   │   │   └── page.tsx
-    │   │   ├── orders
-    │   │   │   └── page.tsx
-    │   │   └── page.tsx
-    │   ├── not-found.tsx
-    │   ├── orders
     │   │   ├── page.tsx
-    │   │   └── [id]
-    │   │       └── tracking
+    │   │   ├── store-settings/
+    │   │   │   └── page.tsx
+    │   │   └── subscription/
+    │   │       └── page.tsx
+    │   ├── not-found.tsx
+    │   ├── orders/
+    │   │   ├── page.tsx
+    │   │   └── [id]/
+    │   │       └── tracking/
     │   │           └── page.tsx
     │   ├── page.tsx
-    │   ├── profile
+    │   ├── product/
+    │   │   └── [id]/
+    │   │       └── page.tsx
+    │   ├── profile/
     │   │   └── page.tsx
-    │   ├── store
-    │   │   └── [slug]
+    │   ├── search/
+    │   │   └── page.tsx
+    │   ├── store/
+    │   │   └── [slug]/
     │   │       ├── page.tsx
-    │   │       └── product
-    │   │           └── [id]
+    │   │       └── product/
+    │   │           └── [id]/
     │   │               └── page.tsx
-    │   └── unauthorized
+    │   ├── track/
+    │   │   └── [trackingNo]/
+    │   │       └── page.tsx
+    │   └── unauthorized/
     │       └── page.tsx
-    ├── components
-    │   ├── layout
+    ├── components/
+    │   ├── layout/
     │   │   ├── Footer.tsx
     │   │   ├── Navbar.tsx
     │   │   └── Sidebar.tsx
-    │   ├── modules
-    │   │   ├── admin
-    │   │   │   └── products
+    │   ├── modules/
+    │   │   ├── admin/
+    │   │   │   ├── AdminFulfillmentPanel.tsx
+    │   │   │   ├── AdminMerchantsTable.tsx
+    │   │   │   ├── CourierAssignPanel.tsx
+    │   │   │   └── products/
     │   │   │       ├── AddProductModal.tsx
     │   │   │       ├── ProductsTable.tsx
     │   │   │       └── types.ts
-    │   │   ├── home
+    │   │   ├── analytics/
+    │   │   │   ├── AdminAnalyticsDashboard.tsx
+    │   │   │   └── MerchantAnalyticsDashboard.tsx
+    │   │   ├── checkout/
+    │   │   │   └── CartSummary.tsx
+    │   │   ├── courier/
+    │   │   │   └── CourierShipmentList.tsx
+    │   │   ├── fulfillment/
+    │   │   │   ├── CourierAssignPanel.tsx
+    │   │   │   ├── ETADisplay.tsx
+    │   │   │   └── TrackingTimeline.tsx
+    │   │   ├── home/
     │   │   │   ├── CategoryGrid.tsx
     │   │   │   ├── FeaturedProducts.tsx
     │   │   │   ├── FeaturedStores.tsx
     │   │   │   └── HeroSection.tsx
-    │   │   └── store
+    │   │   ├── merchant/
+    │   │   │   ├── InvoicesTable.tsx
+    │   │   │   ├── MerchantOrdersTable.tsx
+    │   │   │   ├── ProductCatalogueTable.tsx
+    │   │   │   ├── ProductFormModal.tsx
+    │   │   │   ├── StoreSettingsForm.tsx
+    │   │   │   └── SubscriptionCard.tsx
+    │   │   └── store/
     │   │       ├── AddToCartButton.tsx
     │   │       ├── StoreHeader.tsx
     │   │       └── StoreProductGrid.tsx
-    │   ├── providers
+    │   ├── providers/
     │   │   └── QueryProvider.tsx
-    │   └── ui
+    │   └── ui/
     │       ├── accordion.tsx
     │       ├── alert-dialog.tsx
     │       ├── alert.tsx
@@ -294,17 +347,24 @@
     │       └── tooltip.tsx
     ├── components.json
     ├── Dockerfile
-    ├── hooks
+    ├── eslint.config.mjs
+    ├── hooks/
     │   ├── use-auth.ts
     │   ├── use-cart.ts
+    │   ├── use-checkout.ts
     │   ├── use-cloudinary-upload.ts
+    │   ├── use-merchant.ts
     │   ├── use-mobile.ts
+    │   ├── use-signalr-tracking.ts
     │   └── use-tracking.ts
-    ├── lib
+    ├── lib/
     │   ├── api.ts
     │   ├── auth.ts
     │   ├── cloudinary.ts
+    │   ├── constants.ts
     │   ├── fetch.ts
+    │   ├── format.ts
+    │   ├── shipping.ts
     │   ├── signalr.ts
     │   └── utils.ts
     ├── middleware.ts
@@ -313,17 +373,26 @@
     ├── package-lock.json
     ├── package.json
     ├── postcss.config.mjs
-    ├── public
+    ├── public/
     │   ├── file.svg
     │   ├── globe.svg
     │   ├── next.svg
     │   ├── vercel.svg
     │   └── window.svg
-    ├── queries
-    │   ├── useBuyBox.ts
+    ├── queries/
+    │   ├── useAnalytics.ts
+    │   ├── useCategories.ts
+    │   ├── useCouriers.ts
     │   ├── useMerchant.ts
     │   ├── useOrders.ts
     │   ├── useProducts.ts
+    │   ├── useStore.ts
+    │   ├── useSubscription.ts
     │   └── useTracking.ts
     ├── README.md
-    └── tsconfig.json
+    ├── tsconfig.json
+    └── types/
+        ├── api.ts
+        ├── entities.ts
+        ├── enums.ts
+        └── index.ts

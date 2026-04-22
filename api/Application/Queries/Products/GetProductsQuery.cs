@@ -38,7 +38,7 @@ public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, GetProd
         CancellationToken cancellationToken
     )
     {
-        var query = _db.Products.Include(p => p.Category).Include(p => p.Offers).AsQueryable();
+        var query = _db.Products.Include(p => p.Category).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.Search))
             query = query.Where(p =>
@@ -65,7 +65,7 @@ public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, GetProd
                 p.Description,
                 p.Category != null ? p.Category.Name : "",
                 p.IsApproved,
-                p.Offers.Count,
+                0,
                 p.CreatedAt
             ))
             .ToListAsync(cancellationToken);

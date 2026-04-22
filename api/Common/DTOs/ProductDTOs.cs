@@ -2,6 +2,25 @@ namespace api.Common.DTOs;
 
 // ── REQUEST DTOs ─────────────────────────────────────────────────────────────
 
+public class ProductDto
+{
+    public Guid Id { get; set; }
+    public Guid MerchantId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string? ShortDescription { get; set; }
+    public Guid CategoryId { get; set; }
+    public string? CategoryName { get; set; }
+    public string? MerchantStoreName { get; set; }
+    public List<string> Images { get; set; } = new();
+    public List<string> Tags { get; set; } = new();
+    public decimal Price { get; set; }
+    public int Stock { get; set; }
+    public bool IsApproved { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
 public record CreateProductRequest(
     string Name,
     string Description,
@@ -33,10 +52,7 @@ public record UpdateOfferRequest(
     bool? PublishToStore
 );
 
-public record PublishToggleRequest(
-    bool PublishToMarket,
-    bool PublishToStore
-);
+public record PublishToggleRequest(bool PublishToMarket, bool PublishToStore);
 
 // ── RESPONSE DTOs ────────────────────────────────────────────────────────────
 

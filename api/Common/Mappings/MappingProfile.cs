@@ -1,5 +1,3 @@
-using api.Application.Queries.Offers;
-using api.Application.Queries.Products;
 using api.Common.DTOs;
 using api.Domain.Entities;
 using AutoMapper;
@@ -10,78 +8,45 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        // ── User ─────────────────────────────────────────────────────────────
-        CreateMap<User, UserDto>().ForMember(d => d.Role, o => o.MapFrom(s => s.Role.ToString()));
+        CreateMap<User, UserDto>();
 
-        // ── Category ─────────────────────────────────────────────────────────
-        CreateMap<Category, CategoryDto>()
-            .ForMember(
-                d => d.ParentName,
-                o => o.MapFrom(s => s.Parent != null ? s.Parent.Name : null)
-            );
+        CreateMap<MerchantProfile, MerchantDto>()
+            .ForMember(d => d.Email, o => o.MapFrom(s => s.User != null ? s.User.Email : null));
 
-        // ── Product ───────────────────────────────────────────────────────────
         CreateMap<Product, ProductDto>()
             .ForMember(
                 d => d.CategoryName,
-                o => o.MapFrom(s => s.Category != null ? s.Category.Name : string.Empty)
+                o => o.MapFrom(s => s.Category != null ? s.Category.Name : null)
             )
             .ForMember(
-                d => d.OfferCount,
-                o => o.MapFrom(s => s.Offers != null ? s.Offers.Count : 0)
+                d => d.MerchantStoreName,
+                o => o.MapFrom(s => s.Merchant != null ? s.Merchant.StoreName : null)
             );
 
-        // ── ProductOffer ──────────────────────────────────────────────────────
-        CreateMap<ProductOffer, OfferDto>()
-            .ForMember(
-                d => d.ProductName,
-                o => o.MapFrom(s => s.Product != null ? s.Product.Name : string.Empty)
-            )
-            .ForMember(
-                d => d.MerchantName,
-                o => o.MapFrom(s => s.Merchant != null ? s.Merchant.StoreName : string.Empty)
-            );
+        CreateMap<Category, CategoryDto>();
 
-        // ── MerchantProfile ───────────────────────────────────────────────────
-        CreateMap<MerchantProfile, MerchantDto>()
-            .ForMember(
-                d => d.Email,
-                o => o.MapFrom(s => s.User != null ? s.User.Email : string.Empty)
-            )
-            .ForMember(
-                d => d.IsActive,
-                o => o.MapFrom(s => s.User != null ? s.User.IsVerified : false)
-            );
-
-        // ── Order ─────────────────────────────────────────────────────────────
-        CreateMap<Order, OrderDto>()
-            .ForMember(
-                d => d.CustomerName,
-                o => o.MapFrom(s => s.Customer != null ? s.Customer.Email : string.Empty)
-            )
-            .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()))
-            .ForMember(d => d.Source, o => o.MapFrom(s => s.Source.ToString()));
+        CreateMap<Order, OrderDto>();
 
         CreateMap<OrderItem, OrderItemDto>()
+            .ForMember(d => d.ProductName, o => o.MapFrom(s => s.ProductName));
+
+        CreateMap<Shipment, ShipmentDto>()
             .ForMember(
-                d => d.ProductName,
+                d => d.CourierName,
                 o =>
                     o.MapFrom(s =>
-                        s.Offer != null && s.Offer.Product != null
-                            ? s.Offer.Product.Name
-                            : string.Empty
+                        s.Courier != null && s.Courier.User != null
+                            ? $"{s.Courier.User.FirstName} {s.Courier.User.LastName}".Trim()
+                            : null
                     )
             );
 
-        // ── Courier ───────────────────────────────────────────────────────────
+        CreateMap<ShipmentStatusHistory, ShipmentStatusHistoryDto>()
+            .ForMember(d => d.ChangedAt, o => o.MapFrom(s => s.ChangedAt));
+
         CreateMap<Courier, CourierDto>()
-            .ForMember(
-                d => d.FullName,
-                o => o.MapFrom(s => s.User != null ? s.User.Email : string.Empty)
-            )
-            .ForMember(
-                d => d.Email,
-                o => o.MapFrom(s => s.User != null ? s.User.Email : string.Empty)
-            );
+            .ForMember(d => d.Email, o => o.MapFrom(s => s.User != null ? s.User.Email : null));
+
+        CreateMap<Subscription, SubscriptionDto>();
     }
 }

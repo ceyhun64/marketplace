@@ -3,7 +3,6 @@ using api.Domain.Entities;
 using api.Domain.Enums;
 using api.Infrastructure.Persistence;
 using api.Infrastructure.Services;
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,51 +15,51 @@ namespace api.Controllers;
 public class OrdersController(
     AppDbContext db,
     ICurrentUserService currentUser,
-    IFulfillmentService fulfillmentService,
-    IMapper mapper
+    IFulfillmentService fulfillmentService
 ) : ControllerBase
 {
     // ─── CUSTOMER ──────────────────────────────────────────────
 
-    /// <summary>Sipariş oluştur (checkout)</summary>
     [HttpPost]
     [Authorize(Policy = "CustomerOnly")]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto dto)
     {
-        var offerIds = dto.Items.Select(i => i.OfferId).ToList();
-        var offers = await db
-            .ProductOffers.Include(o => o.Product)
-            .Include(o => o.Merchant)
-            .Where(o => offerIds.Contains(o.Id) && o.Stock > 0)
+        var productIds = dto.Items.Select(i => i.ProductId).ToList();
+
+        var products = await db
+            .Products.Include(p => p.Merchant)
+            .Where(p => productIds.Contains(p.Id) && p.Stock > 0 && !p.IsDeleted)
             .ToListAsync();
 
-        if (offers.Count != dto.Items.Count)
-            return BadRequest(new { message = "Bazı teklifler bulunamadı veya stok yetersiz." });
+        if (products.Count != dto.Items.Count)
+            return BadRequest(new { message = "Bazı ürünler bulunamadı veya stok yetersiz." });
 
         decimal total = 0;
         var orderItems = new List<OrderItem>();
 
         foreach (var item in dto.Items)
         {
-            var offer = offers.First(o => o.Id == item.OfferId);
+            var product = products.First(p => p.Id == item.ProductId);
 
-            if (offer.Stock < item.Quantity)
-                return BadRequest(
-                    new { message = $"'{offer.Product.Name}' için yeterli stok yok." }
-                );
+            if (product.Stock < item.Quantity)
+                return BadRequest(new { message = $"'{product.Name}' için yeterli stok yok." });
 
-            var orderItem = new OrderItem
-            {
-                Id = Guid.NewGuid(),
-                OfferId = offer.Id,
-                Quantity = item.Quantity,
-                UnitPrice = offer.Price,
-            };
+            orderItems.Add(
+                new OrderItem
+                {
+                    Id = Guid.NewGuid(),
+                    ProductId = product.Id,
+                    MerchantId = product.MerchantId,
+                    ProductName = product.Name,
+                    ProductImage = product.Images.FirstOrDefault(),
+                    UnitPrice = product.Price,
+                    Quantity = item.Quantity,
+                }
+            );
 
-            total += offer.Price * item.Quantity;
-            orderItems.Add(orderItem);
-
-            offer.Stock -= item.Quantity;
+            total += product.Price * item.Quantity;
+            product.Stock -= item.Quantity;
+            product.UpdatedAt = DateTime.UtcNow;
         }
 
         var order = new Order
@@ -92,7 +91,6 @@ public class OrdersController(
         );
     }
 
-    /// <summary>Kendi siparişlerim</summary>
     [HttpGet]
     [Authorize(Policy = "CustomerOnly")]
     public async Task<IActionResult> GetMyOrders(
@@ -103,16 +101,12 @@ public class OrdersController(
     {
         var query = db
             .Orders.Include(o => o.Items)
-                .ThenInclude(i => i.Offer)
-                    .ThenInclude(o => o.Product)
+                .ThenInclude(i => i.Product)
             .Include(o => o.Shipment)
             .Where(o => o.CustomerId == currentUser.UserId);
 
-        if (
-            !string.IsNullOrEmpty(status)
-            && Enum.TryParse<OrderStatus>(status, out var parsedStatus)
-        )
-            query = query.Where(o => o.Status == parsedStatus);
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, out var ps))
+            query = query.Where(o => o.Status == ps);
 
         var total = await query.CountAsync();
         var orders = await query
@@ -124,7 +118,7 @@ public class OrdersController(
         return Ok(
             new
             {
-                data = orders.Select(o => MapOrderToDto(o)),
+                data = orders.Select(MapOrderToDto),
                 pagination = new
                 {
                     page,
@@ -136,15 +130,13 @@ public class OrdersController(
         );
     }
 
-    /// <summary>Sipariş detayı</summary>
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetOrder(Guid id)
     {
         var order = await db
             .Orders.Include(o => o.Items)
-                .ThenInclude(i => i.Offer)
-                    .ThenInclude(o => o.Product)
-                        .ThenInclude(p => p.Category)
+                .ThenInclude(i => i.Product)
+                    .ThenInclude(p => p.Category)
             .Include(o => o.Shipment)
                 .ThenInclude(s => s!.StatusHistory)
             .FirstOrDefaultAsync(o => o.Id == id);
@@ -157,17 +149,13 @@ public class OrdersController(
 
         if (currentUser.Role == "Merchant")
         {
-            var hasMerchantItem = order.Items.Any(i =>
-                i.Offer.MerchantId == currentUser.MerchantId
-            );
-            if (!hasMerchantItem)
+            if (!order.Items.Any(i => i.MerchantId == currentUser.MerchantId))
                 return Forbid();
         }
 
         return Ok(MapOrderToDto(order));
     }
 
-    /// <summary>Canlı kargo takip</summary>
     [HttpGet("{id:guid}/tracking")]
     public async Task<IActionResult> GetTracking(Guid id)
     {
@@ -205,9 +193,10 @@ public class OrdersController(
                 ShipmentStatus = shipment.Status.ToString(),
                 EstimatedDelivery = shipment.EstimatedDelivery,
                 CourierName =
-                    shipment.Courier?.User?.FirstName + " " + shipment.Courier?.User?.LastName,
+                    shipment.Courier?.User != null
+                        ? $"{shipment.Courier.User.FirstName} {shipment.Courier.User.LastName}".Trim()
+                        : null,
                 CourierPhone = shipment.Courier?.User?.Phone,
-                // ✅ Doğru
                 StatusHistory = shipment
                     .StatusHistory.OrderByDescending(h => h.ChangedAt)
                     .Select(h => new ShipmentStatusHistoryDto
@@ -221,7 +210,6 @@ public class OrdersController(
         );
     }
 
-    /// <summary>Sipariş iptal</summary>
     [HttpPost("{id:guid}/cancel")]
     [Authorize(Policy = "CustomerOnly")]
     public async Task<IActionResult> CancelOrder(Guid id, [FromBody] CancelOrderDto dto)
@@ -229,11 +217,11 @@ public class OrdersController(
         var order = await db.Orders.FirstOrDefaultAsync(o =>
             o.Id == id && o.CustomerId == currentUser.UserId
         );
+
         if (order == null)
             return NotFound();
 
-        var cancellableStatuses = new[] { OrderStatus.Pending, OrderStatus.PaymentConfirmed };
-        if (!cancellableStatuses.Contains(order.Status))
+        if (!new[] { OrderStatus.Pending, OrderStatus.PaymentConfirmed }.Contains(order.Status))
             return BadRequest(new { message = "Bu aşamada sipariş iptal edilemez." });
 
         order.Status = OrderStatus.Cancelled;
@@ -244,80 +232,8 @@ public class OrdersController(
         return Ok(new { message = "Sipariş iptal edildi." });
     }
 
-    // ─── MERCHANT ──────────────────────────────────────────────
-
-    /// <summary>Merchant'a gelen siparişler</summary>
-    [HttpGet("merchant/incoming")]
-    [Authorize(Policy = "MerchantOnly")]
-    public async Task<IActionResult> GetMerchantOrders(
-        [FromQuery] string? status,
-        [FromQuery] int page = 1,
-        [FromQuery] int limit = 10
-    )
-    {
-        var query = db
-            .Orders.Include(o => o.Items)
-                .ThenInclude(i => i.Offer)
-                    .ThenInclude(o => o.Product)
-            .Include(o => o.Shipment)
-            .Where(o => o.Items.Any(i => i.Offer.MerchantId == currentUser.MerchantId));
-
-        if (
-            !string.IsNullOrEmpty(status)
-            && Enum.TryParse<OrderStatus>(status, out var parsedStatus)
-        )
-            query = query.Where(o => o.Status == parsedStatus);
-
-        var total = await query.CountAsync();
-        var orders = await query
-            .OrderByDescending(o => o.CreatedAt)
-            .Skip((page - 1) * limit)
-            .Take(limit)
-            .ToListAsync();
-
-        return Ok(
-            new
-            {
-                data = orders.Select(o => MapOrderToDto(o)),
-                pagination = new
-                {
-                    page,
-                    limit,
-                    total,
-                    pages = (int)Math.Ceiling((double)total / limit),
-                },
-            }
-        );
-    }
-
-    /// <summary>Merchant: sipariş hazırlandı</summary>
-    [HttpPatch("{id:guid}/pack")]
-    [Authorize(Policy = "MerchantOnly")]
-    public async Task<IActionResult> MarkAsPacked(Guid id)
-    {
-        var order = await db
-            .Orders.Include(o => o.Items)
-                .ThenInclude(i => i.Offer)
-            .FirstOrDefaultAsync(o =>
-                o.Id == id && o.Items.Any(i => i.Offer.MerchantId == currentUser.MerchantId)
-            );
-
-        if (order == null)
-            return NotFound();
-
-        if (order.Status != OrderStatus.PaymentConfirmed)
-            return BadRequest(new { message = "Yalnızca ödeme onaylı siparişler hazırlanabilir." });
-
-        order.Status = OrderStatus.LabelGenerated;
-        order.UpdatedAt = DateTime.UtcNow;
-
-        await db.SaveChangesAsync();
-        return Ok(new { message = "Sipariş hazırlandı olarak işaretlendi." });
-    }
-
     // ─── ADMIN ─────────────────────────────────────────────────
 
-    /// <summary>Tüm siparişler (Admin)</summary>
     [HttpGet("admin/all")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> GetAllOrders(
@@ -329,19 +245,15 @@ public class OrdersController(
     {
         var query = db
             .Orders.Include(o => o.Items)
-                .ThenInclude(i => i.Offer)
-                    .ThenInclude(o => o.Product)
+                .ThenInclude(i => i.Product)
             .Include(o => o.Shipment)
             .AsQueryable();
 
-        if (
-            !string.IsNullOrEmpty(status)
-            && Enum.TryParse<OrderStatus>(status, out var parsedStatus)
-        )
-            query = query.Where(o => o.Status == parsedStatus);
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, out var ps))
+            query = query.Where(o => o.Status == ps);
 
         if (merchantId.HasValue)
-            query = query.Where(o => o.Items.Any(i => i.Offer.MerchantId == merchantId.Value));
+            query = query.Where(o => o.Items.Any(i => i.MerchantId == merchantId.Value));
 
         var total = await query.CountAsync();
         var orders = await query
@@ -353,7 +265,7 @@ public class OrdersController(
         return Ok(
             new
             {
-                data = orders.Select(o => MapOrderToDto(o)),
+                data = orders.Select(MapOrderToDto),
                 pagination = new
                 {
                     page,
@@ -365,7 +277,6 @@ public class OrdersController(
         );
     }
 
-    /// <summary>Sipariş durumu güncelle (Admin)</summary>
     [HttpPatch("{id:guid}/status")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateOrderStatusDto dto)
@@ -379,26 +290,15 @@ public class OrdersController(
 
         order.Status = newStatus;
         order.UpdatedAt = DateTime.UtcNow;
-
         await db.SaveChangesAsync();
+
         return Ok(new { message = "Sipariş durumu güncellendi.", status = newStatus.ToString() });
     }
 
-    // ─── HELPERS ───────────────────────────────────────────────
+    // ─── HELPER ────────────────────────────────────────────────
 
-    private static OrderDto MapOrderToDto(Order order)
-    {
-        var addr = new ShippingAddressDto
-        {
-            FullName = order.RecipientName,
-            Phone = order.RecipientPhone,
-            AddressLine = order.AddressLine,
-            City = order.City,
-            District = order.District,
-            PostalCode = order.PostalCode,
-        };
-
-        return new OrderDto
+    private static OrderDto MapOrderToDto(Order order) =>
+        new()
         {
             Id = order.Id,
             CustomerId = order.CustomerId,
@@ -407,15 +307,23 @@ public class OrdersController(
             TotalAmount = order.TotalAmount,
             ShippingRate = order.ShippingRate.ToString(),
             PaymentId = order.PaymentId,
-            ShippingAddress = addr,
+            ShippingAddress = new ShippingAddressDto
+            {
+                FullName = order.RecipientName,
+                Phone = order.RecipientPhone,
+                AddressLine = order.AddressLine,
+                City = order.City,
+                District = order.District,
+                PostalCode = order.PostalCode,
+            },
             Items = order
                 .Items.Select(i => new OrderItemDto
                 {
                     Id = i.Id,
-                    OfferId = i.OfferId,
-                    ProductName = i.Offer?.Product?.Name ?? "",
-                    ProductImageUrl = i.Offer?.Product?.Images?.FirstOrDefault(),
-                    MerchantStoreName = i.Offer?.Merchant?.StoreName ?? "",
+                    ProductId = i.ProductId,
+                    ProductName = i.ProductName,
+                    ProductImageUrl = i.ProductImage,
+                    MerchantId = i.MerchantId,
                     Quantity = i.Quantity,
                     UnitPrice = i.UnitPrice,
                     SubTotal = i.UnitPrice * i.Quantity,
@@ -435,5 +343,4 @@ public class OrdersController(
             CreatedAt = order.CreatedAt,
             UpdatedAt = order.UpdatedAt,
         };
-    }
 }

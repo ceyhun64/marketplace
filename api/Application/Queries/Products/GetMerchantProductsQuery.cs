@@ -43,17 +43,9 @@ public class GetMerchantProductsQueryHandler
         if (merchant is null)
             return [];
 
-        var merchantId = merchant.Id; // ← closure için local variable, EF Core translator için kritik
-
-        var offeredProductIds = await _db
-            .ProductOffers.Where(o => o.MerchantId == merchantId)
-            .Select(o => o.ProductId)
-            .Distinct()
-            .ToListAsync(cancellationToken);
-
         return await _db
             .Products.Include(p => p.Category)
-            .Where(p => p.CreatedById == _currentUser.UserId || offeredProductIds.Contains(p.Id))
+            .Where(p => p.MerchantId == merchant.Id)
             .OrderByDescending(p => p.CreatedAt)
             .Select(p => new MerchantProductDto(
                 p.Id,
@@ -62,8 +54,7 @@ public class GetMerchantProductsQueryHandler
                 p.CategoryId,
                 p.Category != null ? p.Category.Name : "",
                 p.IsApproved,
-                // ← Include + Count yerine subquery ile say — SQL'e çevrilir
-                p.Offers.Count(o => o.MerchantId == merchantId && !o.IsDeleted),
+                0,
                 p.CreatedAt
             ))
             .ToListAsync(cancellationToken);

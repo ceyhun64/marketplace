@@ -20,13 +20,20 @@ public class OrderDto
 public class OrderItemDto
 {
     public Guid Id { get; set; }
-    public Guid OfferId { get; set; }
+    public Guid ProductId { get; set; } // OfferId → ProductId
+    public Guid MerchantId { get; set; } // yeni eklendi
     public string ProductName { get; set; } = string.Empty;
     public string? ProductImageUrl { get; set; }
     public string MerchantStoreName { get; set; } = string.Empty;
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal SubTotal { get; set; }
+}
+
+public class CreateOrderItemDto
+{
+    public Guid ProductId { get; set; } // OfferId → ProductId
+    public int Quantity { get; set; }
 }
 
 public class ShippingAddressDto
@@ -56,12 +63,6 @@ public class CreateOrderDto
     public string Source { get; set; } = "Marketplace";
 }
 
-public class CreateOrderItemDto
-{
-    public Guid OfferId { get; set; }
-    public int Quantity { get; set; }
-}
-
 public class UpdateOrderStatusDto
 {
     public string Status { get; set; } = string.Empty;
@@ -72,8 +73,6 @@ public class CancelOrderDto
 {
     public string Reason { get; set; } = string.Empty;
 }
-
-
 
 public class TrackingHistoryItemDto
 {

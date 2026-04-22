@@ -45,7 +45,6 @@ public class CreateProductCommandHandler
             Images = request.Images ?? [],
             Tags = request.Tags ?? [],
             IsApproved = isAdmin,
-            CreatedById = _currentUser.UserId,
             CreatedAt = DateTime.UtcNow,
         };
 

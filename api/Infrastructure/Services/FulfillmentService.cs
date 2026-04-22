@@ -27,7 +27,6 @@ public class FulfillmentService : IFulfillmentService
         _logger = logger;
     }
 
-    // Geçerli durum geçiş tablosu
     private static readonly Dictionary<ShipmentStatus, ShipmentStatus[]> ValidTransitions = new()
     {
         [ShipmentStatus.Pending] = [ShipmentStatus.CourierAssigned],
@@ -45,7 +44,6 @@ public class FulfillmentService : IFulfillmentService
         string? note = null
     )
     {
-        // Geçiş geçerli mi?
         if (
             !ValidTransitions.TryGetValue(shipment.Status, out var allowed)
             || !allowed.Contains(newStatus)
@@ -58,7 +56,6 @@ public class FulfillmentService : IFulfillmentService
         shipment.Status = newStatus;
         shipment.UpdatedAt = DateTime.UtcNow;
 
-        // Geçmiş kaydı
         _db.ShipmentStatusHistories.Add(
             new ShipmentStatusHistory
             {
@@ -70,7 +67,6 @@ public class FulfillmentService : IFulfillmentService
             }
         );
 
-        // Bağlı siparişin durumunu da güncelle
         var order = await _db.Orders.FindAsync(shipment.OrderId);
         if (order != null)
         {
@@ -81,13 +77,12 @@ public class FulfillmentService : IFulfillmentService
         await _db.SaveChangesAsync();
 
         _logger.LogInformation(
-            "Shipment {Id} transitioned {From} → {To}",
+            "Shipment {Id} {From} → {To}",
             shipment.Id,
             previousStatus,
             newStatus
         );
 
-        // SignalR: ilgili gruba canlı bildirim
         await _hub
             .Clients.Group($"shipment-{shipment.Id}")
             .SendAsync(
@@ -102,7 +97,6 @@ public class FulfillmentService : IFulfillmentService
                 }
             );
 
-        // E-posta / SMS (fire-and-forget — API yanıtını yavaşlatmasın)
         _ = _notificationService.SendOrderUpdateNotificationAsync(
             shipment.OrderId.ToString(),
             $"Kargo durumu güncellendi: {newStatus}"
@@ -111,7 +105,8 @@ public class FulfillmentService : IFulfillmentService
 
     public async Task<Shipment> CreateShipmentForOrderAsync(Order order)
     {
-        var trackingNumber = GenerateTrackingNumber();
+        var trackingNumber =
+            $"TR{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}{new Random().Next(1000, 9999)}".ToUpper();
 
         var shipment = new Shipment
         {
@@ -143,8 +138,6 @@ public class FulfillmentService : IFulfillmentService
         return shipment;
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
-
     private static OrderStatus MapToOrderStatus(ShipmentStatus s) =>
         s switch
         {
@@ -156,11 +149,4 @@ public class FulfillmentService : IFulfillmentService
             ShipmentStatus.Failed => OrderStatus.Failed,
             _ => OrderStatus.Pending,
         };
-
-    private static string GenerateTrackingNumber()
-    {
-        var ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        var rnd = new Random().Next(1000, 9999);
-        return $"TR{ts}{rnd}".ToUpper();
-    }
 }

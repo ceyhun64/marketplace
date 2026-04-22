@@ -10,12 +10,8 @@ public class StoreController : ControllerBase
 {
     private readonly AppDbContext _db;
 
-    public StoreController(AppDbContext db)
-    {
-        _db = db;
-    }
+    public StoreController(AppDbContext db) => _db = db;
 
-    /// <summary>Tüm aktif e-mağazaların listesi</summary>
     [HttpGet("list")]
     public async Task<IActionResult> GetStoreList(
         [FromQuery] int page = 1,
@@ -36,7 +32,10 @@ public class StoreController : ControllerBase
                 m.Slug,
                 m.LogoUrl,
                 m.BannerUrl,
-                ProductCount = m.Offers.Count(o => o.PublishToStore && o.Stock > 0 && !o.IsDeleted),
+                m.CreatedAt,
+                ProductCount = m.Products.Count(p =>
+                    p.PublishToStore && p.Stock > 0 && !p.IsDeleted
+                ),
             })
             .ToListAsync();
 
@@ -51,7 +50,6 @@ public class StoreController : ControllerBase
         );
     }
 
-    /// <summary>E-mağaza profili + bilgileri (slug ile)</summary>
     [HttpGet("{slug}")]
     public async Task<IActionResult> GetStore(string slug)
     {
@@ -65,8 +63,9 @@ public class StoreController : ControllerBase
                 m.LogoUrl,
                 m.BannerUrl,
                 m.CreatedAt,
-                ProductCount = m.Offers.Count(o => o.PublishToStore && o.Stock > 0 && !o.IsDeleted),
-                AverageRating = m.Offers.Where(o => o.Rating > 0).Average(o => (double?)o.Rating),
+                ProductCount = m.Products.Count(p =>
+                    p.PublishToStore && p.Stock > 0 && !p.IsDeleted
+                ),
             })
             .FirstOrDefaultAsync();
 
@@ -75,7 +74,6 @@ public class StoreController : ControllerBase
         return Ok(store);
     }
 
-    /// <summary>Mağaza ürünleri (sadece o merchant, publishToStore=true)</summary>
     [HttpGet("{slug}/products")]
     public async Task<IActionResult> GetStoreProducts(
         string slug,
@@ -93,45 +91,31 @@ public class StoreController : ControllerBase
             return NotFound(new { message = "Mağaza bulunamadı." });
 
         var query = _db
-            .ProductOffers.Include(o => o.Product)
-                .ThenInclude(p => p.Category)
-            .Where(o =>
-                o.MerchantId == merchant.Id
-                && o.PublishToStore
-                && o.Stock > 0
-                && !o.IsDeleted
-                && !o.Product.IsDeleted
+            .Products.Include(p => p.Category)
+            .Where(p =>
+                p.MerchantId == merchant.Id && p.PublishToStore && p.Stock > 0 && !p.IsDeleted
             )
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(search))
-            query = query.Where(o => EF.Functions.ILike(o.Product.Name, $"%{search}%"));
+            query = query.Where(p => EF.Functions.ILike(p.Name, $"%{search}%"));
 
         if (!string.IsNullOrEmpty(category))
-            query = query.Where(o =>
-                o.Product.Category != null && o.Product.Category.Slug == category
-            );
+            query = query.Where(p => p.Category != null && p.Category.Slug == category);
 
         var total = await query.CountAsync();
         var items = await query
-            .OrderByDescending(o => o.CreatedAt)
+            .OrderByDescending(p => p.CreatedAt)
             .Skip((page - 1) * limit)
             .Take(limit)
-            .Select(o => new
+            .Select(p => new
             {
-                OfferId = o.Id,
-                o.Price,
-                o.Stock,
-                o.Rating,
-                Product = new
-                {
-                    o.Product.Id,
-                    o.Product.Name,
-                    o.Product.Images,
-                    Category = o.Product.Category == null
-                        ? null
-                        : new { o.Product.Category.Name, o.Product.Category.Slug },
-                },
+                p.Id,
+                p.Name,
+                p.Images,
+                p.Price,
+                p.Stock,
+                Category = p.Category == null ? null : new { p.Category.Name, p.Category.Slug },
             })
             .ToListAsync();
 
@@ -146,47 +130,34 @@ public class StoreController : ControllerBase
         );
     }
 
-    /// <summary>Mağaza ürün detayı</summary>
     [HttpGet("{slug}/products/{productId:guid}")]
     public async Task<IActionResult> GetStoreProduct(string slug, Guid productId)
     {
-        var offer = await _db
-            .ProductOffers.Include(o => o.Product)
-                .ThenInclude(p => p.Category)
-            .Include(o => o.Merchant)
-            .Where(o =>
-                o.Merchant.Slug == slug
-                && o.Product.Id == productId
-                && o.PublishToStore
-                && !o.IsDeleted
+        var product = await _db
+            .Products.Include(p => p.Category)
+            .Include(p => p.Merchant)
+            .Where(p =>
+                p.Merchant.Slug == slug && p.Id == productId && p.PublishToStore && !p.IsDeleted
             )
-            .Select(o => new
+            .Select(p => new
             {
-                OfferId = o.Id,
-                o.Price,
-                o.Stock,
-                o.Rating,
-                Product = new
-                {
-                    o.Product.Id,
-                    o.Product.Name,
-                    o.Product.Description,
-                    o.Product.Images,
-                    o.Product.Tags,
-                    Category = o.Product.Category == null
-                        ? null
-                        : new { o.Product.Category.Name, o.Product.Category.Slug },
-                },
-                Store = new { o.Merchant.StoreName, o.Merchant.Slug },
+                p.Id,
+                p.Name,
+                p.Description,
+                p.Images,
+                p.Tags,
+                p.Price,
+                p.Stock,
+                Category = p.Category == null ? null : new { p.Category.Name, p.Category.Slug },
+                Store = new { p.Merchant.StoreName, p.Merchant.Slug },
             })
             .FirstOrDefaultAsync();
 
-        if (offer == null)
+        if (product == null)
             return NotFound(new { message = "Ürün bulunamadı." });
-        return Ok(offer);
+        return Ok(product);
     }
 
-    /// <summary>Mağazaya özel kategoriler (o mağazada ürün olan kategoriler)</summary>
     [HttpGet("{slug}/categories")]
     public async Task<IActionResult> GetStoreCategories(string slug)
     {
@@ -198,15 +169,18 @@ public class StoreController : ControllerBase
             return NotFound(new { message = "Mağaza bulunamadı." });
 
         var categories = await _db
-            .ProductOffers.Include(o => o.Product)
-                .ThenInclude(p => p.Category)
-            .Where(o => o.MerchantId == merchant.Id && o.PublishToStore && !o.IsDeleted)
-            .Where(o => o.Product.Category != null)
-            .Select(o => new
+            .Products.Include(p => p.Category)
+            .Where(p =>
+                p.MerchantId == merchant.Id
+                && p.PublishToStore
+                && !p.IsDeleted
+                && p.Category != null
+            )
+            .Select(p => new
             {
-                o.Product.Category!.Id,
-                o.Product.Category.Name,
-                o.Product.Category.Slug,
+                p.Category!.Id,
+                p.Category.Name,
+                p.Category.Slug,
             })
             .Distinct()
             .ToListAsync();

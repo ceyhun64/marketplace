@@ -106,6 +106,7 @@ try
         opt.AddPolicy("CourierOnly", p => p.RequireRole("Courier"));
         opt.AddPolicy("CustomerOnly", p => p.RequireRole("Customer"));
         opt.AddPolicy("AdminOrMerchant", p => p.RequireRole("Admin", "Merchant"));
+        opt.AddPolicy("AdminOrCourier", p => p.RequireRole("Admin", "Courier")); // ← EKLE
     });
 
     // ── MediatR ───────────────────────────────────────────────────────────────
@@ -172,8 +173,8 @@ try
     builder.Services.AddScoped<IShippingCalculatorService, ShippingCalculatorService>();
     builder.Services.AddScoped<ILabelGeneratorService, LabelGeneratorService>();
     builder.Services.AddScoped<INotificationService, NotificationService>();
-    builder.Services.AddScoped<IBuyBoxService, BuyBoxService>();
     builder.Services.AddScoped<IPaymentService, PaymentService>();
+    builder.Services.AddScoped<ICourierService, CourierService>(); // ← EKLE
 
     // ── Hangfire Jobs ─────────────────────────────────────────────────────────
     builder.Services.AddTransient<OrderStatusJob>();

@@ -31,7 +31,7 @@ public class CreateOrderItemValidator : AbstractValidator<CreateOrderItemDto>
 {
     public CreateOrderItemValidator()
     {
-        RuleFor(x => x.OfferId).NotEmpty().WithMessage("Teklif ID boş olamaz.");
+        RuleFor(x => x.ProductId).NotEmpty().WithMessage("Ürün ID boş olamaz.");
 
         RuleFor(x => x.Quantity)
             .GreaterThan(0)

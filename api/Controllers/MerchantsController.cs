@@ -22,13 +22,11 @@ public class MerchantsController : ControllerBase
         _currentUser = currentUser;
     }
 
-    // ── PROFILE ─────────────────────────────────────────────────────────────
+    // ── PROFILE ──────────────────────────────────────────────────────────────
 
-    /// <summary>Kendi merchant profili</summary>
     [HttpGet("profile")]
     public async Task<IActionResult> GetProfile()
     {
-        // YENİ: Dönüştürme işlemini sildik, doğrudan UserId'yi kullanıyoruz.
         var merchant = await _db
             .MerchantProfiles.Include(m => m.User)
             .Include(m => m.Subscription)
@@ -43,13 +41,14 @@ public class MerchantsController : ControllerBase
                 merchant.Id,
                 merchant.StoreName,
                 merchant.Slug,
+                merchant.LogoUrl,
+                merchant.BannerUrl,
+                merchant.CustomDomain,
                 merchant.Latitude,
                 merchant.Longitude,
                 merchant.HandlingHours,
                 merchant.IsActive,
                 merchant.CreatedAt,
-                merchant.LogoUrl,
-                merchant.BannerUrl,
                 User = new { merchant.User.Email },
                 Subscription = merchant.Subscription == null
                     ? null
@@ -63,11 +62,9 @@ public class MerchantsController : ControllerBase
         );
     }
 
-    /// <summary>Profil güncelle (lokasyon, handling süresi, görsel)</summary>
     [HttpPut("profile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
     {
-        // YENİ: Dönüştürme işlemini sildik.
         var merchant = await _db.MerchantProfiles.FirstOrDefaultAsync(m =>
             m.UserId == _currentUser.UserId
         );
@@ -81,9 +78,9 @@ public class MerchantsController : ControllerBase
         merchant.HandlingHours = dto.HandlingHours ?? merchant.HandlingHours;
         merchant.LogoUrl = dto.LogoUrl ?? merchant.LogoUrl;
         merchant.BannerUrl = dto.BannerUrl ?? merchant.BannerUrl;
+        merchant.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
-
         return Ok(
             new
             {
@@ -94,11 +91,10 @@ public class MerchantsController : ControllerBase
         );
     }
 
-    // ── OFFERS ──────────────────────────────────────────────────────────────
+    // ── CATALOGUE (Products) ──────────────────────────────────────────────────
 
-    /// <summary>Kendi teklifleri listesi</summary>
-    [HttpGet("offers")]
-    public async Task<IActionResult> GetOffers(
+    [HttpGet("catalogue")]
+    public async Task<IActionResult> GetCatalogue(
         [FromQuery] int page = 1,
         [FromQuery] int limit = 20,
         [FromQuery] bool? publishedToMarket = null,
@@ -110,38 +106,34 @@ public class MerchantsController : ControllerBase
             return NotFound(new { message = "Merchant profili bulunamadı." });
 
         var query = _db
-            .ProductOffers.Include(o => o.Product)
-                .ThenInclude(p => p.Category)
-            .Where(o => o.MerchantId == merchant.Id && !o.IsDeleted)
+            .Products.Include(p => p.Category)
+            .Where(p => p.MerchantId == merchant.Id)
             .AsQueryable();
 
         if (publishedToMarket.HasValue)
-            query = query.Where(o => o.PublishToMarket == publishedToMarket.Value);
-
+            query = query.Where(p => p.PublishToMarket == publishedToMarket.Value);
         if (publishedToStore.HasValue)
-            query = query.Where(o => o.PublishToStore == publishedToStore.Value);
+            query = query.Where(p => p.PublishToStore == publishedToStore.Value);
 
         var total = await query.CountAsync();
         var items = await query
-            .OrderByDescending(o => o.CreatedAt)
+            .OrderByDescending(p => p.CreatedAt)
             .Skip((page - 1) * limit)
             .Take(limit)
-            .Select(o => new
+            .Select(p => new
             {
-                o.Id,
-                o.Price,
-                o.Stock,
-                o.Rating,
-                o.PublishToMarket,
-                o.PublishToStore,
-                o.CreatedAt,
-                Product = new
-                {
-                    o.Product.Id,
-                    o.Product.Name,
-                    o.Product.Images,
-                    Category = o.Product.Category == null ? null : o.Product.Category.Name,
-                },
+                p.Id,
+                p.Name,
+                p.Description,
+                p.Images,
+                p.Tags,
+                p.Price,
+                p.Stock,
+                p.PublishToMarket,
+                p.PublishToStore,
+                p.IsApproved,
+                p.CreatedAt,
+                Category = p.Category == null ? null : p.Category.Name,
             })
             .ToListAsync();
 
@@ -156,9 +148,8 @@ public class MerchantsController : ControllerBase
         );
     }
 
-    /// <summary>Yeni teklif ekle (var olan bir ürüne)</summary>
-    [HttpPost("offers")]
-    public async Task<IActionResult> CreateOffer([FromBody] CreateOfferDto dto)
+    [HttpPost("catalogue")]
+    public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -167,20 +158,9 @@ public class MerchantsController : ControllerBase
         if (merchant == null)
             return NotFound(new { message = "Merchant profili bulunamadı." });
 
-        // Ürün mevcut mu?
-        var product = await _db.Products.FindAsync(dto.ProductId);
-        if (product == null || product.IsDeleted)
-            return BadRequest(new { message = "Ürün bulunamadı." });
-
-        // Bu merchant zaten bu ürüne teklif vermiş mi?
-        var existingOffer = await _db.ProductOffers.FirstOrDefaultAsync(o =>
-            o.ProductId == dto.ProductId && o.MerchantId == merchant.Id && !o.IsDeleted
-        );
-
-        if (existingOffer != null)
-            return BadRequest(
-                new { message = "Bu ürün için zaten bir teklifiniz var. Güncelleme yapın." }
-            );
+        var category = await _db.Categories.FindAsync(dto.CategoryId);
+        if (category == null)
+            return BadRequest(new { message = "Kategori bulunamadı." });
 
         // Abonelik kontrolü: marketplace'e yayınlamak için Pro gerekiyor
         if (dto.PublishToMarket == true)
@@ -191,6 +171,7 @@ public class MerchantsController : ControllerBase
                 && s.ExpiresAt > DateTime.UtcNow
                 && s.Plan != PlanType.Basic
             );
+
             if (!hasPro)
                 return BadRequest(
                     new
@@ -200,80 +181,90 @@ public class MerchantsController : ControllerBase
                 );
         }
 
-        var offer = new ProductOffer
+        var product = new Product
         {
             Id = Guid.NewGuid(),
-            ProductId = dto.ProductId,
             MerchantId = merchant.Id,
+            Name = dto.Name,
+            Description = dto.Description,
+            CategoryId = dto.CategoryId,
+            Images = dto.Images ?? [],
+            Tags = dto.Tags ?? [],
             Price = dto.Price,
             Stock = dto.Stock,
             PublishToMarket = dto.PublishToMarket ?? false,
             PublishToStore = dto.PublishToStore ?? true,
-            Rating = 0,
+            IsApproved = false,
             CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
         };
 
-        _db.ProductOffers.Add(offer);
+        _db.Products.Add(product);
         await _db.SaveChangesAsync();
 
         return CreatedAtAction(
-            nameof(GetOffers),
+            nameof(GetCatalogue),
             null,
             new
             {
-                offer.Id,
-                offer.Price,
-                offer.Stock,
+                product.Id,
+                product.Name,
+                product.Price,
+                product.Stock,
             }
         );
     }
 
-    /// <summary>Teklif güncelle (fiyat / stok)</summary>
-    [HttpPut("offers/{id:guid}")]
-    public async Task<IActionResult> UpdateOffer(Guid id, [FromBody] UpdateOfferDto dto)
+    [HttpPut("catalogue/{id:guid}")]
+    public async Task<IActionResult> UpdateProduct(Guid id, [FromBody] UpdateProductDto dto)
     {
         var merchant = await GetCurrentMerchantAsync();
         if (merchant == null)
             return NotFound();
 
-        var offer = await _db.ProductOffers.FirstOrDefaultAsync(o =>
-            o.Id == id && o.MerchantId == merchant.Id && !o.IsDeleted
+        var product = await _db.Products.FirstOrDefaultAsync(p =>
+            p.Id == id && p.MerchantId == merchant.Id
         );
 
-        if (offer == null)
-            return NotFound(new { message = "Teklif bulunamadı." });
+        if (product == null)
+            return NotFound(new { message = "Ürün bulunamadı." });
 
-        offer.Price = dto.Price ?? offer.Price;
-        offer.Stock = dto.Stock ?? offer.Stock;
+        product.Name = dto.Name ?? product.Name;
+        product.Description = dto.Description ?? product.Description;
+        product.Price = dto.Price ?? product.Price;
+        product.Stock = dto.Stock ?? product.Stock;
+        product.Images = dto.Images ?? product.Images;
+        product.Tags = dto.Tags ?? product.Tags;
+        product.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
         return Ok(
             new
             {
-                offer.Id,
-                offer.Price,
-                offer.Stock,
+                product.Id,
+                product.Name,
+                product.Price,
+                product.Stock,
             }
         );
     }
 
-    /// <summary>Marketplace / E-store yayın toggle</summary>
-    [HttpPatch("offers/{id:guid}/publish")]
+    [HttpPatch("catalogue/{id:guid}/publish")]
     public async Task<IActionResult> TogglePublish(Guid id, [FromBody] PublishToggleDto dto)
     {
         var merchant = await GetCurrentMerchantAsync();
         if (merchant == null)
             return NotFound();
 
-        var offer = await _db.ProductOffers.FirstOrDefaultAsync(o =>
-            o.Id == id && o.MerchantId == merchant.Id && !o.IsDeleted
+        var product = await _db.Products.FirstOrDefaultAsync(p =>
+            p.Id == id && p.MerchantId == merchant.Id
         );
 
-        if (offer == null)
-            return NotFound(new { message = "Teklif bulunamadı." });
+        if (product == null)
+            return NotFound(new { message = "Ürün bulunamadı." });
 
         // Marketplace toggle için abonelik kontrolü
-        if (dto.PublishToMarket == true && offer.PublishToMarket == false)
+        if (dto.PublishToMarket == true && !product.PublishToMarket)
         {
             var hasPro = await _db.Subscriptions.AnyAsync(s =>
                 s.MerchantId == merchant.Id
@@ -281,6 +272,7 @@ public class MerchantsController : ControllerBase
                 && s.ExpiresAt > DateTime.UtcNow
                 && s.Plan != PlanType.Basic
             );
+
             if (!hasPro)
                 return BadRequest(
                     new
@@ -291,44 +283,44 @@ public class MerchantsController : ControllerBase
         }
 
         if (dto.PublishToMarket.HasValue)
-            offer.PublishToMarket = dto.PublishToMarket.Value;
+            product.PublishToMarket = dto.PublishToMarket.Value;
         if (dto.PublishToStore.HasValue)
-            offer.PublishToStore = dto.PublishToStore.Value;
+            product.PublishToStore = dto.PublishToStore.Value;
+        product.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
         return Ok(
             new
             {
-                offer.Id,
-                offer.PublishToMarket,
-                offer.PublishToStore,
+                product.Id,
+                product.PublishToMarket,
+                product.PublishToStore,
             }
         );
     }
 
-    /// <summary>Teklif kaldır (soft-delete)</summary>
-    [HttpDelete("offers/{id:guid}")]
-    public async Task<IActionResult> DeleteOffer(Guid id)
+    [HttpDelete("catalogue/{id:guid}")]
+    public async Task<IActionResult> DeleteProduct(Guid id)
     {
         var merchant = await GetCurrentMerchantAsync();
         if (merchant == null)
             return NotFound();
 
-        var offer = await _db.ProductOffers.FirstOrDefaultAsync(o =>
-            o.Id == id && o.MerchantId == merchant.Id && !o.IsDeleted
+        var product = await _db.Products.FirstOrDefaultAsync(p =>
+            p.Id == id && p.MerchantId == merchant.Id
         );
 
-        if (offer == null)
+        if (product == null)
             return NotFound();
 
-        offer.IsDeleted = true;
+        product.IsDeleted = true;
+        product.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return NoContent();
     }
 
-    // ── ORDERS ──────────────────────────────────────────────────────────────
+    // ── ORDERS ───────────────────────────────────────────────────────────────
 
-    /// <summary>Merchant'a gelen siparişler</summary>
     [HttpGet("orders")]
     public async Task<IActionResult> GetIncomingOrders(
         [FromQuery] string? status = null,
@@ -342,16 +334,13 @@ public class MerchantsController : ControllerBase
 
         var query = _db
             .Orders.Include(o => o.Items)
-                .ThenInclude(i => i.Offer)
+                .ThenInclude(i => i.Product)
             .Include(o => o.Customer)
-            .Where(o => o.Items.Any(i => i.Offer.MerchantId == merchant.Id))
+            .Where(o => o.Items.Any(i => i.MerchantId == merchant.Id))
             .AsQueryable();
 
-        if (
-            !string.IsNullOrEmpty(status)
-            && Enum.TryParse<OrderStatus>(status, true, out var parsedStatus)
-        )
-            query = query.Where(o => o.Status == parsedStatus);
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, true, out var ps))
+            query = query.Where(o => o.Status == ps);
 
         var total = await query.CountAsync();
         var items = await query
@@ -368,12 +357,12 @@ public class MerchantsController : ControllerBase
                 o.CreatedAt,
                 Customer = new { o.Customer.Email },
                 MyItems = o
-                    .Items.Where(i => i.Offer.MerchantId == merchant.Id)
+                    .Items.Where(i => i.MerchantId == merchant.Id)
                     .Select(i => new
                     {
                         i.Quantity,
                         i.UnitPrice,
-                        ProductName = i.Offer.Product.Name,
+                        i.ProductName,
                     }),
             })
             .ToListAsync();
@@ -389,7 +378,6 @@ public class MerchantsController : ControllerBase
         );
     }
 
-    /// <summary>Sipariş hazırlandı (merchant → PACKED)</summary>
     [HttpPatch("orders/{id:guid}/pack")]
     public async Task<IActionResult> MarkPacked(Guid id)
     {
@@ -399,23 +387,18 @@ public class MerchantsController : ControllerBase
 
         var order = await _db
             .Orders.Include(o => o.Items)
-                .ThenInclude(i => i.Offer)
-            .FirstOrDefaultAsync(o =>
-                o.Id == id && o.Items.Any(i => i.Offer.MerchantId == merchant.Id)
-            );
+            .FirstOrDefaultAsync(o => o.Id == id && o.Items.Any(i => i.MerchantId == merchant.Id));
 
         if (order == null)
             return NotFound(new { message = "Sipariş bulunamadı." });
 
         if (order.Status != OrderStatus.PaymentConfirmed)
             return BadRequest(
-                new
-                {
-                    message = $"Bu sipariş '{order.Status}' durumunda, 'Hazırlandı' işlemi yapılamaz.",
-                }
+                new { message = $"Bu sipariş '{order.Status}' durumunda, hazırlanamaz." }
             );
 
-        order.Status = OrderStatus.LabelGenerated; // Packed → etiket üretilmeye hazır
+        order.Status = OrderStatus.LabelGenerated;
+        order.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
         return Ok(
@@ -428,9 +411,8 @@ public class MerchantsController : ControllerBase
         );
     }
 
-    // ── ANALYTICS ───────────────────────────────────────────────────────────
+    // ── ANALYTICS ────────────────────────────────────────────────────────────
 
-    /// <summary>Satış analitikleri (marketplace vs e-store)</summary>
     [HttpGet("analytics")]
     public async Task<IActionResult> GetAnalytics([FromQuery] string period = "month")
     {
@@ -448,41 +430,31 @@ public class MerchantsController : ControllerBase
 
         var orders = await _db
             .Orders.Include(o => o.Items)
-                .ThenInclude(i => i.Offer)
             .Where(o =>
                 o.CreatedAt >= from
                 && o.Status != OrderStatus.Cancelled
-                && o.Items.Any(i => i.Offer.MerchantId == merchant.Id)
+                && o.Items.Any(i => i.MerchantId == merchant.Id)
             )
             .ToListAsync();
 
-        var marketplaceOrders = orders.Where(o => o.Source == OrderSource.Marketplace).ToList();
-        var estoreOrders = orders.Where(o => o.Source == OrderSource.EStore).ToList();
+        var mpOrders = orders.Where(o => o.Source == OrderSource.Marketplace).ToList();
+        var esOrders = orders.Where(o => o.Source == OrderSource.EStore).ToList();
 
-        decimal CalcRevenue(List<Order> list) =>
-            list.SelectMany(o => o.Items.Where(i => i.Offer.MerchantId == merchant.Id))
+        decimal Revenue(List<Order> list) =>
+            list.SelectMany(o => o.Items.Where(i => i.MerchantId == merchant.Id))
                 .Sum(i => i.UnitPrice * i.Quantity);
 
         return Ok(
             new
             {
                 period,
-                marketplace = new
-                {
-                    orderCount = marketplaceOrders.Count,
-                    revenue = CalcRevenue(marketplaceOrders),
-                },
-                estore = new
-                {
-                    orderCount = estoreOrders.Count,
-                    revenue = CalcRevenue(estoreOrders),
-                },
-                total = new { orderCount = orders.Count, revenue = CalcRevenue(orders) },
+                marketplace = new { orderCount = mpOrders.Count, revenue = Revenue(mpOrders) },
+                estore = new { orderCount = esOrders.Count, revenue = Revenue(esOrders) },
+                total = new { orderCount = orders.Count, revenue = Revenue(orders) },
             }
         );
     }
 
-    /// <summary>En çok satan ürünler</summary>
     [HttpGet("analytics/top-products")]
     public async Task<IActionResult> GetTopProducts([FromQuery] int limit = 5)
     {
@@ -491,16 +463,14 @@ public class MerchantsController : ControllerBase
             return NotFound();
 
         var topProducts = await _db
-            .OrderItems.Include(i => i.Offer)
-                .ThenInclude(o => o.Product)
-            .Where(i =>
-                i.Offer.MerchantId == merchant.Id && i.Order.Status != OrderStatus.Cancelled
-            )
-            .GroupBy(i => new { i.Offer.Product.Id, i.Offer.Product.Name })
+            .OrderItems.Include(i => i.Product)
+            .Include(i => i.Order)
+            .Where(i => i.MerchantId == merchant.Id && i.Order.Status != OrderStatus.Cancelled)
+            .GroupBy(i => new { i.ProductId, i.ProductName })
             .Select(g => new
             {
-                ProductId = g.Key.Id,
-                ProductName = g.Key.Name,
+                ProductId = g.Key.ProductId,
+                ProductName = g.Key.ProductName,
                 TotalSold = g.Sum(i => i.Quantity),
                 Revenue = g.Sum(i => i.UnitPrice * i.Quantity),
             })
@@ -511,7 +481,6 @@ public class MerchantsController : ControllerBase
         return Ok(topProducts);
     }
 
-    /// <summary>Fatura listesi</summary>
     [HttpGet("invoices")]
     public async Task<IActionResult> GetInvoices(
         [FromQuery] int page = 1,
@@ -524,15 +493,13 @@ public class MerchantsController : ControllerBase
 
         var invoices = await _db
             .Orders.Where(o =>
-                o.Items.Any(i => i.Offer.MerchantId == merchant.Id)
-                && o.Status == OrderStatus.Delivered
+                o.Items.Any(i => i.MerchantId == merchant.Id) && o.Status == OrderStatus.Delivered
             )
             .OrderByDescending(o => o.CreatedAt)
             .Skip((page - 1) * limit)
             .Take(limit)
             .Select(o => new
             {
-                // [..8] yerine Substring — EF expression tree'de Range desteklenmiyor
                 InvoiceNo = "INV-" + o.Id.ToString().Substring(0, 8).ToUpper(),
                 OrderId = o.Id,
                 o.TotalAmount,
@@ -544,12 +511,11 @@ public class MerchantsController : ControllerBase
         return Ok(invoices);
     }
 
-    // _currentUser.UserId zaten uygun tipte olduğu için direkt karşılaştırıyoruz
     private async Task<MerchantProfile?> GetCurrentMerchantAsync() =>
         await _db.MerchantProfiles.FirstOrDefaultAsync(m => m.UserId == _currentUser.UserId);
 }
 
-// ── DTOs ────────────────────────────────────────────────────────────────────
+// ── DTOs ─────────────────────────────────────────────────────────────────────
 
 public record UpdateProfileDto(
     string? StoreName,
@@ -560,14 +526,25 @@ public record UpdateProfileDto(
     string? BannerUrl
 );
 
-public record CreateOfferDto(
-    Guid ProductId,
+public record CreateProductDto(
+    string Name,
+    string Description,
+    Guid CategoryId,
     decimal Price,
     int Stock,
+    List<string>? Images,
+    List<string>? Tags,
     bool? PublishToMarket,
     bool? PublishToStore
 );
 
-public record UpdateOfferDto(decimal? Price, int? Stock);
+public record UpdateProductDto(
+    string? Name,
+    string? Description,
+    decimal? Price,
+    int? Stock,
+    List<string>? Images,
+    List<string>? Tags
+);
 
 public record PublishToggleDto(bool? PublishToMarket, bool? PublishToStore);

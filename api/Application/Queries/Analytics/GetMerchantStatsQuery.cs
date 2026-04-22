@@ -27,7 +27,6 @@ public class GetMerchantStatsQueryHandler
         CancellationToken cancellationToken
     )
     {
-        // ✅ Doğru
         if (_currentUser.MerchantId is null)
             return ServiceResult<MerchantStatsDto>.Fail("Merchant profili bulunamadı.");
 
@@ -43,9 +42,8 @@ public class GetMerchantStatsQueryHandler
 
         var orderItems = await _context
             .OrderItems.Include(i => i.Order)
-            .Include(i => i.Offer)
             .Where(i =>
-                i.Offer.MerchantId == merchantId
+                i.MerchantId == merchantId
                 && i.Order.CreatedAt >= startDate
                 && i.Order.Status == OrderStatus.Delivered
             )
@@ -61,7 +59,6 @@ public class GetMerchantStatsQueryHandler
 
         var totalOrders = orderItems.Select(i => i.OrderId).Distinct().Count();
 
-        // Günlük/haftalık/aylık grupla
         var salesByPeriod = orderItems
             .GroupBy(i =>
                 request.Period switch
