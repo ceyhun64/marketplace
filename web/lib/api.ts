@@ -15,10 +15,24 @@ export const api = axios.create({
   withCredentials: false,
 });
 
+// ── camelCase dönüşümü ────────────────────────────────────────────────────
+function toCamel(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(toCamel);
+  if (obj !== null && typeof obj === "object") {
+    return Object.fromEntries(
+      Object.entries(obj as Record<string, unknown>).map(([k, v]) => [
+        k.charAt(0).toLowerCase() + k.slice(1),
+        toCamel(v),
+      ]),
+    );
+  }
+  return obj;
+}
+
 // ── Request Interceptor ───────────────────────────────────────────────────
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (typeof window !== "undefined") {
-    const token = getAccessToken(); // artık cookie'den okuyor
+    const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -42,7 +56,11 @@ function processQueue(error: unknown, token: string | null = null) {
 }
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Backend PascalCase → frontend camelCase
+    response.data = toCamel(response.data);
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
@@ -64,13 +82,13 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = getRefreshToken(); // cookie'den
+        const refreshToken = getRefreshToken();
         const { data } = await axios.post<{
           accessToken: string;
           refreshToken: string;
         }>(`${API_URL}/api/auth/refresh`, { refreshToken });
 
-        setTokens(data.accessToken, data.refreshToken); // cookie'ye yaz
+        setTokens(data.accessToken, data.refreshToken);
         processQueue(null, data.accessToken);
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return api(originalRequest);

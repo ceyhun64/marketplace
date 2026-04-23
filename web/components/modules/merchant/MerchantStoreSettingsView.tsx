@@ -14,8 +14,7 @@ export default function MerchantStoreSettingsView() {
     },
   });
 
-  const profile = data?.data || null;
-
+  const profile = data || null;
   if (isLoading) {
     return (
       <div className="p-6 space-y-5">
