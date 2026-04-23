@@ -1,6 +1,6 @@
 ================================================================
 PROJE MİMARİSİ VE DOSYA YAPISI
-Oluşturulma Tarihi: 23.04.2026 10:04:50
+Oluşturulma Tarihi: 23.04.2026 10:25:04
 Kapsam: Tam Proje Haritası
 ================================================================
 
@@ -282,7 +282,14 @@ Kapsam: Tam Proje Haritası
     │   │   │   └── HeroSection.tsx
     │   │   ├── merchant/
     │   │   │   ├── InvoicesTable.tsx
+    │   │   │   ├── MerchantAnalyticsDashboard.tsx
+    │   │   │   ├── MerchantCatalogueView.tsx
+    │   │   │   ├── MerchantDashboard.tsx
+    │   │   │   ├── MerchantInvoicesView.tsx
     │   │   │   ├── MerchantOrdersTable.tsx
+    │   │   │   ├── MerchantOrdersView.tsx
+    │   │   │   ├── MerchantStoreSettingsView.tsx
+    │   │   │   ├── MerchantSubscriptionView.tsx
     │   │   │   ├── ProductCatalogueTable.tsx
     │   │   │   ├── ProductFormModal.tsx
     │   │   │   ├── StoreSettingsForm.tsx
