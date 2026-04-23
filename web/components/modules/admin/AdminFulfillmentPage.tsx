@@ -157,7 +157,7 @@ export default function AdminFulfillmentPage() {
     queryKey: ["admin-shipments", statusFilter],
     queryFn: async () => {
       const params = statusFilter !== "all" ? `?status=${statusFilter}` : "";
-      const res = await api.get(`/fulfillment${params}`);
+      const res = await api.get(`/api/fulfillment${params}`);
       return res.data;
     },
   });
@@ -165,7 +165,7 @@ export default function AdminFulfillmentPage() {
   const { data: couriersData, isLoading: loadingCouriers } = useQuery({
     queryKey: ["admin-couriers-active"],
     queryFn: async () => {
-      const res = await api.get("/admin/couriers");
+      const res = await api.get("/api/couriers");
       return res.data;
     },
   });
@@ -178,7 +178,7 @@ export default function AdminFulfillmentPage() {
       shipmentId: string;
       courierId: string;
     }) => {
-      const res = await api.post("/fulfillment/assign", {
+      const res = await api.post("/api/fulfillment/assign", {
         shipmentId,
         courierId,
       });

@@ -4,9 +4,13 @@ const adminLinks = [
   { href: "/admin", label: "Dashboard", icon: "grid" },
   { href: "/admin/merchants", label: "Merchant'lar", icon: "store" },
   { href: "/admin/products", label: "Ürünler", icon: "package" },
+  { href: "/admin/products/pending", label: "Onay Bekleyenler", icon: "clock" },
   { href: "/admin/orders", label: "Siparişler", icon: "shopping-cart" },
-  { href: "/admin/couriers", label: "Kuryeler", icon: "truck" },
+  { href: "/admin/fulfillment", label: "Fulfillment", icon: "truck" },
+  { href: "/admin/couriers", label: "Kuryeler", icon: "user-check" },
+  { href: "/admin/categories", label: "Kategoriler", icon: "tag" },
   { href: "/admin/analytics", label: "Analitik", icon: "bar-chart-2" },
+  { href: "/admin/subscription", label: "Abonelikler", icon: "credit-card" },
 ];
 
 export default function AdminLayout({

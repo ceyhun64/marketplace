@@ -122,7 +122,7 @@ export default function CourierShipmentDetailPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["courier-shipment", shipmentId],
     queryFn: async () => {
-      const res = await api.get(`/fulfillment/${shipmentId}`);
+      const res = await api.get(`/api/fulfillment/${shipmentId}`);
       return res.data;
     },
     enabled: !!shipmentId,
@@ -131,7 +131,7 @@ export default function CourierShipmentDetailPage() {
 
   const pickupMutation = useMutation({
     mutationFn: async () => {
-      const res = await api.post(`/fulfillment/${shipmentId}/pickup-confirm`);
+      const res = await api.post(`/api/fulfillment/${shipmentId}/pickup-confirm`);
       return res.data;
     },
     onSuccess: () => {
@@ -147,7 +147,7 @@ export default function CourierShipmentDetailPage() {
     mutationFn: async () => {
       const recipientName = prompt("Teslim alan kişinin adını girin:");
       if (!recipientName) return;
-      const res = await api.post(`/fulfillment/${shipmentId}/delivered`, {
+      const res = await api.post(`/api/fulfillment/${shipmentId}/delivered`, {
         recipientName,
       });
       return res.data;

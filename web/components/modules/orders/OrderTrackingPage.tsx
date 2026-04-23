@@ -94,6 +94,37 @@ const STATUS_ORDER: ShipmentStatus[] = [
   "Delivered",
 ];
 
+
+// ── Backend status normalizer ─────────────────────────────────────────────────
+// Backend returns UPPER_SNAKE_CASE (e.g. "PAYMENT_CONFIRMED"),
+// component uses PascalCase (e.g. "PaymentConfirmed").
+const STATUS_MAP: Record<string, ShipmentStatus> = {
+  PENDING: "Pending",
+  PAYMENT_CONFIRMED: "PaymentConfirmed",
+  LABEL_GENERATED: "LabelGenerated",
+  COURIER_ASSIGNED: "CourierAssigned",
+  PICKED_UP: "PickedUp",
+  IN_TRANSIT: "InTransit",
+  OUT_FOR_DELIVERY: "OutForDelivery",
+  DELIVERED: "Delivered",
+  FAILED: "Failed",
+};
+
+function normalizeStatus(raw: string): ShipmentStatus {
+  return STATUS_MAP[raw] ?? (raw as ShipmentStatus);
+}
+
+function normalizeTrackingData(raw: TrackingData): TrackingData {
+  return {
+    ...raw,
+    status: normalizeStatus(raw.status as string),
+    events: raw.events.map((e) => ({
+      ...e,
+      status: normalizeStatus(e.status as string),
+    })),
+  };
+}
+
 function getStepIndex(status: ShipmentStatus): number {
   return STATUS_ORDER.indexOf(status);
 }
@@ -109,7 +140,7 @@ export default function TrackingPage() {
   useEffect(() => {
     api
       .get<TrackingData>(`/api/orders/${orderId}/tracking`)
-      .then((r) => setData(r.data))
+      .then((r) => setData(normalizeTrackingData(r.data)))
       .catch(() => setData(null))
       .finally(() => setLoading(false));
   }, [orderId]);
@@ -155,9 +186,9 @@ export default function TrackingPage() {
             if (!prev) return prev;
             return {
               ...prev,
-              status: u.status,
+              status: normalizeStatus(u.status as string),
               events: [
-                { status: u.status, timestamp: u.timestamp, note: u.note },
+                { status: normalizeStatus(u.status as string), timestamp: u.timestamp, note: u.note },
                 ...prev.events,
               ],
             };

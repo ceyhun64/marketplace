@@ -22,7 +22,7 @@ export default function MerchantOrdersView() {
   const { data, isLoading } = useQuery({
     queryKey: ["merchant-incoming-orders", statusFilter],
     queryFn: async () => {
-      const res = await api.get("/api/orders/incoming", {
+      const res = await api.get("/api/orders/merchant/incoming", {
         params: {
           status: statusFilter === "all" ? undefined : statusFilter,
           limit: 50,

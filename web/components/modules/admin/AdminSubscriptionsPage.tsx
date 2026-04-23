@@ -93,7 +93,7 @@ export default function AdminSubscriptionsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-subscriptions", planFilter],
     queryFn: async () => {
-      const res = await api.get("/subscriptions/plans");
+      const res = await api.get("/api/subscriptions/plans");
       return res.data;
     },
   });
@@ -101,7 +101,7 @@ export default function AdminSubscriptionsPage() {
   const { data: merchantsData, isLoading: loadingMerchants } = useQuery({
     queryKey: ["admin-merchants-subscriptions"],
     queryFn: async () => {
-      const res = await api.get("/admin/merchants");
+      const res = await api.get("/api/admin/merchants");
       return res.data;
     },
   });
@@ -114,7 +114,7 @@ export default function AdminSubscriptionsPage() {
       merchantId: string;
       plan: PlanType;
     }) => {
-      const res = await api.put(`/admin/merchants/${merchantId}`, { plan });
+      const res = await api.put(`/api/admin/merchants/${merchantId}`, { plan });
       return res.data;
     },
     onSuccess: () => {

@@ -188,7 +188,7 @@ export default function AdminPendingProductsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-pending-products"],
     queryFn: async () => {
-      const res = await api.get("/admin/products/pending");
+      const res = await api.get("/api/products/admin/pending");
       return res.data;
     },
     refetchInterval: 30000,
@@ -196,7 +196,7 @@ export default function AdminPendingProductsPage() {
 
   const approveMutation = useMutation({
     mutationFn: async (productId: string) => {
-      const res = await api.patch(`/admin/products/${productId}/approve`, {
+      const res = await api.patch(`/api/products/${productId}/approve`, {
         approved: true,
       });
       return res.data;
@@ -211,7 +211,7 @@ export default function AdminPendingProductsPage() {
 
   const rejectMutation = useMutation({
     mutationFn: async (productId: string) => {
-      const res = await api.patch(`/admin/products/${productId}/approve`, {
+      const res = await api.patch(`/api/products/${productId}/approve`, {
         approved: false,
       });
       return res.data;

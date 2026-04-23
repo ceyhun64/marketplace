@@ -30,6 +30,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth as useAuthStore } from "@/hooks/use-auth";
+import { useCart } from "@/hooks/use-cart";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -44,17 +46,24 @@ interface CurrentUser {
   initials?: string;
 }
 
-// ─── Hooks (Stubs - Replace with real logic) ──────────────────────────────────
+// ─── Hooks ───────────────────────────────────────────────────────────────────
 
 function useAuth() {
-  return {
-    user: null as CurrentUser | null, // You can mock this for testing
-    logout: async () => {},
-  };
+  const { user: storeUser, logout } = useAuthStore();
+  const user: CurrentUser | null = storeUser
+    ? {
+        id: storeUser.id,
+        name: storeUser.name,
+        email: storeUser.email,
+        role: storeUser.role.toLowerCase() as UserRole,
+      }
+    : null;
+  return { user, logout };
 }
 
 function useCartCount(): number {
-  return 3; // Example count
+  const cart = useCart();
+  return cart.totalItems();
 }
 
 function useNotifications() {

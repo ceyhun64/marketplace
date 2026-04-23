@@ -1,6 +1,6 @@
 ================================================================
 PROJE MİMARİSİ VE DOSYA YAPISI
-Oluşturulma Tarihi: 23.04.2026 10:25:04
+Oluşturulma Tarihi: 23.04.2026 14:06:26
 Kapsam: Tam Proje Haritası
 ================================================================
 
@@ -255,8 +255,19 @@ Kapsam: Tam Proje Haritası
     │   │   └── Sidebar.tsx
     │   ├── modules/
     │   │   ├── admin/
+    │   │   │   ├── AdminAnalyticsPage.tsx
+    │   │   │   ├── AdminCategoriesPage.tsx
+    │   │   │   ├── AdminCouriersPage.tsx
+    │   │   │   ├── AdminDashboardPage.tsx
+    │   │   │   ├── AdminFulfillmentPage.tsx
     │   │   │   ├── AdminFulfillmentPanel.tsx
+    │   │   │   ├── AdminMerchantsPage.tsx
     │   │   │   ├── AdminMerchantsTable.tsx
+    │   │   │   ├── AdminMerchantStoreSetupPage.tsx
+    │   │   │   ├── AdminOrdersPage.tsx
+    │   │   │   ├── AdminPendingProductsPage.tsx
+    │   │   │   ├── AdminProductsPage.tsx
+    │   │   │   ├── AdminSubscriptionsPage.tsx
     │   │   │   ├── CourierAssignPanel.tsx
     │   │   │   ├── products/
     │   │   │   │   ├── AddProductModal.tsx
@@ -266,11 +277,23 @@ Kapsam: Tam Proje Haritası
     │   │   ├── analytics/
     │   │   │   ├── AdminAnalyticsDashboard.tsx
     │   │   │   └── MerchantAnalyticsDashboard.tsx
+    │   │   ├── auth/
+    │   │   │   ├── ForgotPasswordPage.tsx
+    │   │   │   ├── LoginPage.tsx
+    │   │   │   ├── RegisterPage.tsx
+    │   │   │   ├── ResetPasswordPage.tsx
+    │   │   │   └── UnauthorizedPage.tsx
+    │   │   ├── category/
+    │   │   │   └── CategoryPage.tsx
     │   │   ├── checkout/
     │   │   │   ├── CartSummary.tsx
+    │   │   │   ├── CheckoutPage.tsx
     │   │   │   └── PaymentForm.tsx
     │   │   ├── courier/
-    │   │   │   └── CourierShipmentList.tsx
+    │   │   │   ├── CourierDashboardPage.tsx
+    │   │   │   ├── CourierShipmentDetailPage.tsx
+    │   │   │   ├── CourierShipmentList.tsx
+    │   │   │   └── CourierShipmentsPage.tsx
     │   │   ├── fulfillment/
     │   │   │   ├── CourierAssignPanel.tsx
     │   │   │   ├── ETADisplay.tsx
@@ -294,15 +317,29 @@ Kapsam: Tam Proje Haritası
     │   │   │   ├── ProductFormModal.tsx
     │   │   │   ├── StoreSettingsForm.tsx
     │   │   │   └── SubscriptionCard.tsx
+    │   │   ├── orders/
+    │   │   │   ├── OrdersPage.tsx
+    │   │   │   └── OrderTrackingPage.tsx
+    │   │   ├── product/
+    │   │   │   └── ProductPage.tsx
+    │   │   ├── profile/
+    │   │   │   └── ProfilePage.tsx
+    │   │   ├── search/
+    │   │   │   └── SearchPage.tsx
     │   │   ├── shipping/
     │   │   │   ├── ShipmentLabel.tsx
     │   │   │   └── ShippingRateSelect.tsx
-    │   │   └── store/
-    │   │       ├── AddToCartButton.tsx
-    │   │       ├── ProductCard.tsx
-    │   │       ├── StoreHeader.tsx
-    │   │       ├── StoreProductGrid.tsx
-    │   │       └── TagFilter.tsx
+    │   │   ├── store/
+    │   │   │   ├── AddToCartButton.tsx
+    │   │   │   ├── ProductCard.tsx
+    │   │   │   ├── StoreCategoryPage.tsx
+    │   │   │   ├── StoreHeader.tsx
+    │   │   │   ├── StorePage.tsx
+    │   │   │   ├── StoreProductGrid.tsx
+    │   │   │   ├── StoreProductPage.tsx
+    │   │   │   └── TagFilter.tsx
+    │   │   └── track/
+    │   │       └── TrackingPage.tsx
     │   ├── providers/
     │   │   └── QueryProvider.tsx
     │   └── ui/
@@ -400,7 +437,7 @@ Kapsam: Tam Proje Haritası
     │   ├── useInvoices.ts
     │   ├── useMerchant.ts
     │   ├── useOrders.ts
-    │   ├── usePayment.ts"
+    │   ├── usePayment.ts
     │   ├── useProducts.ts
     │   ├── useShipping.ts
     │   ├── useStore.ts

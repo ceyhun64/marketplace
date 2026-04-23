@@ -56,7 +56,7 @@ export function useMerchantOffers() {
     queryKey: merchantKeys.offers(),
     queryFn: async () => {
       const { data } = await api.get<{ items: MerchantOffer[]; total: number }>(
-        " /api/merchants/offers",
+        "/api/merchants/offers",
       );
       // API { total, page, limit, items } döndürüyor
       return Array.isArray(data) ? data : ((data as any).items ?? []);

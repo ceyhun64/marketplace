@@ -96,6 +96,40 @@ function statusMatch(status: OrderStatus, filter: string): boolean {
   return status === filter;
 }
 
+
+// ── Status normalizer (backend UPPER_SNAKE → component PascalCase) ────────────
+const ORDER_STATUS_MAP: Record<string, OrderStatus> = {
+  PENDING: "Pending",
+  PAYMENT_CONFIRMED: "PaymentConfirmed",
+  LABEL_GENERATED: "LabelGenerated",
+  COURIER_ASSIGNED: "CourierAssigned",
+  PICKED_UP: "PickedUp",
+  IN_TRANSIT: "InTransit",
+  OUT_FOR_DELIVERY: "OutForDelivery",
+  DELIVERED: "Delivered",
+  FAILED: "Failed",
+  CANCELLED: "Cancelled",
+};
+
+function normalizeOrder(raw: Order): Order {
+  return {
+    ...raw,
+    status: ORDER_STATUS_MAP[raw.status as string] ?? raw.status,
+    source:
+      raw.source === "MARKETPLACE"
+        ? "Marketplace"
+        : raw.source === "ESTORE"
+          ? "Estore"
+          : raw.source,
+    shippingRate:
+      raw.shippingRate === "EXPRESS"
+        ? "Express"
+        : raw.shippingRate === "REGULAR"
+          ? "Regular"
+          : raw.shippingRate,
+  };
+}
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,7 +139,7 @@ export default function OrdersPage() {
   useEffect(() => {
     api
       .get<Order[]>("/api/orders")
-      .then((r) => setOrders(r.data))
+      .then((r) => setOrders((r.data as Order[]).map(normalizeOrder)))
       .catch(() => setOrders([]))
       .finally(() => setLoading(false));
   }, []);

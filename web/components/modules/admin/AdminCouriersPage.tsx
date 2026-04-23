@@ -32,7 +32,7 @@ export default function AdminCouriersPage() {
   async function load() {
     setLoading(true);
     try {
-      const res = await api.get<Courier[]>("/admin/couriers");
+      const res = await api.get<Courier[]>("/api/couriers");
       setCouriers(Array.isArray(res.data) ? res.data : []);
     } catch {
       setCouriers([]);
@@ -50,7 +50,7 @@ export default function AdminCouriersPage() {
     setFormLoading(true);
     setFormError("");
     try {
-      await api.post("/admin/couriers", form);
+      await api.post("/api/couriers", form);
       setShowForm(false);
       setForm({ name: "", email: "", password: "", phone: "" });
       await load();
@@ -66,7 +66,7 @@ export default function AdminCouriersPage() {
 
   async function handleToggleActive(id: string, current: boolean) {
     try {
-      await api.patch(`/admin/couriers/${id}`, { isActive: !current });
+      await api.patch(`/api/couriers/${id}`, { isActive: !current });
       setCouriers((prev) =>
         prev.map((c) => (c.id === id ? { ...c, isActive: !current } : c)),
       );

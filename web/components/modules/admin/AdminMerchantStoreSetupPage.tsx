@@ -81,7 +81,7 @@ export default function AdminMerchantStoreSetupPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-merchant-profile", merchantId],
     queryFn: async () => {
-      const res = await api.get(`/admin/merchants/${merchantId}`);
+      const res = await api.get(`/api/admin/merchants/${merchantId}`);
       return res.data;
     },
     enabled: !!merchantId,
@@ -108,7 +108,7 @@ export default function AdminMerchantStoreSetupPage() {
 
   const setupMutation = useMutation({
     mutationFn: async (payload: StoreSetupForm) => {
-      const res = await api.post(`/admin/store/${merchantId}/setup`, {
+      const res = await api.post(`/api/admin/store/${merchantId}/setup`, {
         ...payload,
         latitude: parseFloat(payload.latitude) || null,
         longitude: parseFloat(payload.longitude) || null,

@@ -9,7 +9,7 @@ export default function MerchantStoreSettingsView() {
   const { data, isLoading } = useQuery({
     queryKey: ["merchant-profile"],
     queryFn: async () => {
-      const res = await api.get("/merchant/profile");
+      const res = await api.get("/api/merchants/profile");
       return res.data;
     },
   });

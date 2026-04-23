@@ -40,7 +40,7 @@ export default function NotFound() {
           Back to Home
         </Link>
         <button
-          onClick={() => window.history.back()}
+          onClick={() => typeof window !== "undefined" && window.history.back()}
           className="px-5 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-gray-400 transition-colors"
         >
           ← Go Back

@@ -10,7 +10,7 @@ import { ArrowLeft, Star, Package, ShoppingCart, Clock } from "lucide-react";
 import { AddToCartButton } from "@/components/modules/store/AddToCartButton";
 
 interface Props {
-  params: { slug: string; id: string };
+  params: Promise<{ slug: string; id: string }>;
 }
 
 interface ProductDetail {
@@ -49,7 +49,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function StoreProductPage({ params }: Props) {
+export default async function StoreProductPage({ params: paramsPromise }: Props) {
+  const params = await paramsPromise;
   let product: ProductDetail;
   let offers: StoreOffer[];
 

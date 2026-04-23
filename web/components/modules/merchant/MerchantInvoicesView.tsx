@@ -62,7 +62,7 @@ export default function MerchantInvoicesView() {
   const { data, isLoading } = useQuery({
     queryKey: ["merchant-invoices"],
     queryFn: async () => {
-      const res = await api.get("/merchant/invoices");
+      const res = await api.get("/api/invoices");
       return res.data;
     },
   });
@@ -71,7 +71,7 @@ export default function MerchantInvoicesView() {
 
   const handleDownload = async (invoiceId: string, invoiceNumber: string) => {
     try {
-      const res = await api.get(`/merchant/invoices/${invoiceId}/download`, {
+      const res = await api.get(`/api/invoices/${invoiceId}/download`, {
         responseType: "blob",
       });
       const url = window.URL.createObjectURL(new Blob([res.data]));

@@ -20,7 +20,7 @@ export default function MerchantDashboard() {
   const { data: profile } = useQuery({
     queryKey: ["merchant-profile"],
     queryFn: async () => {
-      const res = await api.get("/api/merchant/profile");
+      const res = await api.get("/api/merchants/profile");
       return res.data;
     },
   });
@@ -28,7 +28,7 @@ export default function MerchantDashboard() {
   const { data: offersData } = useQuery({
     queryKey: ["merchant-offers"],
     queryFn: async () => {
-      const res = await api.get("/api/merchant/offers");
+      const res = await api.get("/api/merchants/offers");
       return res.data;
     },
   });
@@ -36,8 +36,8 @@ export default function MerchantDashboard() {
   const { data: ordersData } = useQuery({
     queryKey: ["merchant-orders-incoming"],
     queryFn: async () => {
-      const res = await api.get("/api/orders/incoming", {
-        params: { status: "placed", limit: 5 },
+      const res = await api.get("/api/orders/merchant/incoming", {
+        params: { status: "PENDING", limit: 5 },
       });
       return res.data;
     },

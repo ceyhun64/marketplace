@@ -18,6 +18,10 @@ const ICONS: Record<string, string> = {
   truck: "🚚",
   "bar-chart-2": "📊",
   "credit-card": "💳",
+  tag: "🏷️",
+  clock: "⏳",
+  "user-check": "👤",
+  star: "⭐",
 };
 
 interface SidebarProps {
@@ -36,24 +40,16 @@ export function Sidebar({ links, role }: SidebarProps) {
   };
 
   const isActive = (href: string) => {
-    // Exact match is always active
     if (pathname === href) return true;
-    // Dashboard root links (/merchant, /admin, /courier):
-    // only active on exact match — don't use startsWith
-    const rootPaths = links
-      .map((l) => l.href)
-      .filter((h) => {
-        const segments = h.split("/").filter(Boolean);
-        return segments.length === 1;
-      });
-    if (rootPaths.includes(href)) return false;
-    // Sub-pages: check that pathname starts with href
-    // AND is immediately followed by / or is the last character
-    return pathname.startsWith(href + "/") || pathname.startsWith(href);
+    // Root dashboard links (e.g. /admin, /merchant) - exact match only
+    const segments = href.split("/").filter(Boolean);
+    if (segments.length === 1) return false;
+    // Sub-pages: pathname must start with href followed by / or end exactly
+    return pathname === href || pathname.startsWith(href + "/");
   };
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-60 bg-white border-r border-gray-200 flex flex-col">
+    <aside className="fixed left-0 top-0 h-screen w-60 bg-white border-r border-gray-200 flex flex-col z-40">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-gray-100">
         <Link

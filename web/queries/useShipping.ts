@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { SHIPPING_COSTS } from "@/types/enums";
+import { SHIPPING_COSTS } from "@/lib/constants";
 import type { ShippingRate } from "@/types/enums";
 
 // ── Types ─────────────────────────────────────────────────────────────────────

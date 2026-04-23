@@ -7,7 +7,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
 interface StorePageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 interface StorProfile {
@@ -36,8 +36,9 @@ interface StoreOffer {
 }
 
 export async function generateMetadata({
-  params,
+  params: paramsPromise,
 }: StorePageProps): Promise<Metadata> {
+  const params = await paramsPromise;
   try {
     const store = (await serverFetch.store(params.slug)) as StorProfile;
     return {
@@ -55,7 +56,8 @@ export async function generateMetadata({
   }
 }
 
-export default async function StorePage({ params }: StorePageProps) {
+export default async function StorePage({ params: paramsPromise }: StorePageProps) {
+  const params = await paramsPromise;
   let store: StorProfile;
   let offers: StoreOffer[];
 
