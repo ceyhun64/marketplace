@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import dynamic from "next/dynamic";
+
+// Recharts SSR'da DOM manipülasyonu yapıp hydration uyumsuzluğuna yol açıyor.
+// ssr: false ile yalnızca client-side render edilmesini sağlıyoruz.
+const MerchantSalesChart = dynamic(
+  () => import("@/components/modules/charts/MerchantSalesChart"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[220px] bg-gray-100 rounded-lg animate-pulse" />
+    ),
+  },
+);
 
 const salesData = [
   { gun: "Pzt", marketplace: 3200, estore: 1100 },
@@ -44,14 +47,11 @@ const kpis = [
 ];
 
 // API bağlantıları:
-// GET /api/analytics/merchant/sales       → salesData
-// GET /api/analytics/merchant/comparison  → comparison
+// GET /api/analytics/merchant/sales        → salesData
+// GET /api/analytics/merchant/comparison   → comparison
 // GET /api/analytics/merchant/top-products → topProducts
 
 export default function MerchantAnalyticsDashboard() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -98,48 +98,7 @@ export default function MerchantAnalyticsDashboard() {
             </span>
           </div>
         </div>
-        {mounted && (
-          <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={salesData}>
-              <defs>
-                <linearGradient id="mktGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="storeGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="gun" tick={{ fontSize: 12 }} />
-              <YAxis
-                tick={{ fontSize: 12 }}
-                tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`}
-              />
-              <Tooltip
-                formatter={(v, n) => [
-                  `₺${Number(v).toLocaleString("tr-TR")}`,
-                  n === "marketplace" ? "Marketplace" : "E-Mağaza",
-                ]}
-              />
-              <Area
-                type="monotone"
-                dataKey="marketplace"
-                stroke="#3b82f6"
-                fill="url(#mktGrad)"
-                strokeWidth={2}
-              />
-              <Area
-                type="monotone"
-                dataKey="estore"
-                stroke="#10b981"
-                fill="url(#storeGrad)"
-                strokeWidth={2}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        )}
+        <MerchantSalesChart data={salesData} />
       </div>
 
       {/* Karşılaştırma + Top Ürünler */}

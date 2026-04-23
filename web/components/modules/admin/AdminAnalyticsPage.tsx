@@ -1,20 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+import dynamic from "next/dynamic";
+
+// Recharts SSR'da DOM manipülasyonu yapıp hydration uyumsuzluğuna yol açıyor.
+// ssr: false ile yalnızca client-side render edilmesini sağlıyoruz.
+const RevenueChart = dynamic(() => import("@/components/modules/charts/AdminRevenueChart"), {
+  ssr: false,
+  loading: () => <ChartSkeleton />,
+});
+const OrderChart = dynamic(() => import("@/components/modules/charts/AdminOrderChart"), {
+  ssr: false,
+  loading: () => <ChartSkeleton />,
+});
+const SourceChart = dynamic(() => import("@/components/modules/charts/AdminSourceChart"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-[180px] h-[180px] bg-gray-100 rounded-full animate-pulse mx-auto" />
+  ),
+});
+
+function ChartSkeleton() {
+  return (
+    <div className="w-full h-[200px] bg-gray-100 rounded-lg animate-pulse" />
+  );
+}
 
 const revenueData = [
   { gun: "Pzt", gelir: 18400 },
@@ -36,7 +45,7 @@ const orderData = [
   { gun: "Paz", siparis: 54 },
 ];
 
-const sourceData = [
+export const sourceData = [
   { name: "Marketplace", value: 68, color: "#3b82f6" },
   { name: "E-Mağaza", value: 32, color: "#10b981" },
 ];
@@ -66,10 +75,9 @@ const stats = [
 // GET /api/analytics/admin/revenue     → revenueData
 // GET /api/analytics/admin/fulfillment → fulfillment metrics
 
-export default function AdminAnalyticsPage() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+export { revenueData, orderData };
 
+export default function AdminAnalyticsPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -105,48 +113,14 @@ export default function AdminAnalyticsPage() {
           <h2 className="text-sm font-semibold text-gray-700 mb-4">
             Haftalık Gelir (₺)
           </h2>
-          {mounted && (
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="gun" tick={{ fontSize: 12 }} />
-                <YAxis
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`}
-                />
-                <Tooltip
-                  formatter={(v) => [
-                    `₺${Number(v).toLocaleString("tr-TR")}`,
-                    "Gelir",
-                  ]}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="gelir"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
+          <RevenueChart data={revenueData} />
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h2 className="text-sm font-semibold text-gray-700 mb-4">
             Haftalık Sipariş Adedi
           </h2>
-          {mounted && (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={orderData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="gun" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(v) => [Number(v), "Sipariş"]} />
-                <Bar dataKey="siparis" fill="#6366f1" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
+          <OrderChart data={orderData} />
         </div>
       </div>
 
@@ -156,37 +130,7 @@ export default function AdminAnalyticsPage() {
           <h2 className="text-sm font-semibold text-gray-700 mb-4 self-start">
             Sipariş Kaynağı
           </h2>
-          {mounted && (
-            <PieChart width={180} height={180}>
-              <Pie
-                data={sourceData}
-                cx={90}
-                cy={90}
-                innerRadius={50}
-                outerRadius={80}
-                dataKey="value"
-              >
-                {sourceData.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(v) => [`%${Number(v)}`, ""]} />
-            </PieChart>
-          )}
-          <div className="flex gap-4 mt-2">
-            {sourceData.map((s) => (
-              <div
-                key={s.name}
-                className="flex items-center gap-1.5 text-xs text-gray-600"
-              >
-                <span
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ background: s.color }}
-                />
-                {s.name}
-              </div>
-            ))}
-          </div>
+          <SourceChart data={sourceData} />
         </div>
 
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5">
