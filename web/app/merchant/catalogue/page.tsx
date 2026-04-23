@@ -1,733 +1,456 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import api from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
+import { useState, useMemo, useCallback } from "react";
 import { toast } from "sonner";
+
+import ProductCatalogueTable from "@/components/modules/merchant/ProductCatalogueTable";
+import ProductFormModal from "@/components/modules/merchant/ProductFormModal";
+
 import {
-  Plus,
-  Search,
-  Package,
-  Globe,
-  Store,
-  TrendingUp,
-  DollarSign,
-  Pencil,
-  Trash2,
-  Image as ImageIcon,
-} from "lucide-react";
+  useMerchantProducts,
+  useDeleteProduct,
+  useTogglePublish,
+  type ProductFilters,
+} from "@/queries/useProducts";
 
-interface Offer {
-  id: string;
-  productId: string;
-  productName: string;
-  productImages: string[];
-  productCategoryName?: string;
-  price: number;
-  stock: number;
-  publishToMarket: boolean;
-  publishToStore: boolean;
-  rating: number;
-  isDeleted: boolean;
-}
+import type { Product } from "@/types/entities";
 
-interface Category {
-  id: string;
-  name: string;
-  parentId?: string;
-}
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const PAGE_SIZE = 20;
+
+const SORT_OPTIONS = [
+  { value: "createdAt_desc", label: "En Yeni" },
+  { value: "createdAt_asc", label: "En Eski" },
+  { value: "price_asc", label: "Fiyat ↑" },
+  { value: "price_desc", label: "Fiyat ↓" },
+  { value: "stock_asc", label: "Stok ↑" },
+  { value: "name_asc", label: "A → Z" },
+];
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function MerchantCataloguePage() {
-  const queryClient = useQueryClient();
+  // ── Modal state ──────────────────────────────────────────────────────────
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editProduct, setEditProduct] = useState<Product | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  // ── Filter / pagination state ─────────────────────────────────────────────
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [addOpen, setAddOpen] = useState(false);
-  const [editOffer, setEditOffer] = useState<Offer | null>(null);
-  const [editOpen, setEditOpen] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [sort, setSort] = useState("createdAt_desc");
+  const [publishFilter, setPublishFilter] = useState<
+    "all" | "market" | "store" | "none"
+  >("all");
 
-  const [productForm, setProductForm] = useState({
-    name: "",
-    description: "",
-    categoryId: "",
-    subcategoryId: "",
-    tags: "",
-    images: [] as string[],
-  });
-  const [imageInput, setImageInput] = useState("");
-  const [offerForm, setOfferForm] = useState({
-    price: "",
-    stock: "",
-    publishToMarket: false,
-    publishToStore: true,
-  });
-  const [editForm, setEditForm] = useState({ price: "", stock: "" });
+  // ── Debounce search ───────────────────────────────────────────────────────
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    clearTimeout((handleSearchChange as any)._timer);
+    (handleSearchChange as any)._timer = setTimeout(() => {
+      setDebouncedSearch(value);
+      setPage(1);
+    }, 400);
+  }, []);
 
-  const { data: offersData, isLoading } = useQuery({
-    queryKey: ["merchant-offers"],
-    queryFn: async () => {
-      const res = await api.get("/api/merchant/offers");
-      return res.data;
-    },
-  });
-
-  const { data: categoriesData } = useQuery({
-    queryKey: ["categories"],
-    queryFn: async () => {
-      const res = await api.get("/api/categories");
-      return res.data;
-    },
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async () => {
-      const productRes = await api.post("/api/products", {
-        name: productForm.name,
-        description: productForm.description,
-        categoryId: productForm.subcategoryId || productForm.categoryId,
-        images: productForm.images,
-        tags: productForm.tags
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean),
-      });
-      const productId = productRes.data?.id || productRes.data?.productId;
-
-      await api.post("/api/merchant/offers", {
-        productId,
-        price: parseFloat(offerForm.price),
-        stock: parseInt(offerForm.stock),
-        publishToMarket: offerForm.publishToMarket,
-        publishToStore: offerForm.publishToStore,
-      });
-    },
-    onSuccess: () => {
-      toast.success("Ürün ve teklif başarıyla oluşturuldu");
-      queryClient.invalidateQueries({ queryKey: ["merchant-offers"] });
-      setAddOpen(false);
-      setProductForm({
-        name: "",
-        description: "",
-        categoryId: "",
-        subcategoryId: "",
-        tags: "",
-        images: [],
-      });
-      setOfferForm({
-        price: "",
-        stock: "",
-        publishToMarket: false,
-        publishToStore: true,
-      });
-    },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Ürün oluşturulamadı");
-    },
-  });
-
-  const updateOfferMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: object }) =>
-      api.put(`/api/merchant/offers/${id}`, data),
-    onSuccess: () => {
-      toast.success("Teklif güncellendi");
-      queryClient.invalidateQueries({ queryKey: ["merchant-offers"] });
-      setEditOpen(false);
-    },
-    onError: () => toast.error("Güncellenemedi"),
-  });
-
-  const toggleMutation = useMutation({
-    mutationFn: ({
-      id,
-      publishToMarket,
-      publishToStore,
-    }: {
-      id: string;
-      publishToMarket: boolean;
-      publishToStore: boolean;
-    }) =>
-      api.patch(`/api/merchant/offers/${id}/publish`, {
-        publishToMarket,
-        publishToStore,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["merchant-offers"] });
-    },
-    onError: () => toast.error("Güncelleme başarısız"),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/api/merchant/offers/${id}`),
-    onSuccess: () => {
-      toast.success("Teklif kaldırıldı");
-      queryClient.invalidateQueries({ queryKey: ["merchant-offers"] });
-    },
-    onError: () => toast.error("Kaldırılamadı"),
-  });
-
-  const offers: Offer[] = offersData?.items || offersData || [];
-  const categories: Category[] = categoriesData?.items || categoriesData || [];
-  const rootCategories = categories.filter((c) => !c.parentId);
-  const subCategories = categories.filter(
-    (c) => c.parentId === productForm.categoryId,
-  );
-  const filtered = offers.filter(
-    (o) =>
-      !search || o.productName?.toLowerCase().includes(search.toLowerCase()),
+  // ── Query filters ─────────────────────────────────────────────────────────
+  const filters: ProductFilters = useMemo(
+    () => ({
+      page,
+      limit: PAGE_SIZE,
+      search: debouncedSearch || undefined,
+      sort,
+    }),
+    [page, debouncedSearch, sort],
   );
 
-  const stats = {
-    total: offers.length,
-    inMarket: offers.filter((o) => o.publishToMarket).length,
-    inStore: offers.filter((o) => o.publishToStore).length,
-    totalStock: offers.reduce((sum, o) => sum + (o.stock || 0), 0),
+  const { data, isLoading, isFetching } = useMerchantProducts(filters);
+  const deleteProduct = useDeleteProduct();
+  const togglePublish = useTogglePublish();
+
+  // ── Derived data ──────────────────────────────────────────────────────────
+  const allProducts: Product[] = data?.items ?? [];
+
+  const filteredProducts = useMemo(() => {
+    if (publishFilter === "all") return allProducts;
+    if (publishFilter === "market")
+      return allProducts.filter((p) => p.publishToMarket);
+    if (publishFilter === "store")
+      return allProducts.filter((p) => p.publishToStore);
+    if (publishFilter === "none")
+      return allProducts.filter((p) => !p.publishToMarket && !p.publishToStore);
+    return allProducts;
+  }, [allProducts, publishFilter]);
+
+  const totalCount = data?.totalCount ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  // ── Summary stats ─────────────────────────────────────────────────────────
+  const stats = useMemo(() => {
+    const items = allProducts;
+    return {
+      total: totalCount,
+      onMarket: items.filter((p) => p.publishToMarket).length,
+      onStore: items.filter((p) => p.publishToStore).length,
+      pendingApproval: items.filter((p) => !p.isApproved).length,
+      outOfStock: items.filter((p) => p.stock === 0).length,
+    };
+  }, [allProducts, totalCount]);
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+  const handleEdit = (product: Product) => {
+    setEditProduct(product);
+    setModalOpen(true);
   };
 
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
+    try {
+      await deleteProduct.mutateAsync(deleteConfirm);
+      toast.success("Ürün silindi.");
+    } catch {
+      toast.error("Ürün silinemedi.");
+    } finally {
+      setDeleteConfirm(null);
+    }
+  };
+
+  const handleTogglePublish = async (
+    id: string,
+    field: "publishToMarket" | "publishToStore",
+    value: boolean,
+  ) => {
+    try {
+      await togglePublish.mutateAsync({ id, [field]: value });
+      const channelName =
+        field === "publishToMarket" ? "Pazaryeri" : "E-Mağaza";
+      toast.success(
+        value
+          ? `${channelName}'de yayınlandı.`
+          : `${channelName}'den kaldırıldı.`,
+      );
+    } catch {
+      toast.error("Durum güncellenemedi.");
+    }
+  };
+
+  const handleModalSuccess = () => {
+    toast.success(editProduct ? "Ürün güncellendi." : "Ürün eklendi.");
+  };
+
+  const handleAddNew = () => {
+    setEditProduct(null);
+    setModalOpen(true);
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Ürün Kataloğum</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Ürünlerinizi ve fiyatlarınızı yönetin
-          </p>
+    <div className="min-h-screen bg-[#F5F2EB]">
+      {/* ── Page Header ──────────────────────────────────────────────────── */}
+      <div className="bg-[#0D0D0D] px-6 py-8 md:px-10">
+        <div className="max-w-7xl mx-auto flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-mono tracking-[3px] uppercase text-[#C84B2F] mb-2">
+              Merchant Dashboard
+            </p>
+            <h1 className="text-2xl md:text-3xl font-serif text-[#F5F2EB] leading-tight">
+              Ürün Kataloğu
+            </h1>
+            <p className="text-sm text-[#7A7060] mt-1 font-mono">
+              {isFetching && !isLoading
+                ? "Güncelleniyor..."
+                : `${totalCount} ürün`}
+            </p>
+          </div>
+          <button
+            onClick={handleAddNew}
+            className="shrink-0 flex items-center gap-2 bg-[#C84B2F] hover:bg-[#a83d25] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-sm"
+          >
+            <span className="text-base leading-none">+</span>
+            Yeni Ürün
+          </button>
         </div>
-        <Button onClick={() => setAddOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Ürün Ekle
-        </Button>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
-        {[
-          {
-            label: "Toplam Ürün",
-            value: stats.total,
-            icon: Package,
-            color: "text-blue-600",
-          },
-          {
-            label: "Marketplace'de",
-            value: stats.inMarket,
-            icon: Globe,
-            color: "text-green-600",
-          },
-          {
-            label: "E-Mağazada",
-            value: stats.inStore,
-            icon: Store,
-            color: "text-purple-600",
-          },
-          {
-            label: "Toplam Stok",
-            value: stats.totalStock,
-            icon: TrendingUp,
-            color: "text-orange-500",
-          },
-        ].map((s) => (
-          <Card key={s.label}>
-            <CardContent className="p-4 flex items-center gap-3">
-              <s.icon className={`w-8 h-8 ${s.color}`} />
-              <div>
-                <p className="text-2xl font-bold">{s.value}</p>
-                <p className="text-xs text-gray-500">{s.label}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <div className="max-w-7xl mx-auto px-6 md:px-10 py-8 space-y-6">
+        {/* ── Stats Row ──────────────────────────────────────────────────── */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <StatCard
+            label="Toplam Ürün"
+            value={stats.total}
+            color="#0D0D0D"
+            active={publishFilter === "all"}
+            onClick={() => {
+              setPublishFilter("all");
+              setPage(1);
+            }}
+          />
+          <StatCard
+            label="Pazaryerinde"
+            value={stats.onMarket}
+            color="#C84B2F"
+            active={publishFilter === "market"}
+            onClick={() => {
+              setPublishFilter("market");
+              setPage(1);
+            }}
+          />
+          <StatCard
+            label="E-Mağazada"
+            value={stats.onStore}
+            color="#1A4A6B"
+            active={publishFilter === "store"}
+            onClick={() => {
+              setPublishFilter("store");
+              setPage(1);
+            }}
+          />
+          <StatCard
+            label="Onay Bekleyen"
+            value={stats.pendingApproval}
+            color="#8B5E1A"
+            active={false}
+            onClick={() => {}}
+          />
+          <StatCard
+            label="Stokta Yok"
+            value={stats.outOfStock}
+            color="#6B2828"
+            active={false}
+            onClick={() => {}}
+          />
+        </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="p-4 border-b">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Ürün ara..."
-                className="pl-9"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+        {/* ── Filters Bar ────────────────────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Search */}
+          <div className="relative flex-1">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7A7060] text-sm pointer-events-none">
+              🔍
+            </span>
+            <input
+              type="text"
+              placeholder="Ürün ara..."
+              value={search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1A4A6B]/20 focus:border-[#1A4A6B] transition-colors"
+            />
           </div>
 
-          {isLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-              <Package className="w-12 h-12 mb-3 opacity-30" />
-              <p className="text-sm">Henüz ürün yok</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-3"
-                onClick={() => setAddOpen(true)}
+          {/* Sort */}
+          <select
+            value={sort}
+            onChange={(e) => {
+              setSort(e.target.value);
+              setPage(1);
+            }}
+            className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A4A6B]/20 focus:border-[#1A4A6B] transition-colors cursor-pointer"
+          >
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+
+          {/* Publish filter pills */}
+          <div className="flex gap-2 bg-white border border-gray-200 rounded-xl p-1">
+            {(
+              [
+                { key: "all", label: "Tümü" },
+                { key: "market", label: "Pazar" },
+                { key: "store", label: "Mağaza" },
+                { key: "none", label: "Yayında Değil" },
+              ] as const
+            ).map((f) => (
+              <button
+                key={f.key}
+                onClick={() => {
+                  setPublishFilter(f.key);
+                  setPage(1);
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+                  publishFilter === f.key
+                    ? "bg-[#0D0D0D] text-[#F5F2EB]"
+                    : "text-[#7A7060] hover:text-[#0D0D0D]"
+                }`}
               >
-                İlk Ürünü Ekle
-              </Button>
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Table ──────────────────────────────────────────────────────── */}
+        <ProductCatalogueTable
+          products={filteredProducts}
+          loading={isLoading}
+          onEdit={handleEdit}
+          onDelete={(id) => setDeleteConfirm(id)}
+          onTogglePublish={handleTogglePublish}
+        />
+
+        {/* ── Pagination ─────────────────────────────────────────────────── */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-[#7A7060] font-mono">
+              Sayfa {page} / {totalPages} — {totalCount} ürün
+            </p>
+            <div className="flex gap-2">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+                className="px-4 py-2 text-sm border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                ← Önceki
+              </button>
+
+              {/* Page numbers */}
+              <div className="hidden sm:flex gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const p =
+                    totalPages <= 5
+                      ? i + 1
+                      : page <= 3
+                        ? i + 1
+                        : page >= totalPages - 2
+                          ? totalPages - 4 + i
+                          : page - 2 + i;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`w-9 h-9 text-sm rounded-lg transition-colors ${
+                        p === page
+                          ? "bg-[#0D0D0D] text-[#F5F2EB] font-semibold"
+                          : "border border-gray-200 bg-white hover:bg-gray-50 text-[#0D0D0D]"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="px-4 py-2 text-sm border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Sonraki →
+              </button>
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead>Ürün</TableHead>
-                  <TableHead>Fiyat</TableHead>
-                  <TableHead>Stok</TableHead>
-                  <TableHead>Marketplace</TableHead>
-                  <TableHead>E-Mağaza</TableHead>
-                  <TableHead>Rating</TableHead>
-                  <TableHead className="w-20">İşlem</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((offer) => (
-                  <TableRow key={offer.id} className="hover:bg-gray-50">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        {offer.productImages?.[0] ? (
-                          <img
-                            src={offer.productImages[0]}
-                            alt={offer.productName}
-                            className="w-10 h-10 object-cover rounded-lg border"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                            <ImageIcon className="w-4 h-4 text-gray-400" />
-                          </div>
-                        )}
-                        <div>
-                          <p className="font-medium text-sm">
-                            {offer.productName}
-                          </p>
-                          {offer.productCategoryName && (
-                            <p className="text-xs text-gray-400">
-                              {offer.productCategoryName}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="w-3 h-3 text-gray-400" />
-                        <span className="font-semibold text-sm">
-                          {offer.price?.toLocaleString("tr-TR", {
-                            minimumFractionDigits: 2,
-                          })}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={
-                          offer.stock > 10
-                            ? "border-green-200 text-green-700"
-                            : offer.stock > 0
-                              ? "border-orange-200 text-orange-700"
-                              : "border-red-200 text-red-700"
-                        }
-                      >
-                        {offer.stock} adet
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={offer.publishToMarket}
-                        onCheckedChange={(checked) =>
-                          toggleMutation.mutate({
-                            id: offer.id,
-                            publishToMarket: checked,
-                            publishToStore: offer.publishToStore,
-                          })
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={offer.publishToStore}
-                        onCheckedChange={(checked) =>
-                          toggleMutation.mutate({
-                            id: offer.id,
-                            publishToMarket: offer.publishToMarket,
-                            publishToStore: checked,
-                          })
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-0.5">
-                        <span className="text-yellow-500 text-xs">★</span>
-                        <span className="text-xs text-gray-600">
-                          {offer.rating?.toFixed(1) || "—"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0"
-                          onClick={() => {
-                            setEditOffer(offer);
-                            setEditForm({
-                              price: offer.price?.toString(),
-                              stock: offer.stock?.toString(),
-                            });
-                            setEditOpen(true);
-                          }}
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => {
-                            if (
-                              confirm(
-                                "Bu teklifi kaldırmak istediğinizden emin misiniz?",
-                              )
-                            )
-                              deleteMutation.mutate(offer.id);
-                          }}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          </div>
+        )}
+
+        {/* ── Empty state (filtered) ─────────────────────────────────────── */}
+        {!isLoading &&
+          filteredProducts.length === 0 &&
+          allProducts.length > 0 && (
+            <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
+              <div className="text-4xl mb-3">🔍</div>
+              <p className="text-sm font-medium text-gray-700">
+                Filtreyle eşleşen ürün bulunamadı
+              </p>
+              <button
+                onClick={() => {
+                  setPublishFilter("all");
+                  setSearch("");
+                  setDebouncedSearch("");
+                }}
+                className="mt-3 text-xs text-[#1A4A6B] hover:underline font-medium"
+              >
+                Filtreleri temizle
+              </button>
+            </div>
           )}
-        </CardContent>
-      </Card>
+      </div>
 
-      {/* Add Dialog */}
-      <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="sm:max-w-[580px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Ürün & Teklif Ekle</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-5 py-2">
-            <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                Ürün Bilgileri
-              </p>
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label>Ürün Adı *</Label>
-                  <Input
-                    placeholder="Örn: iPhone 15 Pro Max"
-                    value={productForm.name}
-                    onChange={(e) =>
-                      setProductForm((f) => ({ ...f, name: e.target.value }))
-                    }
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Açıklama *</Label>
-                  <Textarea
-                    rows={2}
-                    placeholder="Ürün açıklaması..."
-                    value={productForm.description}
-                    onChange={(e) =>
-                      setProductForm((f) => ({
-                        ...f,
-                        description: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label>Kategori *</Label>
-                    <Select
-                      value={productForm.categoryId}
-                      onValueChange={(v) =>
-                        setProductForm((f) => ({
-                          ...f,
-                          categoryId: v,
-                          subcategoryId: "",
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seçin" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {rootCategories.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {subCategories.length > 0 && (
-                    <div className="space-y-1.5">
-                      <Label>Alt Kategori</Label>
-                      <Select
-                        value={productForm.subcategoryId}
-                        onValueChange={(v) =>
-                          setProductForm((f) => ({ ...f, subcategoryId: v }))
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Alt kategori" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {subCategories.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Etiketler</Label>
-                  <Input
-                    placeholder="teknoloji, telefon (virgülle)"
-                    value={productForm.tags}
-                    onChange={(e) =>
-                      setProductForm((f) => ({ ...f, tags: e.target.value }))
-                    }
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Görseller</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Görsel URL..."
-                      value={imageInput}
-                      onChange={(e) => setImageInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && imageInput.trim()) {
-                          setProductForm((f) => ({
-                            ...f,
-                            images: [...f.images, imageInput.trim()],
-                          }));
-                          setImageInput("");
-                        }
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (imageInput.trim()) {
-                          setProductForm((f) => ({
-                            ...f,
-                            images: [...f.images, imageInput.trim()],
-                          }));
-                          setImageInput("");
-                        }
-                      }}
-                    >
-                      Ekle
-                    </Button>
-                  </div>
-                  {productForm.images.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {productForm.images.map((img, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded text-xs"
-                        >
-                          <span className="truncate max-w-[100px]">
-                            {img.split("/").pop()}
-                          </span>
-                          <button
-                            className="text-gray-400 hover:text-red-500"
-                            onClick={() =>
-                              setProductForm((f) => ({
-                                ...f,
-                                images: f.images.filter((_, idx) => idx !== i),
-                              }))
-                            }
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+      {/* ── Product Form Modal ──────────────────────────────────────────────── */}
+      {modalOpen && (
+        <ProductFormModal
+          product={editProduct}
+          onClose={() => {
+            setModalOpen(false);
+            setEditProduct(null);
+          }}
+          onSuccess={handleModalSuccess}
+        />
+      )}
 
-            <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                Fiyat & Stok
-              </p>
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label>Fiyat (₺) *</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={offerForm.price}
-                      onChange={(e) =>
-                        setOfferForm((f) => ({ ...f, price: e.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Stok *</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder="0"
-                      value={offerForm.stock}
-                      onChange={(e) =>
-                        setOfferForm((f) => ({ ...f, stock: e.target.value }))
-                      }
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium">E-Mağazamda Göster</p>
-                    <p className="text-xs text-gray-400">
-                      Kendi mağaza sayfanızda yayınlansın
-                    </p>
-                  </div>
-                  <Switch
-                    checked={offerForm.publishToStore}
-                    onCheckedChange={(v) =>
-                      setOfferForm((f) => ({ ...f, publishToStore: v }))
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium">Marketplace'e Yayınla</p>
-                    <p className="text-xs text-gray-400">
-                      Genel pazaryerinde görünsün (Pro+ gerekir)
-                    </p>
-                  </div>
-                  <Switch
-                    checked={offerForm.publishToMarket}
-                    onCheckedChange={(v) =>
-                      setOfferForm((f) => ({ ...f, publishToMarket: v }))
-                    }
-                  />
-                </div>
-              </div>
+      {/* ── Delete Confirm Dialog ───────────────────────────────────────────── */}
+      {deleteConfirm && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={(e) =>
+            e.target === e.currentTarget && setDeleteConfirm(null)
+          }
+        >
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <div className="text-2xl mb-3">⚠️</div>
+            <h3 className="text-base font-semibold text-[#0D0D0D] mb-1">
+              Ürünü sil
+            </h3>
+            <p className="text-sm text-[#7A7060] mb-6">
+              Bu ürün katalogdan kaldırılacak. Bu işlem geri alınamaz.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={deleteProduct.isPending}
+                className="flex-1 bg-red-600 text-white rounded-xl py-2.5 text-sm font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
+              >
+                {deleteProduct.isPending ? "Siliniyor..." : "Sil"}
+              </button>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAddOpen(false)}>
-              İptal
-            </Button>
-            <Button
-              onClick={() => createMutation.mutate()}
-              disabled={
-                createMutation.isPending ||
-                !productForm.name ||
-                !productForm.description ||
-                !productForm.categoryId ||
-                !offerForm.price ||
-                !offerForm.stock
-              }
-            >
-              {createMutation.isPending ? "Ekleniyor..." : "Ürünü Ekle"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Dialog */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-[380px]">
-          <DialogHeader>
-            <DialogTitle>Teklif Düzenle — {editOffer?.productName}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>Fiyat (₺)</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={editForm.price}
-                onChange={(e) =>
-                  setEditForm((f) => ({ ...f, price: e.target.value }))
-                }
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Stok</Label>
-              <Input
-                type="number"
-                min="0"
-                value={editForm.stock}
-                onChange={(e) =>
-                  setEditForm((f) => ({ ...f, stock: e.target.value }))
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>
-              İptal
-            </Button>
-            <Button
-              onClick={() =>
-                editOffer &&
-                updateOfferMutation.mutate({
-                  id: editOffer.id,
-                  data: {
-                    price: parseFloat(editForm.price),
-                    stock: parseInt(editForm.stock),
-                  },
-                })
-              }
-              disabled={updateOfferMutation.isPending}
-            >
-              {updateOfferMutation.isPending ? "Kaydediliyor..." : "Kaydet"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
+  );
+}
+
+// ── StatCard ──────────────────────────────────────────────────────────────────
+
+function StatCard({
+  label,
+  value,
+  color,
+  active,
+  onClick,
+}: {
+  label: string;
+  value: number;
+  color: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`text-left bg-white border rounded-xl px-4 py-3 transition-all ${
+        active
+          ? "border-[#0D0D0D] shadow-sm"
+          : "border-gray-200 hover:border-gray-300"
+      }`}
+    >
+      <p
+        className="text-2xl font-serif font-bold leading-none"
+        style={{ color }}
+      >
+        {value}
+      </p>
+      <p className="text-[11px] text-[#7A7060] font-mono mt-1 uppercase tracking-wide">
+        {label}
+      </p>
+    </button>
   );
 }

@@ -1,6 +1,6 @@
 ================================================================
 PROJE MİMARİSİ VE DOSYA YAPISI
-Oluşturulma Tarihi: 22.04.2026 16:34:02
+Oluşturulma Tarihi: 23.04.2026 10:04:50
 Kapsam: Tam Proje Haritası
 ================================================================
 
@@ -148,6 +148,7 @@ Kapsam: Tam Proje Haritası
 │   └── conf.d/
 │       └── marketplace.conf
 ├── project_tree.txt
+├── README.md
 ├── system_architecture.html
 └── web/
     ├── .env.local
@@ -235,6 +236,9 @@ Kapsam: Tam Proje Haritası
     │   │   └── page.tsx
     │   ├── store/
     │   │   └── [slug]/
+    │   │       ├── category/
+    │   │       │   └── [cat]/
+    │   │       │       └── page.tsx
     │   │       ├── page.tsx
     │   │       └── product/
     │   │           └── [id]/
@@ -254,15 +258,17 @@ Kapsam: Tam Proje Haritası
     │   │   │   ├── AdminFulfillmentPanel.tsx
     │   │   │   ├── AdminMerchantsTable.tsx
     │   │   │   ├── CourierAssignPanel.tsx
-    │   │   │   └── products/
-    │   │   │       ├── AddProductModal.tsx
-    │   │   │       ├── ProductsTable.tsx
-    │   │   │       └── types.ts
+    │   │   │   ├── products/
+    │   │   │   │   ├── AddProductModal.tsx
+    │   │   │   │   ├── ProductsTable.tsx
+    │   │   │   │   └── types.ts
+    │   │   │   └── StoreSetupForm.tsx
     │   │   ├── analytics/
     │   │   │   ├── AdminAnalyticsDashboard.tsx
     │   │   │   └── MerchantAnalyticsDashboard.tsx
     │   │   ├── checkout/
-    │   │   │   └── CartSummary.tsx
+    │   │   │   ├── CartSummary.tsx
+    │   │   │   └── PaymentForm.tsx
     │   │   ├── courier/
     │   │   │   └── CourierShipmentList.tsx
     │   │   ├── fulfillment/
@@ -281,10 +287,15 @@ Kapsam: Tam Proje Haritası
     │   │   │   ├── ProductFormModal.tsx
     │   │   │   ├── StoreSettingsForm.tsx
     │   │   │   └── SubscriptionCard.tsx
+    │   │   ├── shipping/
+    │   │   │   ├── ShipmentLabel.tsx
+    │   │   │   └── ShippingRateSelect.tsx
     │   │   └── store/
     │   │       ├── AddToCartButton.tsx
+    │   │       ├── ProductCard.tsx
     │   │       ├── StoreHeader.tsx
-    │   │       └── StoreProductGrid.tsx
+    │   │       ├── StoreProductGrid.tsx
+    │   │       └── TagFilter.tsx
     │   ├── providers/
     │   │   └── QueryProvider.tsx
     │   └── ui/
@@ -374,23 +385,23 @@ Kapsam: Tam Proje Haritası
     ├── package.json
     ├── postcss.config.mjs
     ├── public/
-    │   ├── file.svg
-    │   ├── globe.svg
-    │   ├── next.svg
-    │   ├── vercel.svg
-    │   └── window.svg
     ├── queries/
+    │   ├── useAdmin.ts
     │   ├── useAnalytics.ts
     │   ├── useCategories.ts
     │   ├── useCouriers.ts
+    │   ├── useInvoices.ts
     │   ├── useMerchant.ts
     │   ├── useOrders.ts
+    │   ├── usePayment.ts
     │   ├── useProducts.ts
+    │   ├── useShipping.ts
     │   ├── useStore.ts
     │   ├── useSubscription.ts
     │   └── useTracking.ts
     ├── README.md
     ├── tsconfig.json
+    ├── tsconfig.tsbuildinfo
     └── types/
         ├── api.ts
         ├── entities.ts
