@@ -454,7 +454,7 @@ export default function AdminFulfillmentPage() {
       {/* Assign Courier Dialog */}
       <Dialog
         open={assignDialog.open}
-        onOpenChange={(open) => setAssignDialog({ open })}
+        onOpenChange={(open) => setAssignDialog((prev) => ({ ...prev, open }))}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -537,7 +537,9 @@ export default function AdminFulfillmentPage() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setAssignDialog({ open: false })}
+              onClick={() =>
+                setAssignDialog((prev) => ({ ...prev, open: false }))
+              }
             >
               İptal
             </Button>

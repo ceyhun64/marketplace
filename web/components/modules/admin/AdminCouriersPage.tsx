@@ -45,8 +45,15 @@ export default function AdminCouriersPage() {
     load();
   }, []);
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleCreate() {
+    if (!form.name || !form.email || !form.password) {
+      setFormError("Lütfen zorunlu alanları doldurun.");
+      return;
+    }
+    if (form.password.length < 8) {
+      setFormError("Şifre en az 8 karakter olmalıdır.");
+      return;
+    }
     setFormLoading(true);
     setFormError("");
     try {
@@ -124,14 +131,16 @@ export default function AdminCouriersPage() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4">Yeni Kurye Hesabı</h3>
-            <form onSubmit={handleCreate} className="space-y-4">
+            {/* div kullanıyoruz — form/password kombinasyonu şifre yöneticilerinin
+                DOM'a node enjekte etmesine neden olur, React unmount sırasında
+                removeChild patlıyor */}
+            <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Ad Soyad
+                  Ad Soyad <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  required
                   value={form.name}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, name: e.target.value }))
@@ -142,11 +151,10 @@ export default function AdminCouriersPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  E-posta
+                  E-posta <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
-                  required
                   value={form.email}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, email: e.target.value }))
@@ -171,12 +179,11 @@ export default function AdminCouriersPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Şifre
+                  Şifre <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="password"
-                  required
-                  minLength={8}
+                  autoComplete="new-password"
                   value={form.password}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, password: e.target.value }))
@@ -195,14 +202,15 @@ export default function AdminCouriersPage() {
                   İptal
                 </button>
                 <button
-                  type="submit"
+                  type="button"
                   disabled={formLoading}
+                  onClick={handleCreate}
                   className="px-4 py-2 text-sm bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50"
                 >
                   {formLoading ? "Oluşturuluyor..." : "Oluştur"}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
