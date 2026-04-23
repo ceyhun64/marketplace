@@ -266,7 +266,7 @@ export default function CartPage() {
               </Button>
 
               <Link
-                href="/products"
+                href="/product"
                 className="block text-center text-xs text-[#7A7060] hover:text-[#0D0D0D] mt-4 transition-colors"
               >
                 Continue Shopping

@@ -7,14 +7,14 @@ export interface CartItem {
   offerId: string;
   productId: string;
   productName: string;
-  productImage?: string; // opsiyonel
+  productImage?: string;
   price: number;
   quantity: number;
   merchantId: string;
-  merchantStoreName?: string; // opsiyonel
-  stock?: number; // opsiyonel
-  source?: string; // opsiyonel
-  merchantSlug?: string; // opsiyonel
+  merchantStoreName?: string;
+  stock?: number;
+  source?: string;
+  merchantSlug?: string;
 }
 
 export type ShippingRate = "EXPRESS" | "REGULAR";
@@ -129,7 +129,6 @@ export const useCart = create<CartState>()(
     {
       name: "marketplace-cart",
       storage: createJSONStorage(() => sessionStorage),
-      // Sadece items ve shippingRate kalıcı
       partialize: (state) => ({
         items: state.items,
         shippingRate: state.shippingRate,
@@ -144,13 +143,23 @@ export const useCart = create<CartState>()(
 export const useCartMerchantCount = () =>
   useCart((s) => new Set(s.items.map((i) => i.merchantId)).size);
 
-/** Sepet özeti: ürün adedi, toplam fiyat */
-export const useCartSummary = () =>
-  useCart((s) => ({
-    itemCount: s.totalItems(),
-    subtotal: s.subtotal(),
-    shipping: s.shippingCost(),
-    total: s.total(),
-    shippingRate: s.shippingRate,
-    isEmpty: s.items.length === 0,
-  }));
+/** * Sepet özeti: ürün adedi, toplam fiyat
+ * Infinite Loop hatasını önlemek için selector'lar parçalanmıştır.
+ */
+export const useCartSummary = () => {
+  const itemCount = useCart((s) => s.totalItems());
+  const subtotal = useCart((s) => s.subtotal());
+  const shipping = useCart((s) => s.shippingCost());
+  const total = useCart((s) => s.total());
+  const shippingRate = useCart((s) => s.shippingRate);
+  const isEmpty = useCart((s) => s.items.length === 0);
+
+  return {
+    itemCount,
+    subtotal,
+    shipping,
+    total,
+    shippingRate,
+    isEmpty,
+  };
+};
