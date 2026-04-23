@@ -33,8 +33,11 @@ interface StoreOffer {
   merchantSlug: string;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({
+  params: paramsPromise,
+}: Props): Promise<Metadata> {
   try {
+    const params = await paramsPromise;
     const product = (await serverFetch.product(params.id)) as ProductDetail;
     return {
       title: `${product.name} | Ürün Detayı`,
@@ -49,7 +52,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function StoreProductPage({ params: paramsPromise }: Props) {
+export default async function StoreProductPage({
+  params: paramsPromise,
+}: Props) {
   const params = await paramsPromise;
   let product: ProductDetail;
   let offers: StoreOffer[];

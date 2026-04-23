@@ -96,7 +96,6 @@ function statusMatch(status: OrderStatus, filter: string): boolean {
   return status === filter;
 }
 
-
 // ── Status normalizer (backend UPPER_SNAKE → component PascalCase) ────────────
 const ORDER_STATUS_MAP: Record<string, OrderStatus> = {
   PENDING: "Pending",
@@ -116,15 +115,15 @@ function normalizeOrder(raw: Order): Order {
     ...raw,
     status: ORDER_STATUS_MAP[raw.status as string] ?? raw.status,
     source:
-      raw.source === "MARKETPLACE"
+      (raw.source as string) === "MARKETPLACE"
         ? "Marketplace"
-        : raw.source === "ESTORE"
+        : (raw.source as string) === "ESTORE"
           ? "Estore"
           : raw.source,
     shippingRate:
-      raw.shippingRate === "EXPRESS"
+      (raw.shippingRate as string) === "EXPRESS"
         ? "Express"
-        : raw.shippingRate === "REGULAR"
+        : (raw.shippingRate as string) === "REGULAR"
           ? "Regular"
           : raw.shippingRate,
   };

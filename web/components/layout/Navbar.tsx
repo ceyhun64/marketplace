@@ -119,12 +119,13 @@ function AvatarCircle({ user }: { user: CurrentUser }) {
       />
     );
   }
-  const initials = user.name
+  const initials = (user.name ?? "")
     .split(" ")
     .map((w) => w[0])
+    .filter(Boolean) // boş string kalmasın diye
     .join("")
     .slice(0, 2)
-    .toUpperCase();
+    .toUpperCase(); // isteğe bağlı, avatar için temiz görünür
   return (
     <div className="w-8 h-8 rounded-full bg-[#1A4A6B] flex items-center justify-center text-white text-[10px] font-bold tracking-tighter">
       {initials}
