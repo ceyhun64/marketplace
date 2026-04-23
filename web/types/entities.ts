@@ -43,9 +43,11 @@ export interface MerchantProfile {
   isSuspended: boolean;
   subscriptionPlan: PlanType;
   subscriptionId?: string;
+
   createdAt: string;
 }
 
+//divane gönül
 // ── Category ─────────────────────────────────────────────────────────────────
 
 export interface Category {
