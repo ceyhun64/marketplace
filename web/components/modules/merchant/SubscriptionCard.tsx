@@ -3,6 +3,7 @@
 import { useMySubscription, useUpgradePlan } from "@/queries/useSubscription";
 import { PLAN_LABELS, PLAN_COLORS, PLAN_LIMITS } from "@/types/enums";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import type { PlanType } from "@/types/enums";
 
 const PLAN_PRICES: Record<PlanType, string> = {
@@ -82,15 +83,13 @@ export default function SubscriptionCard() {
             >
               {/* Top bar */}
               <div
-                className="h-1.5"
-                style={{
-                  background:
-                    plan === "BASIC"
-                      ? "#9CA3AF"
-                      : plan === "PRO"
-                        ? "#1A4A6B"
-                        : "#8B5E1A",
-                }}
+                className={`h-1.5 ${
+                  plan === "BASIC"
+                    ? "bg-gray-400"
+                    : plan === "PRO"
+                      ? "bg-[#1A4A6B]"
+                      : "bg-[#8B5E1A]"
+                }`}
               />
 
               <div className="p-5">
@@ -130,15 +129,15 @@ export default function SubscriptionCard() {
                     Mevcut Plan
                   </div>
                 ) : isUpgrade ? (
-                  <button
+                  <Button
                     onClick={() => upgradeMutation.mutate(plan)}
                     disabled={upgradeMutation.isPending}
-                    className="w-full py-2.5 rounded-xl bg-[#1A4A6B] text-white text-sm font-medium hover:bg-[#1A4A6B]/80 disabled:opacity-50 transition-colors"
+                    className="w-full bg-[#1A4A6B] text-white hover:bg-[#1A4A6B]/80"
                   >
                     {upgradeMutation.isPending
                       ? "İşleniyor..."
                       : `${PLAN_LABELS[plan]}'a Geç`}
-                  </button>
+                  </Button>
                 ) : (
                   <div className="text-center py-2.5 rounded-xl bg-gray-50 text-xs text-[#7A7060] font-mono">
                     Mevcut plandan düşük
