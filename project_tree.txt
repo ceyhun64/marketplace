@@ -1,6 +1,6 @@
 ================================================================
 PROJE MİMARİSİ VE DOSYA YAPISI
-Oluşturulma Tarihi: 23.04.2026 16:40:02
+Oluşturulma Tarihi: 24.04.2026 10:11:51
 Kapsam: Tam Proje Haritası
 ================================================================
 
@@ -192,6 +192,8 @@ Kapsam: Tam Proje Haritası
     │   │       └── page.tsx
     │   ├── cart/
     │   │   └── page.tsx
+    │   ├── categories/
+    │   │   └── page.tsx
     │   ├── category/
     │   │   └── [slug]/
     │   │       └── page.tsx
@@ -204,6 +206,8 @@ Kapsam: Tam Proje Haritası
     │   │       ├── page.tsx
     │   │       └── [id]/
     │   │           └── page.tsx
+    │   ├── deals/
+    │   │   └── page.tsx
     │   ├── favicon.ico
     │   ├── globals.css
     │   ├── layout.tsx
@@ -232,6 +236,8 @@ Kapsam: Tam Proje Haritası
     │   ├── product/
     │   │   └── [id]/
     │   │       └── page.tsx
+    │   ├── products/
+    │   │   └── page.tsx
     │   ├── profile/
     │   │   └── page.tsx
     │   ├── search/
@@ -245,6 +251,8 @@ Kapsam: Tam Proje Haritası
     │   │       └── product/
     │   │           └── [id]/
     │   │               └── page.tsx
+    │   ├── stores/
+    │   │   └── page.tsx
     │   ├── track/
     │   │   └── [trackingNo]/
     │   │       └── page.tsx
@@ -287,6 +295,8 @@ Kapsam: Tam Proje Haritası
     │   │   │   ├── RegisterPage.tsx
     │   │   │   ├── ResetPasswordPage.tsx
     │   │   │   └── UnauthorizedPage.tsx
+    │   │   ├── categories/
+    │   │   │   └── CategoriesPage.tsx
     │   │   ├── category/
     │   │   │   └── CategoryPage.tsx
     │   │   ├── charts/
@@ -303,6 +313,8 @@ Kapsam: Tam Proje Haritası
     │   │   │   ├── CourierShipmentDetailPage.tsx
     │   │   │   ├── CourierShipmentList.tsx
     │   │   │   └── CourierShipmentsPage.tsx
+    │   │   ├── deals/
+    │   │   │   └── DealsPage.tsx
     │   │   ├── fulfillment/
     │   │   │   ├── CourierAssignPanel.tsx
     │   │   │   ├── ETADisplay.tsx
@@ -331,6 +343,8 @@ Kapsam: Tam Proje Haritası
     │   │   │   └── OrderTrackingPage.tsx
     │   │   ├── product/
     │   │   │   └── ProductPage.tsx
+    │   │   ├── products/
+    │   │   │   └── ProductsListPage.tsx
     │   │   ├── profile/
     │   │   │   └── ProfilePage.tsx
     │   │   ├── search/
@@ -347,6 +361,8 @@ Kapsam: Tam Proje Haritası
     │   │   │   ├── StoreProductGrid.tsx
     │   │   │   ├── StoreProductPage.tsx
     │   │   │   └── TagFilter.tsx
+    │   │   ├── stores/
+    │   │   │   └── StoresListPage.tsx
     │   │   └── track/
     │   │       └── TrackingPage.tsx
     │   ├── providers/

@@ -1,18 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
-
-// Recharts SSR'da DOM manipülasyonu yapıp hydration uyumsuzluğuna yol açıyor.
-// ssr: false ile yalnızca client-side render edilmesini sağlıyoruz.
-const MerchantSalesChart = dynamic(
-  () => import("@/components/modules/charts/MerchantSalesChart"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-full h-[220px] bg-gray-100 rounded-lg animate-pulse" />
-    ),
-  },
-);
+import MerchantSalesChart from "@/components/modules/charts/MerchantSalesChart";
 
 const salesData = [
   { gun: "Pzt", marketplace: 3200, estore: 1100 },

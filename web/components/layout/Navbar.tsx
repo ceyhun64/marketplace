@@ -6,19 +6,13 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Search,
   ShoppingBag,
-  Bell,
   Heart,
   ChevronDown,
   User,
   ClipboardList,
-  Settings,
-  LogOut,
   LayoutDashboard,
-  Store,
-  BarChart2,
-  Shield,
+  LogOut,
   X,
-  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -43,7 +37,6 @@ interface CurrentUser {
   email: string;
   role: UserRole;
   avatarUrl?: string;
-  initials?: string;
 }
 
 // ─── Hooks ───────────────────────────────────────────────────────────────────
@@ -66,19 +59,6 @@ function useCartCount(): number {
   return cart.totalItems();
 }
 
-function useNotifications() {
-  return {
-    items: [] as Array<{
-      id: string;
-      text: string;
-      time: string;
-      read: boolean;
-    }>,
-    unreadCount: 0,
-    markAllRead: () => {},
-  };
-}
-
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PUBLIC_NAV = [
@@ -87,11 +67,11 @@ const PUBLIC_NAV = [
   { label: "Deals", href: "/deals" },
 ];
 
-const ROLE_LABELS: Record<UserRole, string> = {
-  customer: "Customer",
-  merchant: "Seller",
-  admin: "Admin",
-  courier: "Courier",
+const DASHBOARD_HREF: Record<UserRole, string> = {
+  admin: "/admin",
+  merchant: "/merchant",
+  courier: "/courier",
+  customer: "/profile",
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -122,10 +102,10 @@ function AvatarCircle({ user }: { user: CurrentUser }) {
   const initials = (user.name ?? "")
     .split(" ")
     .map((w) => w[0])
-    .filter(Boolean) // boş string kalmasın diye
+    .filter(Boolean)
     .join("")
     .slice(0, 2)
-    .toUpperCase(); // isteğe bağlı, avatar için temiz görünür
+    .toUpperCase();
   return (
     <div className="w-8 h-8 rounded-full bg-[#1A4A6B] flex items-center justify-center text-white text-[10px] font-bold tracking-tighter">
       {initials}
@@ -140,7 +120,6 @@ export default function Navbar() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const cartCount = useCartCount();
-  const notifications = useNotifications();
 
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -165,6 +144,11 @@ export default function Navbar() {
     }
   };
 
+  const handleLogout = async () => {
+    await logout();
+    router.push("/auth/login");
+  };
+
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none p-4 md:p-6">
@@ -179,7 +163,7 @@ export default function Navbar() {
           )}
         >
           <div className="flex items-center h-[48px] gap-2 md:gap-6">
-            {/* Logo Area */}
+            {/* Logo */}
             <Link href="/" className="flex items-center gap-3 shrink-0 group">
               <LogoMark />
               <span className="hidden sm:block text-[#0D0D0D] text-xl font-bold font-serif tracking-tight">
@@ -209,9 +193,10 @@ export default function Navbar() {
 
             {/* Action Group */}
             <div className="flex items-center gap-2">
-              {/* Modern Search Bar */}
+              {/* Search */}
               <div className="relative flex items-center">
-                <div
+                <form
+                  onSubmit={handleSearch}
                   className={cn(
                     "flex items-center transition-all duration-300 rounded-full bg-white/50 border border-black/5 overflow-hidden",
                     searchOpen
@@ -226,36 +211,40 @@ export default function Navbar() {
                     placeholder="Discover products..."
                     className="border-0 bg-transparent text-xs focus-visible:ring-0 h-9 p-0"
                   />
-                  <X
-                    className="w-4 h-4 text-gray-400 cursor-pointer ml-2"
+                  <button
+                    type="button"
                     onClick={() => setSearchOpen(false)}
-                  />
-                </div>
+                    className="ml-2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </form>
 
                 {!searchOpen && (
                   <button
+                    type="button"
                     onClick={() => setSearchOpen(true)}
                     className="p-3 text-[#0D0D0D] hover:bg-white rounded-full transition-all border border-transparent hover:border-black/5 shadow-sm"
                   >
-                    <Search className="w-4.5 h-4.5" strokeWidth={2.2} />
+                    <Search className="w-[18px] h-[18px]" strokeWidth={2.2} />
                   </button>
                 )}
               </div>
 
-              {/* Interaction Icons */}
+              {/* Wishlist & Cart */}
               <div className="hidden sm:flex items-center gap-1 bg-black/5 p-1 rounded-full">
                 <Link
                   href="/wishlist"
                   className="p-2.5 text-[#0D0D0D]/70 hover:text-[#C84B2F] hover:bg-white rounded-full transition-all"
                 >
-                  <Heart className="w-4.5 h-4.5" strokeWidth={2} />
+                  <Heart className="w-[18px] h-[18px]" strokeWidth={2} />
                 </Link>
 
                 <Link
                   href="/cart"
-                  className="relative p-2.5 text-[#0D0D0D]/70 hover:text-[#0D0D0D] hover:bg-white rounded-full transition-all shadow-none hover:shadow-sm"
+                  className="relative p-2.5 text-[#0D0D0D]/70 hover:text-[#0D0D0D] hover:bg-white rounded-full transition-all"
                 >
-                  <ShoppingBag className="w-4.5 h-4.5" strokeWidth={2} />
+                  <ShoppingBag className="w-[18px] h-[18px]" strokeWidth={2} />
                   {cartCount > 0 && (
                     <span className="absolute top-1 right-1 w-4 h-4 bg-[#C84B2F] text-white text-[8px] font-bold rounded-full flex items-center justify-center border-2 border-white">
                       {cartCount}
@@ -264,33 +253,82 @@ export default function Navbar() {
                 </Link>
               </div>
 
-              {/* Auth / User Section */}
+              {/* Auth / User */}
               <div className="pl-2 ml-1 border-l border-black/10">
                 {user ? (
                   <DropdownMenu>
-                    <DropdownMenuTrigger className="outline-none flex items-center gap-2 hover:opacity-80 transition-opacity">
-                      <AvatarCircle user={user} />
-                      <ChevronDown className="w-3 h-3 text-gray-500" />
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="outline-none flex items-center gap-2 hover:opacity-80 transition-opacity"
+                      >
+                        <AvatarCircle user={user} />
+                        <ChevronDown className="w-3 h-3 text-gray-500" />
+                      </button>
                     </DropdownMenuTrigger>
+
                     <DropdownMenuContent
                       align="end"
-                      className="w-56 mt-4 p-2 rounded-2xl border-white/50 bg-white/90 backdrop-blur-md shadow-xl"
+                      sideOffset={12}
+                      className="w-56 p-2 rounded-2xl border border-black/5 bg-white shadow-xl z-[9999]"
                     >
+                      {/* User info header */}
                       <div className="px-3 py-2 border-b border-black/5 mb-1">
-                        <p className="text-xs font-bold">{user.name}</p>
-                        <p className="text-[10px] text-gray-500">
+                        <p className="text-xs font-bold text-[#0D0D0D] truncate">
+                          {user.name}
+                        </p>
+                        <p className="text-[10px] text-[#7A7060] truncate">
                           {user.email}
                         </p>
                       </div>
-                      <DropdownMenuItem className="rounded-xl py-2 cursor-pointer focus:bg-black/5">
-                        <User className="w-4 h-4 mr-2" /> My Profile
+
+                      {/* Profile */}
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/profile"
+                          className="flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-medium text-[#0D0D0D] cursor-pointer hover:bg-[#F5F2EB] focus:bg-[#F5F2EB] outline-none"
+                        >
+                          <User className="w-4 h-4 text-[#7A7060]" />
+                          My Profile
+                        </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="rounded-xl py-2 cursor-pointer focus:bg-black/5">
-                        <ClipboardList className="w-4 h-4 mr-2" /> My Orders
+
+                      {/* My Orders */}
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/orders"
+                          className="flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-medium text-[#0D0D0D] cursor-pointer hover:bg-[#F5F2EB] focus:bg-[#F5F2EB] outline-none"
+                        >
+                          <ClipboardList className="w-4 h-4 text-[#7A7060]" />
+                          My Orders
+                        </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator className="bg-black/5" />
-                      <DropdownMenuItem className="rounded-xl py-2 cursor-pointer text-[#C84B2F] focus:bg-[#FDF0EC]">
-                        <LogOut className="w-4 h-4 mr-2" /> Sign Out
+
+                      {/* Dashboard (role-based) */}
+                      {user.role !== "customer" && (
+                        <DropdownMenuItem asChild>
+                          <Link
+                            href={DASHBOARD_HREF[user.role]}
+                            className="flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-medium text-[#0D0D0D] cursor-pointer hover:bg-[#F5F2EB] focus:bg-[#F5F2EB] outline-none"
+                          >
+                            <LayoutDashboard className="w-4 h-4 text-[#7A7060]" />
+                            Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+
+                      <DropdownMenuSeparator className="my-1 bg-black/5" />
+
+                      {/* Logout */}
+                      <DropdownMenuItem asChild>
+                        <button
+                          type="button"
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-medium text-[#C84B2F] cursor-pointer hover:bg-[#FDF0EC] focus:bg-[#FDF0EC] outline-none"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Sign Out
+                        </button>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -308,7 +346,7 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Hero Spacer */}
+      {/* Spacer */}
       <div
         className={cn(
           "transition-all duration-500",

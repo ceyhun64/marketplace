@@ -1,20 +1,30 @@
 "use client";
 
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
+
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 
 type SalesData = { gun: string; marketplace: number; estore: number };
 
+const chartConfig = {
+  marketplace: {
+    label: "Marketplace",
+    color: "#3b82f6",
+  },
+  estore: {
+    label: "E-Mağaza",
+    color: "#10b981",
+  },
+} satisfies ChartConfig;
+
 export default function MerchantSalesChart({ data }: { data: SalesData[] }) {
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <ChartContainer config={chartConfig} className="h-[220px] w-full">
       <AreaChart data={data}>
         <defs>
           <linearGradient id="mktGrad" x1="0" y1="0" x2="0" y2="1">
@@ -32,11 +42,15 @@ export default function MerchantSalesChart({ data }: { data: SalesData[] }) {
           tick={{ fontSize: 12 }}
           tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`}
         />
-        <Tooltip
-          formatter={(v, n) => [
-            `₺${Number(v).toLocaleString("tr-TR")}`,
-            n === "marketplace" ? "Marketplace" : "E-Mağaza",
-          ]}
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              formatter={(value, name) => [
+                `₺${Number(value).toLocaleString("tr-TR")}`,
+                name === "marketplace" ? "Marketplace" : "E-Mağaza",
+              ]}
+            />
+          }
         />
         <Area
           type="monotone"
@@ -53,6 +67,6 @@ export default function MerchantSalesChart({ data }: { data: SalesData[] }) {
           strokeWidth={2}
         />
       </AreaChart>
-    </ResponsiveContainer>
+    </ChartContainer>
   );
 }

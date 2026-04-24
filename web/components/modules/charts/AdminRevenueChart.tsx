@@ -1,22 +1,27 @@
 "use client";
 
+import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 
 interface Props {
   data: { gun: string; gelir: number }[];
 }
 
+const chartConfig = {
+  gelir: {
+    label: "Gelir",
+    color: "#3b82f6",
+  },
+} satisfies ChartConfig;
+
 export default function RevenueChart({ data }: Props) {
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ChartContainer config={chartConfig} className="h-[200px] w-full">
       <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
         <XAxis dataKey="gun" tick={{ fontSize: 12 }} />
@@ -24,11 +29,15 @@ export default function RevenueChart({ data }: Props) {
           tick={{ fontSize: 12 }}
           tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`}
         />
-        <Tooltip
-          formatter={(v) => [
-            `₺${Number(v).toLocaleString("tr-TR")}`,
-            "Gelir",
-          ]}
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              formatter={(value) => [
+                `₺${Number(value).toLocaleString("tr-TR")}`,
+                "Gelir",
+              ]}
+            />
+          }
         />
         <Line
           type="monotone"
@@ -38,6 +47,6 @@ export default function RevenueChart({ data }: Props) {
           dot={false}
         />
       </LineChart>
-    </ResponsiveContainer>
+    </ChartContainer>
   );
 }
