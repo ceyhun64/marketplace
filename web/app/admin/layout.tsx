@@ -2,15 +2,15 @@ import { Sidebar } from "@/components/layout/Sidebar";
 
 const adminLinks = [
   { href: "/admin", label: "Dashboard", icon: "grid" },
-  { href: "/admin/merchants", label: "Merchant'lar", icon: "store" },
-  { href: "/admin/products", label: "Ürünler", icon: "package" },
-  { href: "/admin/products/pending", label: "Onay Bekleyenler", icon: "clock" },
-  { href: "/admin/orders", label: "Siparişler", icon: "shopping-cart" },
+  { href: "/admin/merchants", label: "Merchants", icon: "store" },
+  { href: "/admin/products", label: "Products", icon: "package" },
+  { href: "/admin/products/pending", label: "Pending Approval", icon: "clock" },
+  { href: "/admin/orders", label: "Orders", icon: "shopping-cart" },
   { href: "/admin/fulfillment", label: "Fulfillment", icon: "truck" },
-  { href: "/admin/couriers", label: "Kuryeler", icon: "user-check" },
-  { href: "/admin/categories", label: "Kategoriler", icon: "tag" },
-  { href: "/admin/analytics", label: "Analitik", icon: "bar-chart-2" },
-  { href: "/admin/subscription", label: "Abonelikler", icon: "credit-card" },
+  { href: "/admin/couriers", label: "Couriers", icon: "user-check" },
+  { href: "/admin/categories", label: "Categories", icon: "tag" },
+  { href: "/admin/analytics", label: "Analytics", icon: "bar-chart-2" },
+  { href: "/admin/subscription", label: "Subscriptions", icon: "credit-card" },
 ];
 
 export default function AdminLayout({
@@ -19,7 +19,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#F8F9FB]">
       <Sidebar links={adminLinks} role="Admin" />
       <main className="flex-1 ml-60 p-8">{children}</main>
     </div>

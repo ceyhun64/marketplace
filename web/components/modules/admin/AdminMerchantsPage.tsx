@@ -28,20 +28,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
   Plus,
   MoreHorizontal,
   Search,
   Store,
-  User,
   Ban,
   CheckCircle,
   Building2,
@@ -62,7 +55,6 @@ interface Merchant {
   totalSales?: number;
   createdAt: string;
 }
-
 interface CreateMerchantForm {
   storeName: string;
   email: string;
@@ -104,40 +96,37 @@ export default function AdminMerchantsPage() {
     mutationFn: (data: CreateMerchantForm) =>
       api.post("/api/admin/merchants", data),
     onSuccess: () => {
-      toast.success("Merchant başarıyla oluşturuldu");
+      toast.success("Merchant created successfully");
       queryClient.invalidateQueries({ queryKey: ["admin-merchants"] });
       setCreateOpen(false);
       setForm({ storeName: "", email: "", password: "", phone: "", slug: "" });
     },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Merchant oluşturulamadı");
-    },
+    onError: (err: any) =>
+      toast.error(err?.response?.data?.message || "Failed to create merchant"),
   });
 
   const suspendMutation = useMutation({
     mutationFn: (id: string) => api.post(`/api/admin/merchants/${id}/suspend`),
     onSuccess: () => {
-      toast.success("Merchant durumu güncellendi");
+      toast.success("Merchant status updated");
       queryClient.invalidateQueries({ queryKey: ["admin-merchants"] });
     },
-    onError: () => toast.error("İşlem başarısız"),
+    onError: () => toast.error("Operation failed"),
   });
 
   const setupMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: object }) =>
       api.post(`/api/admin/merchants/${id}/setup`, data),
     onSuccess: () => {
-      toast.success("Mağaza kurulumu tamamlandı");
+      toast.success("Store setup complete");
       queryClient.invalidateQueries({ queryKey: ["admin-merchants"] });
       setSetupOpen(false);
     },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Kurulum başarısız");
-    },
+    onError: (err: any) =>
+      toast.error(err?.response?.data?.message || "Setup failed"),
   });
 
   const merchants: Merchant[] = data?.items || data || [];
-
   const filtered = merchants.filter(
     (m) =>
       !search ||
@@ -153,18 +142,19 @@ export default function AdminMerchantsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Merchants</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Merchants</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Platform üzerindeki tüm satıcıları yönetin
+            Manage all sellers on the platform
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Yeni Merchant
+        <Button
+          onClick={() => setCreateOpen(true)}
+          className="gap-2 bg-gray-900 hover:bg-gray-800 text-white"
+        >
+          <Plus className="w-4 h-4" /> New Merchant
         </Button>
       </div>
 
@@ -172,232 +162,242 @@ export default function AdminMerchantsPage() {
       <div className="grid grid-cols-4 gap-4">
         {[
           {
-            label: "Toplam Merchant",
+            label: "Total",
             value: stats.total,
             icon: Building2,
-            color: "text-blue-600",
+            color: "text-gray-700",
           },
           {
-            label: "Aktif",
+            label: "Active",
             value: stats.active,
             icon: CheckCircle,
-            color: "text-green-600",
+            color: "text-emerald-600",
           },
           {
-            label: "Askıda",
+            label: "Suspended",
             value: stats.suspended,
             icon: Ban,
-            color: "text-red-600",
+            color: "text-rose-600",
           },
           {
-            label: "Özel Domain",
+            label: "Custom Domain",
             value: stats.withDomain,
             icon: TrendingUp,
-            color: "text-purple-600",
+            color: "text-violet-600",
           },
         ].map((s) => (
-          <Card key={s.label}>
-            <CardContent className="p-4 flex items-center gap-3">
-              <s.icon className={`w-8 h-8 ${s.color}`} />
-              <div>
-                <p className="text-2xl font-bold">{s.value}</p>
-                <p className="text-xs text-gray-500">{s.label}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div
+            key={s.label}
+            className="bg-white rounded-xl border border-gray-100 p-5"
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+                {s.label}
+              </p>
+              <s.icon className={`w-4 h-4 ${s.color}`} />
+            </div>
+            <p className="text-2xl font-bold text-gray-900 mt-2">{s.value}</p>
+          </div>
         ))}
       </div>
 
-      {/* Search */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Merchant adı veya email ile ara..."
-                className="pl-9"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+      {/* Table */}
+      <div className="bg-white rounded-xl border border-gray-100">
+        <div className="p-4 border-b border-gray-100">
+          <div className="relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Search by name or email..."
+              className="pl-9 border-gray-200"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-              <Building2 className="w-12 h-12 mb-3 opacity-30" />
-              <p className="text-sm">Henüz merchant yok</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-3"
-                onClick={() => setCreateOpen(true)}
-              >
-                İlk Merchant'ı Ekle
-              </Button>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead>Mağaza</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead>Domain</TableHead>
-                  <TableHead>Ürün</TableHead>
-                  <TableHead>Durum</TableHead>
-                  <TableHead>Kayıt</TableHead>
-                  <TableHead className="w-10" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((merchant) => (
-                  <TableRow key={merchant.id} className="hover:bg-gray-50">
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
-                          {merchant.storeName?.charAt(0)?.toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">
-                            {merchant.storeName}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            /{merchant.slug}
-                          </p>
-                        </div>
+        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+            <Building2 className="w-10 h-10 mb-3 opacity-20" />
+            <p className="text-sm font-medium">No merchants yet</p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              onClick={() => setCreateOpen(true)}
+            >
+              Add First Merchant
+            </Button>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50 border-b border-gray-100">
+                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Store
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Email
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Plan
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Domain
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Products
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Status
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Joined
+                </TableHead>
+                <TableHead className="w-10" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((merchant) => (
+                <TableRow
+                  key={merchant.id}
+                  className="hover:bg-gray-50 border-b border-gray-50"
+                >
+                  <TableCell>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center text-white text-xs font-bold">
+                        {merchant.storeName?.charAt(0)?.toUpperCase()}
                       </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-gray-600">
-                      {merchant.email}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={
-                          merchant.subscriptionPlan === "Enterprise"
-                            ? "border-purple-300 text-purple-700 bg-purple-50"
-                            : merchant.subscriptionPlan === "Pro"
-                              ? "border-blue-300 text-blue-700 bg-blue-50"
-                              : "border-gray-300 text-gray-600"
-                        }
-                      >
-                        {merchant.subscriptionPlan || "Basic"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {merchant.customDomain ? (
-                        <div className="flex items-center gap-1">
-                          <span className="text-gray-700 text-xs truncate max-w-[120px]">
-                            {merchant.customDomain}
-                          </span>
-                          {merchant.domainVerified ? (
-                            <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0" />
-                          ) : (
-                            <span className="text-xs text-orange-500">!</span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 text-xs">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
+                      <div>
+                        <p className="font-medium text-sm text-gray-900">
+                          {merchant.storeName}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          /{merchant.slug}
+                        </p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm text-gray-600">
+                    {merchant.email}
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-md font-medium ${
+                        merchant.subscriptionPlan === "Enterprise"
+                          ? "bg-violet-100 text-violet-700"
+                          : merchant.subscriptionPlan === "Pro"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {merchant.subscriptionPlan || "Basic"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {merchant.customDomain ? (
                       <div className="flex items-center gap-1">
-                        <ShoppingBag className="w-3 h-3 text-gray-400" />
-                        <span className="text-sm">
-                          {merchant.productCount ?? 0}
+                        <span className="text-gray-700 text-xs truncate max-w-[120px]">
+                          {merchant.customDomain}
                         </span>
+                        {merchant.domainVerified ? (
+                          <CheckCircle className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                        ) : (
+                          <span className="text-xs text-amber-500">!</span>
+                        )}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={
-                          merchant.isSuspended
-                            ? "bg-red-100 text-red-700 border-red-200"
-                            : "bg-green-100 text-green-700 border-green-200"
-                        }
-                        variant="outline"
-                      >
-                        {merchant.isSuspended ? "Askıda" : "Aktif"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-gray-400">
-                      {new Date(merchant.createdAt).toLocaleDateString("tr-TR")}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-8 h-8 p-0"
-                          >
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedMerchant(merchant);
-                              setSetupForm({
-                                storeName: merchant.storeName,
-                                slug: merchant.slug,
-                                description: "",
-                              });
-                              setSetupOpen(true);
-                            }}
-                          >
-                            <Store className="w-4 h-4 mr-2" />
-                            Mağaza Kur / Düzenle
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className={
-                              merchant.isSuspended
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }
-                            onClick={() => suspendMutation.mutate(merchant.id)}
-                          >
-                            {merchant.isSuspended ? (
-                              <>
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                Aktifleştir
-                              </>
-                            ) : (
-                              <>
-                                <Ban className="w-4 h-4 mr-2" />
-                                Askıya Al
-                              </>
-                            )}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                    ) : (
+                      <span className="text-gray-300 text-xs">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <ShoppingBag className="w-3 h-3 text-gray-400" />
+                      <span className="text-sm text-gray-700">
+                        {merchant.productCount ?? 0}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-md font-medium ${
+                        merchant.isSuspended
+                          ? "bg-rose-50 text-rose-600"
+                          : "bg-emerald-50 text-emerald-700"
+                      }`}
+                    >
+                      {merchant.isSuspended ? "Suspended" : "Active"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-xs text-gray-400">
+                    {new Date(merchant.createdAt).toLocaleDateString("en-US")}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-8 h-8 p-0"
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedMerchant(merchant);
+                            setSetupForm({
+                              storeName: merchant.storeName,
+                              slug: merchant.slug,
+                              description: "",
+                            });
+                            setSetupOpen(true);
+                          }}
+                        >
+                          <Store className="w-4 h-4 mr-2" /> Setup Store
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className={
+                            merchant.isSuspended
+                              ? "text-emerald-600"
+                              : "text-rose-600"
+                          }
+                          onClick={() => suspendMutation.mutate(merchant.id)}
+                        >
+                          {merchant.isSuspended ? (
+                            <>
+                              <CheckCircle className="w-4 h-4 mr-2" /> Activate
+                            </>
+                          ) : (
+                            <>
+                              <Ban className="w-4 h-4 mr-2" /> Suspend
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
 
-      {/* Create Merchant Dialog */}
+      {/* Create Dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
-            <DialogTitle>Yeni Merchant Oluştur</DialogTitle>
+            <DialogTitle>Create New Merchant</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="storeName">Mağaza Adı *</Label>
+              <Label>Store Name *</Label>
               <Input
-                id="storeName"
-                placeholder="Örn: Tech Store"
+                placeholder="e.g. Tech Store"
                 value={form.storeName}
                 onChange={(e) =>
                   setForm((f) => ({
@@ -412,13 +412,12 @@ export default function AdminMerchantsPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="slug">Mağaza URL Slug</Label>
+              <Label>Store URL Slug</Label>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-500 whitespace-nowrap">
                   /store/
                 </span>
                 <Input
-                  id="slug"
                   placeholder="tech-store"
                   value={form.slug}
                   onChange={(e) =>
@@ -428,9 +427,8 @@ export default function AdminMerchantsPage() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email *</Label>
+              <Label>Email *</Label>
               <Input
-                id="email"
                 type="email"
                 placeholder="merchant@example.com"
                 value={form.email}
@@ -440,11 +438,10 @@ export default function AdminMerchantsPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">Şifre *</Label>
+              <Label>Password *</Label>
               <Input
-                id="password"
                 type="password"
-                placeholder="En az 8 karakter"
+                placeholder="At least 8 characters"
                 value={form.password}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, password: e.target.value }))
@@ -452,11 +449,10 @@ export default function AdminMerchantsPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="phone">Telefon</Label>
+              <Label>Phone</Label>
               <Input
-                id="phone"
                 type="tel"
-                placeholder="+90 5xx xxx xx xx"
+                placeholder="+1 5xx xxx xxxx"
                 value={form.phone}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, phone: e.target.value }))
@@ -466,7 +462,7 @@ export default function AdminMerchantsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>
-              İptal
+              Cancel
             </Button>
             <Button
               onClick={() => createMutation.mutate(form)}
@@ -477,23 +473,23 @@ export default function AdminMerchantsPage() {
                 !form.password
               }
             >
-              {createMutation.isPending ? "Oluşturuluyor..." : "Oluştur"}
+              {createMutation.isPending ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Store Setup Dialog */}
+      {/* Setup Dialog */}
       <Dialog open={setupOpen} onOpenChange={setSetupOpen}>
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
             <DialogTitle>
-              Mağaza Kur — {selectedMerchant?.storeName}
+              Setup Store — {selectedMerchant?.storeName}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label>Mağaza Adı</Label>
+              <Label>Store Name</Label>
               <Input
                 value={setupForm.storeName}
                 onChange={(e) =>
@@ -516,9 +512,9 @@ export default function AdminMerchantsPage() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Mağaza Açıklaması</Label>
+              <Label>Store Description</Label>
               <Input
-                placeholder="Kısa mağaza tanımı..."
+                placeholder="Short store description..."
                 value={setupForm.description}
                 onChange={(e) =>
                   setSetupForm((f) => ({ ...f, description: e.target.value }))
@@ -528,7 +524,7 @@ export default function AdminMerchantsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSetupOpen(false)}>
-              İptal
+              Cancel
             </Button>
             <Button
               onClick={() =>
@@ -540,7 +536,7 @@ export default function AdminMerchantsPage() {
               }
               disabled={setupMutation.isPending}
             >
-              {setupMutation.isPending ? "Kaydediliyor..." : "Kaydet"}
+              {setupMutation.isPending ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

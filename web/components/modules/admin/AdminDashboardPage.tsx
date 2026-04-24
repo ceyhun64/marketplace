@@ -42,7 +42,7 @@ export default function AdminDashboardPage() {
 
   const cards = [
     {
-      label: "Toplam Sipariş",
+      label: "Total Orders",
       value: stats.totalOrders ?? 0,
       icon: ShoppingCart,
       color: "text-blue-600",
@@ -50,31 +50,31 @@ export default function AdminDashboardPage() {
       href: "/admin/orders",
     },
     {
-      label: "Bekleyen Sipariş",
+      label: "Pending Orders",
       value: stats.pendingOrders ?? 0,
       icon: Clock,
-      color: "text-orange-500",
-      bg: "bg-orange-50",
+      color: "text-amber-600",
+      bg: "bg-amber-50",
       href: "/admin/orders",
     },
     {
-      label: "Aktif Merchant",
+      label: "Active Merchants",
       value: `${stats.activeMerchants ?? 0} / ${stats.totalMerchants ?? 0}`,
       icon: Users,
-      color: "text-purple-600",
-      bg: "bg-purple-50",
+      color: "text-violet-600",
+      bg: "bg-violet-50",
       href: "/admin/merchants",
     },
     {
-      label: "Toplam Gelir",
-      value: `₺${(stats.totalRevenue ?? 0).toLocaleString("tr-TR")}`,
+      label: "Total Revenue",
+      value: `₺${(stats.totalRevenue ?? 0).toLocaleString("en-US")}`,
       icon: DollarSign,
-      color: "text-green-600",
-      bg: "bg-green-50",
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
       href: "/admin/analytics",
     },
     {
-      label: "Toplam Ürün",
+      label: "Total Products",
       value: stats.totalProducts ?? 0,
       icon: Package,
       color: "text-cyan-600",
@@ -82,15 +82,15 @@ export default function AdminDashboardPage() {
       href: "/admin/products",
     },
     {
-      label: "Onay Bekleyen",
+      label: "Pending Approval",
       value: stats.pendingProducts ?? 0,
       icon: AlertCircle,
-      color: "text-red-500",
-      bg: "bg-red-50",
+      color: "text-rose-500",
+      bg: "bg-rose-50",
       href: "/admin/products",
     },
     {
-      label: "Fulfillment Başarısı",
+      label: "Fulfillment Rate",
       value: `${stats.fulfillmentSuccessRate ?? 0}%`,
       icon: CheckCircle,
       color: "text-teal-600",
@@ -98,7 +98,7 @@ export default function AdminDashboardPage() {
       href: "/admin/analytics",
     },
     {
-      label: "Aktif Teslimat",
+      label: "Active Deliveries",
       value: 0,
       icon: Truck,
       color: "text-indigo-600",
@@ -108,94 +108,101 @@ export default function AdminDashboardPage() {
   ];
 
   const quickLinks = [
-    { href: "/admin/merchants", label: "Merchant Ekle", icon: Users },
-    { href: "/admin/products", label: "Ürünleri Onayla", icon: Package },
-    { href: "/admin/categories", label: "Kategoriler", icon: TrendingUp },
-    { href: "/admin/couriers", label: "Kuryeler", icon: Truck },
+    { href: "/admin/merchants", label: "Add Merchant", icon: Users },
+    {
+      href: "/admin/products/pending",
+      label: "Review Products",
+      icon: Package,
+    },
+    { href: "/admin/categories", label: "Categories", icon: TrendingUp },
+    { href: "/admin/couriers", label: "Couriers", icon: Truck },
   ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-8">
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-1">Platform genel durumu</p>
+        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Platform overview & key metrics
+        </p>
       </div>
 
+      {/* Stats Grid */}
       {isLoading ? (
         <div className="grid grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-4">
-                <div className="animate-pulse space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  <div className="h-8 bg-gray-200 rounded w-1/2" />
-                </div>
-              </CardContent>
-            </Card>
+            <div
+              key={i}
+              className="bg-white rounded-xl border border-gray-100 p-5"
+            >
+              <div className="animate-pulse space-y-3">
+                <div className="h-3 bg-gray-100 rounded w-3/4" />
+                <div className="h-7 bg-gray-100 rounded w-1/2" />
+              </div>
+            </div>
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-4 gap-4">
           {cards.map((card) => (
             <Link key={card.label} href={card.href}>
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${card.bg}`}>
-                    <card.icon className={`w-5 h-5 ${card.color}`} />
-                  </div>
-                  <div>
-                    <p className="text-xl font-bold">{card.value}</p>
-                    <p className="text-xs text-gray-500">{card.label}</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="bg-white rounded-xl border border-gray-100 p-5 hover:border-gray-200 hover:shadow-sm transition-all cursor-pointer group">
+                <div className={`inline-flex p-2 rounded-lg ${card.bg} mb-3`}>
+                  <card.icon className={`w-4 h-4 ${card.color}`} />
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mb-1">
+                  {card.value}
+                </p>
+                <p className="text-xs text-gray-500 font-medium">
+                  {card.label}
+                </p>
+              </div>
             </Link>
           ))}
         </div>
       )}
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Hızlı İşlemler</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-4 gap-3">
-            {quickLinks.map((link) => (
-              <Link key={link.href} href={link.href}>
-                <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all cursor-pointer gap-2">
-                  <link.icon className="w-6 h-6 text-gray-500" />
-                  <span className="text-sm text-gray-600 text-center font-medium">
-                    {link.label}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {(stats.pendingProducts ?? 0) > 0 && (
-        <Card className="border-orange-200 bg-orange-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-orange-500" />
-              <div>
-                <p className="font-medium text-orange-800">
-                  {stats.pendingProducts} ürün onay bekliyor
-                </p>
-                <p className="text-sm text-orange-600">
-                  Merchant'ların ürünleri yayına girebilmek için onayınızı
-                  bekliyor
-                </p>
+      {/* Quick Actions */}
+      <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <h2 className="text-sm font-semibold text-gray-900 mb-4">
+          Quick Actions
+        </h2>
+        <div className="grid grid-cols-4 gap-3">
+          {quickLinks.map((link) => (
+            <Link key={link.href} href={link.href}>
+              <div className="flex flex-col items-center justify-center p-4 border border-dashed border-gray-200 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all cursor-pointer gap-2">
+                <link.icon className="w-5 h-5 text-gray-400" />
+                <span className="text-xs text-gray-600 text-center font-medium">
+                  {link.label}
+                </span>
               </div>
-            </div>
-            <Link href="/admin/products">
-              <Badge className="bg-orange-500 hover:bg-orange-600 cursor-pointer">
-                İncele →
-              </Badge>
             </Link>
-          </CardContent>
-        </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Alert */}
+      {(stats.pendingProducts ?? 0) > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-amber-900 text-sm">
+                {stats.pendingProducts} products awaiting review
+              </p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Merchant products are waiting for your approval before going
+                live.
+              </p>
+            </div>
+          </div>
+          <Link href="/admin/products/pending">
+            <span className="text-xs font-semibold text-amber-700 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap">
+              Review →
+            </span>
+          </Link>
+        </div>
       )}
     </div>
   );
