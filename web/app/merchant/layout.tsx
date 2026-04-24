@@ -2,12 +2,12 @@ import { Sidebar } from "@/components/layout/Sidebar";
 
 const merchantLinks = [
   { href: "/merchant", label: "Dashboard", icon: "grid" },
-  { href: "/merchant/catalogue", label: "Katalog & Teklifler", icon: "package" },
-  { href: "/merchant/orders", label: "Siparişler", icon: "shopping-cart" },
-  { href: "/merchant/analytics", label: "Analitik", icon: "bar-chart-2" },
-  { href: "/merchant/store-settings", label: "Mağaza Ayarları", icon: "store" },
-  { href: "/merchant/invoices", label: "Faturalar", icon: "credit-card" },
-  { href: "/merchant/subscription", label: "Abonelik", icon: "star" },
+  { href: "/merchant/catalogue", label: "Catalogue & Offers", icon: "package" },
+  { href: "/merchant/orders", label: "Orders", icon: "shopping-cart" },
+  { href: "/merchant/analytics", label: "Analytics", icon: "bar-chart-2" },
+  { href: "/merchant/store-settings", label: "Store Settings", icon: "store" },
+  { href: "/merchant/invoices", label: "Invoices", icon: "credit-card" },
+  { href: "/merchant/subscription", label: "Subscription", icon: "star" },
 ];
 
 export default function MerchantLayout({

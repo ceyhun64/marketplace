@@ -12,33 +12,33 @@ export default function InvoicesTable() {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
               {[
-                "Fatura No",
-                "Sipariş",
-                "Tutar",
-                "KDV",
-                "Toplam",
-                "Tarih",
-                "İndir",
+                "Invoice No.",
+                "Order",
+                "Subtotal",
+                "VAT",
+                "Total",
+                "Date",
+                "PDF",
               ].map((h) => (
                 <th
                   key={h}
-                  className="px-4 py-3 text-left text-xs text-[#7A7060] uppercase tracking-wide font-medium"
+                  className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide"
                 >
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-50">
             {Array.from({ length: 5 }).map((_, i) => (
               <tr key={i}>
                 {Array.from({ length: 7 }).map((_, j) => (
-                  <td key={j} className="px-4 py-3">
+                  <td key={j} className="px-5 py-3">
                     <Skeleton className="h-4 rounded" />
                   </td>
                 ))}
@@ -52,81 +52,80 @@ export default function InvoicesTable() {
 
   if (!invoices.length) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
-        <div className="text-4xl mb-3">🧾</div>
-        <p className="text-sm font-medium text-gray-700">Henüz fatura yok</p>
-        <p className="text-xs text-[#7A7060] mt-1">
-          Satışlar gerçekleştikçe faturalar burada listelenir.
+      <div className="bg-white border border-gray-100 rounded-xl p-12 text-center text-gray-400">
+        <p className="text-sm font-medium">No invoices yet</p>
+        <p className="text-xs mt-1">
+          Invoices will appear here as sales are made.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+    <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
       <table className="w-full text-sm">
-        <thead className="bg-gray-50 text-xs text-[#7A7060] uppercase tracking-wide">
+        <thead className="bg-gray-50 border-b border-gray-100">
           <tr>
             {[
-              "Fatura No",
-              "Sipariş",
-              "Ara Toplam",
-              "KDV",
-              "Toplam",
-              "Tarih",
+              "Invoice No.",
+              "Order",
+              "Subtotal",
+              "VAT",
+              "Total",
+              "Date",
               "PDF",
             ].map((h) => (
-              <th key={h} className="px-4 py-3 text-left font-medium">
+              <th
+                key={h}
+                className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide"
+              >
                 {h}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-gray-50">
           {invoices.map((inv) => (
-            <tr
-              key={inv.id}
-              className="hover:bg-[#F5F2EB]/40 transition-colors"
-            >
-              <td className="px-4 py-3">
-                <span className="font-mono text-xs font-bold text-[#1A4A6B]">
+            <tr key={inv.id} className="hover:bg-gray-50 transition-colors">
+              <td className="px-5 py-3">
+                <span className="font-mono text-xs font-bold text-blue-600">
                   {inv.invoiceNumber}
                 </span>
               </td>
-              <td className="px-4 py-3">
-                <span className="font-mono text-xs text-[#7A7060]">
+              <td className="px-5 py-3">
+                <span className="font-mono text-xs text-gray-500">
                   #{inv.orderId.slice(0, 8).toUpperCase()}
                 </span>
               </td>
-              <td className="px-4 py-3 font-serif text-[#0D0D0D]">
+              <td className="px-5 py-3 text-gray-900">
                 {formatPrice(inv.subTotal)}
               </td>
-              <td className="px-4 py-3 text-[#7A7060]">
+              <td className="px-5 py-3 text-gray-500">
                 {formatPrice(inv.vatAmount)}
               </td>
-              <td className="px-4 py-3 font-serif font-semibold text-[#0D0D0D]">
+              <td className="px-5 py-3 font-semibold text-gray-900">
                 {formatPrice(inv.totalAmount)}
               </td>
-              <td className="px-4 py-3 text-xs text-[#7A7060]">
+              <td className="px-5 py-3 text-xs text-gray-400">
                 {formatDate(inv.issuedAt)}
               </td>
-              <td className="px-4 py-3">
+              <td className="px-5 py-3">
                 {inv.pdfUrl ? (
                   <a
                     href={inv.pdfUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-[#2D7A4F] hover:underline font-medium"
+                    className="text-xs text-emerald-600 hover:underline font-medium"
                   >
-                    📄 İndir
+                    Download
                   </a>
                 ) : (
                   <button
                     onClick={() => downloadMutation.mutate(inv.id)}
                     disabled={downloadMutation.isPending}
-                    className="text-xs text-[#1A4A6B] hover:underline disabled:opacity-50"
+                    className="text-xs text-blue-600 hover:underline disabled:opacity-50"
                   >
-                    {downloadMutation.isPending ? "..." : "📄 İndir"}
+                    {downloadMutation.isPending ? "..." : "Download"}
                   </button>
                 )}
               </td>
