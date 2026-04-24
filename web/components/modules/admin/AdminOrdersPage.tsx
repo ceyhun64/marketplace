@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,7 +26,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
@@ -42,11 +40,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { formatCurrency, formatDateTime } from "@/lib/format";
-import {
-  ORDER_STATUS_LABELS,
-  ORDER_STATUS_COLORS,
-  type OrderStatus,
-} from "@/types/enums";
+import { ORDER_STATUS_COLORS, type OrderStatus } from "@/types/enums";
 
 interface OrderItem {
   productName: string;
@@ -76,17 +70,17 @@ interface PaginatedOrders {
 }
 
 const STATUS_OPTIONS = [
-  { value: "ALL", label: "Tüm Durumlar" },
-  { value: "PENDING", label: "Beklemede" },
-  { value: "PAYMENT_CONFIRMED", label: "Ödeme Onaylandı" },
-  { value: "LABEL_GENERATED", label: "Etiket Oluşturuldu" },
-  { value: "COURIER_ASSIGNED", label: "Kurye Atandı" },
-  { value: "PICKED_UP", label: "Teslim Alındı" },
-  { value: "IN_TRANSIT", label: "Yolda" },
-  { value: "OUT_FOR_DELIVERY", label: "Dağıtımda" },
-  { value: "DELIVERED", label: "Teslim Edildi" },
-  { value: "FAILED", label: "Başarısız" },
-  { value: "CANCELLED", label: "İptal" },
+  { value: "ALL", label: "All Statuses" },
+  { value: "PENDING", label: "Pending" },
+  { value: "PAYMENT_CONFIRMED", label: "Payment Confirmed" },
+  { value: "LABEL_GENERATED", label: "Label Generated" },
+  { value: "COURIER_ASSIGNED", label: "Courier Assigned" },
+  { value: "PICKED_UP", label: "Picked Up" },
+  { value: "IN_TRANSIT", label: "In Transit" },
+  { value: "OUT_FOR_DELIVERY", label: "Out for Delivery" },
+  { value: "DELIVERED", label: "Delivered" },
+  { value: "FAILED", label: "Failed" },
+  { value: "CANCELLED", label: "Cancelled" },
 ];
 
 const NEXT_STATUSES: Partial<Record<OrderStatus, OrderStatus>> = {
@@ -100,6 +94,19 @@ const NEXT_STATUSES: Partial<Record<OrderStatus, OrderStatus>> = {
 };
 
 const TERMINAL_STATUSES: OrderStatus[] = ["DELIVERED", "FAILED", "CANCELLED"];
+
+const STATUS_LABEL_EN: Partial<Record<OrderStatus, string>> = {
+  PENDING: "Pending",
+  PAYMENT_CONFIRMED: "Payment Confirmed",
+  LABEL_GENERATED: "Label Generated",
+  COURIER_ASSIGNED: "Courier Assigned",
+  PICKED_UP: "Picked Up",
+  IN_TRANSIT: "In Transit",
+  OUT_FOR_DELIVERY: "Out for Delivery",
+  DELIVERED: "Delivered",
+  FAILED: "Failed",
+  CANCELLED: "Cancelled",
+};
 
 export default function AdminOrdersPage() {
   const queryClient = useQueryClient();
@@ -127,12 +134,12 @@ export default function AdminOrdersPage() {
     mutationFn: ({ id, status }: { id: string; status: string }) =>
       api.patch(`/api/orders/${id}/status`, { status }),
     onSuccess: () => {
-      toast.success("Sipariş durumu güncellendi");
+      toast.success("Order status updated");
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
       setSelectedOrder(null);
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Durum güncellenemedi");
+      toast.error(err?.response?.data?.message || "Failed to update status");
     },
   });
 
@@ -157,64 +164,72 @@ export default function AdminOrdersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Sipariş Yönetimi</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Orders</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Platform genelindeki tüm siparişler
+            All orders across the platform
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Yenile
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          className="gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh
         </Button>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
         {[
           {
-            label: "Toplam Sipariş",
+            label: "Total Orders",
             value: stats.total,
             icon: ShoppingCart,
             color: "text-blue-600",
             bg: "bg-blue-50",
           },
           {
-            label: "Bekleyen",
+            label: "Pending",
             value: stats.pending,
             icon: Clock,
-            color: "text-yellow-600",
-            bg: "bg-yellow-50",
+            color: "text-amber-600",
+            bg: "bg-amber-50",
           },
           {
-            label: "Taşımada",
+            label: "In Transit",
             value: stats.inTransit,
             icon: Truck,
             color: "text-indigo-600",
             bg: "bg-indigo-50",
           },
           {
-            label: "Teslim Edildi",
+            label: "Delivered",
             value: stats.delivered,
             icon: CheckCircle,
-            color: "text-green-600",
-            bg: "bg-green-50",
+            color: "text-emerald-600",
+            bg: "bg-emerald-50",
           },
         ].map((s) => (
-          <Card key={s.label}>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${s.bg}`}>
-                <s.icon className={`h-5 w-5 ${s.color}`} />
+          <div
+            key={s.label}
+            className="bg-white rounded-xl border border-gray-100 p-5"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+                {s.label}
+              </p>
+              <div className={`p-1.5 rounded-lg ${s.bg}`}>
+                <s.icon className={`h-4 w-4 ${s.color}`} />
               </div>
-              <div>
-                <p className="text-xs text-gray-500">{s.label}</p>
-                <p className="text-xl font-bold text-gray-900">
-                  {isLoading ? "—" : s.value}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">
+              {isLoading ? "—" : s.value}
+            </p>
+          </div>
         ))}
       </div>
 
@@ -222,10 +237,10 @@ export default function AdminOrdersPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Sipariş ID, müşteri veya mağaza ara..."
+            placeholder="Search by order ID, customer or store..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-9 border-gray-200"
           />
         </div>
         <Select
@@ -235,8 +250,8 @@ export default function AdminOrdersPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="w-52">
-            <SelectValue placeholder="Durum filtrele" />
+          <SelectTrigger className="w-52 border-gray-200">
+            <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
             {STATUS_OPTIONS.map((opt) => (
@@ -248,30 +263,30 @@ export default function AdminOrdersPage() {
         </Select>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead className="font-semibold text-xs uppercase tracking-wide">
-                Sipariş ID
+            <TableRow className="bg-gray-50 border-b border-gray-100">
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Order ID
               </TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wide">
-                Müşteri
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Customer
               </TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wide">
-                Mağaza
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Store
               </TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wide">
-                Kaynak
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Source
               </TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wide">
-                Tutar
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Amount
               </TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wide">
-                Durum
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Status
               </TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wide">
-                Tarih
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Date
               </TableHead>
               <TableHead />
             </TableRow>
@@ -291,48 +306,52 @@ export default function AdminOrdersPage() {
               <TableRow>
                 <TableCell
                   colSpan={8}
-                  className="text-center text-gray-500 py-12"
+                  className="text-center text-gray-400 py-16"
                 >
-                  <Package className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                  Sipariş bulunamadı
+                  <Package className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                  <p className="text-sm font-medium">No orders found</p>
                 </TableCell>
               </TableRow>
             ) : (
               filtered.map((order) => (
-                <TableRow key={order.id} className="hover:bg-gray-50">
-                  <TableCell className="font-mono text-xs text-gray-600">
+                <TableRow
+                  key={order.id}
+                  className="hover:bg-gray-50 border-b border-gray-50"
+                >
+                  <TableCell className="font-mono text-xs text-gray-500">
                     #{order.id.slice(0, 8).toUpperCase()}
                   </TableCell>
-                  <TableCell className="text-sm">
+                  <TableCell className="text-sm text-gray-900">
                     {order.customerName ?? "—"}
                   </TableCell>
                   <TableCell className="text-sm text-gray-600">
                     {order.merchantStoreName ?? "—"}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="text-xs">
+                    <span className="text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-600">
                       {order.source === "MARKETPLACE"
-                        ? "Pazaryeri"
-                        : "E-Mağaza"}
-                    </Badge>
+                        ? "Marketplace"
+                        : "E-Store"}
+                    </span>
                   </TableCell>
-                  <TableCell className="font-semibold text-sm">
+                  <TableCell className="font-semibold text-sm text-gray-900">
                     {formatCurrency(order.totalAmount)}
                   </TableCell>
                   <TableCell>
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ORDER_STATUS_COLORS[order.status] ?? "bg-gray-100 text-gray-800"}`}
                     >
-                      {ORDER_STATUS_LABELS[order.status] ?? order.status}
+                      {STATUS_LABEL_EN[order.status] ?? order.status}
                     </span>
                   </TableCell>
-                  <TableCell className="text-xs text-gray-500">
+                  <TableCell className="text-xs text-gray-400">
                     {formatDateTime(order.createdAt)}
                   </TableCell>
                   <TableCell>
                     <Button
                       variant="ghost"
                       size="sm"
+                      className="w-8 h-8 p-0"
                       onClick={() => setSelectedOrder(order)}
                     >
                       <Eye className="h-4 w-4" />
@@ -353,10 +372,10 @@ export default function AdminOrdersPage() {
             disabled={page === 1}
             onClick={() => setPage((p) => p - 1)}
           >
-            ← Önceki
+            ← Previous
           </Button>
           <span className="px-3 py-1 text-sm text-gray-600">
-            Sayfa {page} / {totalPages}
+            Page {page} of {totalPages}
           </span>
           <Button
             variant="outline"
@@ -364,7 +383,7 @@ export default function AdminOrdersPage() {
             disabled={page >= totalPages}
             onClick={() => setPage((p) => p + 1)}
           >
-            Sonraki →
+            Next →
           </Button>
         </div>
       )}
@@ -376,51 +395,50 @@ export default function AdminOrdersPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              Sipariş #{selectedOrder?.id.slice(0, 8).toUpperCase()}
+              Order #{selectedOrder?.id.slice(0, 8).toUpperCase()}
             </DialogTitle>
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <p className="text-xs text-gray-500 mb-0.5">Müşteri</p>
+                  <p className="text-xs text-gray-400 mb-0.5">Customer</p>
                   <p className="font-medium">
                     {selectedOrder.customerName ?? "—"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 mb-0.5">Mağaza</p>
+                  <p className="text-xs text-gray-400 mb-0.5">Store</p>
                   <p className="font-medium">
                     {selectedOrder.merchantStoreName ?? "—"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 mb-0.5">Tutar</p>
+                  <p className="text-xs text-gray-400 mb-0.5">Amount</p>
                   <p className="font-semibold">
                     {formatCurrency(selectedOrder.totalAmount)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 mb-0.5">Kargo</p>
+                  <p className="text-xs text-gray-400 mb-0.5">Shipping</p>
                   <p>
                     {selectedOrder.shippingRate === "EXPRESS"
-                      ? "⚡ Ekspres"
-                      : "📦 Standart"}
+                      ? "⚡ Express"
+                      : "📦 Standard"}
                   </p>
                 </div>
                 {selectedOrder.shipment?.trackingNumber && (
                   <div className="col-span-2">
-                    <p className="text-xs text-gray-500 mb-0.5">Takip No</p>
+                    <p className="text-xs text-gray-400 mb-0.5">Tracking No.</p>
                     <p className="font-mono text-sm">
                       {selectedOrder.shipment.trackingNumber}
                     </p>
                   </div>
                 )}
               </div>
-
               {selectedOrder.items && selectedOrder.items.length > 0 && (
                 <div>
-                  <p className="text-xs text-gray-500 mb-2">Ürünler</p>
+                  <p className="text-xs text-gray-400 mb-2">Items</p>
                   <div className="space-y-1">
                     {selectedOrder.items.map((item, i) => (
                       <div
@@ -438,14 +456,13 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
               )}
-
               <div>
-                <p className="text-xs text-gray-500 mb-2">Durum Güncelle</p>
+                <p className="text-xs text-gray-400 mb-2">Update Status</p>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${ORDER_STATUS_COLORS[selectedOrder.status] ?? ""}`}
                   >
-                    {ORDER_STATUS_LABELS[selectedOrder.status] ??
+                    {STATUS_LABEL_EN[selectedOrder.status] ??
                       selectedOrder.status}
                   </span>
                   {NEXT_STATUSES[selectedOrder.status] && (
@@ -461,11 +478,7 @@ export default function AdminOrdersPage() {
                         }
                         disabled={updateStatusMutation.isPending}
                       >
-                        {
-                          ORDER_STATUS_LABELS[
-                            NEXT_STATUSES[selectedOrder.status]!
-                          ]
-                        }
+                        {STATUS_LABEL_EN[NEXT_STATUSES[selectedOrder.status]!]}
                       </Button>
                     </>
                   )}
@@ -482,7 +495,7 @@ export default function AdminOrdersPage() {
                       disabled={updateStatusMutation.isPending}
                     >
                       <XCircle className="h-3.5 w-3.5 mr-1" />
-                      İptal Et
+                      Cancel Order
                     </Button>
                   )}
                 </div>

@@ -31,7 +31,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
   Plus,
@@ -40,7 +39,6 @@ import {
   XCircle,
   Package,
   Clock,
-  Tag,
   Image as ImageIcon,
 } from "lucide-react";
 
@@ -118,7 +116,7 @@ export default function AdminProductsPage() {
   const createMutation = useMutation({
     mutationFn: (data: object) => api.post("/api/products", data),
     onSuccess: () => {
-      toast.success("Ürün başarıyla oluşturuldu");
+      toast.success("Product created successfully");
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["pending-products"] });
       setAddOpen(false);
@@ -132,7 +130,7 @@ export default function AdminProductsPage() {
       });
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Ürün oluşturulamadı");
+      toast.error(err?.response?.data?.message || "Failed to create product");
     },
   });
 
@@ -140,20 +138,20 @@ export default function AdminProductsPage() {
     mutationFn: ({ id, approved }: { id: string; approved: boolean }) =>
       api.post(`/api/admin/products/${id}/approve`, { approved }),
     onSuccess: (_, { approved }) => {
-      toast.success(approved ? "Ürün onaylandı" : "Ürün reddedildi");
+      toast.success(approved ? "Product approved" : "Product rejected");
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["pending-products"] });
     },
-    onError: () => toast.error("İşlem başarısız"),
+    onError: () => toast.error("Operation failed"),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/api/products/${id}`),
     onSuccess: () => {
-      toast.success("Ürün silindi");
+      toast.success("Product deleted");
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
     },
-    onError: () => toast.error("Ürün silinemedi"),
+    onError: () => toast.error("Failed to delete product"),
   });
 
   const allProducts: Product[] = productsData?.items || productsData || [];
@@ -194,59 +192,72 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Ürünler</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Products</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Master katalog — tüm ürünleri yönetin ve onaylayın
+            Master catalog — manage and approve all products
           </p>
         </div>
-        <Button onClick={() => setAddOpen(true)} className="gap-2">
+        <Button
+          onClick={() => setAddOpen(true)}
+          className="gap-2 bg-gray-900 hover:bg-gray-800 text-white"
+        >
           <Plus className="w-4 h-4" />
-          Ürün Ekle
+          Add Product
         </Button>
       </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <Package className="w-8 h-8 text-blue-600" />
-            <div>
-              <p className="text-2xl font-bold">{allProducts.length}</p>
-              <p className="text-xs text-gray-500">Toplam Ürün</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <CheckCircle className="w-8 h-8 text-green-600" />
-            <div>
-              <p className="text-2xl font-bold">
-                {allProducts.filter((p) => p.isApproved).length}
+        {[
+          {
+            label: "Total Products",
+            value: allProducts.length,
+            icon: Package,
+            color: "text-blue-600",
+            bg: "bg-blue-50",
+          },
+          {
+            label: "Approved",
+            value: allProducts.filter((p) => p.isApproved).length,
+            icon: CheckCircle,
+            color: "text-emerald-600",
+            bg: "bg-emerald-50",
+          },
+          {
+            label: "Pending Approval",
+            value: pendingProducts.length,
+            icon: Clock,
+            color: "text-amber-600",
+            bg: "bg-amber-50",
+          },
+        ].map((s) => (
+          <div
+            key={s.label}
+            className="bg-white rounded-xl border border-gray-100 p-5"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+                {s.label}
               </p>
-              <p className="text-xs text-gray-500">Onaylı</p>
+              <div className={`p-1.5 rounded-lg ${s.bg}`}>
+                <s.icon className={`w-4 h-4 ${s.color}`} />
+              </div>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <Clock className="w-8 h-8 text-orange-500" />
-            <div>
-              <p className="text-2xl font-bold">{pendingProducts.length}</p>
-              <p className="text-xs text-gray-500">Onay Bekliyor</p>
-            </div>
-          </CardContent>
-        </Card>
+            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+          </div>
+        ))}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="all">Tüm Ürünler</TabsTrigger>
+        <TabsList className="bg-gray-100">
+          <TabsTrigger value="all">All Products</TabsTrigger>
           <TabsTrigger value="pending" className="relative">
-            Onay Bekleyen
+            Pending Approval
             {pendingProducts.length > 0 && (
-              <span className="ml-2 bg-orange-500 text-white text-xs rounded-full px-1.5 py-0.5">
+              <span className="ml-2 bg-amber-500 text-white text-xs rounded-full px-1.5 py-0.5">
                 {pendingProducts.length}
               </span>
             )}
@@ -254,273 +265,292 @@ export default function AdminProductsPage() {
         </TabsList>
 
         <TabsContent value="all" className="mt-4">
-          <Card>
-            <CardContent className="p-0">
-              <div className="p-4 border-b">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    placeholder="Ürün adı veya kategori..."
-                    className="pl-9"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
-                </div>
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+            <div className="p-4 border-b border-gray-100">
+              <div className="relative max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Search by name or category..."
+                  className="pl-9 border-gray-200"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
               </div>
-
-              {productsLoading ? (
-                <div className="flex items-center justify-center py-16">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-                </div>
-              ) : filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-                  <Package className="w-12 h-12 mb-3 opacity-30" />
-                  <p className="text-sm">Henüz ürün yok</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-3"
-                    onClick={() => setAddOpen(true)}
-                  >
-                    İlk Ürünü Ekle
-                  </Button>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50">
-                      <TableHead>Ürün</TableHead>
-                      <TableHead>Kategori</TableHead>
-                      <TableHead>Etiketler</TableHead>
-                      <TableHead>Teklifler</TableHead>
-                      <TableHead>Durum</TableHead>
-                      <TableHead>Tarih</TableHead>
-                      <TableHead className="w-24">İşlem</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered.map((product) => (
-                      <TableRow key={product.id} className="hover:bg-gray-50">
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            {product.images?.[0] ? (
-                              <img
-                                src={product.images[0]}
-                                alt={product.name}
-                                className="w-10 h-10 object-cover rounded-lg border"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                                <ImageIcon className="w-4 h-4 text-gray-400" />
-                              </div>
-                            )}
-                            <div>
-                              <p className="font-medium text-sm">
-                                {product.name}
-                              </p>
-                              <p className="text-xs text-gray-400 truncate max-w-[200px]">
-                                {product.description}
-                              </p>
+            </div>
+            {productsLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+                <Package className="w-12 h-12 mb-3 opacity-20" />
+                <p className="text-sm font-medium">No products yet</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => setAddOpen(true)}
+                >
+                  Add First Product
+                </Button>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50 border-b border-gray-100">
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Product
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Category
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Tags
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Offers
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Status
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Date
+                    </TableHead>
+                    <TableHead className="w-24" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((product) => (
+                    <TableRow
+                      key={product.id}
+                      className="hover:bg-gray-50 border-b border-gray-50"
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          {product.images?.[0] ? (
+                            <img
+                              src={product.images[0]}
+                              alt={product.name}
+                              className="w-10 h-10 object-cover rounded-lg border border-gray-100"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                              <ImageIcon className="w-4 h-4 text-gray-400" />
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-600">
-                          {product.categoryName || "—"}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {product.tags?.slice(0, 2).map((tag) => (
-                              <Badge
-                                key={tag}
-                                variant="secondary"
-                                className="text-xs"
-                              >
-                                {tag}
-                              </Badge>
-                            ))}
-                            {(product.tags?.length ?? 0) > 2 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{product.tags.length - 2}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {product.offerCount ?? 0} teklif
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            className={
-                              product.isApproved
-                                ? "bg-green-100 text-green-700 border-green-200"
-                                : "bg-orange-100 text-orange-700 border-orange-200"
-                            }
-                            variant="outline"
-                          >
-                            {product.isApproved ? "Onaylı" : "Bekliyor"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-xs text-gray-400">
-                          {new Date(product.createdAt).toLocaleDateString(
-                            "tr-TR",
                           )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            {!product.isApproved && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-                                onClick={() =>
-                                  approveMutation.mutate({
-                                    id: product.id,
-                                    approved: true,
-                                  })
-                                }
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                              </Button>
-                            )}
+                          <div>
+                            <p className="font-medium text-sm text-gray-900">
+                              {product.name}
+                            </p>
+                            <p className="text-xs text-gray-400 truncate max-w-[200px]">
+                              {product.description}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {product.categoryName || "—"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {product.tags?.slice(0, 2).map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant="secondary"
+                              className="text-xs"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                          {(product.tags?.length ?? 0) > 2 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{product.tags.length - 2}
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {product.offerCount ?? 0} offers
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-md font-medium ${product.isApproved ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
+                        >
+                          {product.isApproved ? "Approved" : "Pending"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-xs text-gray-400">
+                        {new Date(product.createdAt).toLocaleDateString(
+                          "en-US",
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          {!product.isApproved && (
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 w-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                              onClick={() => {
-                                if (
-                                  confirm(
-                                    "Bu ürünü silmek istediğinizden emin misiniz?",
-                                  )
-                                )
-                                  deleteMutation.mutate(product.id);
-                              }}
-                            >
-                              <XCircle className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="pending" className="mt-4">
-          <Card>
-            <CardContent className="p-0">
-              {pendingLoading ? (
-                <div className="flex items-center justify-center py-16">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-                </div>
-              ) : pendingProducts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-                  <CheckCircle className="w-12 h-12 mb-3 opacity-30" />
-                  <p className="text-sm">Onay bekleyen ürün yok</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50">
-                      <TableHead>Ürün</TableHead>
-                      <TableHead>Kategori</TableHead>
-                      <TableHead>Ekleyen</TableHead>
-                      <TableHead>Tarih</TableHead>
-                      <TableHead>Karar</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {pendingProducts.map((product) => (
-                      <TableRow key={product.id} className="hover:bg-gray-50">
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            {product.images?.[0] ? (
-                              <img
-                                src={product.images[0]}
-                                alt={product.name}
-                                className="w-10 h-10 object-cover rounded-lg border"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                                <ImageIcon className="w-4 h-4 text-gray-400" />
-                              </div>
-                            )}
-                            <div>
-                              <p className="font-medium text-sm">
-                                {product.name}
-                              </p>
-                              <p className="text-xs text-gray-400 truncate max-w-[200px]">
-                                {product.description}
-                              </p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-600">
-                          {product.categoryName || "—"}
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-600">
-                          {product.createdByName || "Merchant"}
-                        </TableCell>
-                        <TableCell className="text-xs text-gray-400">
-                          {new Date(product.createdAt).toLocaleDateString(
-                            "tr-TR",
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              className="h-8 bg-green-600 hover:bg-green-700 text-white gap-1.5"
+                              className="h-7 w-7 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
                               onClick={() =>
                                 approveMutation.mutate({
                                   id: product.id,
                                   approved: true,
                                 })
                               }
-                              disabled={approveMutation.isPending}
                             >
-                              <CheckCircle className="w-3.5 h-3.5" />
-                              Onayla
+                              <CheckCircle className="w-4 h-4" />
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 border-red-200 text-red-600 hover:bg-red-50 gap-1.5"
-                              onClick={() =>
-                                approveMutation.mutate({
-                                  id: product.id,
-                                  approved: false,
-                                })
-                              }
-                              disabled={approveMutation.isPending}
-                            >
-                              <XCircle className="w-3.5 h-3.5" />
-                              Reddet
-                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                            onClick={() => {
+                              if (
+                                confirm(
+                                  "Are you sure you want to delete this product?",
+                                )
+                              )
+                                deleteMutation.mutate(product.id);
+                            }}
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="pending" className="mt-4">
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+            {pendingLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+              </div>
+            ) : pendingProducts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+                <CheckCircle className="w-12 h-12 mb-3 opacity-20" />
+                <p className="text-sm font-medium">No pending products</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50 border-b border-gray-100">
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Product
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Category
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Added By
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Date
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Action
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingProducts.map((product) => (
+                    <TableRow
+                      key={product.id}
+                      className="hover:bg-gray-50 border-b border-gray-50"
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          {product.images?.[0] ? (
+                            <img
+                              src={product.images[0]}
+                              alt={product.name}
+                              className="w-10 h-10 object-cover rounded-lg border border-gray-100"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                              <ImageIcon className="w-4 h-4 text-gray-400" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium text-sm text-gray-900">
+                              {product.name}
+                            </p>
+                            <p className="text-xs text-gray-400 truncate max-w-[200px]">
+                              {product.description}
+                            </p>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {product.categoryName || "—"}
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {product.createdByName || "Merchant"}
+                      </TableCell>
+                      <TableCell className="text-xs text-gray-400">
+                        {new Date(product.createdAt).toLocaleDateString(
+                          "en-US",
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
+                            onClick={() =>
+                              approveMutation.mutate({
+                                id: product.id,
+                                approved: true,
+                              })
+                            }
+                            disabled={approveMutation.isPending}
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 border-rose-200 text-rose-600 hover:bg-rose-50 gap-1.5"
+                            onClick={() =>
+                              approveMutation.mutate({
+                                id: product.id,
+                                approved: false,
+                              })
+                            }
+                            disabled={approveMutation.isPending}
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                            Reject
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
 
+      {/* Add Product Dialog */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Yeni Ürün Ekle</DialogTitle>
+            <DialogTitle>Add New Product</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label>Ürün Adı *</Label>
+              <Label>Product Name *</Label>
               <Input
-                placeholder="Örn: iPhone 15 Pro"
+                placeholder="e.g. iPhone 15 Pro"
                 value={form.name}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, name: e.target.value }))
@@ -528,9 +558,9 @@ export default function AdminProductsPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Açıklama *</Label>
+              <Label>Description *</Label>
               <Textarea
-                placeholder="Ürün hakkında kısa açıklama..."
+                placeholder="Brief product description..."
                 rows={3}
                 value={form.description}
                 onChange={(e) =>
@@ -540,7 +570,7 @@ export default function AdminProductsPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Ana Kategori *</Label>
+                <Label>Main Category *</Label>
                 <Select
                   value={form.categoryId}
                   onValueChange={(v) =>
@@ -548,7 +578,7 @@ export default function AdminProductsPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Kategori seçin" />
+                    <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
                     {rootCategories.map((c) => (
@@ -561,7 +591,7 @@ export default function AdminProductsPage() {
               </div>
               {subCategories.length > 0 && (
                 <div className="space-y-1.5">
-                  <Label>Alt Kategori</Label>
+                  <Label>Subcategory</Label>
                   <Select
                     value={form.subcategoryId}
                     onValueChange={(v) =>
@@ -569,7 +599,7 @@ export default function AdminProductsPage() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Alt kategori" />
+                      <SelectValue placeholder="Select subcategory" />
                     </SelectTrigger>
                     <SelectContent>
                       {subCategories.map((c) => (
@@ -583,23 +613,21 @@ export default function AdminProductsPage() {
               )}
             </div>
             <div className="space-y-1.5">
-              <Label>Etiketler</Label>
+              <Label>Tags</Label>
               <Input
-                placeholder="teknoloji, akıllı telefon, apple (virgülle ayırın)"
+                placeholder="technology, smartphone, apple (comma separated)"
                 value={form.tags}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, tags: e.target.value }))
                 }
               />
-              <p className="text-xs text-gray-400">
-                Etiketleri virgülle ayırarak girin
-              </p>
+              <p className="text-xs text-gray-400">Separate tags with commas</p>
             </div>
             <div className="space-y-1.5">
-              <Label>Görseller</Label>
+              <Label>Images</Label>
               <div className="flex gap-2">
                 <Input
-                  placeholder="Görsel URL ekle..."
+                  placeholder="Add image URL..."
                   value={imageInput}
                   onChange={(e) => setImageInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAddImage()}
@@ -610,7 +638,7 @@ export default function AdminProductsPage() {
                   onClick={handleAddImage}
                   disabled={!imageInput.trim()}
                 >
-                  Ekle
+                  Add
                 </Button>
               </div>
               {form.images.length > 0 && (
@@ -638,7 +666,7 @@ export default function AdminProductsPage() {
                             images: f.images.filter((_, idx) => idx !== i),
                           }))
                         }
-                        className="text-gray-400 hover:text-red-500 ml-1"
+                        className="text-gray-400 hover:text-rose-500 ml-1"
                       >
                         ×
                       </button>
@@ -650,7 +678,7 @@ export default function AdminProductsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddOpen(false)}>
-              İptal
+              Cancel
             </Button>
             <Button
               onClick={handleSubmit}
@@ -661,7 +689,7 @@ export default function AdminProductsPage() {
                 !form.categoryId
               }
             >
-              {createMutation.isPending ? "Ekleniyor..." : "Ürünü Ekle"}
+              {createMutation.isPending ? "Creating..." : "Create Product"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -3,10 +3,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -65,17 +63,16 @@ function ProductDetailDialog({
     <Dialog open={!!product} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-lg">Ürün Detayı</DialogTitle>
+          <DialogTitle className="text-lg">Product Details</DialogTitle>
         </DialogHeader>
         <div className="space-y-5">
-          {/* Images */}
           {product.images?.length > 0 && (
             <div className="flex gap-2 overflow-x-auto pb-1">
               {product.images.map((img, i) => (
                 <img
                   key={i}
                   src={img}
-                  alt={`Görsel ${i + 1}`}
+                  alt={`Image ${i + 1}`}
                   className="h-32 w-32 object-cover rounded-lg border border-gray-200 flex-shrink-0"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src =
@@ -85,8 +82,6 @@ function ProductDetailDialog({
               ))}
             </div>
           )}
-
-          {/* Name & Category */}
           <div>
             <h2 className="text-xl font-bold text-gray-900">{product.name}</h2>
             <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
@@ -100,22 +95,18 @@ function ProductDetailDialog({
               )}
             </div>
           </div>
-
-          {/* Description */}
           <div>
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-              Açıklama
+              Description
             </p>
             <p className="text-sm text-gray-700 leading-relaxed">
               {product.description || "—"}
             </p>
           </div>
-
-          {/* Tags */}
           {product.tags?.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                Etiketler
+                Tags
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {product.tags.map((tag) => (
@@ -129,21 +120,19 @@ function ProductDetailDialog({
               </div>
             </div>
           )}
-
-          {/* Meta */}
           <div className="grid grid-cols-2 gap-3 bg-gray-50 rounded-lg p-3">
             <div>
-              <p className="text-xs text-gray-400">Oluşturan</p>
+              <p className="text-xs text-gray-400">Added By</p>
               <p className="text-sm font-medium">{product.createdByName}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-400">Mağaza</p>
+              <p className="text-xs text-gray-400">Store</p>
               <p className="text-sm font-medium">{product.merchantStoreName}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-400">Tarih</p>
+              <p className="text-xs text-gray-400">Date</p>
               <p className="text-sm font-medium">
-                {new Date(product.createdAt).toLocaleDateString("tr-TR", {
+                {new Date(product.createdAt).toLocaleDateString("en-US", {
                   day: "2-digit",
                   month: "long",
                   year: "numeric",
@@ -151,25 +140,23 @@ function ProductDetailDialog({
               </p>
             </div>
           </div>
-
-          {/* Actions */}
           <div className="flex gap-3 pt-2">
             <Button
-              className="flex-1 bg-green-600 hover:bg-green-700"
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700"
               disabled={isLoading}
               onClick={() => onApprove(product.id)}
             >
               <CheckCircle2 className="w-4 h-4 mr-2" />
-              Onayla
+              Approve
             </Button>
             <Button
               variant="outline"
-              className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+              className="flex-1 border-rose-300 text-rose-600 hover:bg-rose-50"
               disabled={isLoading}
               onClick={() => onReject(product.id)}
             >
               <XCircle className="w-4 h-4 mr-2" />
-              Reddet
+              Reject
             </Button>
           </div>
         </div>
@@ -202,11 +189,11 @@ export default function AdminPendingProductsPage() {
       return res.data;
     },
     onSuccess: () => {
-      toast.success("Ürün onaylandı");
+      toast.success("Product approved");
       queryClient.invalidateQueries({ queryKey: ["admin-pending-products"] });
       setSelectedProduct(null);
     },
-    onError: () => toast.error("Onaylama başarısız"),
+    onError: () => toast.error("Failed to approve"),
   });
 
   const rejectMutation = useMutation({
@@ -217,11 +204,11 @@ export default function AdminPendingProductsPage() {
       return res.data;
     },
     onSuccess: () => {
-      toast.success("Ürün reddedildi");
+      toast.success("Product rejected");
       queryClient.invalidateQueries({ queryKey: ["admin-pending-products"] });
       setSelectedProduct(null);
     },
-    onError: () => toast.error("Reddetme başarısız"),
+    onError: () => toast.error("Failed to reject"),
   });
 
   const products: PendingProduct[] = data?.data || [];
@@ -235,192 +222,196 @@ export default function AdminPendingProductsPage() {
   const isActioning = approveMutation.isPending || rejectMutation.isPending;
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Onay Bekleyen Ürünler
+          <h1 className="text-2xl font-semibold text-gray-900">
+            Pending Approval
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Merchant'ların eklediği ürünleri incele ve onayla/reddet
+            Review and approve or reject merchant products
           </p>
         </div>
         {products.length > 0 && (
-          <span className="inline-flex items-center gap-1.5 bg-orange-100 text-orange-700 px-3 py-1.5 rounded-full text-sm font-semibold">
+          <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-sm font-semibold">
             <Clock className="w-4 h-4" />
-            {products.length} bekliyor
+            {products.length} pending
           </span>
         )}
       </div>
 
       {/* Search */}
-      <div className="relative max-w-md">
+      <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <Input
-          placeholder="Ürün adı, mağaza veya kategori ara..."
+          placeholder="Search by name, store or category..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
+          className="pl-9 border-gray-200"
         />
       </div>
 
       {/* Products Table */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold">
-            Bekleyen Ürünler
+      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h2 className="text-sm font-semibold text-gray-900">
+            Pending Products
             <span className="ml-2 text-sm font-normal text-gray-400">
-              ({filtered.length} ürün)
+              ({filtered.length} products)
             </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead className="text-xs w-12">Görsel</TableHead>
-                  <TableHead className="text-xs">Ürün Adı</TableHead>
-                  <TableHead className="text-xs">Kategori</TableHead>
-                  <TableHead className="text-xs">Mağaza</TableHead>
-                  <TableHead className="text-xs">Tarih</TableHead>
-                  <TableHead className="text-xs text-right">İşlem</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                      {Array.from({ length: 6 }).map((_, j) => (
-                        <TableCell key={j}>
-                          <Skeleton className="h-4 w-full" />
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : filtered.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="text-center py-16 text-gray-400"
-                    >
-                      <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                      <p className="text-sm font-medium">
-                        Onay bekleyen ürün yok
-                      </p>
-                      <p className="text-xs mt-1">Tüm ürünler incelendi</p>
+          </h2>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-50 border-b border-gray-100">
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide w-12">
+                Image
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Product
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Category
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Store
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Date
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">
+                Action
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  {Array.from({ length: 6 }).map((_, j) => (
+                    <TableCell key={j}>
+                      <Skeleton className="h-4 w-full" />
                     </TableCell>
-                  </TableRow>
-                ) : (
-                  filtered.map((product) => (
-                    <TableRow
-                      key={product.id}
-                      className="hover:bg-gray-50/50 cursor-pointer"
-                      onClick={() => setSelectedProduct(product)}
-                    >
-                      <TableCell>
-                        {product.images?.[0] ? (
-                          <img
-                            src={product.images[0]}
-                            alt={product.name}
-                            className="w-10 h-10 rounded-lg object-cover border border-gray-200"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src =
-                                "/placeholder-product.png";
-                            }}
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                            <Package className="w-5 h-5 text-gray-400" />
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-sm font-medium text-gray-900">
-                          {product.name}
-                        </p>
-                        <p className="text-xs text-gray-400 line-clamp-1 max-w-[200px]">
-                          {product.description}
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm text-gray-600">
-                          {product.categoryName}
-                          {product.subcategoryName && (
-                            <span className="text-gray-400">
-                              {" "}
-                              / {product.subcategoryName}
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <Store className="w-3.5 h-3.5 text-gray-400" />
-                          <span className="text-sm text-gray-600">
-                            {product.merchantStoreName}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-xs text-gray-500">
-                        {new Date(product.createdAt).toLocaleDateString(
-                          "tr-TR",
-                        )}
-                      </TableCell>
-                      <TableCell
-                        className="text-right"
-                        onClick={(e) => e.stopPropagation()}
+                  ))}
+                </TableRow>
+              ))
+            ) : filtered.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className="text-center py-16 text-gray-400"
+                >
+                  <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                  <p className="text-sm font-medium">No pending products</p>
+                  <p className="text-xs mt-1">
+                    All products have been reviewed
+                  </p>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((product) => (
+                <TableRow
+                  key={product.id}
+                  className="hover:bg-gray-50 border-b border-gray-50 cursor-pointer"
+                  onClick={() => setSelectedProduct(product)}
+                >
+                  <TableCell>
+                    {product.images?.[0] ? (
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="w-10 h-10 rounded-lg object-cover border border-gray-100"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            "/placeholder-product.png";
+                        }}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                        <Package className="w-5 h-5 text-gray-400" />
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <p className="text-sm font-medium text-gray-900">
+                      {product.name}
+                    </p>
+                    <p className="text-xs text-gray-400 line-clamp-1 max-w-[200px]">
+                      {product.description}
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm text-gray-600">
+                      {product.categoryName}
+                      {product.subcategoryName && (
+                        <span className="text-gray-400">
+                          {" "}
+                          / {product.subcategoryName}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      <Store className="w-3.5 h-3.5 text-gray-400" />
+                      <span className="text-sm text-gray-600">
+                        {product.merchantStoreName}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-xs text-gray-400">
+                    {new Date(product.createdAt).toLocaleDateString("en-US")}
+                  </TableCell>
+                  <TableCell
+                    className="text-right"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0 text-gray-400 hover:text-gray-600"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProduct(product);
+                        }}
                       >
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0 text-gray-400 hover:text-gray-600"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedProduct(product);
-                            }}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="h-7 text-xs bg-green-600 hover:bg-green-700"
-                            disabled={isActioning}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              approveMutation.mutate(product.id);
-                            }}
-                          >
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            Onayla
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 text-xs border-red-200 text-red-600 hover:bg-red-50"
-                            disabled={isActioning}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              rejectMutation.mutate(product.id);
-                            }}
-                          >
-                            <XCircle className="w-3 h-3 mr-1" />
-                            Reddet
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700"
+                        disabled={isActioning}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          approveMutation.mutate(product.id);
+                        }}
+                      >
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs border-rose-200 text-rose-600 hover:bg-rose-50"
+                        disabled={isActioning}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          rejectMutation.mutate(product.id);
+                        }}
+                      >
+                        <XCircle className="w-3 h-3 mr-1" />
+                        Reject
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-      {/* Detail Dialog */}
       <ProductDetailDialog
         product={selectedProduct}
         onClose={() => setSelectedProduct(null)}

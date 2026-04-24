@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -85,48 +83,48 @@ const STATUS_CONFIG: Record<
   { label: string; color: string; icon: React.ReactNode }
 > = {
   PLACED: {
-    label: "Sipariş Alındı",
+    label: "Order Placed",
     color: "bg-slate-100 text-slate-700",
     icon: <CircleDot className="w-3 h-3" />,
   },
   PAYMENT_CONFIRMED: {
-    label: "Ödeme Onaylandı",
+    label: "Payment Confirmed",
     color: "bg-blue-100 text-blue-700",
     icon: <CheckCircle2 className="w-3 h-3" />,
   },
   LABEL_GENERATED: {
-    label: "Etiket Hazır",
-    color: "bg-purple-100 text-purple-700",
+    label: "Label Ready",
+    color: "bg-violet-100 text-violet-700",
     icon: <Package className="w-3 h-3" />,
   },
   COURIER_ASSIGNED: {
-    label: "Kurye Atandı",
-    color: "bg-yellow-100 text-yellow-700",
+    label: "Courier Assigned",
+    color: "bg-amber-100 text-amber-700",
     icon: <UserCheck className="w-3 h-3" />,
   },
   PICKED_UP: {
-    label: "Teslim Alındı",
+    label: "Picked Up",
     color: "bg-orange-100 text-orange-700",
     icon: <Truck className="w-3 h-3" />,
   },
   IN_TRANSIT: {
-    label: "Yolda",
+    label: "In Transit",
     color: "bg-cyan-100 text-cyan-700",
     icon: <Truck className="w-3 h-3" />,
   },
   OUT_FOR_DELIVERY: {
-    label: "Dağıtımda",
+    label: "Out for Delivery",
     color: "bg-indigo-100 text-indigo-700",
     icon: <MapPin className="w-3 h-3" />,
   },
   DELIVERED: {
-    label: "Teslim Edildi",
-    color: "bg-green-100 text-green-700",
+    label: "Delivered",
+    color: "bg-emerald-100 text-emerald-700",
     icon: <CheckCircle2 className="w-3 h-3" />,
   },
   FAILED: {
-    label: "Başarısız",
-    color: "bg-red-100 text-red-700",
+    label: "Failed",
+    color: "bg-rose-100 text-rose-700",
     icon: <AlertCircle className="w-3 h-3" />,
   },
 };
@@ -185,14 +183,12 @@ export default function AdminFulfillmentPage() {
       return res.data;
     },
     onSuccess: () => {
-      toast.success("Kurye başarıyla atandı");
+      toast.success("Courier assigned successfully");
       queryClient.invalidateQueries({ queryKey: ["admin-shipments"] });
       setAssignDialog({ open: false });
       setSelectedCourier("");
     },
-    onError: () => {
-      toast.error("Kurye atama başarısız");
-    },
+    onError: () => toast.error("Failed to assign courier"),
   });
 
   const shipments: Shipment[] = shipmentsData?.data || [];
@@ -217,92 +213,93 @@ export default function AdminFulfillmentPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Fulfillment Paneli
-          </h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Fulfillment</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Kurye atama ve sevkiyat izleme
+            Courier assignment and shipment tracking
           </p>
         </div>
         <Button
           variant="outline"
           size="sm"
+          className="gap-2"
           onClick={() =>
             queryClient.invalidateQueries({ queryKey: ["admin-shipments"] })
           }
         >
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Yenile
+          <RefreshCw className="w-4 h-4" />
+          Refresh
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         {[
           {
-            label: "Toplam Sevkiyat",
+            label: "Total Shipments",
             value: stats.total,
             icon: Package,
-            color: "text-slate-600",
-            bg: "bg-slate-50",
+            color: "text-gray-600",
+            bg: "bg-gray-100",
           },
           {
-            label: "Aktif Sevkiyat",
+            label: "Active Shipments",
             value: stats.active,
             icon: Truck,
             color: "text-blue-600",
             bg: "bg-blue-50",
           },
           {
-            label: "Teslim Edildi",
+            label: "Delivered",
             value: stats.delivered,
             icon: CheckCircle2,
-            color: "text-green-600",
-            bg: "bg-green-50",
+            color: "text-emerald-600",
+            bg: "bg-emerald-50",
           },
           {
-            label: "Kurye Bekliyor",
+            label: "Needs Courier",
             value: stats.needsCourier,
             icon: AlertCircle,
-            color: "text-orange-600",
-            bg: "bg-orange-50",
+            color: "text-amber-600",
+            bg: "bg-amber-50",
           },
         ].map((s) => (
-          <Card key={s.label} className="border-0 shadow-sm">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${s.bg}`}>
-                <s.icon className={`w-5 h-5 ${s.color}`} />
+          <div
+            key={s.label}
+            className="bg-white rounded-xl border border-gray-100 p-5"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+                {s.label}
+              </p>
+              <div className={`p-1.5 rounded-lg ${s.bg}`}>
+                <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
-              <div>
-                <p className="text-xs text-gray-500">{s.label}</p>
-                <p className="text-xl font-bold text-gray-900">{s.value}</p>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+          </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      <div className="flex gap-3">
+        <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <Input
-            placeholder="Takip no, müşteri adı veya sipariş ara..."
+            placeholder="Search by tracking no, customer or order..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-9 border-gray-200"
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-52">
-            <SelectValue placeholder="Durum filtrele" />
+          <SelectTrigger className="w-52 border-gray-200">
+            <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tüm Durumlar</SelectItem>
+            <SelectItem value="all">All Statuses</SelectItem>
             {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
               <SelectItem key={key} value={key}>
                 {cfg.label}
@@ -313,143 +310,153 @@ export default function AdminFulfillmentPage() {
       </div>
 
       {/* Shipments Table */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold">
-            Sevkiyatlar
+      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h2 className="text-sm font-semibold text-gray-900">
+            Shipments
             <span className="ml-2 text-sm font-normal text-gray-400">
-              ({filtered.length} kayıt)
+              ({filtered.length} records)
             </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead className="text-xs">Takip No</TableHead>
-                  <TableHead className="text-xs">Müşteri</TableHead>
-                  <TableHead className="text-xs">Satıcı</TableHead>
-                  <TableHead className="text-xs">Durum</TableHead>
-                  <TableHead className="text-xs">Kargo Tipi</TableHead>
-                  <TableHead className="text-xs">Kurye</TableHead>
-                  <TableHead className="text-xs">ETA</TableHead>
-                  <TableHead className="text-xs text-right">İşlem</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loadingShipments ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                      {Array.from({ length: 8 }).map((_, j) => (
-                        <TableCell key={j}>
-                          <Skeleton className="h-4 w-full" />
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : filtered.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={8}
-                      className="text-center py-12 text-gray-400"
-                    >
-                      <Package className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                      <p className="text-sm">Sevkiyat bulunamadı</p>
+          </h2>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-50 border-b border-gray-100">
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Tracking No.
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Customer
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Merchant
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Status
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Shipping
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Courier
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                ETA
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">
+                Actions
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loadingShipments ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  {Array.from({ length: 8 }).map((_, j) => (
+                    <TableCell key={j}>
+                      <Skeleton className="h-4 w-full" />
                     </TableCell>
-                  </TableRow>
-                ) : (
-                  filtered.map((shipment) => (
-                    <TableRow key={shipment.id} className="hover:bg-gray-50/50">
-                      <TableCell className="font-mono text-xs text-blue-600">
-                        {shipment.trackingNumber}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        <p className="font-medium">{shipment.customerName}</p>
-                        <p className="text-xs text-gray-400 truncate max-w-[140px]">
-                          {shipment.customerAddress}
-                        </p>
-                      </TableCell>
-                      <TableCell className="text-sm text-gray-600">
-                        {shipment.merchantName}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={shipment.status} />
-                      </TableCell>
-                      <TableCell>
-                        <span
-                          className={`text-xs font-medium px-2 py-0.5 rounded ${
-                            shipment.shippingRate === "EXPRESS"
-                              ? "bg-amber-100 text-amber-700"
-                              : "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {shipment.shippingRate === "EXPRESS"
-                            ? "⚡ Express"
-                            : "Regular"}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {shipment.courierName ? (
-                          <span className="text-green-700 font-medium">
-                            {shipment.courierName}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 italic text-xs">
-                            Atanmadı
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs text-gray-500">
-                        {shipment.estimatedDelivery
-                          ? new Date(
-                              shipment.estimatedDelivery,
-                            ).toLocaleDateString("tr-TR")
-                          : "—"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          {(shipment.status === "LABEL_GENERATED" ||
-                            shipment.status === "PAYMENT_CONFIRMED") &&
-                            !shipment.courierId && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
-                                onClick={() =>
-                                  setAssignDialog({
-                                    open: true,
-                                    shipment,
-                                  })
-                                }
-                              >
-                                <UserCheck className="w-3 h-3 mr-1" />
-                                Ata
-                              </Button>
-                            )}
+                  ))}
+                </TableRow>
+              ))
+            ) : filtered.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={8}
+                  className="text-center py-16 text-gray-400"
+                >
+                  <Package className="w-10 h-10 mx-auto mb-2 opacity-20" />
+                  <p className="text-sm font-medium">No shipments found</p>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((shipment) => (
+                <TableRow
+                  key={shipment.id}
+                  className="hover:bg-gray-50 border-b border-gray-50"
+                >
+                  <TableCell className="font-mono text-xs text-blue-600">
+                    {shipment.trackingNumber}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    <p className="font-medium text-gray-900">
+                      {shipment.customerName}
+                    </p>
+                    <p className="text-xs text-gray-400 truncate max-w-[140px]">
+                      {shipment.customerAddress}
+                    </p>
+                  </TableCell>
+                  <TableCell className="text-sm text-gray-600">
+                    {shipment.merchantName}
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={shipment.status} />
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`text-xs font-medium px-2 py-0.5 rounded-md ${shipment.shippingRate === "EXPRESS" ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-600"}`}
+                    >
+                      {shipment.shippingRate === "EXPRESS"
+                        ? "⚡ Express"
+                        : "Regular"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {shipment.courierName ? (
+                      <span className="text-emerald-700 font-medium">
+                        {shipment.courierName}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 italic text-xs">
+                        Unassigned
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-xs text-gray-500">
+                    {shipment.estimatedDelivery
+                      ? new Date(shipment.estimatedDelivery).toLocaleDateString(
+                          "en-US",
+                        )
+                      : "—"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      {(shipment.status === "LABEL_GENERATED" ||
+                        shipment.status === "PAYMENT_CONFIRMED") &&
+                        !shipment.courierId && (
                           <Button
                             size="sm"
-                            variant="ghost"
-                            className="h-7 text-xs"
+                            variant="outline"
+                            className="h-7 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
                             onClick={() =>
-                              window.open(
-                                `/orders/${shipment.orderId}/tracking`,
-                                "_blank",
-                              )
+                              setAssignDialog({ open: true, shipment })
                             }
                           >
-                            <Eye className="w-3 h-3" />
+                            <UserCheck className="w-3 h-3 mr-1" />
+                            Assign
                           </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                        )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0"
+                        onClick={() =>
+                          window.open(
+                            `/orders/${shipment.orderId}/tracking`,
+                            "_blank",
+                          )
+                        }
+                      >
+                        <Eye className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Assign Courier Dialog */}
       <Dialog
@@ -458,30 +465,29 @@ export default function AdminFulfillmentPage() {
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Kurye Ata</DialogTitle>
+            <DialogTitle>Assign Courier</DialogTitle>
           </DialogHeader>
           {assignDialog.shipment && (
             <div className="space-y-4">
               <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-1">
                 <p>
-                  <span className="text-gray-500">Takip No:</span>{" "}
+                  <span className="text-gray-500">Tracking No.:</span>{" "}
                   <span className="font-mono font-medium text-blue-600">
                     {assignDialog.shipment.trackingNumber}
                   </span>
                 </p>
                 <p>
-                  <span className="text-gray-500">Müşteri:</span>{" "}
+                  <span className="text-gray-500">Customer:</span>{" "}
                   {assignDialog.shipment.customerName}
                 </p>
                 <p>
-                  <span className="text-gray-500">Adres:</span>{" "}
+                  <span className="text-gray-500">Address:</span>{" "}
                   {assignDialog.shipment.customerAddress}
                 </p>
               </div>
-
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Kurye Seç
+                  Select Courier
                 </label>
                 {loadingCouriers ? (
                   <Skeleton className="h-10 w-full" />
@@ -492,11 +498,7 @@ export default function AdminFulfillmentPage() {
                       .map((courier) => (
                         <label
                           key={courier.id}
-                          className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                            selectedCourier === courier.id
-                              ? "border-blue-500 bg-blue-50"
-                              : "border-gray-200 hover:bg-gray-50"
-                          }`}
+                          className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedCourier === courier.id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:bg-gray-50"}`}
                         >
                           <input
                             type="radio"
@@ -507,26 +509,26 @@ export default function AdminFulfillmentPage() {
                             className="accent-blue-600"
                           />
                           <div className="flex-1">
-                            <p className="text-sm font-medium">
+                            <p className="text-sm font-medium text-gray-900">
                               {courier.name}
                             </p>
                             <p className="text-xs text-gray-400">
                               {courier.phone} ·{" "}
-                              <span className="text-orange-500">
-                                {courier.activeShipments} aktif paket
+                              <span className="text-amber-500">
+                                {courier.activeShipments} active packages
                               </span>
                             </p>
                           </div>
                           {courier.activeShipments === 0 && (
-                            <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full">
-                              Müsait
+                            <span className="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full">
+                              Available
                             </span>
                           )}
                         </label>
                       ))}
                     {couriers.filter((c) => c.isActive).length === 0 && (
                       <p className="text-center text-sm text-gray-400 py-4">
-                        Aktif kurye bulunamadı
+                        No active couriers available
                       </p>
                     )}
                   </div>
@@ -541,7 +543,7 @@ export default function AdminFulfillmentPage() {
                 setAssignDialog((prev) => ({ ...prev, open: false }))
               }
             >
-              İptal
+              Cancel
             </Button>
             <Button
               disabled={!selectedCourier || assignMutation.isPending}
@@ -554,7 +556,7 @@ export default function AdminFulfillmentPage() {
                 }
               }}
             >
-              {assignMutation.isPending ? "Atanıyor..." : "Kurye Ata"}
+              {assignMutation.isPending ? "Assigning..." : "Assign Courier"}
             </Button>
           </DialogFooter>
         </DialogContent>
