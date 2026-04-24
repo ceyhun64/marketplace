@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useCategories } from "@/queries/useCategories";
 import { useCreateProduct, useUpdateProduct } from "@/queries/useProducts";
 import MultiImageUploader from "@/components/ui/multiImageUploader";
 import type { Product } from "@/types/entities";
+import { X } from "lucide-react";
 
 interface Props {
-  product?: Product | null; // null = add mode, Product = edit mode
+  product?: Product | null;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -72,12 +72,12 @@ export default function ProductFormModal({
     setForm((f) => ({ ...f, [key]: val }));
 
   const handleSubmit = async () => {
-    if (!form.name.trim()) return setError("Ürün adı zorunlu.");
-    if (!form.categoryId) return setError("Kategori seçin.");
+    if (!form.name.trim()) return setError("Product name is required.");
+    if (!form.categoryId) return setError("Please select a category.");
     if (!form.price || isNaN(Number(form.price)) || Number(form.price) <= 0)
-      return setError("Geçerli bir fiyat girin.");
+      return setError("Enter a valid price.");
     if (!form.stock || isNaN(Number(form.stock)) || Number(form.stock) < 0)
-      return setError("Geçerli bir stok miktarı girin.");
+      return setError("Enter a valid stock quantity.");
 
     setError(null);
 
@@ -105,7 +105,7 @@ export default function ProductFormModal({
       onSuccess();
       onClose();
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? "İşlem başarısız.");
+      setError(e?.response?.data?.message ?? "Operation failed.");
     }
   };
 
@@ -118,65 +118,65 @@ export default function ProductFormModal({
     >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <div>
-            <h2 className="text-lg font-semibold text-[#0D0D0D]">
-              {isEdit ? "Ürünü Düzenle" : "Yeni Ürün Ekle"}
+            <h2 className="text-lg font-semibold text-gray-900">
+              {isEdit ? "Edit Product" : "Add New Product"}
             </h2>
-            <p className="text-xs text-[#7A7060] mt-0.5 font-mono">
+            <p className="text-xs text-gray-400 mt-0.5">
               {isEdit
-                ? "Ürün bilgilerini güncelleyin"
-                : "Kataloğunuza yeni ürün ekleyin"}
+                ? "Update product details"
+                : "Add a new product to your catalogue"}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Body */}
         <div className="p-6 flex flex-col gap-5">
-          {/* Görseller */}
+          {/* Images */}
           <MultiImageUploader
-            label="Ürün Görselleri"
+            label="Product Images"
             folder="marketplace/products"
             maxFiles={6}
             onUpdate={(urls) => set("images", urls)}
           />
 
-          {/* Ad */}
-          <Field label="Ürün Adı" required>
+          {/* Name */}
+          <Field label="Product Name" required>
             <input
               type="text"
-              placeholder="Örn: Bluetooth Kulaklık"
+              placeholder="E.g. Bluetooth Headphones"
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
               className={inputCls}
             />
           </Field>
 
-          {/* Açıklama */}
-          <Field label="Açıklama">
+          {/* Description */}
+          <Field label="Description">
             <textarea
               rows={3}
-              placeholder="Ürün hakkında kısa açıklama..."
+              placeholder="Short product description..."
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
               className={`${inputCls} resize-none`}
             />
           </Field>
 
-          {/* Kategori */}
-          <Field label="Kategori" required>
+          {/* Category */}
+          <Field label="Category" required>
             <select
               value={form.categoryId}
               onChange={(e) => set("categoryId", e.target.value)}
               className={inputCls}
             >
-              <option value="">Kategori seçin...</option>
+              <option value="">Select a category...</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -185,9 +185,9 @@ export default function ProductFormModal({
             </select>
           </Field>
 
-          {/* Fiyat & Stok */}
+          {/* Price & Stock */}
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Fiyat (₺)" required>
+            <Field label="Price (₺)" required>
               <input
                 type="number"
                 min="0"
@@ -198,7 +198,7 @@ export default function ProductFormModal({
                 className={inputCls}
               />
             </Field>
-            <Field label="Stok Adedi" required>
+            <Field label="Stock Quantity" required>
               <input
                 type="number"
                 min="0"
@@ -210,63 +210,63 @@ export default function ProductFormModal({
             </Field>
           </div>
 
-          {/* Etiketler */}
-          <Field label="Etiketler" hint="virgülle ayırın">
+          {/* Tags */}
+          <Field label="Tags" hint="comma separated">
             <input
               type="text"
-              placeholder="elektronik, ses, kablosuz"
+              placeholder="electronics, audio, wireless"
               value={form.tags}
               onChange={(e) => set("tags", e.target.value)}
               className={inputCls}
             />
           </Field>
 
-          {/* Yayın Kanalları */}
+          {/* Publish Channels */}
           <div className="rounded-xl border border-gray-100 p-4 space-y-3 bg-gray-50/50">
-            <p className="text-xs font-mono uppercase tracking-widest text-[#7A7060]">
-              Yayın Kanalları
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+              Publish Channels
             </p>
             <ToggleRow
-              label="E-Mağazamda Yayınla"
-              description="Mağaza sayfanızda görünür"
+              label="Publish to My E-Store"
+              description="Visible on your store page"
               checked={form.publishToStore}
               onChange={(v) => set("publishToStore", v)}
-              accentColor="#1A4A6B"
+              color="bg-violet-600"
             />
             <ToggleRow
-              label="Pazaryerinde Yayınla"
-              description="Genel listede görünür (onay gerekebilir)"
+              label="Publish to Marketplace"
+              description="Visible in general listing (approval may be required)"
               checked={form.publishToMarket}
               onChange={(v) => set("publishToMarket", v)}
-              accentColor="#C84B2F"
+              color="bg-blue-600"
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">
+            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
               {error}
             </p>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 p-6 pt-0">
+        <div className="flex gap-3 px-6 pb-6">
           <button
             onClick={onClose}
             className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors"
           >
-            İptal
+            Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="flex-1 bg-[#0D0D0D] text-[#F5F2EB] rounded-xl py-2.5 text-sm font-medium hover:bg-[#C84B2F] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 bg-gray-900 text-white rounded-xl py-2.5 text-sm font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {submitting
-              ? "Kaydediliyor..."
+              ? "Saving..."
               : isEdit
-                ? "Güncelle"
-                : "Ürünü Ekle"}
+                ? "Update Product"
+                : "Add Product"}
           </button>
         </div>
       </div>
@@ -277,7 +277,7 @@ export default function ProductFormModal({
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const inputCls =
-  "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A4A6B]/30 focus:border-[#1A4A6B] transition-colors";
+  "w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors";
 
 function Field({
   label,
@@ -292,11 +292,11 @@ function Field({
 }) {
   return (
     <div>
-      <label className="flex items-center gap-1 text-sm font-medium text-[#0D0D0D] mb-1.5">
+      <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1.5">
         {label}
-        {required && <span className="text-[#C84B2F]">*</span>}
+        {required && <span className="text-red-500">*</span>}
         {hint && (
-          <span className="text-[#7A7060] font-normal text-xs">({hint})</span>
+          <span className="text-gray-400 font-normal text-xs">({hint})</span>
         )}
       </label>
       {children}
@@ -309,27 +309,26 @@ function ToggleRow({
   description,
   checked,
   onChange,
-  accentColor,
+  color,
 }: {
   label: string;
   description: string;
   checked: boolean;
   onChange: (v: boolean) => void;
-  accentColor: string;
+  color: string;
 }) {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-sm font-medium text-[#0D0D0D]">{label}</p>
-        <p className="text-xs text-[#7A7060]">{description}</p>
+        <p className="text-sm font-medium text-gray-800">{label}</p>
+        <p className="text-xs text-gray-400">{description}</p>
       </div>
       <button
         type="button"
         onClick={() => onChange(!checked)}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-          checked ? "bg-opacity-100" : "bg-gray-200"
+          checked ? color : "bg-gray-200"
         }`}
-        style={{ backgroundColor: checked ? accentColor : undefined }}
       >
         <span
           className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${

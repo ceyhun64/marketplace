@@ -1,10 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { useUpdateStoreSettings, useSetStoreDomain } from "@/queries/useStore";
 import ImageUploader from "@/components/ui/imageUploader";
 import type { MerchantProfile } from "@/types/entities";
+import {
+  CheckCircle2,
+  Globe,
+  Store,
+  Clock,
+  BadgeCheck,
+  ChevronRight,
+} from "lucide-react";
 
 interface Props {
   store: MerchantProfile;
@@ -45,7 +53,7 @@ export default function StoreSettingsForm({ store }: Props) {
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? "Kaydedilemedi.");
+      setError(e?.response?.data?.message ?? "Could not be saved.");
     }
   };
 
@@ -59,57 +67,52 @@ export default function StoreSettingsForm({ store }: Props) {
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? "Domain kaydedilemedi.");
+      setError(e?.response?.data?.message ?? "Failed to save domain.");
     }
   };
 
   return (
-    <div className="max-w-2xl space-y-8">
-      {/* Temel Bilgiler */}
-      <section className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h3 className="font-semibold text-[#0D0D0D]">Mağaza Bilgileri</h3>
-          <p className="text-xs text-[#7A7060] mt-0.5 font-mono">
-            Müşterilerin gördüğü bilgiler
-          </p>
-        </div>
-        <div className="p-6 space-y-5">
+    <div className="space-y-6 max-w-3xl">
+
+      {/* ── Branding ──────────────────────────────────────────────── */}
+      <SettingsSection
+        icon={<Store className="w-4 h-4" />}
+        title="Store Branding"
+        description="Your store's public identity shown to customers."
+      >
+        {/* Logo + Banner row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* Logo */}
-          <div>
-            <p className="text-sm font-medium text-[#0D0D0D] mb-2">
-              Mağaza Logosu
-            </p>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden">
+          <div className="space-y-2">
+            <p className={labelCls}>Store Logo</p>
+            <div className="flex items-center gap-3">
+              <div className="relative w-14 h-14 rounded-2xl border border-gray-200 bg-gray-50 overflow-hidden shrink-0 flex items-center justify-center">
                 {form.logoUrl ? (
                   <Image
                     src={form.logoUrl}
                     alt="logo"
-                    width={64}
-                    height={64}
+                    fill
                     className="object-cover"
                   />
                 ) : (
-                  <span className="text-2xl">{store.storeName.charAt(0)}</span>
+                  <span className="text-xl font-bold text-gray-300 select-none">
+                    {store.storeName.charAt(0).toUpperCase()}
+                  </span>
                 )}
               </div>
               <ImageUploader
-                label="Logo Yükle"
+                label="Upload"
                 folder="marketplace/logos"
-                onUpload={(result) =>
-                  setForm((f) => ({ ...f, logoUrl: result.url }))
-                }
+                onUpload={(r) => setForm((f) => ({ ...f, logoUrl: r.url }))}
               />
             </div>
           </div>
 
           {/* Banner */}
-          <div>
-            <p className="text-sm font-medium text-[#0D0D0D] mb-2">
-              Mağaza Banner'ı
-            </p>
-            {form.bannerUrl && (
-              <div className="relative h-24 rounded-xl overflow-hidden mb-2 border border-gray-200">
+          <div className="space-y-2">
+            <p className={labelCls}>Store Banner</p>
+            {form.bannerUrl ? (
+              <div className="relative h-14 rounded-2xl overflow-hidden border border-gray-200">
                 <Image
                   src={form.bannerUrl}
                   alt="banner"
@@ -117,186 +120,262 @@ export default function StoreSettingsForm({ store }: Props) {
                   className="object-cover"
                 />
               </div>
+            ) : (
+              <div className="h-14 rounded-2xl border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center">
+                <span className="text-xs text-gray-400">No banner yet</span>
+              </div>
             )}
             <ImageUploader
-              label="Banner Yükle"
+              label="Upload Banner"
               folder="marketplace/banners"
-              onUpload={(result) =>
-                setForm((f) => ({ ...f, bannerUrl: result.url }))
-              }
+              onUpload={(r) => setForm((f) => ({ ...f, bannerUrl: r.url }))}
             />
           </div>
+        </div>
 
-          {/* Mağaza Adı */}
-          <Field label="Mağaza Adı" required>
+        <hr className="border-gray-100" />
+
+        {/* Store Name */}
+        <Field label="Store Name" required>
+          <input
+            type="text"
+            value={form.storeName}
+            onChange={(e) => setForm((f) => ({ ...f, storeName: e.target.value }))}
+            className={inputCls}
+            placeholder="My Awesome Store"
+          />
+        </Field>
+
+        {/* Description */}
+        <Field label="Description" hint="Optional — shown on your store page">
+          <textarea
+            rows={3}
+            value={form.description}
+            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+            placeholder="Tell customers what makes your store special..."
+            className={`${inputCls} resize-none`}
+          />
+        </Field>
+
+        {error && <ErrorBox message={error} />}
+
+        <SaveButton
+          loading={updateSettings.isPending}
+          saved={saved}
+          onClick={handleSave}
+        />
+      </SettingsSection>
+
+      {/* ── Operations ────────────────────────────────────────────── */}
+      <SettingsSection
+        icon={<Clock className="w-4 h-4" />}
+        title="Operations"
+        description="Configure handling times used in shipping estimates."
+      >
+        <Field label="Order Handling Time" hint="in hours">
+          <div className="flex items-center gap-3">
             <input
-              type="text"
-              value={form.storeName}
+              type="number"
+              min="1"
+              max="72"
+              value={form.handlingHours}
               onChange={(e) =>
-                setForm((f) => ({ ...f, storeName: e.target.value }))
+                setForm((f) => ({ ...f, handlingHours: e.target.value }))
               }
-              className={inputCls}
+              className={`${inputCls} w-28 text-center`}
             />
-          </Field>
-
-          {/* Açıklama */}
-          <Field label="Açıklama">
-            <textarea
-              rows={3}
-              value={form.description}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, description: e.target.value }))
-              }
-              placeholder="Mağazanız hakkında kısa bir açıklama..."
-              className={`${inputCls} resize-none`}
-            />
-          </Field>
-
-          {/* Hazırlık Süresi */}
-          <Field label="Sipariş Hazırlık Süresi" hint="saat cinsinden">
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min="1"
-                max="72"
-                value={form.handlingHours}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, handlingHours: e.target.value }))
-                }
-                className={`${inputCls} w-28`}
-              />
-              <span className="text-sm text-[#7A7060]">saat</span>
-            </div>
-            <p className="text-xs text-[#7A7060] mt-1">
-              ETA hesaplamalarında kullanılır. Varsayılan: 24 saat.
-            </p>
-          </Field>
-
-          {error && (
-            <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">
-              {error}
-            </p>
-          )}
-
-          <button
-            onClick={handleSave}
-            disabled={updateSettings.isPending}
-            className="bg-[#0D0D0D] text-[#F5F2EB] rounded-xl px-6 py-2.5 text-sm font-medium hover:bg-[#C84B2F] disabled:opacity-50 transition-colors"
-          >
-            {updateSettings.isPending
-              ? "Kaydediliyor..."
-              : saved
-                ? "✓ Kaydedildi"
-                : "Kaydet"}
-          </button>
-        </div>
-      </section>
-
-      {/* Domain Ayarları */}
-      <section className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-[#0D0D0D]">Domain Ayarları</h3>
-            {store.domainVerified && (
-              <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-medium">
-                ✓ Doğrulandı
-              </span>
-            )}
+            <span className="text-sm text-gray-400">hours per order</span>
           </div>
-          <p className="text-xs text-[#7A7060] mt-0.5 font-mono">
-            Özel domain veya subdomain bağlayın
+          <p className="text-xs text-gray-400 mt-1.5">
+            Used to calculate estimated delivery dates. Default is 24 hours.
           </p>
-        </div>
-        <div className="p-6 space-y-4">
-          {/* Tür seçimi */}
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              {
-                val: true,
-                label: "Subdomain",
-                desc: "mağaza.platform.com",
-                plan: "PRO+",
-              },
-              {
-                val: false,
-                label: "Özel Domain",
-                desc: "mymağaza.com",
-                plan: "Enterprise",
-              },
-            ].map(({ val, label, desc, plan }) => (
+        </Field>
+      </SettingsSection>
+
+      {/* ── Domain ────────────────────────────────────────────────── */}
+      <SettingsSection
+        icon={<Globe className="w-4 h-4" />}
+        title="Domain"
+        description="Connect a subdomain or your own custom domain."
+        badge={
+          store.domainVerified ? (
+            <span className="flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 rounded-full font-medium">
+              <BadgeCheck className="w-3.5 h-3.5" />
+              Verified
+            </span>
+          ) : undefined
+        }
+      >
+        {/* Type selector */}
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { val: true,  label: "Subdomain",    desc: "store.platform.com", plan: "PRO+" },
+            { val: false, label: "Custom Domain", desc: "yourstore.com",      plan: "Enterprise" },
+          ].map(({ val, label, desc, plan }) => {
+            const active = domainForm.isSubdomain === val;
+            return (
               <button
                 key={String(val)}
-                onClick={() =>
-                  setDomainForm((f) => ({ ...f, isSubdomain: val }))
-                }
-                className={`p-4 rounded-xl border text-left transition-all ${
-                  domainForm.isSubdomain === val
-                    ? "border-[#1A4A6B] bg-[#1A4A6B]/5"
-                    : "border-gray-200 hover:border-gray-300"
+                onClick={() => setDomainForm((f) => ({ ...f, isSubdomain: val }))}
+                className={`relative p-4 rounded-xl border text-left transition-all ${
+                  active
+                    ? "border-blue-400 bg-blue-50/40 shadow-sm"
+                    : "border-gray-200 hover:border-gray-300 bg-white"
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-sm text-[#0D0D0D]">
-                    {label}
-                  </span>
-                  <span className="font-mono text-[9px] text-[#1A4A6B] bg-[#1A4A6B]/10 px-1.5 py-0.5 rounded">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className={`text-sm font-semibold ${active ? "text-blue-700" : "text-gray-800"}`}>
+                      {label}
+                    </p>
+                    <p className="text-xs font-mono text-gray-400 mt-0.5">{desc}</p>
+                  </div>
+                  <span
+                    className={`shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded ${
+                      active ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
                     {plan}
                   </span>
                 </div>
-                <span className="text-xs text-[#7A7060] font-mono">{desc}</span>
+                {active && (
+                  <CheckCircle2 className="absolute bottom-3 right-3 w-4 h-4 text-blue-400" />
+                )}
               </button>
-            ))}
-          </div>
-
-          {/* Domain input */}
-          <Field
-            label={domainForm.isSubdomain ? "Subdomain Adı" : "Domain Adresi"}
-          >
-            <div className="flex items-center">
-              <input
-                type="text"
-                value={domainForm.domain}
-                onChange={(e) =>
-                  setDomainForm((f) => ({ ...f, domain: e.target.value }))
-                }
-                placeholder={
-                  domainForm.isSubdomain ? "maganizin-adi" : "maganizin.com"
-                }
-                className={`${inputCls} ${domainForm.isSubdomain ? "rounded-r-none border-r-0" : ""}`}
-              />
-              {domainForm.isSubdomain && (
-                <div className="border border-gray-200 border-l-0 rounded-r-lg px-3 py-2 bg-gray-50 text-sm text-[#7A7060] whitespace-nowrap">
-                  .platform.com
-                </div>
-              )}
-            </div>
-          </Field>
-
-          {!domainForm.isSubdomain && (
-            <div className="bg-[#F5F2EB] rounded-xl p-4 text-xs text-[#7A7060] space-y-1">
-              <p className="font-semibold text-[#0D0D0D]">DNS Ayarı Gerekli</p>
-              <p>Domain sağlayıcınızda şu CNAME kaydını ekleyin:</p>
-              <code className="block bg-white rounded px-2 py-1 font-mono text-[#1A4A6B] mt-1">
-                @ → platform.com
-              </code>
-            </div>
-          )}
-
-          <button
-            onClick={handleDomainSave}
-            disabled={setDomain.isPending || !domainForm.domain.trim()}
-            className="bg-[#1A4A6B] text-white rounded-xl px-6 py-2.5 text-sm font-medium hover:bg-[#1A4A6B]/80 disabled:opacity-50 transition-colors"
-          >
-            {setDomain.isPending ? "Kaydediliyor..." : "Domain Kaydet"}
-          </button>
+            );
+          })}
         </div>
-      </section>
+
+        {/* Domain input */}
+        <Field label={domainForm.isSubdomain ? "Subdomain Name" : "Your Domain"}>
+          <div className="flex">
+            <input
+              type="text"
+              value={domainForm.domain}
+              onChange={(e) =>
+                setDomainForm((f) => ({ ...f, domain: e.target.value }))
+              }
+              placeholder={
+                domainForm.isSubdomain ? "your-store-name" : "yourstore.com"
+              }
+              className={`${inputCls} ${
+                domainForm.isSubdomain
+                  ? "rounded-r-none border-r-0 focus:ring-0"
+                  : ""
+              }`}
+            />
+            {domainForm.isSubdomain && (
+              <span className="inline-flex items-center border border-gray-200 rounded-r-xl bg-gray-50 px-3 text-sm text-gray-400 whitespace-nowrap">
+                .platform.com
+              </span>
+            )}
+          </div>
+        </Field>
+
+        {/* DNS instructions */}
+        {!domainForm.isSubdomain && (
+          <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 space-y-2">
+            <p className="text-xs font-semibold text-amber-800">
+              DNS Setup Required
+            </p>
+            <p className="text-xs text-amber-700">
+              Add this CNAME record at your domain registrar:
+            </p>
+            <code className="block bg-white border border-amber-100 rounded-lg px-3 py-2 text-xs font-mono text-blue-600">
+              @ → platform.com
+            </code>
+          </div>
+        )}
+
+        {error && <ErrorBox message={error} />}
+
+        <button
+          onClick={handleDomainSave}
+          disabled={setDomain.isPending || !domainForm.domain.trim()}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          {setDomain.isPending ? "Saving..." : "Save Domain"}
+          {!setDomain.isPending && <ChevronRight className="w-3.5 h-3.5" />}
+        </button>
+      </SettingsSection>
     </div>
   );
 }
 
-const inputCls =
-  "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A4A6B]/30 focus:border-[#1A4A6B] transition-colors";
+// ── Shared sub-components ──────────────────────────────────────────────────────
+
+function SettingsSection({
+  icon,
+  title,
+  description,
+  badge,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  badge?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-gray-100 bg-gray-50/60">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 p-2 rounded-lg bg-white border border-gray-200 text-gray-500 shrink-0">
+            {icon}
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+            <p className="text-xs text-gray-400 mt-0.5">{description}</p>
+          </div>
+        </div>
+        {badge}
+      </div>
+      <div className="p-6 space-y-5">{children}</div>
+    </div>
+  );
+}
+
+function SaveButton({
+  loading,
+  saved,
+  onClick,
+}: {
+  loading: boolean;
+  saved: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={loading}
+      className={`flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-xl transition-all disabled:opacity-50 ${
+        saved
+          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+          : "bg-gray-900 text-white hover:bg-gray-700"
+      }`}
+    >
+      {loading ? (
+        "Saving..."
+      ) : saved ? (
+        <>
+          <CheckCircle2 className="w-4 h-4" />
+          Saved
+        </>
+      ) : (
+        "Save Changes"
+      )}
+    </button>
+  );
+}
+
+function ErrorBox({ message }: { message: string }) {
+  return (
+    <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3">
+      <p className="text-sm text-red-600">{message}</p>
+    </div>
+  );
+}
 
 function Field({
   label,
@@ -310,15 +389,20 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <label className="flex items-center gap-1 text-sm font-medium text-[#0D0D0D] mb-1.5">
+    <div className="space-y-1.5">
+      <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
         {label}
-        {required && <span className="text-[#C84B2F]">*</span>}
+        {required && <span className="text-red-400 text-xs">*</span>}
         {hint && (
-          <span className="text-[#7A7060] font-normal text-xs">({hint})</span>
+          <span className="text-gray-400 font-normal text-xs">— {hint}</span>
         )}
       </label>
       {children}
     </div>
   );
 }
+
+const labelCls = "block text-sm font-medium text-gray-700";
+
+const inputCls =
+  "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-colors";

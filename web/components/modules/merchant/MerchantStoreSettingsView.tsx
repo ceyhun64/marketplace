@@ -14,28 +14,31 @@ export default function MerchantStoreSettingsView() {
     },
   });
 
-  const profile = data || null;
   if (isLoading) {
     return (
-      <div className="p-6 space-y-5">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 w-full rounded-xl" />
-        <Skeleton className="h-48 w-full rounded-xl" />
+      <div className="space-y-6 max-w-3xl">
+        <div className="space-y-1">
+          <Skeleton className="h-7 w-44" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <Skeleton className="h-72 w-full rounded-2xl" />
+        <Skeleton className="h-40 w-full rounded-2xl" />
+        <Skeleton className="h-56 w-full rounded-2xl" />
       </div>
     );
   }
 
-  if (!profile) return null;
+  if (!data) return null;
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Mağaza Ayarları</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold text-gray-900">Store Settings</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Mağaza profili, görsel ve domain ayarları
+          Manage your store profile, visuals and domain
         </p>
       </div>
-      <StoreSettingsForm store={profile} />
+      <StoreSettingsForm store={data} />
     </div>
   );
 }
