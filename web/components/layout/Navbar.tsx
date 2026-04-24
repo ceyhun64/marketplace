@@ -78,12 +78,12 @@ const DASHBOARD_HREF: Record<UserRole, string> = {
 
 function LogoMark() {
   return (
-    <div className="w-9 h-9 bg-[#0D0D0D] rounded-xl flex items-center justify-center transition-transform group-hover:rotate-6 shadow-lg shadow-black/10">
-      <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-        <rect x="1" y="1" width="6" height="6" fill="#C84B2F" rx="1" />
-        <rect x="9" y="1" width="6" height="6" fill="#F5F2EB" rx="1" />
-        <rect x="1" y="9" width="6" height="6" fill="#F5F2EB" rx="1" />
-        <rect x="9" y="9" width="6" height="6" fill="#1A4A6B" rx="1" />
+    <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="2" width="5" height="5" fill="white" rx="1" />
+        <rect x="9" y="2" width="5" height="5" fill="#e5e7eb" rx="1" />
+        <rect x="2" y="9" width="5" height="5" fill="#e5e7eb" rx="1" />
+        <rect x="9" y="9" width="5" height="5" fill="white" rx="1" />
       </svg>
     </div>
   );
@@ -95,7 +95,7 @@ function AvatarCircle({ user }: { user: CurrentUser }) {
       <img
         src={user.avatarUrl}
         alt={user.name}
-        className="w-8 h-8 rounded-full object-cover border border-black/10"
+        className="w-8 h-8 rounded-full object-cover ring-1 ring-gray-100"
       />
     );
   }
@@ -107,7 +107,7 @@ function AvatarCircle({ user }: { user: CurrentUser }) {
     .slice(0, 2)
     .toUpperCase();
   return (
-    <div className="w-8 h-8 rounded-full bg-[#1A4A6B] flex items-center justify-center text-white text-[10px] font-bold tracking-tighter">
+    <div className="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center text-white text-[10px] font-medium">
       {initials}
     </div>
   );
@@ -127,7 +127,7 @@ export default function Navbar() {
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 30);
+    const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -151,37 +151,36 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none p-4 md:p-6">
-        {/* Floating Container */}
+      <header className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none p-4 md:p-5">
         <div
           className={cn(
-            "w-full max-w-[1200px] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] pointer-events-auto",
-            "rounded-[28px] border",
+            "w-full max-w-[1100px] transition-all duration-300 ease-in-out pointer-events-auto",
+            "rounded-2xl border bg-white/70 backdrop-blur-md",
             scrolled
-              ? "bg-white/80 backdrop-blur-xl border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.1)] py-2 px-5"
-              : "bg-[#F5F2EB] border-transparent py-4 px-8 shadow-none",
+              ? "border-gray-200/50 shadow-sm py-2 px-4 translate-y-[-4px]"
+              : "border-transparent py-3 px-6 shadow-none",
           )}
         >
-          <div className="flex items-center h-[48px] gap-2 md:gap-6">
+          <div className="flex items-center h-10 gap-4">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 shrink-0 group">
+            <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
               <LogoMark />
-              <span className="hidden sm:block text-[#0D0D0D] text-xl font-bold font-serif tracking-tight">
-                Market<span className="text-[#C84B2F]">place</span>
+              <span className="hidden sm:block text-black text-lg font-bold tracking-tight">
+                Marketplace
               </span>
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-1 ml-4">
+            <nav className="hidden lg:flex items-center gap-0.5 ml-4">
               {PUBLIC_NAV.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    "px-4 py-2 text-[13px] font-semibold transition-all rounded-full",
+                    "px-4 py-2 text-[13px] font-medium transition-colors rounded-lg",
                     pathname === link.href
-                      ? "bg-[#0D0D0D] text-white"
-                      : "text-[#0D0D0D]/70 hover:text-[#0D0D0D] hover:bg-black/5",
+                      ? "text-black bg-gray-100"
+                      : "text-gray-500 hover:text-black hover:bg-gray-50",
                   )}
                 >
                   {link.label}
@@ -192,15 +191,15 @@ export default function Navbar() {
             <div className="flex-1" />
 
             {/* Action Group */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {/* Search */}
               <div className="relative flex items-center">
                 <form
                   onSubmit={handleSearch}
                   className={cn(
-                    "flex items-center transition-all duration-300 rounded-full bg-white/50 border border-black/5 overflow-hidden",
+                    "flex items-center transition-all duration-300 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden",
                     searchOpen
-                      ? "w-[240px] px-3 border-black/20 shadow-sm"
+                      ? "w-[200px] px-3 border-gray-200 shadow-inner"
                       : "w-0 px-0 border-transparent",
                   )}
                 >
@@ -208,15 +207,15 @@ export default function Navbar() {
                     ref={searchRef}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Discover products..."
-                    className="border-0 bg-transparent text-xs focus-visible:ring-0 h-9 p-0"
+                    placeholder="Search..."
+                    className="border-0 bg-transparent text-xs focus-visible:ring-0 h-8 p-0"
                   />
                   <button
                     type="button"
                     onClick={() => setSearchOpen(false)}
-                    className="ml-2 text-gray-400 hover:text-gray-600"
+                    className="ml-2 text-gray-400 hover:text-black transition-colors"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </form>
 
@@ -224,29 +223,29 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={() => setSearchOpen(true)}
-                    className="p-3 text-[#0D0D0D] hover:bg-white rounded-full transition-all border border-transparent hover:border-black/5 shadow-sm"
+                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-all"
                   >
-                    <Search className="w-[18px] h-[18px]" strokeWidth={2.2} />
+                    <Search className="w-[18px] h-[18px]" strokeWidth={2} />
                   </button>
                 )}
               </div>
 
               {/* Wishlist & Cart */}
-              <div className="hidden sm:flex items-center gap-1 bg-black/5 p-1 rounded-full">
+              <div className="hidden sm:flex items-center gap-0.5">
                 <Link
                   href="/wishlist"
-                  className="p-2.5 text-[#0D0D0D]/70 hover:text-[#C84B2F] hover:bg-white rounded-full transition-all"
+                  className="p-2 text-gray-600 hover:text-red-500 hover:bg-gray-50 rounded-full transition-all"
                 >
                   <Heart className="w-[18px] h-[18px]" strokeWidth={2} />
                 </Link>
 
                 <Link
                   href="/cart"
-                  className="relative p-2.5 text-[#0D0D0D]/70 hover:text-[#0D0D0D] hover:bg-white rounded-full transition-all"
+                  className="relative p-2 text-gray-600 hover:text-black hover:bg-gray-50 rounded-full transition-all"
                 >
                   <ShoppingBag className="w-[18px] h-[18px]" strokeWidth={2} />
                   {cartCount > 0 && (
-                    <span className="absolute top-1 right-1 w-4 h-4 bg-[#C84B2F] text-white text-[8px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                    <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-black text-white text-[8px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
                       {cartCount}
                     </span>
                   )}
@@ -254,80 +253,75 @@ export default function Navbar() {
               </div>
 
               {/* Auth / User */}
-              <div className="pl-2 ml-1 border-l border-black/10">
+              <div className="pl-2 ml-1 border-l border-gray-100">
                 {user ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
                         type="button"
-                        className="outline-none flex items-center gap-2 hover:opacity-80 transition-opacity"
+                        className="outline-none flex items-center gap-1.5 hover:opacity-80 transition-opacity"
                       >
                         <AvatarCircle user={user} />
-                        <ChevronDown className="w-3 h-3 text-gray-500" />
+                        <ChevronDown className="w-3 h-3 text-gray-400" />
                       </button>
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent
                       align="end"
                       sideOffset={12}
-                      className="w-56 p-2 rounded-2xl border border-black/5 bg-white shadow-xl z-[9999]"
+                      className="w-52 p-1.5 rounded-xl border border-gray-100 bg-white shadow-lg animate-in fade-in zoom-in-95"
                     >
-                      {/* User info header */}
-                      <div className="px-3 py-2 border-b border-black/5 mb-1">
-                        <p className="text-xs font-bold text-[#0D0D0D] truncate">
+                      <div className="px-3 py-2 mb-1">
+                        <p className="text-[11px] font-semibold text-black truncate uppercase tracking-wider">
                           {user.name}
                         </p>
-                        <p className="text-[10px] text-[#7A7060] truncate">
+                        <p className="text-[10px] text-gray-400 truncate">
                           {user.email}
                         </p>
                       </div>
 
-                      {/* Profile */}
                       <DropdownMenuItem asChild>
                         <Link
                           href="/profile"
-                          className="flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-medium text-[#0D0D0D] cursor-pointer hover:bg-[#F5F2EB] focus:bg-[#F5F2EB] outline-none"
+                          className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
                         >
-                          <User className="w-4 h-4 text-[#7A7060]" />
-                          My Profile
+                          <User className="w-3.5 h-3.5" />
+                          Profile
                         </Link>
                       </DropdownMenuItem>
 
-                      {/* My Orders */}
                       <DropdownMenuItem asChild>
                         <Link
                           href="/orders"
-                          className="flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-medium text-[#0D0D0D] cursor-pointer hover:bg-[#F5F2EB] focus:bg-[#F5F2EB] outline-none"
+                          className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
                         >
-                          <ClipboardList className="w-4 h-4 text-[#7A7060]" />
-                          My Orders
+                          <ClipboardList className="w-3.5 h-3.5" />
+                          Orders
                         </Link>
                       </DropdownMenuItem>
 
-                      {/* Dashboard (role-based) */}
                       {user.role !== "customer" && (
                         <DropdownMenuItem asChild>
                           <Link
                             href={DASHBOARD_HREF[user.role]}
-                            className="flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-medium text-[#0D0D0D] cursor-pointer hover:bg-[#F5F2EB] focus:bg-[#F5F2EB] outline-none"
+                            className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
                           >
-                            <LayoutDashboard className="w-4 h-4 text-[#7A7060]" />
-                            Dashboard
+                            <LayoutDashboard className="w-3.5 h-3.5" />
+                            Admin Panel
                           </Link>
                         </DropdownMenuItem>
                       )}
 
-                      <DropdownMenuSeparator className="my-1 bg-black/5" />
+                      <DropdownMenuSeparator className="my-1 bg-gray-100" />
 
-                      {/* Logout */}
                       <DropdownMenuItem asChild>
                         <button
                           type="button"
                           onClick={handleLogout}
-                          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-medium text-[#C84B2F] cursor-pointer hover:bg-[#FDF0EC] focus:bg-[#FDF0EC] outline-none"
+                          className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                         >
-                          <LogOut className="w-4 h-4" />
-                          Sign Out
+                          <LogOut className="w-3.5 h-3.5" />
+                          Logout
                         </button>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -335,9 +329,9 @@ export default function Navbar() {
                 ) : (
                   <Button
                     asChild
-                    className="h-10 px-6 rounded-full bg-[#0D0D0D] text-white hover:bg-[#C84B2F] transition-all text-xs font-bold shadow-lg shadow-black/10"
+                    className="h-9 px-5 rounded-lg bg-black text-white hover:bg-gray-800 transition-all text-xs font-medium"
                   >
-                    <Link href="/auth/login">Sign In</Link>
+                    <Link href="/auth/login">Login</Link>
                   </Button>
                 )}
               </div>
@@ -349,8 +343,8 @@ export default function Navbar() {
       {/* Spacer */}
       <div
         className={cn(
-          "transition-all duration-500",
-          scrolled ? "h-[100px]" : "h-[120px]",
+          "transition-all duration-300",
+          scrolled ? "h-24" : "h-28",
         )}
       />
     </>

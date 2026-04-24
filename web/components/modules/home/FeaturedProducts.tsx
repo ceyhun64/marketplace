@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { ArrowRight, ShoppingBag, Star, Heart } from "lucide-react";
 
 interface ProductOffer {
   id: string;
@@ -156,7 +157,6 @@ const TABS = [
   { value: "new", label: "New Arrivals" },
   { value: "deals", label: "Deals" },
 ];
-
 export default function FeaturedProducts() {
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
 
@@ -169,47 +169,37 @@ export default function FeaturedProducts() {
   };
 
   return (
-    <section className="py-16 lg:py-20 bg-white border-t border-[#0D0D0D]/6">
-      <div className="max-w-[1200px] mx-auto px-5 lg:px-8">
+    <section className="py-20 lg:py-24 bg-white">
+      <div className="max-w-[1300px] mx-auto px-6 lg:px-8">
         {/* Section header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-8">
-          <div>
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-6 h-[2px] bg-[#C84B2F]" />
-              <span className="font-mono text-[10px] uppercase tracking-[3px] text-[#7A7060]">
-                Curated Products
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] uppercase tracking-[3px] text-blue-600 font-bold">
+                Curated Selection
               </span>
             </div>
-            <h2 className="text-[#0D0D0D] text-[28px] lg:text-[36px] leading-tight font-serif">
+            <h2 className="text-black text-3xl lg:text-4xl font-bold tracking-tight">
               What will you discover today?
             </h2>
           </div>
           <Link
             href="/products"
-            className="hidden sm:flex items-center gap-2 font-mono text-[11px] uppercase tracking-[2px] text-[#7A7060] hover:text-[#C84B2F] transition-colors pb-1 border-b border-transparent hover:border-[#C84B2F] shrink-0"
+            className="flex items-center gap-2 text-sm font-bold text-black hover:opacity-70 transition-opacity group"
           >
-            All products
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+            All Products
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="featured" className="mb-8">
-          <TabsList className="bg-transparent border-b border-[#0D0D0D]/8 w-full justify-start rounded-none h-auto p-0 gap-0">
+        <Tabs defaultValue="featured" className="mb-10">
+          <TabsList className="bg-transparent w-full justify-start rounded-none h-auto p-0 gap-8 border-b border-gray-100">
             {TABS.map((tab) => (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="font-mono text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-[#C84B2F] data-[state=active]:text-[#C84B2F] data-[state=active]:shadow-none data-[state=active]:bg-transparent text-[#7A7060] hover:text-[#0D0D0D] transition-colors -mb-[1px] bg-transparent"
+                className="text-sm font-bold px-0 py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:text-black text-gray-400 hover:text-black transition-all bg-transparent shadow-none"
               >
                 {tab.label}
               </TabsTrigger>
@@ -218,7 +208,7 @@ export default function FeaturedProducts() {
         </Tabs>
 
         {/* Products grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
           {MOCK_PRODUCTS.map((product) => (
             <ProductCard
               key={product.id}
@@ -229,26 +219,14 @@ export default function FeaturedProducts() {
           ))}
         </div>
 
-        {/* Load more */}
-        <div className="mt-10 text-center">
+        {/* View All CTA */}
+        <div className="mt-16 text-center">
           <Button
             variant="outline"
             asChild
-            className="border-2 border-[#0D0D0D] text-[#0D0D0D] font-mono text-[11px] uppercase tracking-[2px] hover:bg-[#0D0D0D] hover:text-[#F5F2EB] transition-colors rounded-sm px-8 py-3.5 h-auto"
+            className="border-gray-200 text-black font-bold text-sm hover:bg-black hover:text-white hover:border-black transition-all rounded-xl px-10 py-6 h-auto"
           >
-            <Link href="/products">
-              View More Products
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </Link>
+            <Link href="/products">Explore Full Catalog</Link>
           </Button>
         </div>
       </div>
@@ -256,15 +234,7 @@ export default function FeaturedProducts() {
   );
 }
 
-function ProductCard({
-  product,
-  isWishlisted,
-  onWishlist,
-}: {
-  product: ProductOffer;
-  isWishlisted: boolean;
-  onWishlist: () => void;
-}) {
+function ProductCard({ product, isWishlisted, onWishlist }: any) {
   const discount = product.originalPrice
     ? Math.round(
         ((product.originalPrice - product.price) / product.originalPrice) * 100,
@@ -272,128 +242,79 @@ function ProductCard({
     : 0;
 
   return (
-    <div className="group relative bg-[#F5F2EB] border border-[#0D0D0D]/8 rounded-sm overflow-hidden hover:border-[#0D0D0D]/20 hover:shadow-[4px_4px_0_0_#0D0D0D08] transition-all duration-200">
-      <Link href={`/product/${product.productId}`} className="block relative">
-        <div className="aspect-square bg-gradient-to-br from-[#F5F2EB] to-[#E8E4D8] flex items-center justify-center text-5xl relative overflow-hidden">
-          <span className="transition-transform duration-300 group-hover:scale-110 select-none">
-            {product.imageEmoji}
-          </span>
-          <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
-            {discount > 0 && (
-              <Badge className="font-mono text-[9px] bg-[#C84B2F] text-white px-1.5 py-0.5 rounded-sm h-auto">
-                -{discount}%
-              </Badge>
-            )}
-            {product.stock < 20 && (
-              <Badge className="font-mono text-[9px] bg-[#8B5E1A] text-white px-1.5 py-0.5 rounded-sm h-auto">
-                Only {product.stock} left
-              </Badge>
-            )}
-          </div>
+    <div className="group relative bg-white transition-all duration-300">
+      {/* Image Container */}
+      <div className="relative aspect-[4/5] bg-gray-50 rounded-[24px] overflow-hidden flex items-center justify-center text-6xl transition-all group-hover:shadow-xl group-hover:shadow-gray-100">
+        <span className="transition-transform duration-500 group-hover:scale-110 select-none">
+          {product.imageEmoji}
+        </span>
+
+        {/* Badges */}
+        <div className="absolute top-4 left-4 flex flex-col gap-2">
+          {discount > 0 && (
+            <Badge className="bg-red-500 text-white border-none font-bold text-[10px] px-2 py-0.5 rounded-lg">
+              -{discount}%
+            </Badge>
+          )}
           {product.isBuyBox && (
-            <div className="absolute bottom-2.5 right-2.5">
-              <Badge className="font-mono text-[8px] bg-[#2D7A4F] text-white px-1.5 py-0.5 rounded-sm h-auto uppercase tracking-wider">
-                ✓ Buy Box
-              </Badge>
-            </div>
+            <Badge className="bg-black text-white border-none font-bold text-[10px] px-2 py-0.5 rounded-lg uppercase">
+              Best Offer
+            </Badge>
           )}
         </div>
-      </Link>
 
-      <button
-        onClick={onWishlist}
-        className="absolute top-2.5 right-2.5 w-7 h-7 bg-white/90 backdrop-blur-sm border border-[#0D0D0D]/10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:border-[#C84B2F]"
-        aria-label="Add to wishlist"
-      >
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill={isWishlisted ? "#C84B2F" : "none"}
-          stroke={isWishlisted ? "#C84B2F" : "#0D0D0D"}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        {/* Wishlist Button */}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            onWishlist();
+          }}
+          className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 active:scale-90"
         >
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-        </svg>
-      </button>
+          <Heart
+            className={`w-5 h-5 ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-400"}`}
+          />
+        </button>
 
-      <div className="p-3.5">
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="font-mono text-[9px] uppercase tracking-wider text-[#7A7060]">
-            {product.categoryName}
-          </span>
-          <Link
-            href={`/store/${product.merchantSlug}`}
-            className="font-mono text-[9px] text-[#1A4A6B] hover:underline truncate max-w-[90px]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {product.merchantName}
-          </Link>
+        {/* Quick Add Button */}
+        <div className="absolute bottom-4 left-4 right-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+          <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-xl h-11 font-bold text-xs gap-2">
+            <ShoppingBag className="w-4 h-4" />
+            Add to Cart
+          </Button>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="mt-5 space-y-2">
+        <div className="flex justify-between items-center text-[11px] font-bold uppercase tracking-wider text-gray-400">
+          <span>{product.categoryName}</span>
+          <span className="text-blue-600">{product.merchantName}</span>
         </div>
 
         <Link href={`/product/${product.productId}`}>
-          <h3 className="text-[#0D0D0D] text-[13px] font-semibold leading-snug mb-2 hover:text-[#C84B2F] transition-colors line-clamp-2">
+          <h3 className="text-black font-bold text-[15px] leading-tight hover:text-blue-600 transition-colors line-clamp-2">
             {product.productName}
           </h3>
         </Link>
 
-        <div className="flex items-center gap-1.5 mb-3">
-          <div className="flex">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <svg
-                key={star}
-                width="10"
-                height="10"
-                viewBox="0 0 24 24"
-                fill={star <= Math.round(product.rating) ? "#F59E0B" : "none"}
-                stroke="#F59E0B"
-                strokeWidth="1.5"
-              >
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
-            ))}
-          </div>
-          <span className="text-[10px] text-[#7A7060]">
-            ({product.reviewCount})
-          </span>
-        </div>
-
-        <div className="flex items-end justify-between">
-          <div>
-            <div className="text-[#0D0D0D] text-[17px] font-bold leading-none font-serif">
+        <div className="flex items-center justify-between pt-1">
+          <div className="flex flex-col">
+            <span className="text-lg font-black text-black tracking-tighter">
               ₺{product.price.toLocaleString("en-US")}
-            </div>
+            </span>
             {product.originalPrice && (
-              <div className="text-[10px] text-[#7A7060] line-through mt-0.5">
+              <span className="text-xs text-gray-400 line-through">
                 ₺{product.originalPrice.toLocaleString("en-US")}
-              </div>
+              </span>
             )}
-            <div className="font-mono text-[9px] text-[#2D7A4F] mt-1 uppercase tracking-wider">
-              {product.eta} delivery
-            </div>
           </div>
-          <Button
-            size="sm"
-            className="w-8 h-8 p-0 bg-[#0D0D0D] text-[#F5F2EB] rounded-sm hover:bg-[#C84B2F] transition-colors"
-            aria-label="Add to cart"
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <path d="M16 10a4 4 0 0 1-8 0" />
-            </svg>
-          </Button>
+          <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-lg">
+            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+            <span className="text-[11px] font-bold text-black">
+              {product.rating}
+            </span>
+          </div>
         </div>
       </div>
     </div>

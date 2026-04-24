@@ -42,57 +42,43 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full flex flex-col items-center px-4 md:px-6 pb-8 mt-32">
-      {/* Main Footer Card */}
-      <div className="w-full max-w-[1200px] bg-[#0D0D0D] rounded-[40px] shadow-2xl overflow-hidden text-[#F5F2EB] p-8 md:p-16">
+    <footer className="w-full flex flex-col items-center px-4 md:px-6 pb-12 mt-32">
+      {/* Main Footer Container */}
+      <div className="w-full max-w-[1200px] bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden p-8 md:p-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
           {/* Brand column */}
           <div className="lg:col-span-1">
-            <Link href="/" className="flex items-center gap-3 mb-8 group">
-              <div className="w-10 h-10 bg-[#F5F2EB] rounded-xl flex items-center justify-center transition-transform group-hover:rotate-6 shrink-0">
-                <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
-                  <rect
-                    x="1"
-                    y="1"
-                    width="6"
-                    height="6"
-                    fill="#C84B2F"
-                    rx="1.5"
-                  />
+            <Link href="/" className="flex items-center gap-2.5 mb-8 group">
+              <div className="w-9 h-9 bg-black rounded-lg flex items-center justify-center transition-transform group-hover:scale-105 shrink-0">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <rect x="2" y="2" width="5" height="5" fill="white" rx="1" />
                   <rect
                     x="9"
-                    y="1"
-                    width="6"
-                    height="6"
-                    fill="#0D0D0D"
-                    rx="1.5"
+                    y="2"
+                    width="5"
+                    height="5"
+                    fill="#e5e7eb"
+                    rx="1"
                   />
                   <rect
-                    x="1"
+                    x="2"
                     y="9"
-                    width="6"
-                    height="6"
-                    fill="#0D0D0D"
-                    rx="1.5"
+                    width="5"
+                    height="5"
+                    fill="#e5e7eb"
+                    rx="1"
                   />
-                  <rect
-                    x="9"
-                    y="9"
-                    width="6"
-                    height="6"
-                    fill="#1A4A6B"
-                    rx="1.5"
-                  />
+                  <rect x="9" y="9" width="5" height="5" fill="white" rx="1" />
                 </svg>
               </div>
-              <span className="text-[#F5F2EB] text-2xl font-bold font-serif tracking-tight">
-                Market<span className="text-[#C84B2F]">place</span>
+              <span className="text-black text-xl font-bold tracking-tight">
+                Marketplace
               </span>
             </Link>
 
-            <p className="text-[#7A7060] text-[14px] leading-relaxed mb-8 max-w-[260px]">
-              The next-generation meeting point of digital commerce. Buy with
-              confidence, sell with joy.
+            <p className="text-gray-500 text-[14px] leading-relaxed mb-8 max-w-[260px]">
+              The modern meeting point of digital commerce. Discover with
+              confidence, shop with pleasure.
             </p>
 
             {/* Social Icons */}
@@ -105,7 +91,7 @@ export default function Footer() {
                 <a
                   key={s.label}
                   href={s.href}
-                  className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center text-[#7A7060] hover:bg-[#C84B2F] hover:text-white transition-all duration-300"
+                  className="w-9 h-9 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:bg-black hover:text-white transition-all duration-300"
                 >
                   {s.icon}
                 </a>
@@ -116,7 +102,7 @@ export default function Footer() {
           {/* Link columns */}
           {Object.values(FOOTER_LINKS).map((section) => (
             <div key={section.title} className="lg:ml-auto">
-              <h3 className="font-mono text-[11px] uppercase tracking-[3px] text-[#C84B2F] font-bold mb-8">
+              <h3 className="text-[12px] uppercase tracking-wider text-black font-bold mb-8">
                 {section.title}
               </h3>
               <ul className="flex flex-col gap-4">
@@ -124,7 +110,7 @@ export default function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-[#7A7060] text-[14px] font-medium hover:text-[#F5F2EB] hover:translate-x-1 transition-all inline-block"
+                      className="text-gray-500 text-[14px] font-medium hover:text-black transition-colors inline-block"
                     >
                       {link.label}
                     </Link>
@@ -136,26 +122,26 @@ export default function Footer() {
         </div>
 
         {/* Newsletter Section */}
-        <div className="mt-20 p-8 md:p-10 bg-white/[0.03] border border-white/10 rounded-[32px] backdrop-blur-sm">
+        <div className="mt-20 p-8 md:p-10 bg-gray-50/50 border border-gray-100 rounded-[24px]">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
             <div className="max-w-md">
-              <h4 className="text-[#F5F2EB] text-2xl mb-2 font-serif font-bold">
-                Join the Elite Club
+              <h4 className="text-black text-xl mb-2 font-bold tracking-tight">
+                Join Our Newsletter
               </h4>
-              <p className="text-[#7A7060] text-[14px]">
-                The newest stores and exclusive deals delivered to your inbox
-                every week.
+              <p className="text-gray-500 text-[14px]">
+                Get the latest stores and exclusive deals delivered to your
+                inbox every week.
               </p>
             </div>
-            <div className="flex items-center w-full lg:w-auto bg-black/20 p-1.5 rounded-full border border-white/10 focus-within:border-[#C84B2F] transition-all">
+            <div className="flex items-center w-full lg:w-auto bg-white p-1.5 rounded-xl border border-gray-200 focus-within:border-black transition-all">
               <Input
                 type="email"
                 placeholder="Your email address"
-                className="flex-1 lg:w-[300px] bg-transparent border-0 text-[#F5F2EB] placeholder:text-[#4A4030] focus-visible:ring-0 h-10 px-4"
+                className="flex-1 lg:w-[280px] bg-transparent border-0 text-black placeholder:text-gray-400 focus-visible:ring-0 h-10 px-4"
               />
               <Button
                 type="button"
-                className="rounded-full bg-[#C84B2F] hover:bg-[#a83a20] text-white font-bold text-[11px] uppercase tracking-wider px-8 h-10 transition-transform active:scale-95 shadow-lg shadow-[#C84B2F]/20"
+                className="rounded-lg bg-black hover:bg-gray-800 text-white font-semibold text-xs px-6 h-10 transition-all active:scale-95"
               >
                 Subscribe
               </Button>
@@ -164,18 +150,18 @@ export default function Footer() {
         </div>
 
         {/* Stats Strip */}
-        <div className="mt-16 pt-10 border-t border-white/5 grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="mt-16 pt-10 border-t border-gray-50 grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
             { value: "2.4K+", label: "Active Sellers" },
-            { value: "48K+", label: "Unique Products" },
+            { value: "48K+", label: "Product Variety" },
             { value: "180K", label: "Happy Customers" },
-            { value: "4.8/5", label: "Satisfaction" },
+            { value: "4.8/5", label: "Satisfaction Rate" },
           ].map((stat) => (
             <div key={stat.label} className="text-center md:text-left">
-              <div className="text-[#F5F2EB] text-xl font-bold font-serif mb-1">
+              <div className="text-black text-lg font-bold mb-0.5">
                 {stat.value}
               </div>
-              <div className="text-[#4A4030] text-[10px] font-mono uppercase tracking-widest">
+              <div className="text-gray-400 text-[10px] uppercase tracking-widest font-medium">
                 {stat.label}
               </div>
             </div>
@@ -184,42 +170,42 @@ export default function Footer() {
       </div>
 
       {/* Bottom Legal Bar */}
-      <div className="w-full max-w-[1100px] mt-8 px-4 flex flex-col md:flex-row items-center justify-between gap-6 opacity-60">
-        <p className="font-mono text-[10px] tracking-[2px] text-[#0D0D0D] uppercase font-bold">
-          © {currentYear} Marketplace Studio
+      <div className="w-full max-w-[1100px] mt-10 px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+        <p className="text-[11px] text-gray-400 font-medium">
+          © {currentYear} Marketplace Studio. All rights reserved.
         </p>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-8">
           {["Privacy", "Terms", "Cookies"].map((item) => (
             <Link
               key={item}
               href="#"
-              className="font-mono text-[10px] tracking-wider text-[#0D0D0D] hover:text-[#C84B2F] transition-colors uppercase font-bold"
+              className="text-[11px] text-gray-400 hover:text-black transition-colors font-medium"
             >
               {item}
             </Link>
           ))}
         </div>
-        <div className="flex gap-4 grayscale opacity-50 hover:grayscale-0 transition-all cursor-default">
-          <span className="font-mono text-[9px] text-[#0D0D0D] font-bold border border-black/10 px-2 py-1 rounded">
-            VISA
-          </span>
-          <span className="font-mono text-[9px] text-[#0D0D0D] font-bold border border-black/10 px-2 py-1 rounded">
-            STRIPE
-          </span>
-          <span className="font-mono text-[9px] text-[#0D0D0D] font-bold border border-black/10 px-2 py-1 rounded">
-            IYZICO
-          </span>
+        <div className="flex gap-4 opacity-40 hover:opacity-100 transition-opacity">
+          {["VISA", "STRIPE", "IYZICO"].map((pay) => (
+            <span
+              key={pay}
+              className="text-[9px] text-black font-bold border border-gray-200 px-2 py-1 rounded"
+            >
+              {pay}
+            </span>
+          ))}
         </div>
       </div>
     </footer>
   );
 }
 
+// Icon Components remains the same
 function InstagramIcon() {
   return (
     <svg
-      width="18"
-      height="18"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -235,7 +221,7 @@ function InstagramIcon() {
 }
 function TwitterIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
     </svg>
   );
@@ -243,8 +229,8 @@ function TwitterIcon() {
 function LinkedInIcon() {
   return (
     <svg
-      width="18"
-      height="18"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
