@@ -18,26 +18,26 @@ import { useAdminSetupStore } from "@/queries/useAdmin";
 const schema = z.object({
   storeName: z
     .string()
-    .min(2, "Mağaza adı en az 2 karakter olmalı.")
-    .max(80, "En fazla 80 karakter."),
+    .min(2, "Store name must be at least 2 characters.")
+    .max(80, "Maximum 80 characters."),
   slug: z
     .string()
-    .min(2, "En az 2 karakter.")
-    .max(50, "En fazla 50 karakter.")
-    .regex(/^[a-z0-9-]+$/, "Sadece küçük harf, rakam ve tire kullanılabilir."),
-  description: z.string().max(500, "En fazla 500 karakter.").optional(),
+    .min(2, "At least 2 characters.")
+    .max(50, "Maximum 50 characters.")
+    .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers and hyphens."),
+  description: z.string().max(500, "Maximum 500 characters.").optional(),
   logoUrl: z
     .string()
-    .url("Geçerli bir URL girin.")
+    .url("Enter a valid URL.")
     .optional()
     .or(z.literal("")),
-  latitude: z.number({ message: "Sayı girin." }).min(-90).max(90),
-  longitude: z.number({ message: "Sayı girin." }).min(-180).max(180),
+  latitude: z.number({ message: "Enter a number." }).min(-90).max(90),
+  longitude: z.number({ message: "Enter a number." }).min(-180).max(180),
   handlingHours: z
-    .number({ message: "Sayı girin." })
+    .number({ message: "Enter a number." })
     .int()
-    .min(1, "En az 1 saat.")
-    .max(168, "En fazla 168 saat (1 hafta)."),
+    .min(1, "Minimum 1 hour.")
+    .max(168, "Maximum 168 hours (1 week)."),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -89,7 +89,7 @@ export function StoreSetupForm({
     },
   });
 
-  // Mağaza adından otomatik slug üret
+  // Auto-generate slug from store name
   function handleStoreNameBlur(name: string) {
     if (getValues("slug")) return;
     const slug = name
@@ -123,7 +123,7 @@ export function StoreSetupForm({
           router.push("/admin/merchants");
         },
         onError: (err: unknown) => {
-          const msg = err instanceof Error ? err.message : "Mağaza kurulamadı.";
+          const msg = err instanceof Error ? err.message : "Store setup failed.";
           setServerError(msg);
         },
       },
@@ -135,26 +135,26 @@ export function StoreSetupForm({
       onSubmit={handleSubmit(onSubmit)}
       className={cn("space-y-6", className)}
     >
-      {/* Merchant bilgisi */}
+      {/* Merchant info */}
       {merchantEmail && (
         <div className="rounded-lg border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-          Satıcı:{" "}
+          Merchant:{" "}
           <span className="font-medium text-foreground">{merchantEmail}</span>
         </div>
       )}
 
-      {/* Mağaza temel bilgileri */}
+      {/* Store basic info */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <Store className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-sm font-medium">Mağaza Bilgileri</h3>
+          <h3 className="text-sm font-medium">Store Information</h3>
         </div>
 
-        {/* Mağaza Adı */}
+        {/* Store Name */}
         <div className="space-y-1">
-          <label className="text-sm font-medium leading-none">Mağaza Adı</label>
+          <label className="text-sm font-medium leading-none">Store Name</label>
           <Input
-            placeholder="Örn: Ahmet'in Butik Çarşısı"
+            placeholder="e.g. Tech Store Pro"
             {...register("storeName")}
             onBlur={(e) => handleStoreNameBlur(e.target.value)}
           />
@@ -170,23 +170,23 @@ export function StoreSetupForm({
             </span>
             <Input
               className="rounded-l-none"
-              placeholder="ahmet-butik"
+              placeholder="tech-store-pro"
               {...register("slug")}
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Mağazanın URL adresi. Sadece küçük harf, rakam ve tire.
+            Store URL path. Lowercase letters, numbers, and hyphens only.
           </p>
           <FieldError message={errors.slug?.message} />
         </div>
 
-        {/* Açıklama */}
+        {/* Description */}
         <div className="space-y-1">
           <label className="text-sm font-medium leading-none">
-            Açıklama (isteğe bağlı)
+            Description (optional)
           </label>
           <Textarea
-            placeholder="Mağaza hakkında kısa bir açıklama…"
+            placeholder="Brief store description..."
             className="resize-none"
             rows={3}
             {...register("description")}
@@ -197,15 +197,14 @@ export function StoreSetupForm({
         {/* Logo URL */}
         <div className="space-y-1">
           <label className="text-sm font-medium leading-none">
-            Logo URL (isteğe bağlı)
+            Logo URL (optional)
           </label>
           <div className="flex items-center gap-2">
             <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <Input placeholder="https://…" {...register("logoUrl")} />
+            <Input placeholder="https://..." {...register("logoUrl")} />
           </div>
           <p className="text-xs text-muted-foreground">
-            Cloudinary URL'si önerilir. Sonradan mağaza ayarlarından da
-            değiştirilebilir.
+            Cloudinary URL recommended. Can be updated later in store settings.
           </p>
           <FieldError message={errors.logoUrl?.message} />
         </div>
@@ -213,21 +212,20 @@ export function StoreSetupForm({
 
       <Separator />
 
-      {/* Konum & Kargo */}
+      {/* Location & Shipping */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-sm font-medium">Konum & Kargo</h3>
+          <h3 className="text-sm font-medium">Location & Shipping</h3>
         </div>
         <p className="text-xs text-muted-foreground">
-          Kargo süresi ve ETA hesaplaması için satıcı deposunun koordinatları
-          kullanılır.
+          Warehouse coordinates used for shipping time and ETA calculations.
         </p>
 
         <div className="grid grid-cols-2 gap-4">
-          {/* Enlem */}
+          {/* Latitude */}
           <div className="space-y-1">
-            <label className="text-sm font-medium leading-none">Enlem</label>
+            <label className="text-sm font-medium leading-none">Latitude</label>
             <Input
               type="number"
               step="any"
@@ -236,9 +234,9 @@ export function StoreSetupForm({
             <FieldError message={errors.latitude?.message} />
           </div>
 
-          {/* Boylam */}
+          {/* Longitude */}
           <div className="space-y-1">
-            <label className="text-sm font-medium leading-none">Boylam</label>
+            <label className="text-sm font-medium leading-none">Longitude</label>
             <Input
               type="number"
               step="any"
@@ -248,10 +246,10 @@ export function StoreSetupForm({
           </div>
         </div>
 
-        {/* Hazırlık Süresi */}
+        {/* Handling Hours */}
         <div className="space-y-1">
           <label className="text-sm font-medium leading-none">
-            Hazırlık Süresi (saat)
+            Handling Time (hours)
           </label>
           <Input
             type="number"
@@ -260,14 +258,13 @@ export function StoreSetupForm({
             {...register("handlingHours", { valueAsNumber: true })}
           />
           <p className="text-xs text-muted-foreground">
-            Siparişin paketlenip kargoya verilmesi için gereken süre.
-            Varsayılan: 24 saat.
+            Time needed to pack and hand off to courier. Default: 24 hours.
           </p>
           <FieldError message={errors.handlingHours?.message} />
         </div>
       </div>
 
-      {/* Sunucu hatası */}
+      {/* Server error */}
       {serverError && (
         <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {serverError}
@@ -277,7 +274,7 @@ export function StoreSetupForm({
       {/* Submit */}
       <Button type="submit" disabled={isPending} className="w-full">
         {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Mağazayı Kur
+        Setup Store
       </Button>
     </form>
   );

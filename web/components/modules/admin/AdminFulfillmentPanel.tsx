@@ -9,11 +9,11 @@ import { formatDateTime } from "@/lib/format";
 import type { Shipment } from "@/types/entities";
 
 const STATUS_FILTERS = [
-  { value: "", label: "Tümü" },
-  { value: "PENDING", label: "Bekleyen" },
-  { value: "COURIER_ASSIGNED", label: "Kurye Atandı" },
-  { value: "IN_TRANSIT", label: "Yolda" },
-  { value: "DELIVERED", label: "Teslim" },
+  { value: "", label: "All" },
+  { value: "PENDING", label: "Pending" },
+  { value: "COURIER_ASSIGNED", label: "Courier Assigned" },
+  { value: "IN_TRANSIT", label: "In Transit" },
+  { value: "DELIVERED", label: "Delivered" },
 ];
 
 export default function AdminFulfillmentPanel() {
@@ -26,7 +26,7 @@ export default function AdminFulfillmentPanel() {
 
   return (
     <div className="space-y-5">
-      {/* Filtreler */}
+      {/* Filters */}
       <div className="flex gap-2 flex-wrap">
         {STATUS_FILTERS.map(({ value, label }) => (
           <button
@@ -34,8 +34,8 @@ export default function AdminFulfillmentPanel() {
             onClick={() => setStatusFilter(value)}
             className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all border ${
               statusFilter === value
-                ? "bg-[#0D0D0D] text-[#F5F2EB] border-[#0D0D0D]"
-                : "bg-white text-[#7A7060] border-gray-200 hover:border-gray-400"
+                ? "bg-gray-900 text-white border-gray-900"
+                : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
             }`}
           >
             {label}
@@ -43,15 +43,15 @@ export default function AdminFulfillmentPanel() {
         ))}
       </div>
 
-      {/* Tablo */}
+      {/* Table */}
       {isLoading ? (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
           <table className="w-full">
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-50">
               {Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <td key={j} className="px-4 py-3">
+                  {Array.from({ length: 6 }).map((_, j) => (
+                    <td key={j} className="px-5 py-3">
                       <Skeleton className="h-4 rounded" />
                     </td>
                   ))}
@@ -61,88 +61,74 @@ export default function AdminFulfillmentPanel() {
           </table>
         </div>
       ) : !shipments.length ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
-          <div className="text-4xl mb-3">🚚</div>
-          <p className="text-sm font-medium text-gray-700">
-            Gönderi bulunamadı
-          </p>
+        <div className="bg-white border border-gray-100 rounded-xl p-12 text-center text-gray-400">
+          <p className="text-sm font-medium">No shipments found</p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-xs text-[#7A7060] uppercase tracking-wide">
+            <thead className="border-b border-gray-100 bg-gray-50">
               <tr>
                 {[
-                  "Takip No",
-                  "Durum",
-                  "Kurye",
-                  "Güncelleme",
-                  "Etiket",
-                  "İşlem",
+                  "Tracking No.",
+                  "Status",
+                  "Courier",
+                  "Updated",
+                  "Label",
+                  "Action",
                 ].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left font-medium">
+                  <th
+                    key={h}
+                    className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                  >
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-50">
               {shipments.map((s) => (
-                <tr
-                  key={s.id}
-                  className="hover:bg-[#F5F2EB]/40 transition-colors"
-                >
-                  {/* Takip No */}
-                  <td className="px-4 py-3">
-                    <span className="font-mono text-xs font-bold text-[#1A4A6B]">
+                <tr key={s.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-5 py-3">
+                    <span className="font-mono text-xs font-bold text-blue-600">
                       {s.trackingNumber}
                     </span>
                   </td>
-
-                  {/* Durum */}
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-3">
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full font-medium ${SHIPMENT_STATUS_COLORS[s.status]}`}
                     >
                       {SHIPMENT_STATUS_LABELS[s.status]}
                     </span>
                   </td>
-
-                  {/* Kurye */}
-                  <td className="px-4 py-3 text-sm text-[#0D0D0D]">
+                  <td className="px-5 py-3 text-sm text-gray-700">
                     {s.courierName ?? (
-                      <span className="text-xs text-[#7A7060]">Atanmadı</span>
+                      <span className="text-xs text-gray-400 italic">Unassigned</span>
                     )}
                   </td>
-
-                  {/* Güncelleme */}
-                  <td className="px-4 py-3 text-xs text-[#7A7060]">
+                  <td className="px-5 py-3 text-xs text-gray-400">
                     {s.updatedAt ? formatDateTime(s.updatedAt) : "—"}
                   </td>
-
-                  {/* Etiket */}
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-3">
                     {s.labelUrl ? (
                       <a
                         href={s.labelUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-[#2D7A4F] hover:underline"
+                        className="text-xs text-emerald-600 hover:underline font-medium"
                       >
-                        📄 İndir
+                        Download
                       </a>
                     ) : (
-                      <span className="text-xs text-[#7A7060]">—</span>
+                      <span className="text-xs text-gray-400">—</span>
                     )}
                   </td>
-
-                  {/* İşlem */}
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-3">
                     <button
                       onClick={() => setAssignTarget(s)}
-                      className="text-xs text-[#1A4A6B] hover:underline font-medium"
+                      className="text-xs text-blue-600 hover:underline font-medium"
                     >
-                      {s.courierId ? "Yeniden Ata" : "Kurye Ata"}
+                      {s.courierId ? "Reassign" : "Assign Courier"}
                     </button>
                   </td>
                 </tr>
@@ -152,7 +138,6 @@ export default function AdminFulfillmentPanel() {
         </div>
       )}
 
-      {/* Assign Modal */}
       {assignTarget && (
         <CourierAssignPanel
           shipment={assignTarget}
