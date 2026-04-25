@@ -27,7 +27,7 @@ export default function CartPage() {
 
   if (summary.isEmpty) {
     return (
-      <main className="min-h-screen bg-[#F5F2EB] flex items-center justify-center px-4">
+      <main className="min-h-screen  flex items-center justify-center px-4">
         <div className="text-center max-w-md">
           <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
             <ShoppingBag className="w-10 h-10 text-[#0D0D0D]/20" />
@@ -51,7 +51,7 @@ export default function CartPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F5F2EB] py-12 px-4">
+    <main className="min-h-screen  py-12 px-4">
       <div className="max-w-[1200px] mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
@@ -81,7 +81,7 @@ export default function CartPage() {
                 className="bg-white rounded-2xl p-5 flex gap-5 shadow-sm border border-black/5"
               >
                 {/* Product Image */}
-                <div className="w-24 h-24 bg-[#F5F2EB] rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <div className="w-24 h-24  rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {item.productImage ? (
                     <img
                       src={item.productImage}
@@ -119,7 +119,7 @@ export default function CartPage() {
 
                   <div className="flex items-center justify-between mt-4">
                     {/* Quantity */}
-                    <div className="flex items-center gap-1 bg-[#F5F2EB] rounded-full p-1">
+                    <div className="flex items-center gap-1  rounded-full p-1">
                       <button
                         onClick={() =>
                           updateQuantity(item.offerId, item.quantity - 1)
@@ -179,7 +179,7 @@ export default function CartPage() {
                       "w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all",
                       summary.shippingRate === rate
                         ? "border-[#0D0D0D] bg-[#0D0D0D]/5"
-                        : "border-transparent bg-[#F5F2EB] hover:border-[#0D0D0D]/20",
+                        : "border-transparent  hover:border-[#0D0D0D]/20",
                     )}
                   >
                     <div className="flex items-center gap-3">
@@ -217,7 +217,7 @@ export default function CartPage() {
                   value={coupon}
                   onChange={(e) => setCoupon(e.target.value.toUpperCase())}
                   placeholder="Enter code"
-                  className="flex-1 h-10 px-4 rounded-full border border-black/10 text-sm font-mono focus:outline-none focus:border-[#0D0D0D] bg-[#F5F2EB]"
+                  className="flex-1 h-10 px-4 rounded-full border border-black/10 text-sm font-mono focus:outline-none focus:border-[#0D0D0D] "
                 />
                 <Button
                   variant="outline"

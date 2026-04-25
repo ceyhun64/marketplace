@@ -35,7 +35,7 @@ function ProductCard({ product }: { product: Product }) {
       className="bg-white rounded-2xl overflow-hidden border border-black/5 shadow-sm hover:shadow-md transition-all group block"
     >
       {/* Image */}
-      <div className="aspect-square bg-[#F5F2EB] overflow-hidden">
+      <div className="aspect-square  overflow-hidden">
         {product.images?.[0] ? (
           <img
             src={product.images[0]}
@@ -103,7 +103,11 @@ interface FilterSidebarProps {
   onReset: () => void;
 }
 
-function FilterSidebar({ filters, onFilterChange, onReset }: FilterSidebarProps) {
+function FilterSidebar({
+  filters,
+  onFilterChange,
+  onReset,
+}: FilterSidebarProps) {
   const { data: categories } = useCategories();
   const rootCategories = (categories ?? []).filter((c) => !c.parentId);
 
@@ -121,7 +125,7 @@ function FilterSidebar({ filters, onFilterChange, onReset }: FilterSidebarProps)
               className={`w-full text-left text-[13px] px-3 py-2 rounded-lg transition-colors ${
                 !filters.category
                   ? "bg-[#0D0D0D] text-white font-bold"
-                  : "text-[#7A7060] hover:bg-[#F5F2EB] hover:text-[#0D0D0D]"
+                  : "text-[#7A7060] hover: hover:text-[#0D0D0D]"
               }`}
             >
               All Categories
@@ -134,7 +138,7 @@ function FilterSidebar({ filters, onFilterChange, onReset }: FilterSidebarProps)
                 className={`w-full text-left text-[13px] px-3 py-2 rounded-lg transition-colors ${
                   filters.category === cat.slug
                     ? "bg-[#0D0D0D] text-white font-bold"
-                    : "text-[#7A7060] hover:bg-[#F5F2EB] hover:text-[#0D0D0D]"
+                    : "text-[#7A7060] hover: hover:text-[#0D0D0D]"
                 }`}
               >
                 {cat.name}
@@ -160,7 +164,10 @@ function FilterSidebar({ filters, onFilterChange, onReset }: FilterSidebarProps)
             placeholder="Min"
             value={filters.minPrice ?? ""}
             onChange={(e) =>
-              onFilterChange("minPrice", e.target.value ? +e.target.value : undefined)
+              onFilterChange(
+                "minPrice",
+                e.target.value ? +e.target.value : undefined,
+              )
             }
             className="h-9 text-sm rounded-lg"
           />
@@ -170,7 +177,10 @@ function FilterSidebar({ filters, onFilterChange, onReset }: FilterSidebarProps)
             placeholder="Max"
             value={filters.maxPrice ?? ""}
             onChange={(e) =>
-              onFilterChange("maxPrice", e.target.value ? +e.target.value : undefined)
+              onFilterChange(
+                "maxPrice",
+                e.target.value ? +e.target.value : undefined,
+              )
             }
             className="h-9 text-sm rounded-lg"
           />
@@ -232,7 +242,9 @@ export default function ProductsListPage() {
     setSearchInput("");
   };
 
-  const totalPages = data ? Math.ceil(data.totalCount / (filters.limit ?? 24)) : 0;
+  const totalPages = data
+    ? Math.ceil(data.totalCount / (filters.limit ?? 24))
+    : 0;
   const activeFilterCount = [
     filters.category,
     filters.minPrice,
@@ -241,7 +253,7 @@ export default function ProductsListPage() {
   ].filter(Boolean).length;
 
   return (
-    <main className="min-h-screen bg-[#F5F2EB]">
+    <main className="min-h-screen ">
       {/* Top bar */}
       <div className="bg-[#0D0D0D] py-10 px-4">
         <div className="max-w-[1200px] mx-auto">

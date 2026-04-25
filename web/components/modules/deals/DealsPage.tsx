@@ -52,7 +52,7 @@ function DealCard({ product }: { product: Product }) {
       className="bg-white rounded-2xl overflow-hidden border border-black/5 shadow-sm hover:shadow-lg transition-all group block"
     >
       {/* Image */}
-      <div className="aspect-square bg-[#F5F2EB] relative overflow-hidden">
+      <div className="aspect-square  relative overflow-hidden">
         {product.images?.[0] ? (
           <img
             src={product.images[0]}
@@ -134,7 +134,7 @@ export default function DealsPage() {
   });
 
   return (
-    <main className="min-h-screen bg-[#F5F2EB]">
+    <main className="min-h-screen ">
       {/* Hero */}
       <div className="bg-[#0D0D0D] py-14 px-4 relative overflow-hidden">
         {/* Decorative rings */}
@@ -152,8 +152,7 @@ export default function DealsPage() {
             className="text-[#F5F2EB] text-[36px] lg:text-[48px] leading-tight mb-2"
             style={{ fontFamily: "'DM Serif Display', serif" }}
           >
-            Today&apos;s{" "}
-            <span className="text-[#C84B2F]">Deals</span>
+            Today&apos;s <span className="text-[#C84B2F]">Deals</span>
           </h1>
           <p className="text-[#7A7060] text-[15px] mb-8">
             Hand-picked offers from our top sellers. Don't miss out.

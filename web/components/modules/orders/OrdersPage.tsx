@@ -146,7 +146,7 @@ export default function OrdersPage() {
   const filtered = orders.filter((o) => statusMatch(o.status, filter));
 
   return (
-    <div className="min-h-screen bg-[#fafaf8]">
+    <div className="min-h-screen">
       {/* Header */}
       <div className="border-b border-gray-200 bg-white">
         <div className="max-w-3xl mx-auto px-4 py-6">

@@ -73,7 +73,7 @@ const MOCK_STORES: Store[] = [
 
 export default function FeaturedStores() {
   return (
-    <section className="py-20 lg:py-24 bg-white border-t border-gray-50">
+    <section className="py-20 lg:py-24 border-t border-gray-50">
       <div className="max-w-[1300px] mx-auto px-6 lg:px-8">
         {/* Section header */}
         <div className="flex items-end justify-between mb-12">

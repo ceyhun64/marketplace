@@ -73,7 +73,7 @@ export default function WishlistPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F5F2EB] py-12 px-4">
+    <main className="min-h-screen  py-12 px-4">
       <div className="max-w-[1200px] mx-auto">
         {/* Header */}
         <div className="mb-10">
@@ -112,7 +112,7 @@ export default function WishlistPage() {
                 className="bg-white rounded-2xl overflow-hidden shadow-sm border border-black/5 group"
               >
                 {/* Image */}
-                <div className="aspect-square bg-[#F5F2EB] relative flex items-center justify-center">
+                <div className="aspect-square  relative flex items-center justify-center">
                   {item.productImage ? (
                     <img
                       src={item.productImage}

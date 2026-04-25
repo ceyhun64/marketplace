@@ -258,7 +258,7 @@ export default function MerchantAnalyticsDashboard() {
               {topProducts.map((p, i) => (
                 <div
                   key={p.productId}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#F5F2EB]/60 transition-colors"
+                  className="flex items-center gap-3 p-2 rounded-lg hover:/60 transition-colors"
                 >
                   <span className="font-mono text-xs text-[#7A7060] w-5 shrink-0">
                     {String(i + 1).padStart(2, "0")}

@@ -27,7 +27,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-white py-12">
+    <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden py-12">
       {/* Soft Background Accents */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-5%] right-[-5%] w-[35%] h-[35%] bg-gray-50 blur-[100px] rounded-full" />

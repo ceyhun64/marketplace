@@ -33,7 +33,7 @@ function CategoryCard({ category }: { category: Category }) {
         className="flex items-center gap-4 p-5 group"
       >
         {/* Icon / colour swatch */}
-        <div className="w-12 h-12 rounded-xl bg-[#F5F2EB] flex items-center justify-center flex-shrink-0 group-hover:bg-[#0D0D0D] transition-colors">
+        <div className="w-12 h-12 rounded-xl  flex items-center justify-center flex-shrink-0 group-hover:bg-[#0D0D0D] transition-colors">
           {category.iconUrl ? (
             <img
               src={category.iconUrl}
@@ -76,7 +76,7 @@ function CategoryCard({ category }: { category: Category }) {
                 <li key={sub.id}>
                   <Link
                     href={`/category/${sub.slug}`}
-                    className="flex items-center justify-between px-5 py-3 text-[13px] text-[#0D0D0D]/70 hover:text-[#C84B2F] hover:bg-[#F5F2EB] transition-colors"
+                    className="flex items-center justify-between px-5 py-3 text-[13px] text-[#0D0D0D]/70 hover:text-[#C84B2F] hover: transition-colors"
                   >
                     <span className="font-medium">{sub.name}</span>
                     {sub.productCount !== undefined && (
@@ -107,7 +107,7 @@ export default function CategoriesPage() {
   const rootCategories = filtered.filter((c) => !c.parentId);
 
   return (
-    <main className="min-h-screen bg-[#F5F2EB]">
+    <main className="min-h-screen ">
       {/* Hero bar */}
       <div className="bg-[#0D0D0D] py-14 px-4">
         <div className="max-w-[1200px] mx-auto">

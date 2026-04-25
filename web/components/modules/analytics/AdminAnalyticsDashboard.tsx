@@ -155,7 +155,7 @@ export default function AdminAnalyticsDashboard() {
                 }}
                 formatter={(val: any) => [formatPrice(val), "Gelir"]}
               />
-            
+
               <Bar dataKey="revenue" fill="#1A4A6B" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -189,10 +189,7 @@ export default function AdminAnalyticsDashboard() {
                 icon: "📦",
               },
             ].map(({ label, value, icon }) => (
-              <div
-                key={label}
-                className="text-center p-4 bg-[#F5F2EB] rounded-xl"
-              >
+              <div key={label} className="text-center p-4  rounded-xl">
                 <div className="text-2xl mb-1">{icon}</div>
                 <p className="text-xl font-bold font-serif text-[#0D0D0D]">
                   {value}

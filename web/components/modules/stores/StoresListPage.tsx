@@ -51,7 +51,7 @@ function StoreCard({ store }: { store: MerchantProfile }) {
   return (
     <div className="bg-white rounded-2xl overflow-hidden border border-black/5 shadow-sm hover:shadow-md transition-shadow group">
       {/* Banner */}
-      <div className="h-32 bg-[#F5F2EB] relative overflow-hidden">
+      <div className="h-32  relative overflow-hidden">
         {store.bannerUrl ? (
           <img
             src={store.bannerUrl}
@@ -69,7 +69,7 @@ function StoreCard({ store }: { store: MerchantProfile }) {
       <div className="p-5">
         <div className="flex items-center gap-3 mb-4">
           {/* Logo */}
-          <div className="w-12 h-12 rounded-xl bg-[#F5F2EB] border-2 border-white shadow-sm flex items-center justify-center flex-shrink-0 -mt-8 relative z-10 overflow-hidden">
+          <div className="w-12 h-12 rounded-xl  border-2 border-white shadow-sm flex items-center justify-center flex-shrink-0 -mt-8 relative z-10 overflow-hidden">
             {store.logoUrl ? (
               <img
                 src={store.logoUrl}
@@ -121,7 +121,7 @@ export default function StoresListPage() {
   );
 
   return (
-    <main className="min-h-screen bg-[#F5F2EB]">
+    <main className="min-h-screen ">
       {/* Hero */}
       <div className="bg-[#0D0D0D] py-14 px-4">
         <div className="max-w-[1200px] mx-auto">

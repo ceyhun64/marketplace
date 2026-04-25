@@ -3,8 +3,7 @@ import { DM_Sans, DM_Serif_Display, Space_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/providers/QueryProvider";
-import Navbar from "@/components/layout/Navbar";
-import { Footer } from "react-day-picker";
+import ClientLayoutWrapper from "@/components/layout/ClientLayoutWrapper";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -42,10 +41,10 @@ export default function RootLayout({
     >
       <body
         style={{ fontFamily: "var(--font-dm-sans), sans-serif" }}
-        className="antialiased bg-[#FAF8F4] text-[#171412]"
+        className="antialiased"
       >
         <QueryProvider>
-          {children}
+          <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
           <Toaster position="bottom-right" richColors />
         </QueryProvider>
       </body>

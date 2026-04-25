@@ -20,8 +20,7 @@ export const metadata = {
 
 export default async function HomePage() {
   return (
-    <main className="bg-white">
-      <Navbar />
+    <main >
 
       {/* 1. Hero — Modern arama ve görsel anlatım */}
       <HeroSection />
@@ -40,7 +39,6 @@ export default async function HomePage() {
         <HowItWorksSection />
       </div>
 
-      <Footer />
     </main>
   );
 }

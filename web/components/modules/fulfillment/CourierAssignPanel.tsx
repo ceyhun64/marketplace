@@ -73,7 +73,7 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
         <div className="p-6 space-y-5">
           {/* Etiket Oluştur */}
           {!shipment.labelUrl && (
-            <div className="bg-[#F5F2EB] rounded-xl p-4 flex items-center justify-between">
+            <div className=" rounded-xl p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-[#0D0D0D]">
                   Kargo Etiketi
