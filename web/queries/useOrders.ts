@@ -106,9 +106,7 @@ export function useMerchantIncomingOrders(status?: OrderStatus) {
     queryKey: orderKeys.merchantIncoming(status),
     queryFn: async () => {
       const params = status ? `?status=${status}` : "";
-      const { data } = await api.get<Order[]>(
-        `/api/orders/merchant/incoming${params}`,
-      );
+      const { data } = await api.get<Order[]>(`/api/merchants/orders${params}`);
       return data;
     },
   });
@@ -117,7 +115,8 @@ export function useMerchantIncomingOrders(status?: OrderStatus) {
 export function usePackOrder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (orderId: string) => api.patch(`/api/orders/${orderId}/pack`),
+    mutationFn: (orderId: string) =>
+      api.patch(`/api/merchants/orders/${orderId}/pack`),
     onSuccess: (_, orderId) => {
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(orderId) });
       queryClient.invalidateQueries({ queryKey: orderKeys.merchantIncoming() });

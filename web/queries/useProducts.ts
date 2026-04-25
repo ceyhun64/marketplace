@@ -175,7 +175,7 @@ export function useMerchantProducts(filters?: ProductFilters) {
       if (filters?.limit) params.set("limit", String(filters.limit));
       if (filters?.search) params.set("search", filters.search);
       const { data } = await api.get<ProductsResponse>(
-        `/api/products/merchant?${params}`,
+        `/api/merchants/catalogue?${params}`,
       );
       return data;
     },
@@ -186,7 +186,7 @@ export function useCreateProduct() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateProductDto) =>
-      api.post<Product>("/api/products", body),
+      api.post<Product>("/api/merchants/catalogue", body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
       queryClient.invalidateQueries({
@@ -200,7 +200,7 @@ export function useUpdateProduct() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, ...body }: { id: string } & Partial<CreateProductDto>) =>
-      api.put<Product>(`/api/products/${id}`, body),
+      api.put<Product>(`/api/merchants/catalogue/${id}`, body),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: productKeys.detail(id) });
       queryClient.invalidateQueries({
@@ -213,7 +213,7 @@ export function useUpdateProduct() {
 export function useDeleteProduct() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/api/products/${id}`),
+    mutationFn: (id: string) => api.delete(`/api/merchants/catalogue/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
       queryClient.invalidateQueries({
@@ -228,7 +228,7 @@ export function useTogglePublish() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, ...dto }: { id: string } & PublishToggleDto) =>
-      api.patch(`/api/products/${id}/publish`, dto),
+      api.patch(`/api/merchants/catalogue/${id}/publish`, dto),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: productKeys.detail(id) });
       queryClient.invalidateQueries({

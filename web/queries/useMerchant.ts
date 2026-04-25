@@ -56,7 +56,7 @@ export function useMerchantOffers() {
     queryKey: merchantKeys.offers(),
     queryFn: async () => {
       const { data } = await api.get<{ items: MerchantOffer[]; total: number }>(
-        "/api/merchants/offers",
+        "/api/merchants/catalogue",
       );
       // API { total, page, limit, items } döndürüyor
       return Array.isArray(data) ? data : ((data as any).items ?? []);
@@ -73,7 +73,7 @@ export function useCreateOffer() {
       stock: number;
       publishToMarket?: boolean;
       publishToStore?: boolean;
-    }) => api.post("/api/merchants/offers", body),
+    }) => api.post("/api/merchants/catalogue", body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: merchantKeys.offers() });
     },
@@ -92,7 +92,7 @@ export function useUpdateOffer() {
       stock?: number;
       publishToMarket?: boolean;
       publishToStore?: boolean;
-    }) => api.put(`/api/merchants/offers/${id}`, body),
+    }) => api.put(`/api/merchants/catalogue/${id}`, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: merchantKeys.offers() });
     },
@@ -102,7 +102,7 @@ export function useUpdateOffer() {
 export function useDeleteOffer() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/api/merchants/offers/${id}`),
+    mutationFn: (id: string) => api.delete(`/api/merchants/catalogue/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: merchantKeys.offers() });
     },
@@ -121,7 +121,7 @@ export function usePublishToggle() {
       publishToMarket?: boolean;
       publishToStore?: boolean;
     }) =>
-      api.patch(`/api/merchants/offers/${id}/publish`, {
+      api.patch(`/api/merchants/catalogue/${id}/publish`, {
         publishToMarket,
         publishToStore,
       }),

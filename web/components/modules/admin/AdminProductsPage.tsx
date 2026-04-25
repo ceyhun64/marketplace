@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -41,6 +42,7 @@ import {
   Clock,
   Image as ImageIcon,
 } from "lucide-react";
+import MultiImageUploader from "@/components/ui/multiImageUploader";
 
 interface Product {
   id: string;
@@ -85,7 +87,6 @@ export default function AdminProductsPage() {
     tags: "",
     images: [],
   });
-  const [imageInput, setImageInput] = useState("");
 
   const { data: productsData, isLoading: productsLoading } = useQuery({
     queryKey: ["admin-products", search],
@@ -114,29 +115,30 @@ export default function AdminProductsPage() {
   });
 
   const createMutation = useMutation({
+    // Backend'de POST /api/products mevcut olmalı — yoksa ProductsController'a eklenмesi gerekir
     mutationFn: (data: object) => api.post("/api/products", data),
     onSuccess: () => {
       toast.success("Product created successfully");
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["pending-products"] });
-      setAddOpen(false);
-      setForm({
-        name: "",
-        description: "",
-        categoryId: "",
-        subcategoryId: "",
-        tags: "",
-        images: [],
-      });
+      handleDialogClose(false);
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || "Failed to create product");
     },
   });
 
+  // Backend: PATCH /api/admin/products/{id}/approve (approved=true → onay, false → soft delete / reject)
   const approveMutation = useMutation({
-    mutationFn: ({ id, approved }: { id: string; approved: boolean }) =>
-      api.post(`/api/admin/products/${id}/approve`, { approved }),
+    mutationFn: ({ id, approved }: { id: string; approved: boolean }) => {
+      if (approved) {
+        // Onay: PATCH /api/admin/products/{id}/approve
+        return api.patch(`/api/admin/products/${id}/approve`);
+      } else {
+        // Reddet: ürünü sil
+        return api.delete(`/api/products/${id}`);
+      }
+    },
     onSuccess: (_, { approved }) => {
       toast.success(approved ? "Product approved" : "Product rejected");
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
@@ -170,13 +172,6 @@ export default function AdminProductsPage() {
       p.categoryName?.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const handleAddImage = () => {
-    if (imageInput.trim()) {
-      setForm((f) => ({ ...f, images: [...f.images, imageInput.trim()] }));
-      setImageInput("");
-    }
-  };
-
   const handleSubmit = () => {
     const payload = {
       name: form.name,
@@ -189,6 +184,20 @@ export default function AdminProductsPage() {
         .filter(Boolean),
     };
     createMutation.mutate(payload);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setAddOpen(open);
+    if (!open) {
+      setForm({
+        name: "",
+        description: "",
+        categoryId: "",
+        subcategoryId: "",
+        tags: "",
+        images: [],
+      });
+    }
   };
 
   return (
@@ -488,10 +497,14 @@ export default function AdminProductsPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-sm text-gray-600">
-                        {product.categoryName || "—"}
+                        {(product as any).category ??
+                          (product as any).categoryName ??
+                          "—"}
                       </TableCell>
                       <TableCell className="text-sm text-gray-600">
-                        {product.createdByName || "Merchant"}
+                        {(product as any).merchant?.storeName ??
+                          (product as any).createdByName ??
+                          "Merchant"}
                       </TableCell>
                       <TableCell className="text-xs text-gray-400">
                         {new Date(product.createdAt).toLocaleDateString(
@@ -541,12 +554,23 @@ export default function AdminProductsPage() {
       </Tabs>
 
       {/* Add Product Dialog */}
-      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+      <Dialog open={addOpen} onOpenChange={handleDialogClose}>
         <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Product</DialogTitle>
+            <DialogDescription>
+              Fill in the details below to add a new product to the catalog.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
+            {/* Images */}
+            <MultiImageUploader
+              label="Product Images"
+              folder="marketplace/products"
+              maxFiles={6}
+              onUpdate={(urls) => setForm((f) => ({ ...f, images: urls }))}
+            />
+
             <div className="space-y-1.5">
               <Label>Product Name *</Label>
               <Input
@@ -623,61 +647,9 @@ export default function AdminProductsPage() {
               />
               <p className="text-xs text-gray-400">Separate tags with commas</p>
             </div>
-            <div className="space-y-1.5">
-              <Label>Images</Label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add image URL..."
-                  value={imageInput}
-                  onChange={(e) => setImageInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAddImage()}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleAddImage}
-                  disabled={!imageInput.trim()}
-                >
-                  Add
-                </Button>
-              </div>
-              {form.images.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {form.images.map((img, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-1 bg-gray-100 rounded px-2 py-1"
-                    >
-                      <img
-                        src={img}
-                        alt=""
-                        className="w-6 h-6 object-cover rounded"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = "none";
-                        }}
-                      />
-                      <span className="text-xs text-gray-600 truncate max-w-[100px]">
-                        {img.split("/").pop()}
-                      </span>
-                      <button
-                        onClick={() =>
-                          setForm((f) => ({
-                            ...f,
-                            images: f.images.filter((_, idx) => idx !== i),
-                          }))
-                        }
-                        className="text-gray-400 hover:text-rose-500 ml-1"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddOpen(false)}>
+            <Button variant="outline" onClick={() => handleDialogClose(false)}>
               Cancel
             </Button>
             <Button
