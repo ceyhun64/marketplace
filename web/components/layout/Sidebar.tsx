@@ -16,6 +16,8 @@ import {
   UserCheck,
   Star,
   LogOut,
+  Puzzle, // ← EKLENDİ (admin/merchant plugins)
+  FileText, // ← EKLENDİ (admin invoices)
 } from "lucide-react";
 
 const ICONS: Record<string, any> = {
@@ -30,6 +32,8 @@ const ICONS: Record<string, any> = {
   clock: Clock,
   "user-check": UserCheck,
   star: Star,
+  puzzle: Puzzle, // ← EKLENDİ
+  "file-text": FileText, // ← EKLENDİ
 };
 
 interface NavLink {
