@@ -26,7 +26,12 @@ public record CreateProductRequest(
     string Description,
     Guid CategoryId,
     List<string> Images,
-    List<string> Tags
+    List<string> Tags,
+    decimal Price,
+    int Stock,
+    Guid? MerchantId, // Admin kendi adına veya belirli merchant adına ekleyebilir
+    bool PublishToMarket = false,
+    bool PublishToStore = true
 );
 
 public record UpdateProductRequest(

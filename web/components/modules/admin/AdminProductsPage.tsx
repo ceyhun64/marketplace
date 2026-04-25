@@ -50,12 +50,13 @@ interface Product {
   description: string;
   categoryId: string;
   categoryName?: string;
+  merchantStoreName?: string;
   images: string[];
   tags: string[];
+  price: number;
+  stock: number;
   isApproved: boolean;
-  createdByName?: string;
   createdAt: string;
-  offerCount?: number;
 }
 
 interface Category {
@@ -65,6 +66,12 @@ interface Category {
   parentId?: string;
 }
 
+interface Merchant {
+  id: string;
+  storeName: string;
+  slug: string;
+}
+
 interface ProductForm {
   name: string;
   description: string;
@@ -72,26 +79,38 @@ interface ProductForm {
   subcategoryId: string;
   tags: string;
   images: string[];
+  price: string;
+  stock: string;
+  merchantId: string;
+  publishToMarket: boolean;
+  publishToStore: boolean;
 }
+
+const defaultForm: ProductForm = {
+  name: "",
+  description: "",
+  categoryId: "",
+  subcategoryId: "",
+  tags: "",
+  images: [],
+  price: "",
+  stock: "0",
+  merchantId: "",
+  publishToMarket: false,
+  publishToStore: true,
+};
 
 export default function AdminProductsPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [addOpen, setAddOpen] = useState(false);
-  const [form, setForm] = useState<ProductForm>({
-    name: "",
-    description: "",
-    categoryId: "",
-    subcategoryId: "",
-    tags: "",
-    images: [],
-  });
+  const [form, setForm] = useState<ProductForm>(defaultForm);
 
   const { data: productsData, isLoading: productsLoading } = useQuery({
     queryKey: ["admin-products", search],
     queryFn: async () => {
-      const res = await api.get("/api/products", {
+      const res = await api.get("/api/products/admin/all", {
         params: { search, limit: 100 },
       });
       return res.data;
@@ -114,8 +133,17 @@ export default function AdminProductsPage() {
     },
   });
 
+  const { data: merchantsData } = useQuery({
+    queryKey: ["admin-merchants-list"],
+    queryFn: async () => {
+      const res = await api.get("/api/admin/merchants", {
+        params: { limit: 200 },
+      });
+      return res.data;
+    },
+  });
+
   const createMutation = useMutation({
-    // Backend'de POST /api/products mevcut olmalı — yoksa ProductsController'a eklenмesi gerekir
     mutationFn: (data: object) => api.post("/api/products", data),
     onSuccess: () => {
       toast.success("Product created successfully");
@@ -128,14 +156,11 @@ export default function AdminProductsPage() {
     },
   });
 
-  // Backend: PATCH /api/admin/products/{id}/approve (approved=true → onay, false → soft delete / reject)
   const approveMutation = useMutation({
     mutationFn: ({ id, approved }: { id: string; approved: boolean }) => {
       if (approved) {
-        // Onay: PATCH /api/admin/products/{id}/approve
         return api.patch(`/api/admin/products/${id}/approve`);
       } else {
-        // Reddet: ürünü sil
         return api.delete(`/api/products/${id}`);
       }
     },
@@ -159,6 +184,7 @@ export default function AdminProductsPage() {
   const allProducts: Product[] = productsData?.items || productsData || [];
   const pendingProducts: Product[] = pendingData?.items || pendingData || [];
   const categories: Category[] = categoriesData?.items || categoriesData || [];
+  const merchants: Merchant[] = merchantsData?.items || merchantsData || [];
 
   const rootCategories = categories.filter((c) => !c.parentId);
   const subCategories = categories.filter(
@@ -169,35 +195,43 @@ export default function AdminProductsPage() {
     (p) =>
       !search ||
       p.name?.toLowerCase().includes(search.toLowerCase()) ||
-      p.categoryName?.toLowerCase().includes(search.toLowerCase()),
+      p.categoryName?.toLowerCase().includes(search.toLowerCase()) ||
+      p.merchantStoreName?.toLowerCase().includes(search.toLowerCase()),
   );
 
   const handleSubmit = () => {
+    const priceNum = parseFloat(form.price);
+    const stockNum = parseInt(form.stock, 10);
+
+    if (!form.name.trim()) return toast.error("Product name is required");
+    if (!form.description.trim()) return toast.error("Description is required");
+    if (!form.categoryId) return toast.error("Please select a category");
+    if (isNaN(priceNum) || priceNum < 0)
+      return toast.error("Please enter a valid price");
+    if (isNaN(stockNum) || stockNum < 0)
+      return toast.error("Please enter a valid stock quantity");
+
     const payload = {
-      name: form.name,
-      description: form.description,
+      name: form.name.trim(),
+      description: form.description.trim(),
       categoryId: form.subcategoryId || form.categoryId,
       images: form.images,
       tags: form.tags
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean),
+      price: priceNum,
+      stock: stockNum,
+      merchantId: form.merchantId || undefined,
+      publishToMarket: form.publishToMarket,
+      publishToStore: form.publishToStore,
     };
     createMutation.mutate(payload);
   };
 
   const handleDialogClose = (open: boolean) => {
     setAddOpen(open);
-    if (!open) {
-      setForm({
-        name: "",
-        description: "",
-        categoryId: "",
-        subcategoryId: "",
-        tags: "",
-        images: [],
-      });
-    }
+    if (!open) setForm(defaultForm);
   };
 
   return (
@@ -279,7 +313,7 @@ export default function AdminProductsPage() {
               <div className="relative max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
-                  placeholder="Search by name or category..."
+                  placeholder="Search by name, category or merchant..."
                   className="pl-9 border-gray-200"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -314,10 +348,13 @@ export default function AdminProductsPage() {
                       Category
                     </TableHead>
                     <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                      Tags
+                      Merchant
                     </TableHead>
                     <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                      Offers
+                      Price / Stock
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Tags
                     </TableHead>
                     <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                       Status
@@ -351,7 +388,7 @@ export default function AdminProductsPage() {
                             <p className="font-medium text-sm text-gray-900">
                               {product.name}
                             </p>
-                            <p className="text-xs text-gray-400 truncate max-w-[200px]">
+                            <p className="text-xs text-gray-400 truncate max-w-[180px]">
                               {product.description}
                             </p>
                           </div>
@@ -359,6 +396,17 @@ export default function AdminProductsPage() {
                       </TableCell>
                       <TableCell className="text-sm text-gray-600">
                         {product.categoryName || "—"}
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {product.merchantStoreName || "—"}
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        <span className="font-semibold">
+                          ${product.price?.toFixed(2) ?? "—"}
+                        </span>
+                        <span className="text-gray-400 text-xs ml-1">
+                          / {product.stock} pcs
+                        </span>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
@@ -377,9 +425,6 @@ export default function AdminProductsPage() {
                             </Badge>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-gray-600">
-                        {product.offerCount ?? 0} offers
                       </TableCell>
                       <TableCell>
                         <span
@@ -460,6 +505,9 @@ export default function AdminProductsPage() {
                       Added By
                     </TableHead>
                     <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Price
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                       Date
                     </TableHead>
                     <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -503,8 +551,11 @@ export default function AdminProductsPage() {
                       </TableCell>
                       <TableCell className="text-sm text-gray-600">
                         {(product as any).merchant?.storeName ??
-                          (product as any).createdByName ??
+                          (product as any).merchantStoreName ??
                           "Merchant"}
+                      </TableCell>
+                      <TableCell className="text-sm font-semibold text-gray-700">
+                        ${(product as any).price?.toFixed(2) ?? "—"}
                       </TableCell>
                       <TableCell className="text-xs text-gray-400">
                         {new Date(product.createdAt).toLocaleDateString(
@@ -555,11 +606,12 @@ export default function AdminProductsPage() {
 
       {/* Add Product Dialog */}
       <Dialog open={addOpen} onOpenChange={handleDialogClose}>
-        <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Product</DialogTitle>
             <DialogDescription>
               Fill in the details below to add a new product to the catalog.
+              Products added by an admin are automatically approved.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
@@ -581,6 +633,7 @@ export default function AdminProductsPage() {
                 }
               />
             </div>
+
             <div className="space-y-1.5">
               <Label>Description *</Label>
               <Textarea
@@ -592,6 +645,37 @@ export default function AdminProductsPage() {
                 }
               />
             </div>
+
+            {/* Price & Stock */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Price ($) *</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={form.price}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, price: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Stock *</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={form.stock}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, stock: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Category */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Main Category *</Label>
@@ -636,6 +720,34 @@ export default function AdminProductsPage() {
                 </div>
               )}
             </div>
+
+            {/* Merchant */}
+            {merchants.length > 0 && (
+              <div className="space-y-1.5">
+                <Label>Assign to Merchant</Label>
+                <Select
+                  value={form.merchantId}
+                  onValueChange={(v) =>
+                    setForm((f) => ({ ...f, merchantId: v }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select merchant (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {merchants.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.storeName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-400">
+                  If left blank, the system will assign one automatically.
+                </p>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <Label>Tags</Label>
               <Input
@@ -646,6 +758,39 @@ export default function AdminProductsPage() {
                 }
               />
               <p className="text-xs text-gray-400">Separate tags with commas</p>
+            </div>
+
+            {/* Publish toggles */}
+            <div className="flex gap-6 pt-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={form.publishToStore}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, publishToStore: e.target.checked }))
+                  }
+                  className="w-4 h-4 rounded"
+                />
+                <span className="text-sm text-gray-700">
+                  Publish to E-Store
+                </span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={form.publishToMarket}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      publishToMarket: e.target.checked,
+                    }))
+                  }
+                  className="w-4 h-4 rounded"
+                />
+                <span className="text-sm text-gray-700">
+                  Publish to Marketplace
+                </span>
+              </label>
             </div>
           </div>
           <DialogFooter>
@@ -658,7 +803,8 @@ export default function AdminProductsPage() {
                 createMutation.isPending ||
                 !form.name ||
                 !form.description ||
-                !form.categoryId
+                !form.categoryId ||
+                !form.price
               }
             >
               {createMutation.isPending ? "Creating..." : "Create Product"}
