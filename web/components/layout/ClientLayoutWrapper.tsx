@@ -11,6 +11,7 @@ const HIDDEN_PATHS = [
   "/auth/forgot-password",
   "/merchant",
   "/courier",
+  "/unauthorized",
 ];
 
 export default function ClientLayoutWrapper({
