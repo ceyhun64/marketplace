@@ -85,7 +85,7 @@ export function useStoreProduct(slug: string, productId: string) {
 }
 
 /**
- * Mağaza içi kategoriler.
+ * Store içi kategoriler.
  */
 export function useStoreCategories(slug: string) {
   return useQuery({
@@ -100,7 +100,7 @@ export function useStoreCategories(slug: string) {
 }
 
 /**
- * Tüm e-mağaza listesi — ana sayfadaki "Öne Çıkan Mağazalar" için.
+ * Tüm e-mağaza listesi — ana sayfadaki "Öne Çıkan Storelar" için.
  */
 export function useStoreList(limit?: number) {
   return useQuery({
@@ -156,7 +156,7 @@ export function useVerifyDomain() {
   });
 }
 
-// ── Admin: Merchant Adına Mağaza Kur ─────────────────────────────────────────
+// ── Admin: Merchant Adına Store Kur ─────────────────────────────────────────
 
 export function useAdminSetupStore() {
   const queryClient = useQueryClient();

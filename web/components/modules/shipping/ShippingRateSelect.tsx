@@ -97,7 +97,7 @@ function ShippingOptionCard({
           {isLoading ? (
             <span className="flex items-center gap-1.5">
               <Loader2 className="h-3 w-3 animate-spin" />
-              Tahmini süre hesaplanıyor…
+              Calculating estimated time…
             </span>
           ) : etaWindow ? (
             <span>
@@ -107,7 +107,7 @@ function ShippingOptionCard({
               </span>
             </span>
           ) : (
-            <span>Teslimat tarihi adres girilince hesaplanır.</span>
+            <span>Delivery date is calculated once an address is entered.</span>
           )}
         </div>
 
@@ -140,7 +140,7 @@ export function ShippingRateSelect({
 
   return (
     <div className={cn("space-y-3", className)}>
-      <p className="text-sm font-medium">Kargo seçeneği</p>
+      <p className="text-sm font-medium">Shipping option</p>
       {options.map((option) => (
         <ShippingOptionCard
           key={option.rate}

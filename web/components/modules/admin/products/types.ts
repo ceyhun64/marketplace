@@ -22,5 +22,5 @@ export interface CreateProductForm {
   description: string;
   categoryId: string;
   imageUrls: string[]; // Cloudinary'den gelen URL'ler
-  tags: string; // virgülle ayrılmış, submit'te split edilir
+  tags: string; // comma separated, split on submit
 }

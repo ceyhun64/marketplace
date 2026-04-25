@@ -60,7 +60,7 @@ export interface EtaParams {
   customerLat: number;
   customerLon: number;
   shippingRate: ShippingRate;
-  /** Merchant'ın paket hazırlama süresi (saat). Default 24 */
+  /** Merchant'ın paket hazırlama süresi (hours). Default 24 */
   handlingHours?: number;
 }
 
@@ -95,11 +95,11 @@ export function calculateEta(params: EtaParams): EtaResult {
 
   const now = new Date();
 
-  // Pickup penceresi: handling süresi bittikten sonra 2 saatlik pencere
+  // Pickup penceresi: handling süresi bittikten sonra 2 hourslik pencere
   const pickupStart = new Date(now.getTime() + handlingHours * 3_600_000);
   const pickupEnd = new Date(pickupStart.getTime() + 2 * 3_600_000);
 
-  // Delivery penceresi: pickup'tan sonra transit + 2 saatlik pencere
+  // Delivery penceresi: pickup'tan sonra transit + 2 hourslik pencere
   const deliveryStart = new Date(
     pickupEnd.getTime() + transitHours * 3_600_000,
   );
@@ -175,7 +175,7 @@ export function getShippingOptions(
   });
 }
 
-// ── Kargo Etiketi QR URL ──────────────────────────────────────────────────────
+// ── Kargo Labeli QR URL ──────────────────────────────────────────────────────
 
 /**
  * Takip numarasından QR erişim URL'si oluşturur.

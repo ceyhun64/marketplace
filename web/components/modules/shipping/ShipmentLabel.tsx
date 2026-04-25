@@ -23,7 +23,7 @@ import api from "@/lib/api";
 
 interface ShipmentLabelProps {
   shipment: Shipment;
-  /** Etiket oluştur butonu gösterilsin mi (admin yetkisi gerekir) */
+  /** Label oluştur butonu gösterilsin mi (admin yetkisi gerekir) */
   canGenerate?: boolean;
   className?: string;
   onGenerated?: () => void;
@@ -42,7 +42,7 @@ export function ShipmentLabel({
 
   const hasLabel = !!shipment.labelUrl;
 
-  // ── Etiket oluştur (admin) ─────────────────────────────────────────────────
+  // ── Label oluştur (admin) ─────────────────────────────────────────────────
 
   async function handleGenerate() {
     setGenerating(true);
@@ -50,7 +50,7 @@ export function ShipmentLabel({
       await api.post(`/api/fulfillment/${shipment.id}/generate-label`);
       onGenerated?.();
     } catch (err) {
-      console.error("Etiket oluşturulamadı:", err);
+      console.error("Label could not be created:", err);
     } finally {
       setGenerating(false);
     }
@@ -72,13 +72,13 @@ export function ShipmentLabel({
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("İndirme başarısız:", err);
+      console.error("Download failed:", err);
     } finally {
       setDownloading(false);
     }
   }
 
-  // ── Yazdır ────────────────────────────────────────────────────────────────
+  // ── Print ────────────────────────────────────────────────────────────────
 
   function handlePrint() {
     if (!shipment.labelUrl) return;
@@ -92,7 +92,7 @@ export function ShipmentLabel({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <CardTitle className="text-base">Kargo Etiketi</CardTitle>
+            <CardTitle className="text-base">Kargo Labeli</CardTitle>
             <CardDescription className="mt-1 font-mono text-xs">
               Takip No: {shipment.trackingNumber}
             </CardDescription>
@@ -124,7 +124,7 @@ export function ShipmentLabel({
             )}
             {shipment.courierVehicle && (
               <div className="flex justify-between mt-1">
-                <span className="text-muted-foreground">Araç</span>
+                <span className="text-muted-foreground">Vehicle</span>
                 <span>{shipment.courierVehicle}</span>
               </div>
             )}
@@ -160,13 +160,13 @@ export function ShipmentLabel({
           </div>
         )}
 
-        {/* Etiket önizleme iframe */}
+        {/* Label önizleme iframe */}
         {hasLabel ? (
           <div className="overflow-hidden rounded-lg border">
             <div className="flex items-center justify-between border-b bg-muted/50 px-3 py-2">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <QrCode className="h-3.5 w-3.5" />
-                <span>Kargo etiketi hazır</span>
+                <span>Shipping label ready</span>
               </div>
               <a
                 href={shipment.labelUrl!}
@@ -174,13 +174,13 @@ export function ShipmentLabel({
                 rel="noopener noreferrer"
                 className="text-xs text-primary hover:underline inline-flex items-center gap-1"
               >
-                Yeni sekmede aç
+                Open in new tab
                 <ExternalLink className="h-3 w-3" />
               </a>
             </div>
             <iframe
               src={shipment.labelUrl!}
-              title="Kargo Etiketi"
+              title="Kargo Labeli"
               className="h-64 w-full bg-white"
             />
           </div>
@@ -189,8 +189,8 @@ export function ShipmentLabel({
             <QrCode className="h-8 w-8 opacity-30" />
             <p className="text-sm">
               {canGenerate
-                ? "Kargo etiketi henüz oluşturulmadı."
-                : "Etiket bekleniyor."}
+                ? "Shipping label not yet generated."
+                : "Label bekleniyor."}
             </p>
           </div>
         )}
@@ -210,7 +210,7 @@ export function ShipmentLabel({
               ) : (
                 <QrCode className="mr-2 h-4 w-4" />
               )}
-              Etiket Oluştur
+              Generate Label
             </Button>
           )}
 
@@ -228,7 +228,7 @@ export function ShipmentLabel({
                 ) : (
                   <Download className="mr-2 h-4 w-4" />
                 )}
-                İndir
+                Download
               </Button>
               <Button
                 variant="default"
@@ -237,7 +237,7 @@ export function ShipmentLabel({
                 className="flex-1"
               >
                 <Printer className="mr-2 h-4 w-4" />
-                Yazdır
+                Print
               </Button>
             </>
           )}

@@ -41,7 +41,7 @@ export async function generateMetadata({
     const params = await paramsPromise;
     const product = (await serverFetch.product(params.id)) as ProductDetail;
     return {
-      title: `${product.name} | Ürün Detayı`,
+      title: `${product.name} | Product Details`,
       description: product.description?.slice(0, 160),
       openGraph: {
         title: product.name,
@@ -49,7 +49,7 @@ export async function generateMetadata({
       },
     };
   } catch {
-    return { title: "Ürün Bulunamadı" };
+    return { title: "Product Not Found" };
   }
 }
 
@@ -82,11 +82,11 @@ export default async function StoreProductPage({
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
           <Link href="/" className="hover:underline">
-            Anasayfa
+            Home
           </Link>
           <span>/</span>
           <Link href={`/store/${params.slug}`} className="hover:underline">
-            Mağaza
+            Store
           </Link>
           <span>/</span>
           <span className="text-foreground truncate max-w-xs">
@@ -97,7 +97,7 @@ export default async function StoreProductPage({
         <Link href={`/store/${params.slug}`}>
           <Button variant="ghost" size="sm" className="gap-1.5 mb-4 -ml-2">
             <ArrowLeft className="h-3.5 w-3.5" />
-            Mağazaya Dön
+            Back to Store
           </Button>
         </Link>
 
@@ -168,18 +168,18 @@ export default async function StoreProductPage({
                     <Package className="h-4 w-4" />
                     {storeOffer.stock > 0 ? (
                       <span className="text-green-600 font-medium">
-                        Stokta var ({storeOffer.stock} adet)
+                        In Stock ({storeOffer.stock} adet)
                       </span>
                     ) : (
                       <span className="text-red-500 font-medium">
-                        Stokta yok
+                        Out of Stock
                       </span>
                     )}
                   </span>
                   {storeOffer.handlingHours && (
                     <span className="flex items-center gap-1.5">
                       <Clock className="h-4 w-4" />
-                      Hazırlık: {storeOffer.handlingHours} saat
+                      Handling: {storeOffer.handlingHours} hours
                     </span>
                   )}
                 </div>
@@ -199,7 +199,7 @@ export default async function StoreProductPage({
             <Separator className="my-5" />
 
             <div>
-              <h2 className="font-semibold mb-2">Ürün Açıklaması</h2>
+              <h2 className="font-semibold mb-2">Product Description</h2>
               <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                 {product.description}
               </p>

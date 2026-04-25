@@ -46,15 +46,15 @@ async function SearchResults({
         <h1 className="text-2xl font-bold text-gray-900">
           {q ? (
             <>
-              &ldquo;<span className="text-blue-600">{q}</span>&rdquo; için
-              sonuçlar
+              Results for &ldquo;<span className="text-blue-600">{q}</span>&rdquo;
+              results
             </>
           ) : (
-            "Tüm Ürünler"
+            "All Products"
           )}
         </h1>
         <p className="text-sm text-gray-500 mt-1">
-          {products.length} ürün bulundu
+          {products.length} products found
         </p>
       </div>
 
@@ -72,7 +72,7 @@ async function SearchResults({
                   href={`/search?q=${q || ""}`}
                   className={`block text-sm px-2 py-1.5 rounded-lg ${!params.category ? "bg-gray-100 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
                 >
-                  Tümü
+                  All
                 </Link>
               </li>
               {categories.slice(0, 10).map((cat: any) => (
@@ -91,7 +91,7 @@ async function SearchResults({
           {/* Price Range */}
           <div className="bg-white rounded-xl border border-gray-100 p-4">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">
-              Fiyat Aralığı
+              Price Range
             </h3>
             <form action="/search" className="space-y-2">
               {q && <input type="hidden" name="q" value={q} />}
@@ -131,17 +131,17 @@ async function SearchResults({
             <div className="text-center py-20">
               <div className="text-5xl mb-4">🔍</div>
               <h2 className="text-lg font-semibold text-gray-900">
-                Sonuç bulunamadı
+                No results found
               </h2>
               <p className="text-sm text-gray-500 mt-2">
-                Farklı anahtar kelimeler deneyebilir veya filtreleri
+                Try different keywords or adjust filters
                 temizleyebilirsiniz.
               </p>
               <Link
                 href="/"
                 className="inline-block mt-4 bg-gray-900 text-white text-sm px-5 py-2.5 rounded-lg hover:bg-gray-800"
               >
-                Ana Sayfaya Dön
+                Back to Home
               </Link>
             </div>
           ) : (
@@ -179,7 +179,7 @@ async function SearchResults({
                     </p>
                     {product.offerCount > 1 && (
                       <p className="text-xs text-blue-600 mt-0.5">
-                        {product.offerCount} satıcı
+                        {product.offerCount} sellers
                       </p>
                     )}
                   </div>

@@ -174,7 +174,7 @@ async function ProductDetail({
           ) : (
             <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 text-center">
               <p className="text-gray-500 text-sm">
-                Bu ürün için şu an aktif teklif bulunmuyor.
+                There are no active offers for this product right now.
               </p>
             </div>
           )}
@@ -183,7 +183,7 @@ async function ProductDetail({
           {product.description && (
             <div>
               <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                Ürün Açıklaması
+                Product Description
               </h3>
               <p className="text-sm text-gray-600 leading-relaxed">
                 {product.description}
@@ -197,7 +197,7 @@ async function ProductDetail({
       {otherOffers.length > 0 && (
         <div className="mt-12">
           <h2 className="text-lg font-bold text-gray-900 mb-4">
-            Diğer Satıcılar ({otherOffers.length})
+            Other Sellers ({otherOffers.length})
           </h2>
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
             <table className="w-full">
@@ -294,7 +294,7 @@ export async function generateMetadata({ params }: PageProps) {
   const data = await fetchISR<{ data: any }>(`/products/${id}`);
   const product = data?.data;
   return {
-    title: product ? `${product.name} — Marketplace` : "Ürün",
+    title: product ? `${product.name} — Marketplace` : "Product",
     description: product?.description?.slice(0, 160),
     openGraph: {
       images: product?.images?.[0] ? [{ url: product.images[0] }] : [],

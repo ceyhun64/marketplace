@@ -43,7 +43,7 @@ export function StoreHeader({ store }: StoreHeaderProps) {
           <Link href="/">
             <Button variant="secondary" size="sm" className="gap-1.5">
               <ArrowLeft className="h-3.5 w-3.5" />
-              Marketplace&apos;e Dön
+              Back to Marketplace
             </Button>
           </Link>
         </div>
@@ -97,7 +97,7 @@ export function StoreHeader({ store }: StoreHeaderProps) {
             <span className="flex items-center gap-1">
               <Package className="h-3.5 w-3.5" />
               <strong className="text-foreground">{store.productCount}</strong>
-              <span>ürün</span>
+              <span>products</span>
             </span>
           )}
           {store.location && (
@@ -109,15 +109,15 @@ export function StoreHeader({ store }: StoreHeaderProps) {
           {store.handlingHours !== undefined && (
             <span className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
-              <span>Hazırlık: </span>
+              <span>Handling: </span>
               <strong className="text-foreground">
-                {store.handlingHours} saat
+                {store.handlingHours} hours
               </strong>
             </span>
           )}
           {store.memberSince && (
             <Badge variant="secondary" className="text-xs">
-              {new Date(store.memberSince).getFullYear()}&apos;den beri üye
+              {new Date(store.memberSince).getFullYear()}member since
             </Badge>
           )}
         </div>

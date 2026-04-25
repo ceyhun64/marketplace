@@ -68,20 +68,20 @@ export default function ETADisplay({
       rate: "EXPRESS",
       label: "Ekspres Teslimat",
       eta: expressEta,
-      description: "Öncelikli kurye, hızlı teslimat",
+      description: "Priority courier, fast delivery",
     },
     {
       rate: "REGULAR",
       label: "Standart Teslimat",
       eta: regularEta,
-      description: "Ekonomik seçenek",
+      description: "Economical option",
     },
   ];
 
   return (
     <div className="space-y-3">
       <p className="text-xs font-mono uppercase tracking-[3px] text-[#7A7060]">
-        Kargo Seçeneği
+        Shipping Option
       </p>
 
       {/* Distance info */}

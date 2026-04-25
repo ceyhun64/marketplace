@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// types/enums.ts — Backend C# enum'larıyla birebir eşleşen TS string union'ları
+// types/enums.ts — TS string unions matching backend C# enums
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── UserRole ─────────────────────────────────────────────────────────────────
@@ -8,9 +8,9 @@ export type UserRole = "Admin" | "Merchant" | "Courier" | "Customer";
 
 export const USER_ROLES: Record<UserRole, string> = {
   Admin: "Admin",
-  Merchant: "Satıcı",
-  Courier: "Kurye",
-  Customer: "Müşteri",
+  Merchant: "Seller",
+  Courier: "Courier",
+  Customer: "Customer",
 };
 
 // ── OrderStatus ──────────────────────────────────────────────────────────────
@@ -29,15 +29,15 @@ export type OrderStatus =
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   PENDING: "Beklemede",
-  PAYMENT_CONFIRMED: "Ödeme Onaylandı",
-  LABEL_GENERATED: "Etiket Oluşturuldu",
-  COURIER_ASSIGNED: "Kurye Atandı",
-  PICKED_UP: "Kurye Teslim Aldı",
-  IN_TRANSIT: "Yolda",
-  OUT_FOR_DELIVERY: "Dağıtımda",
-  DELIVERED: "Teslim Edildi",
-  FAILED: "Başarısız",
-  CANCELLED: "İptal Edildi",
+  PAYMENT_CONFIRMED: "Payment Confirmed",
+  LABEL_GENERATED: "Label Generated",
+  COURIER_ASSIGNED: "Courier Assigned",
+  PICKED_UP: "Picked Up by Courier",
+  IN_TRANSIT: "In Transit",
+  OUT_FOR_DELIVERY: "Out for Delivery",
+  DELIVERED: "Delivered",
+  FAILED: "Failed",
+  CANCELLED: "Cancel Edildi",
 };
 
 export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
@@ -53,7 +53,7 @@ export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   CANCELLED: "bg-gray-100 text-gray-800",
 };
 
-/** Sipariş artık iptal edilemez mi? */
+/** Can the order no longer be cancelled? */
 export const NON_CANCELLABLE_STATUSES: OrderStatus[] = [
   "PICKED_UP",
   "IN_TRANSIT",
@@ -77,13 +77,13 @@ export type ShipmentStatus =
 
 export const SHIPMENT_STATUS_LABELS: Record<ShipmentStatus, string> = {
   PENDING: "Beklemede",
-  LABEL_GENERATED: "Etiket Oluşturuldu",
-  COURIER_ASSIGNED: "Kurye Atandı",
-  PICKED_UP: "Kurye Teslim Aldı",
-  IN_TRANSIT: "Yolda",
-  OUT_FOR_DELIVERY: "Dağıtımda",
-  DELIVERED: "Teslim Edildi",
-  FAILED: "Başarısız",
+  LABEL_GENERATED: "Label Generated",
+  COURIER_ASSIGNED: "Courier Assigned",
+  PICKED_UP: "Picked Up by Courier",
+  IN_TRANSIT: "In Transit",
+  OUT_FOR_DELIVERY: "Out for Delivery",
+  DELIVERED: "Delivered",
+  FAILED: "Failed",
 };
 
 export const SHIPMENT_STATUS_COLORS: Record<ShipmentStatus, string> = {
@@ -97,7 +97,7 @@ export const SHIPMENT_STATUS_COLORS: Record<ShipmentStatus, string> = {
   FAILED: "bg-red-100 text-red-800",
 };
 
-// Tracking timeline'da tamamlanmış adımları belirlemek için sıra
+// Order for determining completed steps in the tracking timeline
 export const SHIPMENT_STATUS_ORDER: ShipmentStatus[] = [
   "PENDING",
   "LABEL_GENERATED",
@@ -113,8 +113,8 @@ export const SHIPMENT_STATUS_ORDER: ShipmentStatus[] = [
 export type ShippingRate = "EXPRESS" | "REGULAR";
 
 export const SHIPPING_RATE_LABELS: Record<ShippingRate, string> = {
-  EXPRESS: "Ekspres (1-2 gün)",
-  REGULAR: "Standart (3-5 gün)",
+  EXPRESS: "Express (1-2 days)",
+  REGULAR: "Standard (3-5 days)",
 };
 
 export const SHIPPING_COSTS: Record<ShippingRate, number> = {
@@ -128,7 +128,7 @@ export type OrderSource = "MARKETPLACE" | "ESTORE";
 
 export const ORDER_SOURCE_LABELS: Record<OrderSource, string> = {
   MARKETPLACE: "Pazaryeri",
-  ESTORE: "E-Mağaza",
+  ESTORE: "E-Store",
 };
 
 // ── PlanType ─────────────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ export const ORDER_SOURCE_LABELS: Record<OrderSource, string> = {
 export type PlanType = "BASIC" | "PRO" | "ENTERPRISE";
 
 export const PLAN_LABELS: Record<PlanType, string> = {
-  BASIC: "Başlangıç",
+  BASIC: "Starter",
   PRO: "Pro",
   ENTERPRISE: "Kurumsal",
 };

@@ -81,7 +81,7 @@ async function CategoryProducts({
                     href={`/category/${slug}`}
                     className={`block text-sm px-2 py-1.5 rounded-lg ${!searchParams.subcategory ? "bg-gray-100 font-medium text-gray-900" : "text-gray-600 hover:bg-gray-50"}`}
                   >
-                    Tümü
+                    All
                   </Link>
                 </li>
                 {subcategories.map((sub: any) => (
@@ -101,7 +101,7 @@ async function CategoryProducts({
           {/* Price Filter */}
           <div className="bg-white rounded-xl border border-gray-100 p-4">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">
-              Fiyat Aralığı
+              Price Range
             </h3>
             <form className="space-y-2">
               <div className="flex gap-2 items-center">
@@ -140,17 +140,17 @@ async function CategoryProducts({
                 {category.name}
               </h1>
               <p className="text-sm text-gray-500 mt-1">
-                {products.length} ürün bulundu
+                {products.length} products found
               </p>
             </div>
             <select
               className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
               defaultValue={searchParams.sort || ""}
             >
-              <option value="">Sıralama</option>
-              <option value="price_asc">Fiyat: Düşükten Yükseğe</option>
-              <option value="price_desc">Fiyat: Yüksekten Düşüğe</option>
-              <option value="rating_desc">En Yüksek Puan</option>
+              <option value="">Sort</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="rating_desc">Highest Rated</option>
               <option value="newest">En Yeni</option>
             </select>
           </div>
@@ -159,7 +159,7 @@ async function CategoryProducts({
           {products.length === 0 ? (
             <div className="text-center py-20 text-gray-400">
               <div className="text-4xl mb-3">📦</div>
-              <p className="font-medium">Bu kategoride ürün bulunamadı</p>
+              <p className="font-medium">No products found in this category</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -238,7 +238,7 @@ export async function generateMetadata({ params }: PageProps) {
   const data = await fetchISR<{ data: any }>(`/categories/${slug}`);
   const category = data?.data;
   return {
-    title: category ? `${category.name} — Marketplace` : "Kategori",
-    description: `${category?.name || "Kategori"} ürünlerini keşfet`,
+    title: category ? `${category.name} — Marketplace` : "Category",
+    description: `Explore ${category?.name || "Category"} products`,
   };
 }

@@ -42,27 +42,27 @@ const STEPS: {
 }[] = [
   {
     status: "PaymentConfirmed",
-    label: "Ödeme Onaylandı",
+    label: "Payment Confirmed",
     icon: "✓",
-    desc: "Ödemeniz başarıyla alındı",
+    desc: "Your payment was received successfully",
   },
   {
     status: "LabelGenerated",
-    label: "Hazırlanıyor",
+    label: "Preparing",
     icon: "📋",
-    desc: "Kargo etiketi oluşturuldu",
+    desc: "Shipping label generated",
   },
   {
     status: "CourierAssigned",
-    label: "Kurye Atandı",
+    label: "Courier Assigned",
     icon: "🏍",
-    desc: "Kurye siparişinizi teslim almaya geliyor",
+    desc: "Courier is on the way to pick up your order",
   },
   {
     status: "PickedUp",
-    label: "Teslim Alındı",
+    label: "Picked Up",
     icon: "📦",
-    desc: "Kurye siparişinizi teslim aldı",
+    desc: "Courier has picked up your order",
   },
   {
     status: "InTransit",
@@ -310,7 +310,7 @@ export default function TrackingPage() {
                 </p>
                 <div className="flex gap-3 mt-3 pt-3 border-t border-white/10">
                   <div>
-                    <p className="text-xs text-gray-400">Kargo Tipi</p>
+                    <p className="text-xs text-gray-400">Shipping Type</p>
                     <p className="text-sm font-medium">
                       {data.shippingRate === "Express"
                         ? "⚡ Ekspres"

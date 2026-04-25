@@ -43,7 +43,7 @@ function ResetPasswordForm() {
     onError: (error: any) => {
       toast.error(
         error?.response?.data?.message ||
-          "Şifre sıfırlama başarısız. Bağlantı geçersiz veya süresi dolmuş olabilir.",
+          "Password reset failed. The link may be invalid or expired.",
       );
     },
   });
@@ -53,12 +53,12 @@ function ResetPasswordForm() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center space-y-4 max-w-sm">
           <div className="text-5xl">🔗</div>
-          <h1 className="text-xl font-bold text-gray-900">Geçersiz Bağlantı</h1>
+          <h1 className="text-xl font-bold text-gray-900">Invalid Link</h1>
           <p className="text-sm text-gray-500">
-            Bu şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.
+            This password reset link is invalid or has expired.
           </p>
           <Link href="/auth/forgot-password">
-            <Button className="w-full">Yeni Bağlantı Talep Et</Button>
+            <Button className="w-full">Request New Link</Button>
           </Link>
         </div>
       </div>
@@ -74,15 +74,14 @@ function ResetPasswordForm() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Şifre Güncellendi!
+              Password Updated!
             </h1>
             <p className="text-sm text-gray-500 mt-2">
-              Şifreniz başarıyla güncellendi. Giriş sayfasına
-              yönlendiriliyorsunuz...
+              Your password has been updated. Redirecting you to the login page...
             </p>
           </div>
           <Link href="/auth/login">
-            <Button className="w-full">Hemen Giriş Yap</Button>
+            <Button className="w-full">Login Now</Button>
           </Link>
         </div>
       </div>
@@ -92,10 +91,10 @@ function ResetPasswordForm() {
   const passwordStrength = (pwd: string) => {
     if (pwd.length === 0) return null;
     if (pwd.length < 6)
-      return { level: "weak", label: "Zayıf", color: "bg-red-400" };
+      return { level: "weak", label: "Weak", color: "bg-red-400" };
     if (pwd.length < 10 || !/[A-Z]/.test(pwd) || !/[0-9]/.test(pwd))
-      return { level: "medium", label: "Orta", color: "bg-yellow-400" };
-    return { level: "strong", label: "Güçlü", color: "bg-green-500" };
+      return { level: "medium", label: "Medium", color: "bg-yellow-400" };
+    return { level: "strong", label: "Strong", color: "bg-green-500" };
   };
 
   const strength = passwordStrength(form.password);
@@ -109,7 +108,7 @@ function ResetPasswordForm() {
             className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-8"
           >
             <ArrowLeft className="w-4 h-4" />
-            Giriş sayfasına dön
+            Back to Login
           </Link>
 
           <div className="mb-8">
@@ -117,10 +116,10 @@ function ResetPasswordForm() {
               <KeyRound className="w-6 h-6 text-blue-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Yeni Şifre Belirle
+              Set New Password
             </h1>
             <p className="text-sm text-gray-500 mt-1.5">
-              Güvenli bir şifre seçin. En az 8 karakter olmalıdır.
+              Choose a strong password. It must be at least 8 characters.
             </p>
           </div>
 
@@ -128,11 +127,11 @@ function ResetPasswordForm() {
             onSubmit={(e) => {
               e.preventDefault();
               if (form.password !== form.confirm) {
-                toast.error("Şifreler eşleşmiyor");
+                toast.error("Passwords do not match");
                 return;
               }
               if (form.password.length < 6) {
-                toast.error("Şifre en az 6 karakter olmalıdır");
+                toast.error("Password must be at least 6 characters");
                 return;
               }
               mutation.mutate({ token, newPassword: form.password });
@@ -140,7 +139,7 @@ function ResetPasswordForm() {
             className="space-y-4"
           >
             <div className="space-y-2">
-              <Label htmlFor="password">Yeni Şifre</Label>
+              <Label htmlFor="password">New Password</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -149,7 +148,7 @@ function ResetPasswordForm() {
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, password: e.target.value }))
                   }
-                  placeholder="En az 8 karakter"
+                  placeholder="At least 8 characters"
                   required
                   className="h-11 pr-10"
                 />
@@ -188,7 +187,7 @@ function ResetPasswordForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirm">Şifre Tekrar</Label>
+              <Label htmlFor="confirm">Confirm Password</Label>
               <Input
                 id="confirm"
                 type={showPassword ? "text" : "password"}
@@ -196,7 +195,7 @@ function ResetPasswordForm() {
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, confirm: e.target.value }))
                 }
-                placeholder="Şifreyi tekrar girin"
+                placeholder="Re-enter your password"
                 required
                 className={`h-11 ${
                   form.confirm && form.password !== form.confirm
@@ -205,7 +204,7 @@ function ResetPasswordForm() {
                 }`}
               />
               {form.confirm && form.password !== form.confirm && (
-                <p className="text-xs text-red-500">Şifreler eşleşmiyor</p>
+                <p className="text-xs text-red-500">Passwords do not match</p>
               )}
             </div>
 
@@ -219,7 +218,7 @@ function ResetPasswordForm() {
                 form.password !== form.confirm
               }
             >
-              {mutation.isPending ? "Güncelleniyor..." : "Şifreyi Güncelle"}
+              {mutation.isPending ? "Updating..." : "Update Password"}
             </Button>
           </form>
         </div>
@@ -233,7 +232,7 @@ export default function ResetPasswordPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="animate-pulse text-gray-400">Yükleniyor...</div>
+          <div className="animate-pulse text-gray-400">Loading...</div>
         </div>
       }
     >

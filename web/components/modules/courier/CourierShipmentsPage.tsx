@@ -61,12 +61,12 @@ interface Shipment {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const STATUS_LABEL: Record<ShipmentStatus, string> = {
-  COURIER_ASSIGNED:   "Atandı — Teslim Alınmayı Bekliyor",
-  PICKED_UP:          "Teslim Alındı",
-  IN_TRANSIT:         "Yolda",
-  OUT_FOR_DELIVERY:   "Dağıtımda",
-  DELIVERED:          "Teslim Edildi",
-  FAILED:             "Teslim Başarısız",
+  COURIER_ASSIGNED:   "Assigned — Awaiting Pickup",
+  PICKED_UP:          "Picked Up",
+  IN_TRANSIT:         "In Transit",
+  OUT_FOR_DELIVERY:   "Out for Delivery",
+  DELIVERED:          "Delivered",
+  FAILED:             "Delivery Failed",
 };
 
 const STATUS_COLOR: Record<ShipmentStatus, string> = {
@@ -98,11 +98,11 @@ function ETAText({ dateStr }: { dateStr: string }) {
       {isOverdue && <AlertCircle className="h-3.5 w-3.5" />}
       <Clock className="h-3.5 w-3.5" />
       {isOverdue
-        ? `${Math.abs(diffHours)} saat gecikti`
+        ? `${Math.abs(diffHours)} hours overdue`
         : diffHours < 1
-        ? "1 saatten az kaldı"
-        : `${diffHours} saat kaldı`}{" "}
-      · {eta.toLocaleDateString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+        ? "Less than 1 hour remaining"
+        : `${diffHours} hours remaining`}{" "}
+      · {eta.toLocaleDateString("en-US", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
     </span>
   );
 }
@@ -132,14 +132,14 @@ function ActionDialog({
     try {
       if (action === "pickup") {
         await pickupConfirm.mutateAsync({ id: shipment.id });
-        toast.success("Kargo teslim alındı olarak işaretlendi.");
+        toast.success("Shipment marked as picked up.");
       } else {
         await delivered.mutateAsync({ id: shipment.id, recipientName: recipientName || undefined });
-        toast.success("Kargo teslim edildi olarak işaretlendi.");
+        toast.success("Shipment marked as delivered.");
       }
       onOpenChange(false);
     } catch {
-      toast.error("İşlem başarısız. Lütfen tekrar deneyin.");
+      toast.error("Action failed. Please try again.");
     }
   };
 
@@ -148,7 +148,7 @@ function ActionDialog({
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>
-            {action === "pickup" ? "Kargo Teslim Alındı mı?" : "Teslimat Onayı"}
+            {action === "pickup" ? "Confirm Pickup?" : "Delivery Confirmation"}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
@@ -162,9 +162,9 @@ function ActionDialog({
 
           {action === "delivered" && (
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Teslim Alan Kişi (opsiyonel)</label>
+              <label className="text-sm font-medium">Recipient Name (optional)</label>
               <Input
-                placeholder="Ad soyad..."
+                placeholder="Full name..."
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
               />
@@ -173,10 +173,10 @@ function ActionDialog({
         </div>
         <div className="flex justify-end gap-2 pt-1">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            İptal
+            Cancel
           </Button>
           <Button onClick={handleConfirm} disabled={isPending}>
-            {isPending ? "İşleniyor..." : "Onayla"}
+            {isPending ? "Processing..." : "Approve"}
           </Button>
         </div>
       </DialogContent>
@@ -219,11 +219,11 @@ export default function CourierShipmentsPage() {
     <div className="space-y-6 p-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Sevkiyatlarım</h1>
+        <h1 className="text-2xl font-bold">My Shipments</h1>
         <p className="text-sm text-muted-foreground">
           {activeCount > 0
-            ? `${activeCount} aktif sevkiyat bekliyor`
-            : "Tüm sevkiyatlar tamamlandı"}
+            ? `${activeCount} active shipments pending`
+            : "All shipments completed"}
         </p>
       </div>
 
@@ -232,7 +232,7 @@ export default function CourierShipmentsPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Takip no, müşteri adı veya adres..."
+            placeholder="Tracking no, customer name or address..."
             className="pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -246,9 +246,9 @@ export default function CourierShipmentsPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="active">Aktif</SelectItem>
-            <SelectItem value="delivered">Teslim Edildi</SelectItem>
-            <SelectItem value="all">Tümü</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="delivered">Delivered</SelectItem>
+            <SelectItem value="all">All</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -271,9 +271,9 @@ export default function CourierShipmentsPage() {
           <Card>
             <CardContent className="py-16 text-center text-muted-foreground">
               <Package className="mx-auto mb-3 h-10 w-10 opacity-30" />
-              <p className="font-medium">Sevkiyat bulunamadı</p>
+              <p className="font-medium">Shipment not found</p>
               <p className="mt-1 text-sm">
-                {search ? "Arama kriterlerinizi değiştirin." : "Bu filtre için sevkiyat yok."}
+                {search ? "Try adjusting your search." : "No shipments for this filter."}
               </p>
             </CardContent>
           </Card>
@@ -321,7 +321,7 @@ export default function CourierShipmentsPage() {
                         onClick={() => window.open(shipment.labelUrl, "_blank")}
                       >
                         <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-                        Etiket
+                        Label
                       </Button>
                     )}
 
@@ -333,7 +333,7 @@ export default function CourierShipmentsPage() {
                         onClick={() => openAction(shipment, "pickup")}
                       >
                         <Truck className="mr-1.5 h-3.5 w-3.5" />
-                        Teslim Aldım
+                        Picked Up
                       </Button>
                     )}
 
@@ -346,7 +346,7 @@ export default function CourierShipmentsPage() {
                         onClick={() => openAction(shipment, "delivered")}
                       >
                         <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
-                        Teslim Ettim
+                        Delivered
                       </Button>
                     )}
                   </div>

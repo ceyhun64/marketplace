@@ -17,7 +17,7 @@ const chartConfig = {
     color: "#3b82f6",
   },
   estore: {
-    label: "E-Mağaza",
+    label: "E-Store",
     color: "#10b981",
   },
 } satisfies ChartConfig;
@@ -47,7 +47,7 @@ export default function MerchantSalesChart({ data }: { data: SalesData[] }) {
             <ChartTooltipContent
               formatter={(value, name) => [
                 `₺${Number(value).toLocaleString("tr-TR")}`,
-                name === "marketplace" ? "Marketplace" : "E-Mağaza",
+                name === "marketplace" ? "Marketplace" : "E-Store",
               ]}
             />
           }

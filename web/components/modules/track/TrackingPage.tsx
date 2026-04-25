@@ -21,11 +21,11 @@ type ShipmentStatus =
 
 const STATUS_STEPS: { status: ShipmentStatus; label: string; icon: string }[] =
   [
-    { status: "PLACED", label: "Sipariş Alındı", icon: "📋" },
-    { status: "PAYMENT_CONFIRMED", label: "Ödeme Onaylandı", icon: "✅" },
-    { status: "LABEL_GENERATED", label: "Etiket Hazırlandı", icon: "🏷️" },
-    { status: "COURIER_ASSIGNED", label: "Kurye Atandı", icon: "👤" },
-    { status: "PICKED_UP", label: "Paket Alındı", icon: "📦" },
+    { status: "PLACED", label: "Order Placed", icon: "📋" },
+    { status: "PAYMENT_CONFIRMED", label: "Payment Confirmed", icon: "✅" },
+    { status: "LABEL_GENERATED", label: "Label Generated", icon: "🏷️" },
+    { status: "COURIER_ASSIGNED", label: "Courier Assigned", icon: "👤" },
+    { status: "PICKED_UP", label: "Package Picked Up", icon: "📦" },
     { status: "IN_TRANSIT", label: "Yolda", icon: "🚚" },
     { status: "OUT_FOR_DELIVERY", label: "Dağıtımda", icon: "📍" },
     { status: "DELIVERED", label: "Teslim Edildi", icon: "🎉" },
@@ -299,7 +299,7 @@ export default async function TrackingPage({ params }: PageProps) {
 export async function generateMetadata({ params }: PageProps) {
   const { trackingNo } = await params;
   return {
-    title: `Takip: ${trackingNo}`,
+    title: `Tracking: ${trackingNo}`,
     description: `${trackingNo} numaralı kargoyu takip edin`,
   };
 }

@@ -273,7 +273,7 @@ export default function OrdersPage() {
                       {/* Items */}
                       <div>
                         <p className="text-xs text-gray-400 uppercase tracking-widest mb-2 font-mono">
-                          Ürünler
+                          Products
                         </p>
                         <div className="space-y-1.5">
                           {order.items.map((item) => (

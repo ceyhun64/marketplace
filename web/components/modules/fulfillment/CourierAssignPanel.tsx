@@ -26,7 +26,7 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
   const availableCouriers = couriers.filter((c) => c.isAvailable);
 
   const handleAssign = async () => {
-    if (!selectedCourierId) return setError("Lütfen bir kurye seçin.");
+    if (!selectedCourierId) return setError("Please select a courier.");
     setError(null);
     try {
       await assignMutation.mutateAsync({
@@ -35,7 +35,7 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
       });
       onClose();
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? "Atama başarısız.");
+      setError(e?.response?.data?.message ?? "Assignment failed.");
     }
   };
 
@@ -44,7 +44,7 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
     try {
       await labelMutation.mutateAsync(shipment.id);
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? "Etiket oluşturulamadı.");
+      setError(e?.response?.data?.message ?? "Label could not be generated.");
     }
   };
 
@@ -59,7 +59,7 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
           <div>
             <h2 className="text-lg font-semibold text-[#0D0D0D]">Kurye Ata</h2>
             <p className="font-mono text-xs text-[#7A7060] mt-0.5">
-              Takip: {shipment.trackingNumber}
+              Tracking: {shipment.trackingNumber}
             </p>
           </div>
           <button
@@ -71,15 +71,15 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
         </div>
 
         <div className="p-6 space-y-5">
-          {/* Etiket Oluştur */}
+          {/* Label Oluştur */}
           {!shipment.labelUrl && (
             <div className=" rounded-xl p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-[#0D0D0D]">
-                  Kargo Etiketi
+                  Kargo Labeli
                 </p>
                 <p className="text-xs text-[#7A7060] mt-0.5">
-                  QR kodlu PDF etiket oluştur
+                  Generate QR-coded PDF label
                 </p>
               </div>
               <button
@@ -88,8 +88,8 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
                 className="text-xs bg-[#0D0D0D] text-[#F5F2EB] px-4 py-2 rounded-lg hover:bg-[#1A4A6B] disabled:opacity-50 transition-colors font-medium"
               >
                 {labelMutation.isPending
-                  ? "Oluşturuluyor..."
-                  : "Etiket Oluştur"}
+                  ? "Generating..."
+                  : "Generate Label"}
               </button>
             </div>
           )}
@@ -98,7 +98,7 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-green-800">
-                  ✓ Etiket Hazır
+                  ✓ Label Ready
                 </p>
                 <p className="text-xs text-green-600 mt-0.5">
                   PDF olarak indirebilirsiniz
@@ -110,7 +110,7 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
                 rel="noopener noreferrer"
                 className="text-xs bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 transition-colors font-medium"
               >
-                İndir
+                Download
               </a>
             </div>
           )}
@@ -118,9 +118,9 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
           {/* Kurye Listesi */}
           <div>
             <p className="text-sm font-medium text-[#0D0D0D] mb-3">
-              Müsait Kuryeler
+              Available Couriers
               <span className="ml-2 font-mono text-[10px] text-[#7A7060]">
-                ({availableCouriers.length} müsait)
+                ({availableCouriers.length} available)
               </span>
             </p>
 
@@ -132,7 +132,7 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
               </div>
             ) : availableCouriers.length === 0 ? (
               <div className="text-center py-6 text-sm text-[#7A7060]">
-                Şu an müsait kurye bulunmuyor.
+                No couriers available right now.
               </div>
             ) : (
               <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
@@ -184,14 +184,14 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
             onClick={onClose}
             className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors"
           >
-            İptal
+            Cancel
           </button>
           <button
             onClick={handleAssign}
             disabled={!selectedCourierId || assignMutation.isPending}
             className="flex-1 bg-[#1A4A6B] text-white rounded-xl py-2.5 text-sm font-medium hover:bg-[#1A4A6B]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {assignMutation.isPending ? "Atanıyor..." : "Kurye Ata"}
+            {assignMutation.isPending ? "Atanıyor..." : "Assign Courier"}
           </button>
         </div>
       </div>

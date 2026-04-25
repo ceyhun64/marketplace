@@ -97,7 +97,7 @@ export default function ImageUploader({
             fill
             className="object-cover"
             unoptimized={preview.startsWith("blob:")}
-            // Eklenecek satır:
+            // Addnecek satır:
             sizes="(max-width: 768px) 100vw, 400px"
           />
           {/* Progress overlay */}

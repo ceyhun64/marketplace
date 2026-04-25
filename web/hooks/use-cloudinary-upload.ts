@@ -51,7 +51,7 @@ export function useCloudinaryUpload(): UseCloudinaryUploadReturn {
             const data = JSON.parse(xhr.responseText);
             resolve(data);
           } else {
-            const msg = "Yükleme başarısız";
+            const msg = "Upload failed";
             setError(msg);
             reject(new Error(msg));
           }

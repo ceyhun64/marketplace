@@ -21,9 +21,9 @@ export default function CartSummary({ readonly }: Props) {
     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
       {/* Header */}
       <div className="px-5 py-4 border-b border-gray-100">
-        <h3 className="font-semibold text-[#0D0D0D]">Sipariş Özeti</h3>
+        <h3 className="font-semibold text-[#0D0D0D]">Order Summary</h3>
         <p className="font-mono text-xs text-[#7A7060] mt-0.5">
-          {summary.itemCount} ürün
+          {summary.itemCount} items
         </p>
       </div>
 

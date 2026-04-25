@@ -33,7 +33,7 @@ export const SHIPPING_COSTS = {
   REGULAR: 19.9,
 } as const;
 
-/** Haversine ETA hesabında kullanılan ortalama hız (km/saat) */
+/** Haversine ETA hesabında kullanılan ortalama hız (km/hours) */
 export const AVG_COURIER_SPEED_KMH = {
   EXPRESS: 60,
   REGULAR: 40,

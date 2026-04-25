@@ -122,12 +122,12 @@ export function PaymentForm({
           {isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Ödeme sayfası hazırlanıyor…
+              Preparing payment page…
             </>
           ) : (
             <>
               <ShieldCheck className="mr-2 h-4 w-4" />
-              Güvenli Öde
+              Pay Securely
             </>
           )}
         </Button>

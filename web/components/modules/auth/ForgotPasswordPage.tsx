@@ -25,7 +25,7 @@ export default function ForgotPasswordPage() {
       setSent(true);
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "İstek gönderilemedi");
+      toast.error(error?.response?.data?.message || "Request could not be sent");
     },
   });
 
@@ -38,11 +38,10 @@ export default function ForgotPasswordPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              E-posta Gönderildi
+              Email Sent
             </h1>
             <p className="text-sm text-gray-500 mt-2">
-              <strong>{email}</strong> adresine şifre sıfırlama bağlantısı
-              gönderdik. Gelen kutunuzu kontrol edin.
+              <strong>{email}</strong> We sent a password reset link to this address. Please check your inbox.
             </p>
           </div>
           <div className="space-y-2">
@@ -54,12 +53,12 @@ export default function ForgotPasswordPage() {
                 setEmail("");
               }}
             >
-              Farklı e-posta dene
+              Try a different email
             </Button>
             <Link href="/auth/login">
               <Button variant="ghost" className="w-full">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Giriş sayfasına dön
+                Back to Login
               </Button>
             </Link>
           </div>
@@ -78,7 +77,7 @@ export default function ForgotPasswordPage() {
             className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-8"
           >
             <ArrowLeft className="w-4 h-4" />
-            Giriş sayfasına dön
+            Back to Login
           </Link>
 
           {/* Header */}
@@ -87,10 +86,10 @@ export default function ForgotPasswordPage() {
               <Mail className="w-6 h-6 text-blue-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Şifremi Unuttum
+              Forgot Password
             </h1>
             <p className="text-sm text-gray-500 mt-1.5">
-              E-posta adresinizi girin, şifre sıfırlama bağlantısı gönderelim.
+              Enter your email address and we'll send you a password reset link.
             </p>
           </div>
 
@@ -104,7 +103,7 @@ export default function ForgotPasswordPage() {
             className="space-y-4"
           >
             <div className="space-y-2">
-              <Label htmlFor="email">E-posta Adresi</Label>
+              <Label htmlFor="email">Email Address</Label>
               <Input
                 id="email"
                 type="email"
@@ -124,8 +123,8 @@ export default function ForgotPasswordPage() {
               disabled={mutation.isPending || !email}
             >
               {mutation.isPending
-                ? "Gönderiliyor..."
-                : "Sıfırlama Bağlantısı Gönder"}
+                ? "Sending..."
+                : "Send Reset Link"}
             </Button>
           </form>
         </div>

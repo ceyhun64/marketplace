@@ -67,12 +67,12 @@ export function AddToCartButton({
         {added ? (
           <>
             <Check className="h-3 w-3" />
-            Eklendi
+            Added
           </>
         ) : (
           <>
             <ShoppingCart className="h-3 w-3" />
-            Ekle
+            Add
           </>
         )}
       </Button>
@@ -89,12 +89,12 @@ export function AddToCartButton({
       {added ? (
         <>
           <Check className="h-4 w-4" />
-          Sepete Eklendi
+          Added to Cart
         </>
       ) : (
         <>
           <ShoppingCart className="h-4 w-4" />
-          Sepete Ekle
+          Add to Cart
         </>
       )}
     </Button>

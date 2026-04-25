@@ -34,7 +34,7 @@ public class CreateProductCommandHandler
     )
     {
         // nameof ile tip-safe karşılaştırma
-        bool isAdmin = _currentUser.Role is nameof(UserRole.Admin) or nameof(UserRole.SuperAdmin);
+        bool isAdmin = _currentUser.Role is nameof(UserRole.Admin);
 
         var product = new Product
         {

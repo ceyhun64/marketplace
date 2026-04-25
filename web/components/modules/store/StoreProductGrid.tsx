@@ -35,10 +35,10 @@ interface StoreProductGridProps {
 }
 
 const SORT_OPTIONS = [
-  { value: "default", label: "Varsayılan" },
-  { value: "price_asc", label: "Fiyat: Düşükten Yükseğe" },
-  { value: "price_desc", label: "Fiyat: Yüksekten Düşüğe" },
-  { value: "rating", label: "En Yüksek Puan" },
+  { value: "default", label: "Default" },
+  { value: "price_asc", label: "Price: Low to High" },
+  { value: "price_desc", label: "Price: High to Low" },
+  { value: "rating", label: "Highest Rated" },
 ];
 
 export function StoreProductGrid({
@@ -76,7 +76,7 @@ export function StoreProductGrid({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Mağazada ara..."
+            placeholder="Search in store..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -84,7 +84,7 @@ export function StoreProductGrid({
         </div>
         <Select value={sort} onValueChange={setSort}>
           <SelectTrigger className="w-full sm:w-52">
-            <SelectValue placeholder="Sırala" />
+            <SelectValue placeholder="Sort" />
           </SelectTrigger>
           <SelectContent>
             {SORT_OPTIONS.map((o) => (
@@ -99,7 +99,7 @@ export function StoreProductGrid({
       {filtered.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
           <Search className="h-10 w-10 mx-auto mb-3 opacity-40" />
-          <p>Ürün bulunamadı.</p>
+          <p>No products found.</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -128,7 +128,7 @@ export function StoreProductGrid({
                       variant="destructive"
                       className="absolute top-2 left-2 text-xs"
                     >
-                      Tükendi
+                      Out of Stock
                     </Badge>
                   )}
                 </div>

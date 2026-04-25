@@ -100,7 +100,7 @@ export async function generateMetadata({
   if (!store || !category) return {};
   return {
     title: `${category.name} — ${store.storeName}`,
-    description: `${store.storeName} mağazasında ${category.name} kategorisindeki ürünleri keşfet.`,
+    description: `${store.storeName} products in ${category.name} category products.`,
   };
 }
 
@@ -158,7 +158,7 @@ export default async function StoreCategoryPage({
         <div>
           <h1 className="text-2xl font-bold">{category.name}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {totalCount} ürün
+            {totalCount} products
           </p>
         </div>
       </div>
@@ -175,12 +175,12 @@ export default async function StoreCategoryPage({
         {/* Ürün grid */}
         {products.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed py-20 text-muted-foreground">
-            <p className="text-base">Bu kategoride ürün bulunamadı.</p>
+            <p className="text-base">No products found in this category.</p>
             <Link
               href={`/store/${slug}`}
               className="text-sm text-primary hover:underline"
             >
-              Tüm ürünlere dön
+              Back to all products
             </Link>
           </div>
         ) : (

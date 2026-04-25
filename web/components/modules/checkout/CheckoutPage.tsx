@@ -30,18 +30,18 @@ function useCart() {
 }
 
 const CITIES = [
-  "İstanbul",
+  "Istanbul",
   "Ankara",
-  "İzmir",
+  "Izmir",
   "Bursa",
   "Antalya",
   "Adana",
   "Konya",
   "Gaziantep",
   "Mersin",
-  "Diyarbakır",
+  "Diyarbakir",
   "Kayseri",
-  "Eskişehir",
+  "Eskisehir",
 ];
 
 export default function CheckoutPage() {
@@ -513,7 +513,7 @@ export default function CheckoutPage() {
               {eta && step !== "address" && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
                   <p className="text-xs text-gray-500">
-                    📅 Tahmini teslimat:{" "}
+                    📅 Estimated delivery:{" "}
                     <strong className="text-gray-800">
                       {new Date(
                         shippingRate === "Express"

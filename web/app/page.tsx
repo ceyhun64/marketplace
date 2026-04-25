@@ -8,12 +8,12 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
 export const metadata = {
-  title: "Marketplace — Binlerce Satıcı, Tek Platform",
+  title: "Marketplace — Thousands of Sellers, One Platform",
   description:
-    "Güvenilir satıcılardan en iyi fiyatları bulun. Pazaryeri ve bağımsız mağazaların gücünü keşfedin.",
+    "Find the best prices from trusted sellers. Discover the power of marketplace and independent stores.",
   openGraph: {
-    title: "Marketplace — Binlerce Satıcı, Tek Platform",
-    description: "Güvenilir satıcılardan en iyi fiyatları bulun.",
+    title: "Marketplace — Thousands of Sellers, One Platform",
+    description: "Find the best prices from trusted sellers.",
     type: "website",
   },
 };
@@ -32,7 +32,7 @@ export default async function HomePage() {
         {/* 3. Öne Çıkan Ürünler */}
         <FeaturedProducts />
 
-        {/* 4. Öne Çıkan Mağazalar */}
+        {/* 4. Öne Çıkan Storelar */}
         <FeaturedStores />
 
         {/* 5. Nasıl Çalışır? - Artık ayrı bir bileşen */}

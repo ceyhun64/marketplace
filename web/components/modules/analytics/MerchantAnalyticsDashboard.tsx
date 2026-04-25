@@ -24,9 +24,9 @@ import { formatPrice, formatCompactNumber, formatPercent } from "@/lib/format";
 import type { AnalyticsPeriod } from "@/types/api";
 
 const PERIODS: { value: AnalyticsPeriod; label: string }[] = [
-  { value: "daily", label: "Günlük" },
-  { value: "weekly", label: "Haftalık" },
-  { value: "monthly", label: "Aylık" },
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
 ];
 
 export default function MerchantAnalyticsDashboard() {
@@ -55,19 +55,19 @@ export default function MerchantAnalyticsDashboard() {
                 icon: "💰",
               },
               {
-                label: "Toplam Sipariş",
+                label: "Total Orders",
                 value: stats?.totalOrders ?? "—",
                 color: "#1A4A6B",
                 icon: "🛒",
               },
               {
-                label: "Ürün Sayısı",
+                label: "Product Count",
                 value: stats?.totalProducts ?? "—",
                 color: "#8B5E1A",
                 icon: "📦",
               },
               {
-                label: "Ort. Sipariş",
+                label: "Avg. Order",
                 value: stats ? formatPrice(stats.averageOrderValue) : "—",
                 color: "#C84B2F",
                 icon: "📊",
@@ -90,11 +90,11 @@ export default function MerchantAnalyticsDashboard() {
             ))}
       </div>
 
-      {/* Satış Grafiği */}
+      {/* Sales Chart */}
       <div className="bg-white border border-gray-200 rounded-xl p-5">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h3 className="font-semibold text-[#0D0D0D]">Satış Grafiği</h3>
+            <h3 className="font-semibold text-[#0D0D0D]">Sales Chart</h3>
             <p className="text-xs text-[#7A7060] font-mono">
               Gelir & sipariş trendi
             </p>
@@ -165,7 +165,7 @@ export default function MerchantAnalyticsDashboard() {
         )}
       </div>
 
-      {/* Marketplace vs E-Mağaza Karşılaştırma */}
+      {/* Marketplace vs E-Store Karşılaştırma */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Comparison stats */}
         <div className="bg-white border border-gray-200 rounded-xl p-5">
@@ -173,7 +173,7 @@ export default function MerchantAnalyticsDashboard() {
             Kanal Karşılaştırması
           </h3>
           <p className="text-xs text-[#7A7060] font-mono mb-5">
-            Pazaryeri vs E-Mağaza
+            Pazaryeri vs E-Store
           </p>
 
           {compLoading ? (
@@ -189,7 +189,7 @@ export default function MerchantAnalyticsDashboard() {
                   conversion: comparison.marketplace.conversionRate,
                 },
                 {
-                  label: "E-Mağaza",
+                  label: "E-Store",
                   color: "#1A4A6B",
                   revenue: comparison.estore.revenue,
                   orders: comparison.estore.orders,

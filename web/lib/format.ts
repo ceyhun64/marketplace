@@ -53,7 +53,7 @@ export function formatDate(dateStr: string | Date, locale = "tr-TR"): string {
 }
 
 /**
- * Tarih + saat formatı.
+ * Tarih + hours formatı.
  * @example formatDateTime("2026-04-22T10:30:00Z") → "22 Nisan 2026, 13:30"
  */
 export function formatDateTime(
@@ -84,7 +84,7 @@ export function formatShortDate(dateStr: string | Date): string {
 }
 
 /**
- * Göreceli zaman (kaç dakika/saat/gün önce).
+ * Göreceli zaman (kaç dakika/hours/gün önce).
  * @example formatRelativeTime("2026-04-21T10:00:00Z") → "1 gün önce"
  */
 export function formatRelativeTime(dateStr: string | Date): string {
@@ -220,7 +220,7 @@ export function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// ── Telefon ───────────────────────────────────────────────────────────────────
+// ── Phone ───────────────────────────────────────────────────────────────────
 
 /**
  * Türk telefon numarasını formatlar.

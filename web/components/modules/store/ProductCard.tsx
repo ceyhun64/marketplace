@@ -66,12 +66,12 @@ export function ProductCard({
         {isOutOfStock && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm">
             <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-              Tükendi
+              Out of Stock
             </span>
           </div>
         )}
 
-        {/* Etiket rozeti — max 2 adet */}
+        {/* Label rozeti — max 2 adet */}
         {product.tags.length > 0 && (
           <div className="absolute left-2 top-2 flex flex-wrap gap-1">
             {product.tags.slice(0, 2).map((tag) => (
@@ -90,7 +90,7 @@ export function ProductCard({
 
       {/* Bilgiler */}
       <div className="flex flex-1 flex-col gap-2 p-3">
-        {/* Mağaza adı (marketplace context'inde göster) */}
+        {/* Store adı (marketplace context'inde göster) */}
         {context === "marketplace" && product.merchantStoreName && (
           <Link
             href={`/store/${product.merchantSlug}`}
@@ -102,7 +102,7 @@ export function ProductCard({
           </Link>
         )}
 
-        {/* Ürün adı */}
+        {/* Product Name */}
         <Link href={href}>
           <h3 className="line-clamp-2 text-sm font-medium leading-snug hover:underline">
             {product.name}

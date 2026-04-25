@@ -24,10 +24,10 @@ export interface TagFilterState {
 type SortOption = "newest" | "price_asc" | "price_desc" | "popular";
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "newest", label: "En Yeni" },
-  { value: "popular", label: "En Popüler" },
-  { value: "price_asc", label: "Fiyat: Düşükten Yükseğe" },
-  { value: "price_desc", label: "Fiyat: Yüksekten Düşüğe" },
+  { value: "newest", label: "Newest" },
+  { value: "popular", label: "Most Popular" },
+  { value: "price_asc", label: "Price: Low to High" },
+  { value: "price_desc", label: "Price: High to Low" },
 ];
 
 interface TagFilterProps {
@@ -79,7 +79,7 @@ export function TagFilter({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Filtreler</span>
+          <span className="text-sm font-medium">Filters</span>
           {activeCount > 0 && (
             <Badge variant="secondary" className="text-xs px-1.5 py-0">
               {activeCount}
@@ -93,15 +93,15 @@ export function TagFilter({
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
           >
             <X className="h-3 w-3" />
-            Temizle
+            Clear
           </button>
         )}
       </div>
 
-      {/* Sıralama */}
+      {/* Sort */}
       <div className="space-y-2">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Sıralama
+          Sort
         </p>
         <div className="flex flex-col gap-1">
           {SORT_OPTIONS.map((opt) => (
@@ -131,7 +131,7 @@ export function TagFilter({
             className="w-full justify-between px-0 hover:bg-transparent"
           >
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Fiyat Aralığı
+              Price Range
             </span>
             <ChevronDown
               className={cn(
@@ -162,7 +162,7 @@ export function TagFilter({
         </CollapsibleContent>
       </Collapsible>
 
-      {/* Etiketler */}
+      {/* Labeller */}
       <Collapsible open={tagsOpen} onOpenChange={setTagsOpen}>
         <CollapsibleTrigger asChild>
           <Button
@@ -171,7 +171,7 @@ export function TagFilter({
             className="w-full justify-between px-0 hover:bg-transparent"
           >
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Etiketler
+              Labeller
             </span>
             <ChevronDown
               className={cn(
@@ -184,7 +184,7 @@ export function TagFilter({
         <CollapsibleContent className="pt-2">
           {availableTags.length === 0 ? (
             <p className="text-xs text-muted-foreground">
-              Bu kategoride etiket yok.
+              No tags in this category.
             </p>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -214,7 +214,7 @@ export function TagFilter({
       {/* Aktif filtre özetleri */}
       {value.tags.length > 0 && (
         <div className="space-y-1.5">
-          <p className="text-xs text-muted-foreground">Seçili etiketler</p>
+          <p className="text-xs text-muted-foreground">Selected tags</p>
           <div className="flex flex-wrap gap-1.5">
             {value.tags.map((tag) => (
               <Badge
@@ -227,7 +227,7 @@ export function TagFilter({
                   type="button"
                   onClick={() => toggleTag(tag)}
                   className="ml-0.5 rounded-full hover:text-destructive"
-                  aria-label={`${tag} filtresini kaldır`}
+                  aria-label={`Remove ${tag} filter`}
                 >
                   <X className="h-3 w-3" />
                 </button>

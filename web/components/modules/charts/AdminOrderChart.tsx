@@ -14,7 +14,7 @@ interface Props {
 
 const chartConfig = {
   siparis: {
-    label: "Sipariş",
+    label: "Orders",
     color: "#6366f1",
   },
 } satisfies ChartConfig;
@@ -29,7 +29,7 @@ export default function OrderChart({ data }: Props) {
         <ChartTooltip
           content={
             <ChartTooltipContent
-              formatter={(value) => [Number(value), "Sipariş"]}
+              formatter={(value) => [Number(value), "Orders"]}
             />
           }
         />

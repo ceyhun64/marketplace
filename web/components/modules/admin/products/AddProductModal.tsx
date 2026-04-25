@@ -32,7 +32,7 @@ export default function AddProductModal({ onClose, onSuccess }: Props) {
 
   const handleSubmit = async () => {
     if (!form.name.trim() || !form.categoryId) {
-      setError("Ürün adı ve kategori zorunlu.");
+      setError("Product name and category are required.");
       return;
     }
 
@@ -53,7 +53,7 @@ export default function AddProductModal({ onClose, onSuccess }: Props) {
       onSuccess();
       onClose();
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? "Ürün eklenemedi.");
+      setError(e?.response?.data?.message ?? "Failed to add product.");
     } finally {
       setSubmitting(false);
     }
@@ -69,7 +69,7 @@ export default function AddProductModal({ onClose, onSuccess }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900">
-            Yeni Ürün Ekle
+            Add New Product
           </h2>
           <button
             onClick={onClose}
@@ -81,36 +81,36 @@ export default function AddProductModal({ onClose, onSuccess }: Props) {
 
         {/* Body */}
         <div className="p-6 flex flex-col gap-5">
-          {/* Görseller */}
+          {/* Images */}
           <MultiImageUploader
-            label="Ürün Görselleri"
+            label="Product Images"
             folder="marketplace/products"
             maxFiles={5}
             onUpdate={(urls) => setForm((f) => ({ ...f, imageUrls: urls }))}
           />
 
-          {/* Ürün adı */}
+          {/* Product Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ürün Adı <span className="text-red-500">*</span>
+              Product Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
-              placeholder="Örn: Bluetooth Kulaklık"
+              placeholder="E.g.: Bluetooth Headphones"
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          {/* Açıklama */}
+          {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Açıklama
+              Description
             </label>
             <textarea
               rows={3}
-              placeholder="Ürün hakkında kısa açıklama..."
+              placeholder="Short description of the product..."
               value={form.description}
               onChange={(e) =>
                 setForm((f) => ({ ...f, description: e.target.value }))
@@ -131,7 +131,7 @@ export default function AddProductModal({ onClose, onSuccess }: Props) {
               }
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">Kategori seçin...</option>
+              <option value="">Select category...</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -140,15 +140,15 @@ export default function AddProductModal({ onClose, onSuccess }: Props) {
             </select>
           </div>
 
-          {/* Etiketler */}
+          {/* Labeller */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Etiketler{" "}
-              <span className="text-gray-400 font-normal">(virgülle ayır)</span>
+              Labeller{" "}
+              <span className="text-gray-400 font-normal">(comma separated)</span>
             </label>
             <input
               type="text"
-              placeholder="elektronik, ses, kablosuz"
+              placeholder="electronics, audio, wireless"
               value={form.tags}
               onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -168,14 +168,14 @@ export default function AddProductModal({ onClose, onSuccess }: Props) {
             onClick={onClose}
             className="flex-1 border border-gray-300 text-gray-700 rounded-lg py-2 text-sm font-medium hover:bg-gray-50 transition-colors"
           >
-            İptal
+            Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
             className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {submitting ? "Kaydediliyor..." : "Ürünü Ekle"}
+            {submitting ? "Saving..." : "Add Product"}
           </button>
         </div>
       </div>

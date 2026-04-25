@@ -24,7 +24,7 @@ export default function ProductsTable({
   if (loading) {
     return (
       <div className="bg-white border border-gray-200 rounded-xl p-8 text-center text-sm text-gray-400">
-        Yükleniyor...
+        Loading...
       </div>
     );
   }
@@ -32,7 +32,7 @@ export default function ProductsTable({
   if (products.length === 0) {
     return (
       <div className="bg-white border border-gray-200 rounded-xl p-8 text-center text-sm text-gray-400">
-        {tab === "pending" ? "Onay bekleyen ürün yok" : "Henüz ürün eklenmedi"}
+        {tab === "pending" ? "No products pending approval" : "No products added yet"}
       </div>
     );
   }
@@ -43,12 +43,12 @@ export default function ProductsTable({
         <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
           <tr>
             {[
-              "Ürün Adı",
-              "Kategori",
-              "Teklif",
-              "Durum",
-              "Eklenme",
-              "İşlem",
+              "Product Name",
+              "Category",
+              "Offer",
+              "Status",
+              "Added",
+              "Action",
             ].map((h) => (
               <th key={h} className="px-4 py-3 text-left font-medium">
                 {h}
@@ -81,11 +81,11 @@ export default function ProductsTable({
                       : "bg-yellow-50 text-yellow-700"
                   }`}
                 >
-                  {p.isApproved ? "Onaylı" : "Bekliyor"}
+                  {p.isApproved ? "Approved" : "Pending"}
                 </span>
               </td>
               <td className="px-4 py-3 text-gray-500">
-                {new Date(p.createdAt).toLocaleDateString("tr-TR")}
+                {new Date(p.createdAt).toLocaleDateString("en-US")}
               </td>
               <td className="px-4 py-3">
                 <div className="flex gap-3">
@@ -94,14 +94,14 @@ export default function ProductsTable({
                       onClick={() => onApprove(p.id)}
                       className="text-xs text-green-600 hover:underline"
                     >
-                      Onayla
+                      Approve
                     </button>
                   )}
                   <button
                     onClick={() => onDelete(p.id)}
                     className="text-xs text-red-500 hover:underline"
                   >
-                    Sil
+                    Delete
                   </button>
                 </div>
               </td>

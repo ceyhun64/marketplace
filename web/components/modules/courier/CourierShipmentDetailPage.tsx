@@ -82,15 +82,15 @@ interface ShipmentDetail {
 }
 
 const STATUS_LABELS: Record<ShipmentStatus, string> = {
-  PLACED: "Sipariş Alındı",
-  PAYMENT_CONFIRMED: "Ödeme Onaylandı",
-  LABEL_GENERATED: "Etiket Hazırlandı",
-  COURIER_ASSIGNED: "Kurye Atandı",
-  PICKED_UP: "Paket Teslim Alındı",
-  IN_TRANSIT: "Yolda",
-  OUT_FOR_DELIVERY: "Dağıtımda",
-  DELIVERED: "Teslim Edildi",
-  FAILED: "Teslim Başarısız",
+  PLACED: "Order Placed",
+  PAYMENT_CONFIRMED: "Payment Confirmed",
+  LABEL_GENERATED: "Label Generated",
+  COURIER_ASSIGNED: "Courier Assigned",
+  PICKED_UP: "Package Picked Up",
+  IN_TRANSIT: "In Transit",
+  OUT_FOR_DELIVERY: "Out for Delivery",
+  DELIVERED: "Delivered",
+  FAILED: "Delivery Failed",
 };
 
 const STATUS_ORDER: ShipmentStatus[] = [
@@ -105,7 +105,7 @@ const STATUS_ORDER: ShipmentStatus[] = [
 ];
 
 function formatDateTime(dt: string) {
-  return new Date(dt).toLocaleString("tr-TR", {
+  return new Date(dt).toLocaleString("en-US", {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
@@ -135,17 +135,17 @@ export default function CourierShipmentDetailPage() {
       return res.data;
     },
     onSuccess: () => {
-      toast.success("Paket teslim alındı olarak işaretlendi");
+      toast.success("Package marked as picked up");
       queryClient.invalidateQueries({
         queryKey: ["courier-shipment", shipmentId],
       });
     },
-    onError: () => toast.error("İşlem başarısız"),
+    onError: () => toast.error("Action failed"),
   });
 
   const deliveredMutation = useMutation({
     mutationFn: async () => {
-      const recipientName = prompt("Teslim alan kişinin adını girin:");
+      const recipientName = prompt("Enter the recipient's name:");
       if (!recipientName) return;
       const res = await api.post(`/api/fulfillment/${shipmentId}/delivered`, {
         recipientName,
@@ -153,12 +153,12 @@ export default function CourierShipmentDetailPage() {
       return res.data;
     },
     onSuccess: () => {
-      toast.success("Teslimat tamamlandı! ✓");
+      toast.success("Delivery completed! ✓");
       queryClient.invalidateQueries({
         queryKey: ["courier-shipment", shipmentId],
       });
     },
-    onError: () => toast.error("İşlem başarısız"),
+    onError: () => toast.error("Action failed"),
   });
 
   const shipment: ShipmentDetail | null = data?.data || null;
@@ -167,7 +167,7 @@ export default function CourierShipmentDetailPage() {
     if (shipment?.labelUrl) {
       window.open(shipment.labelUrl, "_blank");
     } else {
-      toast.error("Etiket henüz oluşturulmadı");
+      toast.error("Label not yet generated");
     }
   };
 
@@ -189,13 +189,13 @@ export default function CourierShipmentDetailPage() {
     return (
       <div className="p-6 text-center py-20">
         <Package className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-        <p className="text-gray-500">Sevkiyat bulunamadı</p>
+        <p className="text-gray-500">Shipment not found</p>
         <Button
           variant="ghost"
           className="mt-3"
           onClick={() => router.push("/courier/shipments")}
         >
-          Geri Dön
+          Go Back
         </Button>
       </div>
     );
@@ -222,7 +222,7 @@ export default function CourierShipmentDetailPage() {
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-lg font-bold text-gray-900">Sevkiyat Detayı</h1>
+          <h1 className="text-lg font-bold text-gray-900">Shipment Details</h1>
           <p className="text-xs font-mono text-blue-600">
             {shipment.trackingNumber}
           </p>
@@ -251,7 +251,7 @@ export default function CourierShipmentDetailPage() {
             onClick={() => pickupMutation.mutate()}
           >
             <Package className="w-5 h-5 mr-2" />
-            {pickupMutation.isPending ? "İşleniyor..." : "Teslim Aldım"}
+            {pickupMutation.isPending ? "Processing..." : "Picked Up"}
           </Button>
           <Button
             className="h-14 text-sm font-semibold bg-green-600 hover:bg-green-700"
@@ -259,7 +259,7 @@ export default function CourierShipmentDetailPage() {
             onClick={() => deliveredMutation.mutate()}
           >
             <CheckCircle2 className="w-5 h-5 mr-2" />
-            {deliveredMutation.isPending ? "İşleniyor..." : "Teslim Ettim"}
+            {deliveredMutation.isPending ? "Processing..." : "Delivered"}
           </Button>
         </div>
       )}
@@ -267,7 +267,7 @@ export default function CourierShipmentDetailPage() {
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
           <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto mb-1" />
           <p className="text-green-700 font-semibold text-sm">
-            Teslim Tamamlandı
+            Delivery Completed
           </p>
           {shipment.actualDeliveredAt && (
             <p className="text-green-600 text-xs mt-1">
@@ -286,10 +286,10 @@ export default function CourierShipmentDetailPage() {
             </div>
             <div>
               <p className="text-sm font-semibold text-gray-900">
-                Kargo Etiketi
+                Kargo Labeli
               </p>
               <p className="text-xs text-gray-500">
-                {shipment.labelUrl ? "Etiket hazır" : "Etiket bekleniyor"}
+                {shipment.labelUrl ? "Label ready" : "Label pending"}
               </p>
             </div>
           </div>
@@ -300,7 +300,7 @@ export default function CourierShipmentDetailPage() {
             disabled={!shipment.labelUrl}
           >
             <Printer className="w-4 h-4 mr-1.5" />
-            Yazdır
+            Print
           </Button>
         </CardContent>
       </Card>
@@ -311,13 +311,13 @@ export default function CourierShipmentDetailPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Clock className="w-4 h-4 text-blue-500" />
-              Teslimat Zaman Penceresi
+              Delivery Time Window
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {shipment.estimatedPickupWindow && (
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Alım Penceresi</span>
+                <span className="text-gray-500">Pickup Window</span>
                 <span className="font-medium text-gray-900">
                   {formatDateTime(shipment.estimatedPickupWindow.start)} –{" "}
                   {formatDateTime(shipment.estimatedPickupWindow.end)}
@@ -326,7 +326,7 @@ export default function CourierShipmentDetailPage() {
             )}
             {shipment.estimatedDeliveryWindow && (
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Teslimat Penceresi</span>
+                <span className="text-gray-500">Delivery Window</span>
                 <span className="font-medium text-gray-900">
                   {formatDateTime(shipment.estimatedDeliveryWindow.start)} –{" "}
                   {formatDateTime(shipment.estimatedDeliveryWindow.end)}
@@ -334,7 +334,7 @@ export default function CourierShipmentDetailPage() {
               </div>
             )}
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">Kargo Tipi</span>
+              <span className="text-gray-500">Shipping Type</span>
               <span
                 className={`font-semibold ${
                   shipment.shippingRate === "EXPRESS"
@@ -360,7 +360,7 @@ export default function CourierShipmentDetailPage() {
               </div>
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                  Alım Adresi (Merchant)
+                  Pickup Address (Merchant)
                 </p>
                 <p className="text-sm font-semibold text-gray-900">
                   {shipment.merchant.name}
@@ -402,7 +402,7 @@ export default function CourierShipmentDetailPage() {
               </div>
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                  Teslimat Adresi (Müşteri)
+                  Delivery Address (Customer)
                 </p>
                 <p className="text-sm font-semibold text-gray-900">
                   {shipment.customer.name}
@@ -430,7 +430,7 @@ export default function CourierShipmentDetailPage() {
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold">
-              Sipariş İçeriği
+              Order Contents
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -454,13 +454,13 @@ export default function CourierShipmentDetailPage() {
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Truck className="w-4 h-4 text-gray-500" />
-            Durum Geçmişi
+            Status History
           </CardTitle>
         </CardHeader>
         <CardContent>
           {shipment.events?.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-4">
-              Henüz durum güncellemesi yok
+              No status updates yet
             </p>
           ) : (
             <div className="space-y-0">

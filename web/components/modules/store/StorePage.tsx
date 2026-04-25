@@ -42,9 +42,9 @@ export async function generateMetadata({
   try {
     const store = (await serverFetch.store(params.slug)) as StorProfile;
     return {
-      title: `${store.storeName} | Mağaza`,
+      title: `${store.storeName} | Store`,
       description:
-        store.description ?? `${store.storeName} mağazasının tüm ürünleri`,
+        store.description ?? `${store.storeName} store - all products`,
       openGraph: {
         title: store.storeName,
         description: store.description,
@@ -52,7 +52,7 @@ export async function generateMetadata({
       },
     };
   } catch {
-    return { title: "Mağaza Bulunamadı" };
+    return { title: "Store Not Found" };
   }
 }
 

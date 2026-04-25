@@ -67,7 +67,7 @@ export default function MultiImageUploader({
         if (result.status === "fulfilled") {
           updated[startIdx + i] = { url: result.value.url };
         } else {
-          updated[startIdx + i] = { url: "", error: "Yükleme başarısız" };
+          updated[startIdx + i] = { url: "", error: "Upload failed" };
         }
       });
       return updated.filter((img) => img.url !== "");
@@ -97,7 +97,7 @@ export default function MultiImageUploader({
                 fill
                 className="object-cover"
                 unoptimized={img.url.startsWith("blob:")}
-                // Eklenecek satır:
+                // Addnecek satır:
                 sizes="96px"
               />
             )}
@@ -130,7 +130,7 @@ export default function MultiImageUploader({
         {images.length < maxFiles && (
           <label className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors text-gray-400">
             <span className="text-2xl">+</span>
-            <span className="text-xs">Ekle</span>
+            <span className="text-xs">Add</span>
             <input
               type="file"
               accept="image/png, image/jpeg, image/webp"

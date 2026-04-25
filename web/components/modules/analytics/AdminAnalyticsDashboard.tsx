@@ -45,19 +45,19 @@ export default function AdminAnalyticsDashboard() {
                 color: "#2D7A4F",
               },
               {
-                label: "Toplam Sipariş",
+                label: "Total Orders",
                 value: overview?.totalOrders ?? "—",
                 icon: "🛒",
                 color: "#1A4A6B",
               },
               {
-                label: "Merchant Sayısı",
+                label: "Merchant Count",
                 value: overview?.totalMerchants ?? "—",
                 icon: "🏪",
                 color: "#C84B2F",
               },
               {
-                label: "Müşteri Sayısı",
+                label: "Customer Count",
                 value: overview?.totalCustomers ?? "—",
                 icon: "👥",
                 color: "#8B5E1A",

@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     const folder = (formData.get("folder") as string) || "marketplace";
 
     if (!file) {
-      return NextResponse.json({ error: "Dosya bulunamadı." }, { status: 400 });
+      return NextResponse.json({ error: "File not found." }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -39,9 +39,9 @@ export async function POST(req: NextRequest) {
       height: uploadResult.height,
     });
   } catch (err: any) {
-    console.error("Upload hatası:", err);
+    console.error("Upload error:", err);
     return NextResponse.json(
-      { error: err.message || "Yükleme başarısız" },
+      { error: err.message || "Upload failed" },
       { status: 500 },
     );
   }
