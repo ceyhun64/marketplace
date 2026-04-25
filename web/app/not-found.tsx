@@ -16,7 +16,7 @@ export default function NotFound() {
           : "/";
 
   return (
-    <div className="min-h-screen bg-[#fafaf8] flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen  flex flex-col items-center justify-center px-4">
       {/* Big 404 */}
       <p className="text-[120px] font-black text-gray-100 leading-none select-none">
         404

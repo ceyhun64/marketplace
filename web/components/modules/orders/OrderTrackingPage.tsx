@@ -94,7 +94,6 @@ const STATUS_ORDER: ShipmentStatus[] = [
   "Delivered",
 ];
 
-
 // ── Backend status normalizer ─────────────────────────────────────────────────
 // Backend returns UPPER_SNAKE_CASE (e.g. "PAYMENT_CONFIRMED"),
 // component uses PascalCase (e.g. "PaymentConfirmed").
@@ -188,7 +187,11 @@ export default function TrackingPage() {
               ...prev,
               status: normalizeStatus(u.status as string),
               events: [
-                { status: normalizeStatus(u.status as string), timestamp: u.timestamp, note: u.note },
+                {
+                  status: normalizeStatus(u.status as string),
+                  timestamp: u.timestamp,
+                  note: u.note,
+                },
                 ...prev.events,
               ],
             };
@@ -212,7 +215,7 @@ export default function TrackingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#fafaf8] flex items-center justify-center">
+      <div className="min-h-screen  flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -220,7 +223,7 @@ export default function TrackingPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-[#fafaf8] flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen  flex flex-col items-center justify-center gap-4">
         <p className="text-gray-500">Sipariş takip bilgisi bulunamadı.</p>
         <Link href="/orders" className="text-sm underline underline-offset-2">
           ← Siparişlerime dön
