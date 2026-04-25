@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
+import Footer from "@/components/layout/Footer";
+import Navbar from "@/components/layout/Navbar";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -23,9 +25,7 @@ export default function ForgotPasswordPage() {
       setSent(true);
     },
     onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "İstek gönderilemedi"
-      );
+      toast.error(error?.response?.data?.message || "İstek gönderilemedi");
     },
   });
 
@@ -69,61 +69,69 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        {/* Back */}
-        <Link
-          href="/auth/login"
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Giriş sayfasına dön
-        </Link>
-
-        {/* Header */}
-        <div className="mb-8">
-          <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mb-4">
-            <Mail className="w-6 h-6 text-blue-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Şifremi Unuttum</h1>
-          <p className="text-sm text-gray-500 mt-1.5">
-            E-posta adresinizi girin, şifre sıfırlama bağlantısı gönderelim.
-          </p>
-        </div>
-
-        {/* Form */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!email) return;
-            mutation.mutate(email);
-          }}
-          className="space-y-4"
-        >
-          <div className="space-y-2">
-            <Label htmlFor="email">E-posta Adresi</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="ornek@email.com"
-              required
-              autoComplete="email"
-              autoFocus
-              className="h-11"
-            />
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full h-11"
-            disabled={mutation.isPending || !email}
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          {/* Back */}
+          <Link
+            href="/auth/login"
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-8"
           >
-            {mutation.isPending ? "Gönderiliyor..." : "Sıfırlama Bağlantısı Gönder"}
-          </Button>
-        </form>
+            <ArrowLeft className="w-4 h-4" />
+            Giriş sayfasına dön
+          </Link>
+
+          {/* Header */}
+          <div className="mb-8">
+            <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mb-4">
+              <Mail className="w-6 h-6 text-blue-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Şifremi Unuttum
+            </h1>
+            <p className="text-sm text-gray-500 mt-1.5">
+              E-posta adresinizi girin, şifre sıfırlama bağlantısı gönderelim.
+            </p>
+          </div>
+
+          {/* Form */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!email) return;
+              mutation.mutate(email);
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="email">E-posta Adresi</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="ornek@email.com"
+                required
+                autoComplete="email"
+                autoFocus
+                className="h-11"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full h-11"
+              disabled={mutation.isPending || !email}
+            >
+              {mutation.isPending
+                ? "Gönderiliyor..."
+                : "Sıfırlama Bağlantısı Gönder"}
+            </Button>
+          </form>
+        </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 }

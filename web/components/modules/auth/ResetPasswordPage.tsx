@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { KeyRound, ArrowLeft, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -99,128 +101,132 @@ function ResetPasswordForm() {
   const strength = passwordStrength(form.password);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <Link
-          href="/auth/login"
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Giriş sayfasına dön
-        </Link>
-
-        <div className="mb-8">
-          <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mb-4">
-            <KeyRound className="w-6 h-6 text-blue-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Yeni Şifre Belirle
-          </h1>
-          <p className="text-sm text-gray-500 mt-1.5">
-            Güvenli bir şifre seçin. En az 8 karakter olmalıdır.
-          </p>
-        </div>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (form.password !== form.confirm) {
-              toast.error("Şifreler eşleşmiyor");
-              return;
-            }
-            if (form.password.length < 6) {
-              toast.error("Şifre en az 6 karakter olmalıdır");
-              return;
-            }
-            mutation.mutate({ token, newPassword: form.password });
-          }}
-          className="space-y-4"
-        >
-          <div className="space-y-2">
-            <Label htmlFor="password">Yeni Şifre</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                value={form.password}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, password: e.target.value }))
-                }
-                placeholder="En az 8 karakter"
-                required
-                className="h-11 pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-            {/* Strength indicator */}
-            {strength && (
-              <div className="space-y-1">
-                <div className="flex gap-1">
-                  {["weak", "medium", "strong"].map((level, i) => (
-                    <div
-                      key={level}
-                      className={`h-1.5 flex-1 rounded-full transition-colors ${
-                        (strength.level === "weak" && i === 0) ||
-                        (strength.level === "medium" && i <= 1) ||
-                        strength.level === "strong"
-                          ? strength.color
-                          : "bg-gray-200"
-                      }`}
-                    />
-                  ))}
-                </div>
-                <p className="text-xs text-gray-500">{strength.label}</p>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirm">Şifre Tekrar</Label>
-            <Input
-              id="confirm"
-              type={showPassword ? "text" : "password"}
-              value={form.confirm}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, confirm: e.target.value }))
-              }
-              placeholder="Şifreyi tekrar girin"
-              required
-              className={`h-11 ${
-                form.confirm && form.password !== form.confirm
-                  ? "border-red-300 focus-visible:ring-red-300"
-                  : ""
-              }`}
-            />
-            {form.confirm && form.password !== form.confirm && (
-              <p className="text-xs text-red-500">Şifreler eşleşmiyor</p>
-            )}
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full h-11"
-            disabled={
-              mutation.isPending ||
-              !form.password ||
-              !form.confirm ||
-              form.password !== form.confirm
-            }
+    <>
+      <Navbar />
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          <Link
+            href="/auth/login"
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-8"
           >
-            {mutation.isPending ? "Güncelleniyor..." : "Şifreyi Güncelle"}
-          </Button>
-        </form>
+            <ArrowLeft className="w-4 h-4" />
+            Giriş sayfasına dön
+          </Link>
+
+          <div className="mb-8">
+            <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mb-4">
+              <KeyRound className="w-6 h-6 text-blue-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Yeni Şifre Belirle
+            </h1>
+            <p className="text-sm text-gray-500 mt-1.5">
+              Güvenli bir şifre seçin. En az 8 karakter olmalıdır.
+            </p>
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (form.password !== form.confirm) {
+                toast.error("Şifreler eşleşmiyor");
+                return;
+              }
+              if (form.password.length < 6) {
+                toast.error("Şifre en az 6 karakter olmalıdır");
+                return;
+              }
+              mutation.mutate({ token, newPassword: form.password });
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="password">Yeni Şifre</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, password: e.target.value }))
+                  }
+                  placeholder="En az 8 karakter"
+                  required
+                  className="h-11 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              {/* Strength indicator */}
+              {strength && (
+                <div className="space-y-1">
+                  <div className="flex gap-1">
+                    {["weak", "medium", "strong"].map((level, i) => (
+                      <div
+                        key={level}
+                        className={`h-1.5 flex-1 rounded-full transition-colors ${
+                          (strength.level === "weak" && i === 0) ||
+                          (strength.level === "medium" && i <= 1) ||
+                          strength.level === "strong"
+                            ? strength.color
+                            : "bg-gray-200"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500">{strength.label}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirm">Şifre Tekrar</Label>
+              <Input
+                id="confirm"
+                type={showPassword ? "text" : "password"}
+                value={form.confirm}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, confirm: e.target.value }))
+                }
+                placeholder="Şifreyi tekrar girin"
+                required
+                className={`h-11 ${
+                  form.confirm && form.password !== form.confirm
+                    ? "border-red-300 focus-visible:ring-red-300"
+                    : ""
+                }`}
+              />
+              {form.confirm && form.password !== form.confirm && (
+                <p className="text-xs text-red-500">Şifreler eşleşmiyor</p>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full h-11"
+              disabled={
+                mutation.isPending ||
+                !form.password ||
+                !form.confirm ||
+                form.password !== form.confirm
+              }
+            >
+              {mutation.isPending ? "Güncelleniyor..." : "Şifreyi Güncelle"}
+            </Button>
+          </form>
+        </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 }
 

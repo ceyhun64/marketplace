@@ -3,6 +3,8 @@ import { DM_Sans, DM_Serif_Display, Space_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import Navbar from "@/components/layout/Navbar";
+import { Footer } from "react-day-picker";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
