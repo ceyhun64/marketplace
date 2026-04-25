@@ -26,11 +26,4 @@ public class SubscribeRequestDto
     public string? PaymentToken { get; set; }
 }
 
-public class PluginDto
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public decimal MonthlyPrice { get; set; }
-    public bool IsSubscribed { get; set; }
-}
+
