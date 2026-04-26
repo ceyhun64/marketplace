@@ -2,533 +2,315 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import api from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+import { useCart } from "@/hooks/use-cart";
+import { ShippingRateSelect } from "@/components/modules/shipping/ShippingRateSelect";
+import CartSummary from "./CartSummary";
+import { PaymentForm } from "./PaymentForm";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, ArrowRight, MapPin, Truck, CreditCard } from "lucide-react";
+import type { ShippingRate } from "@/types/enums";
+import type { ShippingAddress } from "@/types/entities";
 
-interface CartItem {
-  offerId: string;
-  productName: string;
-  merchantName: string;
-  price: number;
-  quantity: number;
-  image?: string;
+// ── Step definitions ──────────────────────────────────────────────────────────
+
+type Step = "address" | "shipping" | "payment";
+const STEPS: Step[] = ["address", "shipping", "payment"];
+
+const STEP_LABEL: Record<Step, string> = {
+  address: "Delivery Address",
+  shipping: "Shipping",
+  payment: "Payment",
+};
+
+const STEP_ICON: Record<Step, React.ReactNode> = {
+  address: <MapPin className="w-4 h-4" />,
+  shipping: <Truck className="w-4 h-4" />,
+  payment: <CreditCard className="w-4 h-4" />,
+};
+
+// ── Address form validation ───────────────────────────────────────────────────
+
+function validateAddress(form: Partial<ShippingAddress>): string | null {
+  if (!form.fullName?.trim()) return "Full name is required.";
+  if (!form.phone?.trim()) return "Phone number is required.";
+  if (!form.addressLine?.trim()) return "Address is required.";
+  if (!form.city?.trim()) return "City is required.";
+  if (!form.postalCode?.trim()) return "Postal code is required.";
+  return null;
 }
 
-interface ETAResult {
-  expressEta: string;
-  regularEta: string;
-  expressPrice: number;
-  regularPrice: number;
+// ── Step Indicator ────────────────────────────────────────────────────────────
+
+function StepIndicator({
+  current,
+  steps,
+}: {
+  current: Step;
+  steps: Step[];
+}) {
+  const currentIdx = steps.indexOf(current);
+  return (
+    <div className="flex items-center gap-2 mb-8">
+      {steps.map((step, idx) => {
+        const done = idx < currentIdx;
+        const active = idx === currentIdx;
+        return (
+          <div key={step} className="flex items-center gap-2 flex-1">
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                active
+                  ? "bg-gray-900 text-white"
+                  : done
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-gray-100 text-gray-400"
+              }`}
+            >
+              {done ? "✓" : STEP_ICON[step]}
+              <span className="hidden sm:inline">{STEP_LABEL[step]}</span>
+              <span className="sm:hidden">{idx + 1}</span>
+            </div>
+            {idx < steps.length - 1 && (
+              <div
+                className={`flex-1 h-px ${done ? "bg-emerald-300" : "bg-gray-200"}`}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
-// Simple cart store — in real project comes from Zustand use-cart.ts
-function useCart() {
-  const [items] = useState<CartItem[]>([
-    // Demo data — actually comes from store
-  ]);
-  return { items };
+// ── Address Step ──────────────────────────────────────────────────────────────
+
+function AddressStep({
+  value,
+  onChange,
+  onNext,
+}: {
+  value: Partial<ShippingAddress>;
+  onChange: (v: Partial<ShippingAddress>) => void;
+  onNext: () => void;
+}) {
+  const [error, setError] = useState<string | null>(null);
+
+  const handleNext = () => {
+    const err = validateAddress(value);
+    if (err) return setError(err);
+    setError(null);
+    onNext();
+  };
+
+  const field = (label: string, key: keyof ShippingAddress, placeholder?: string) => (
+    <div>
+      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">
+        {label}
+      </label>
+      <Input
+        value={(value[key] as string) ?? ""}
+        onChange={(e) => onChange({ ...value, [key]: e.target.value })}
+        placeholder={placeholder}
+        className="border-gray-200"
+      />
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-bold text-gray-900">Delivery Address</h2>
+      <div className="grid sm:grid-cols-2 gap-4">
+        {field("Full Name", "fullName", "Jane Doe")}
+        {field("Phone", "phone", "+90 5xx xxx xx xx")}
+      </div>
+      {field("Address", "addressLine", "Street, apartment, floor...")}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {field("City", "city", "Istanbul")}
+        {field("District", "district", "Kadıköy")}
+        {field("Postal Code", "postalCode", "34700")}
+      </div>
+      {error && (
+        <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">
+          {error}
+        </p>
+      )}
+      <Button className="w-full gap-2" onClick={handleNext}>
+        Continue to Shipping
+        <ArrowRight className="w-4 h-4" />
+      </Button>
+    </div>
+  );
 }
 
-const CITIES = [
-  "Istanbul",
-  "Ankara",
-  "Izmir",
-  "Bursa",
-  "Antalya",
-  "Adana",
-  "Konya",
-  "Gaziantep",
-  "Mersin",
-  "Diyarbakir",
-  "Kayseri",
-  "Eskisehir",
-];
+// ── Shipping Step — integrates ShippingRateSelect (Milestone 2) ────────────────
+
+function ShippingStep({
+  address,
+  merchantId,
+  value,
+  onChange,
+  onNext,
+  onBack,
+}: {
+  address: Partial<ShippingAddress>;
+  merchantId?: string;
+  value: ShippingRate | null;
+  onChange: (r: ShippingRate) => void;
+  onNext: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <div className="space-y-5">
+      <h2 className="text-lg font-bold text-gray-900">Shipping Option</h2>
+
+      {/* Destination summary */}
+      {address.city && (
+        <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+          <MapPin className="w-4 h-4 text-gray-400 shrink-0" />
+          <span>
+            {[address.addressLine, address.district, address.city]
+              .filter(Boolean)
+              .join(", ")}
+          </span>
+        </div>
+      )}
+
+      {/* ShippingRateSelect — fetches real ETA from backend via Haversine calc */}
+      <ShippingRateSelect
+        merchantId={merchantId ?? ""}
+        value={value}
+        onChange={onChange}
+      />
+
+      <div className="flex gap-3">
+        <Button variant="outline" onClick={onBack} className="gap-2">
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </Button>
+        <Button
+          className="flex-1 gap-2"
+          disabled={!value}
+          onClick={onNext}
+        >
+          Continue to Payment
+          <ArrowRight className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main CheckoutPage ─────────────────────────────────────────────────────────
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { items } = useCart();
 
-  const [step, setStep] = useState<"address" | "shipping" | "payment">(
-    "address",
-  );
-  const [form, setForm] = useState({
-    fullName: user?.name ?? "",
-    phone: "",
-    city: "",
-    district: "",
-    address: "",
-    zipCode: "",
+  const [step, setStep] = useState<Step>("address");
+  const [address, setAddress] = useState<Partial<ShippingAddress>>({
+    fullName: user ? `${(user as any).firstName ?? ""} ${(user as any).lastName ?? ""}`.trim() : "",
+    phone: (user as any)?.phone ?? "",
   });
-  const [shippingRate, setShippingRate] = useState<"Express" | "Regular">(
-    "Regular",
-  );
-  const [eta, setEta] = useState<ETAResult | null>(null);
-  const [etaLoading, setEtaLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Partial<typeof form>>({});
+  const [shippingRate, setShippingRate] = useState<ShippingRate | null>("REGULAR");
 
-  const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
-  const shippingCost =
-    eta?.[shippingRate === "Express" ? "expressPrice" : "regularPrice"] ?? 0;
-  const total = subtotal + shippingCost;
-
-  // ETA hesapla (şehir seçince)
+  // Redirect if cart is empty
   useEffect(() => {
-    if (!form.city || items.length === 0) return;
-    setEtaLoading(true);
-
-    // Demo: ilk merchant'tan ETA al
-    const firstOffer = items[0];
-    api
-      .get<ETAResult>("/api/fulfillment/calculate-eta", {
-        params: {
-          offerId: firstOffer.offerId,
-          destCity: form.city,
-        },
-      })
-      .then((r) => setEta(r.data))
-      .catch(() => {
-        // Fallback demo değerleri
-        setEta({
-          expressEta: new Date(Date.now() + 1 * 24 * 3600 * 1000).toISOString(),
-          regularEta: new Date(Date.now() + 3 * 24 * 3600 * 1000).toISOString(),
-          expressPrice: 49.9,
-          regularPrice: 19.9,
-        });
-      })
-      .finally(() => setEtaLoading(false));
-  }, [form.city]);
-
-  function validate() {
-    const e: Partial<typeof form> = {};
-    if (!form.fullName.trim()) e.fullName = "Full name required";
-    if (!form.phone.trim()) e.phone = "Phone required";
-    if (!form.city) e.city = "Select city";
-    if (!form.district.trim()) e.district = "District required";
-    if (!form.address.trim()) e.address = "Address required";
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  }
-
-  async function handleSubmit() {
-    if (!validate()) return;
-    setSubmitting(true);
-    try {
-      const { data } = await api.post("/api/orders", {
-        items: items.map((i) => ({
-          offerId: i.offerId,
-          quantity: i.quantity,
-        })),
-        shippingAddress: `${form.address}, ${form.district}, ${form.city} ${form.zipCode}`,
-        recipientName: form.fullName,
-        recipientPhone: form.phone,
-        shippingRate,
-        source: "Marketplace",
-      });
-      router.push(`/orders/${data.orderId}/tracking`);
-    } catch {
-      alert("Order could not be created. Please try again.");
-    } finally {
-      setSubmitting(false);
+    if (items.length === 0) {
+      router.replace("/cart");
     }
-  }
+  }, [items.length, router]);
 
-  const Field = ({
-    label,
-    name,
-    type = "text",
-    placeholder,
-  }: {
-    label: string;
-    name: keyof typeof form;
-    type?: string;
-    placeholder?: string;
-  }) => (
-    <div>
-      <label className="block text-xs font-medium text-gray-700 mb-1">
-        {label}
-      </label>
-      <input
-        type={type}
-        value={form[name]}
-        onChange={(e) => setForm((f) => ({ ...f, [name]: e.target.value }))}
-        placeholder={placeholder}
-        className={`w-full border rounded-lg px-3 py-2.5 text-sm outline-none transition-colors ${
-          errors[name]
-            ? "border-red-400 focus:border-red-500"
-            : "border-gray-200 focus:border-gray-900"
-        }`}
-      />
-      {errors[name] && (
-        <p className="text-xs text-red-500 mt-1">{errors[name]}</p>
-      )}
-    </div>
-  );
+  // Merchant from first cart item — used for ETA calculation
+  const merchantId = items[0]?.merchantId;
+
+  const goNext = () => {
+    const currentIdx = STEPS.indexOf(step);
+    if (currentIdx < STEPS.length - 1) setStep(STEPS[currentIdx + 1]);
+  };
+
+  const goBack = () => {
+    const currentIdx = STEPS.indexOf(step);
+    if (currentIdx > 0) setStep(STEPS[currentIdx - 1]);
+  };
+
+  if (items.length === 0) return null;
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen" style={{ background: "var(--off-white)" }}>
       {/* Header */}
-      <div className="border-b border-gray-200 bg-white">
-        <div className="max-w-5xl mx-auto px-4 py-5 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">Checkout</h1>
-          {/* Steps */}
-          <div className="flex items-center gap-2 text-xs font-mono">
-            {(["address", "shipping", "payment"] as const).map((s, idx) => (
-              <span key={s} className="flex items-center gap-2">
-                <span
-                  className={`${
-                    step === s
-                      ? "text-gray-900 font-bold"
-                      : step === "shipping" && s === "address"
-                        ? "text-gray-400"
-                        : step === "payment"
-                          ? "text-gray-400"
-                          : "text-gray-300"
-                  }`}
-                >
-                  {idx + 1}.{" "}
-                  {s === "address"
-                    ? "Address"
-                    : s === "shipping"
-                      ? "Shipping"
-                      : "Payment"}
-                </span>
-                {idx < 2 && <span className="text-gray-200">›</span>}
-              </span>
-            ))}
-          </div>
+      <div style={{ borderBottom: "1px solid rgba(51,51,51,0.08)", background: "#fff" }}>
+        <div className="max-w-4xl mx-auto px-4 py-5">
+          <button
+            onClick={() => router.push("/cart")}
+            className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-700 transition-colors mb-3"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Cart
+          </button>
+          <h1 className="text-2xl font-bold text-gray-900">Checkout</h1>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: Form */}
-          <div className="lg:col-span-2 space-y-4">
-            {/* Address step */}
-            {step === "address" && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h2 className="font-semibold text-gray-900 mb-5">
-                  Delivery Address
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="sm:col-span-2">
-                    <Field
-                      label="Full Name"
-                      name="fullName"
-                      placeholder="Your First and Last Name"
-                    />
-                  </div>
-                  <Field
-                    label="Phone"
-                    name="phone"
-                    placeholder="05XX XXX XX XX"
-                  />
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      City
-                    </label>
-                    <select
-                      value={form.city}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, city: e.target.value }))
-                      }
-                      className={`w-full border rounded-lg px-3 py-2.5 text-sm outline-none bg-white transition-colors ${
-                        errors.city
-                          ? "border-red-400"
-                          : "border-gray-200 focus:border-gray-900"
-                      }`}
-                    >
-                      <option value="">Select city</option>
-                      {CITIES.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.city && (
-                      <p className="text-xs text-red-500 mt-1">{errors.city}</p>
-                    )}
-                  </div>
-                  <Field
-                    label="District"
-                    name="district"
-                    placeholder="District"
-                  />
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Detailed Address
-                    </label>
-                    <textarea
-                      value={form.address}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, address: e.target.value }))
-                      }
-                      rows={3}
-                      placeholder="Neighborhood, Street, No, Apartment..."
-                      className={`w-full border rounded-lg px-3 py-2.5 text-sm outline-none resize-none transition-colors ${
-                        errors.address
-                          ? "border-red-400"
-                          : "border-gray-200 focus:border-gray-900"
-                      }`}
-                    />
-                    {errors.address && (
-                      <p className="text-xs text-red-500 mt-1">
-                        {errors.address}
-                      </p>
-                    )}
-                  </div>
-                  <Field
-                    label="Postal Code"
-                    name="zipCode"
-                    placeholder="34XXX"
-                  />
-                </div>
-                <button
-                  onClick={() => {
-                    if (validate()) setStep("shipping");
-                  }}
-                  className="mt-6 w-full py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                >
-                  Proceed to Shipping Selection →
-                </button>
-              </div>
-            )}
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="grid lg:grid-cols-[1fr_360px] gap-8">
+          {/* Left — steps */}
+          <div>
+            <StepIndicator current={step} steps={STEPS} />
 
-            {/* Shipping step */}
-            {step === "shipping" && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="font-semibold text-gray-900">
-                    Shipping Selection
-                  </h2>
-                  <button
-                    onClick={() => setStep("address")}
-                    className="text-xs text-gray-400 hover:text-gray-700"
-                  >
-                    ← Edit Address
-                  </button>
-                </div>
-
-                {etaLoading ? (
-                  <div className="text-center py-8">
-                    <div className="w-6 h-6 border-2 border-gray-900 border-t-transparent rounded-full animate-spin mx-auto" />
-                    <p className="text-sm text-gray-500 mt-2">
-                      Calculating ETA...
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {/* Express */}
-                    <button
-                      onClick={() => setShippingRate("Express")}
-                      className={`w-full text-left border-2 rounded-xl p-4 transition-all ${
-                        shippingRate === "Express"
-                          ? "border-gray-900 bg-gray-50"
-                          : "border-gray-100 hover:border-gray-300"
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold text-gray-900">
-                            ⚡ Express Shipping
-                          </p>
-                          <p className="text-sm text-gray-500 mt-0.5">
-                            {eta
-                              ? new Date(eta.expressEta).toLocaleDateString(
-                                  "en-US",
-                                  {
-                                    weekday: "long",
-                                    day: "numeric",
-                                    month: "long",
-                                  },
-                                ) + " delivery"
-                              : "1-2 business days"}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-gray-900">
-                            ₺{(eta?.expressPrice ?? 49.9).toFixed(2)}
-                          </p>
-                          {shippingRate === "Express" && (
-                            <p className="text-xs text-green-600 mt-0.5">
-                              ✓ Selected
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-
-                    {/* Regular */}
-                    <button
-                      onClick={() => setShippingRate("Regular")}
-                      className={`w-full text-left border-2 rounded-xl p-4 transition-all ${
-                        shippingRate === "Regular"
-                          ? "border-gray-900 bg-gray-50"
-                          : "border-gray-100 hover:border-gray-300"
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold text-gray-900">
-                            📦 Standard Shipping
-                          </p>
-                          <p className="text-sm text-gray-500 mt-0.5">
-                            {eta
-                              ? new Date(eta.regularEta).toLocaleDateString(
-                                  "en-US",
-                                  {
-                                    weekday: "long",
-                                    day: "numeric",
-                                    month: "long",
-                                  },
-                                ) + " delivery"
-                              : "3-5 business days"}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-gray-900">
-                            ₺{(eta?.regularPrice ?? 19.9).toFixed(2)}
-                          </p>
-                          {shippingRate === "Regular" && (
-                            <p className="text-xs text-green-600 mt-0.5">
-                              ✓ Selected
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                )}
-
-                <button
-                  onClick={() => setStep("payment")}
-                  className="mt-6 w-full py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                >
-                  Proceed to Payment →
-                </button>
-              </div>
-            )}
-
-            {/* Payment step */}
-            {step === "payment" && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="font-semibold text-gray-900">Payment</h2>
-                  <button
-                    onClick={() => setStep("shipping")}
-                    className="text-xs text-gray-400 hover:text-gray-700"
-                  >
-                    ← Change Shipping
-                  </button>
-                </div>
-
-                {/* iyzico embed gelecek */}
-                <div className="border border-dashed border-gray-200 rounded-xl p-8 text-center mb-6">
-                  <p className="text-gray-400 text-sm">
-                    iyzico payment form will be displayed here
-                  </p>
-                  <p className="text-xs text-gray-300 mt-1 font-mono">
-                    POST /api/payments/checkout → token → iyzico JS SDK
-                  </p>
-                </div>
-
-                {/* Demo: create order directly */}
-                <button
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  className="w-full py-3 bg-gray-900 text-white rounded-lg font-bold hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submitting
-                    ? "Processing..."
-                    : `Pay ₺${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
-                </button>
-                <p className="text-xs text-gray-400 text-center mt-2">
-                  Secure payment · 256-bit SSL encryption
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Right: Order summary */}
-          <div className="space-y-4">
-            <div className="bg-white rounded-xl border border-gray-200 p-5 sticky top-4">
-              <h2 className="font-semibold text-gray-900 mb-4">
-                Order Summary
-              </h2>
-
-              {items.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-4">
-                  Cart is empty
-                </p>
-              ) : (
-                <div className="space-y-3 mb-4">
-                  {items.map((item) => (
-                    <div key={item.offerId} className="flex gap-3 items-start">
-                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
-                        {item.image && (
-                          <img
-                            src={item.image}
-                            alt={item.productName}
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-800 font-medium truncate">
-                          {item.productName}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {item.merchantName} · ×{item.quantity}
-                        </p>
-                      </div>
-                      <p className="text-sm font-medium text-gray-900 flex-shrink-0">
-                        ₺{(item.price * item.quantity).toLocaleString("en-US")}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+            <div
+              className="bg-white rounded-2xl p-6"
+              style={{ border: "1px solid rgba(51,51,51,0.08)" }}
+            >
+              {step === "address" && (
+                <AddressStep
+                  value={address}
+                  onChange={setAddress}
+                  onNext={goNext}
+                />
               )}
 
-              <div className="border-t border-gray-100 pt-4 space-y-2">
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>Subtotal</span>
-                  <span>₺{subtotal.toLocaleString("en-US")}</span>
-                </div>
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>
-                    Shipping (
-                    {shippingRate === "Express" ? "Express" : "Standard"})
-                  </span>
-                  <span>
-                    {shippingCost > 0 ? `₺${shippingCost.toFixed(2)}` : "—"}
-                  </span>
-                </div>
-                <div className="flex justify-between font-bold text-gray-900 pt-2 border-t border-gray-100">
-                  <span>Toplam</span>
-                  <span>₺{total.toLocaleString("tr-TR")}</span>
-                </div>
-              </div>
+              {step === "shipping" && (
+                <ShippingStep
+                  address={address}
+                  merchantId={merchantId}
+                  value={shippingRate}
+                  onChange={setShippingRate}
+                  onNext={goNext}
+                  onBack={goBack}
+                />
+              )}
 
-              {eta && step !== "address" && (
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <p className="text-xs text-gray-500">
-                    📅 Estimated delivery:{" "}
-                    <strong className="text-gray-800">
-                      {new Date(
-                        shippingRate === "Express"
-                          ? eta.expressEta
-                          : eta.regularEta,
-                      ).toLocaleDateString("tr-TR", {
-                        weekday: "short",
-                        day: "numeric",
-                        month: "long",
-                      })}
-                    </strong>
-                  </p>
+              {step === "payment" && shippingRate && (
+                <div className="space-y-5">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-bold text-gray-900">Payment</h2>
+                    <button
+                      onClick={goBack}
+                      className="text-sm text-gray-400 hover:text-gray-700 flex items-center gap-1"
+                    >
+                      <ArrowLeft className="w-3 h-3" />
+                      Back
+                    </button>
+                  </div>
+                  <PaymentForm
+                    merchantId={merchantId ?? ""}
+                    shippingAddress={address as ShippingAddress}
+                    shippingRate={shippingRate}
+                    source="MARKETPLACE"
+                    onSuccess={(orderId) => {
+                      router.push(`/orders/${orderId}/tracking`);
+                    }}
+                  />
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Right — cart summary */}
+          <div className="space-y-4">
+            <CartSummary readonly={step !== "address"} />
           </div>
         </div>
       </div>
