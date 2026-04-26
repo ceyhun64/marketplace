@@ -2,17 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Search,
-  Sparkles,
-  Zap,
   Truck,
   Package,
   Store,
   ChevronRight,
+  ArrowRight,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 const HERO_TAGS = ["Electronics", "Fashion", "Home & Living", "Fast Delivery"];
 
@@ -27,67 +25,241 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden py-12">
-      {/* Soft Background Accents */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-5%] right-[-5%] w-[35%] h-[35%] bg-gray-50 blur-[100px] rounded-full" />
-        <div className="absolute bottom-[-5%] left-[-5%] w-[30%] h-[30%] bg-blue-50/50 blur-[100px] rounded-full" />
+    <section
+      style={{
+        position: "relative",
+        minHeight: "88vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+        padding: "3rem 0",
+        background: "var(--off-white)",
+      }}
+    >
+      {/* Subtle background texture */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: "-10%",
+            right: "-5%",
+            width: "45%",
+            height: "70%",
+            background:
+              "radial-gradient(ellipse, rgba(200,16,46,0.04) 0%, transparent 70%)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: "-10%",
+            left: "-5%",
+            width: "35%",
+            height: "50%",
+            background:
+              "radial-gradient(ellipse, rgba(51,51,51,0.04) 0%, transparent 70%)",
+          }}
+        />
+        {/* Decorative line */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 1,
+            background: "var(--border-light)",
+          }}
+        />
       </div>
 
-      <div className="relative max-w-[1300px] mx-auto px-6 lg:px-12 w-full">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Left Content */}
-          <div className="z-10 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-full mb-8 shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-              <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
-                Next-Gen Commerce Ecosystem
-              </span>
+      <div
+        style={{
+          position: "relative",
+          maxWidth: 1100,
+          margin: "0 auto",
+          padding: "0 2rem",
+          width: "100%",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "5rem",
+            alignItems: "center",
+          }}
+          className="lg:grid-cols-2 grid-cols-1"
+        >
+          {/* Left: Text content */}
+          <div style={{ zIndex: 10 }}>
+            {/* Section label */}
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                background: "var(--red-muted)",
+                color: "var(--red)",
+                border: "1px solid var(--red-subtle)",
+                borderRadius: 999,
+                padding: "4px 14px",
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.6875rem",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase" as const,
+                marginBottom: "2rem",
+              }}
+            >
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: "var(--red)",
+                  display: "inline-block",
+                }}
+              />
+              Next-Gen Commerce
             </div>
 
-            <h1 className="text-black mb-6 leading-[1.15] text-[clamp(40px,5.5vw,62px)] font-bold tracking-tight">
-              Powerful Marketplace <br />
-              <span className="text-gray-400">Meets Fast</span> <br />
-              Delivery.
+            <h1
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(2.75rem, 5vw, 4.5rem)",
+                fontWeight: 400,
+                lineHeight: 1.05,
+                letterSpacing: "-0.02em",
+                color: "var(--charcoal)",
+                marginBottom: "1.5rem",
+              }}
+            >
+              Premium{" "}
+              <em style={{ color: "var(--red)", fontStyle: "italic" }}>
+                Marketplace
+              </em>
+              <br />
+              Meets Fast Delivery.
             </h1>
 
-            <p className="text-gray-500 text-lg leading-relaxed mb-10 max-w-[520px] mx-auto lg:mx-0 font-medium">
-              We redefine digital commerce with the power of independent stores
-              and an integrated courier engine. Everything under one roof.
+            <p
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: "1rem",
+                color: "var(--charcoal-soft)",
+                lineHeight: 1.8,
+                marginBottom: "2.5rem",
+                maxWidth: 480,
+              }}
+            >
+              We redefine digital commerce with independent stores and an
+              integrated courier engine — everything under one roof.
             </p>
 
-            {/* Search Bar */}
+            {/* Search */}
             <form
               onSubmit={handleSearch}
-              className="max-w-xl mx-auto lg:mx-0 mb-8"
+              style={{ marginBottom: "2rem", maxWidth: 500 }}
             >
-              <div className="group relative flex items-center p-1.5 bg-white rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-gray-100 transition-all focus-within:border-black focus-within:shadow-[0_15px_40px_rgba(0,0,0,0.06)]">
-                <div className="flex items-center pl-4 pr-1 text-gray-400">
-                  <Search className="w-5 h-5" strokeWidth={2} />
-                </div>
-                <Input
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  background: "var(--white)",
+                  border: "1.5px solid var(--border-mid)",
+                  borderRadius: "0.75rem",
+                  padding: "6px 6px 6px 16px",
+                  boxShadow: "var(--shadow-sm)",
+                  transition:
+                    "border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out)",
+                }}
+                className="focus-within:!border-[var(--red)] focus-within:shadow-[0_0_0_3px_var(--red-muted)]"
+              >
+                <Search
+                  style={{
+                    color: "var(--charcoal-soft)",
+                    flexShrink: 0,
+                    marginRight: 8,
+                  }}
+                  size={16}
+                  strokeWidth={2}
+                />
+                <input
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search products, stores or tracking ID..."
-                  className="flex-1 border-0 text-[15px] text-black bg-transparent placeholder:text-gray-400 focus-visible:ring-0 h-12"
+                  placeholder="Search products, stores..."
+                  style={{
+                    flex: 1,
+                    border: "none",
+                    outline: "none",
+                    background: "transparent",
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.9375rem",
+                    color: "var(--charcoal)",
+                    lineHeight: 1.5,
+                  }}
                 />
-                <Button
+                <button
                   type="submit"
-                  className="rounded-xl bg-black text-white hover:bg-gray-800 transition-all px-7 h-11 font-semibold text-sm active:scale-95"
+                  style={{
+                    background: "var(--red)",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "0.5rem",
+                    padding: "0.625rem 1.25rem",
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.8125rem",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.375rem",
+                    flexShrink: 0,
+                    transition:
+                      "background var(--duration-fast) var(--ease-out)",
+                    boxShadow: "0 2px 8px rgba(200,16,46,0.25)",
+                  }}
                 >
-                  Search
-                </Button>
+                  Search <ArrowRight size={13} />
+                </button>
               </div>
             </form>
 
-            {/* Popular Tags */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-2">
+            {/* Tags */}
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap" as const,
+                gap: "0.5rem",
+              }}
+            >
               {HERO_TAGS.map((tag) => (
                 <Link
                   key={tag}
                   href={`/products?category=${tag.toLowerCase()}`}
-                  className="px-4 py-1.5 bg-gray-50 border border-gray-100 text-[12px] font-semibold text-gray-500 hover:text-black hover:border-gray-300 transition-all rounded-lg"
+                  style={{
+                    padding: "5px 14px",
+                    background: "var(--white)",
+                    border: "1.5px solid var(--border-light)",
+                    borderRadius: 999,
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.6875rem",
+                    fontWeight: 500,
+                    color: "var(--charcoal-soft)",
+                    letterSpacing: "0.08em",
+                    textDecoration: "none",
+                    transition:
+                      "border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out)",
+                  }}
                 >
                   {tag}
                 </Link>
@@ -95,84 +267,267 @@ export default function HeroSection() {
             </div>
           </div>
 
-          {/* Right Content: Modern Visual Cards */}
-          <div className="relative hidden lg:flex items-center justify-center h-[550px]">
-            <div className="absolute w-[400px] h-[400px] bg-gray-50/50 rounded-full border border-gray-100 shadow-inner" />
+          {/* Right: Visual cards */}
+          <div
+            className="hidden lg:flex"
+            style={{
+              position: "relative",
+              alignItems: "center",
+              justifyContent: "center",
+              height: 520,
+            }}
+          >
+            {/* Background circle */}
+            <div
+              style={{
+                position: "absolute",
+                width: 380,
+                height: 380,
+                borderRadius: "50%",
+                background: "var(--off-white-2)",
+                border: "1px solid var(--border-light)",
+              }}
+            />
 
-            {/* Main Offer Card */}
-            <div className="relative w-[340px] bg-white rounded-[32px] shadow-[0_30px_60px_rgba(0,0,0,0.08)] border border-gray-100 overflow-hidden z-20">
-              <div className="h-[200px] bg-gray-50 flex items-center justify-center p-8 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-gray-200/20" />
-                <Package className="w-24 h-24 text-black opacity-[0.03] absolute -right-4 -bottom-4 rotate-12" />
-                <div className="text-6xl animate-bounce-slow relative z-10">
-                  📦
-                </div>
+            {/* Main product card */}
+            <div
+              style={{
+                position: "relative",
+                width: 320,
+                background: "var(--white)",
+                borderRadius: 24,
+                boxShadow: "var(--shadow-lg)",
+                border: "1px solid var(--border-light)",
+                overflow: "hidden",
+                zIndex: 20,
+              }}
+            >
+              {/* Red top accent */}
+              <div style={{ height: 3, background: "var(--red)" }} />
+              <div
+                style={{
+                  height: 180,
+                  background:
+                    "linear-gradient(135deg, var(--off-white) 0%, var(--off-white-2) 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 64,
+                }}
+              >
+                📦
               </div>
-
-              <div className="p-7">
-                <div className="flex justify-between items-center mb-6">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600">
-                      Best Offer
-                    </span>
-                    <h3 className="text-lg font-bold text-black mt-0.5">
-                      iPhone 15 Pro
-                    </h3>
-                  </div>
-                  <div className="bg-gray-900 p-2 rounded-xl shadow-lg">
-                    <Zap className="w-4 h-4 text-white" fill="white" />
-                  </div>
+              <div style={{ padding: "1.5rem" }}>
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.6875rem",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase" as const,
+                    color: "var(--red)",
+                    marginBottom: "0.375rem",
+                  }}
+                >
+                  Best Offer
                 </div>
-
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50">
-                  <div className="text-xl font-bold tracking-tight">
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: "1.25rem",
+                    fontWeight: 500,
+                    color: "var(--charcoal)",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  iPhone 15 Pro
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    paddingTop: "1rem",
+                    borderTop: "1px solid var(--border-light)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: "1.5rem",
+                      fontWeight: 500,
+                      color: "var(--charcoal)",
+                    }}
+                  >
                     ₺72,499
                   </div>
-                  <Button
-                    variant="outline"
-                    className="rounded-xl h-10 px-5 text-xs font-bold border-gray-200 hover:bg-black hover:text-white transition-all"
+                  <button
+                    style={{
+                      background: "transparent",
+                      border: "1.5px solid var(--border-mid)",
+                      borderRadius: "0.5rem",
+                      padding: "0.5rem 1rem",
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.75rem",
+                      fontWeight: 600,
+                      color: "var(--charcoal)",
+                      cursor: "pointer",
+                      transition:
+                        "border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out)",
+                    }}
                   >
                     View Details
-                  </Button>
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Live Tracking Status */}
-            <div className="absolute top-12 right-0 z-30 bg-white border border-gray-100 p-4 rounded-2xl shadow-xl animate-float min-w-[200px]">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center">
-                  <Truck className="w-5 h-5 text-white" />
+            {/* Tracking float card */}
+            <div
+              className="animate-float"
+              style={{
+                position: "absolute",
+                top: 40,
+                right: -10,
+                zIndex: 30,
+                background: "var(--white)",
+                border: "1px solid var(--border-light)",
+                borderRadius: 16,
+                padding: "1rem 1.25rem",
+                boxShadow: "var(--shadow-md)",
+                minWidth: 210,
+                animationDelay: "0s",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                }}
+              >
+                <div
+                  style={{
+                    width: 38,
+                    height: 38,
+                    background: "var(--charcoal)",
+                    borderRadius: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Truck size={16} color="white" />
                 </div>
                 <div>
-                  <div className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">
-                    Courier on the way
+                  <div
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.625rem",
+                      color: "var(--charcoal-soft)",
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase" as const,
+                      marginBottom: 2,
+                    }}
+                  >
+                    Courier en route
                   </div>
-                  <div className="text-xs font-bold text-black italic">
+                  <div
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      color: "var(--charcoal)",
+                    }}
+                  >
                     Arriving in 3 mins
                   </div>
-                  <div className="w-full bg-gray-100 h-1 mt-2 rounded-full overflow-hidden">
-                    <div className="bg-black h-full w-3/4 animate-pulse" />
+                  <div
+                    style={{
+                      width: "100%",
+                      background: "var(--off-white-2)",
+                      height: 3,
+                      borderRadius: 999,
+                      marginTop: 6,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "75%",
+                        height: "100%",
+                        background: "var(--red)",
+                        borderRadius: 999,
+                      }}
+                    />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Merchant Status */}
-            <div className="absolute bottom-16 left-0 z-30 bg-white border border-gray-100 p-4 rounded-2xl shadow-xl -rotate-2">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                  <Store className="w-5 h-5 text-blue-600" />
+            {/* Store card */}
+            <div
+              className="animate-float"
+              style={{
+                position: "absolute",
+                bottom: 60,
+                left: -20,
+                zIndex: 30,
+                background: "var(--white)",
+                border: "1px solid var(--border-light)",
+                borderRadius: 16,
+                padding: "1rem 1.25rem",
+                boxShadow: "var(--shadow-md)",
+                transform: "rotate(-2deg)",
+                animationDelay: "1.5s",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                }}
+              >
+                <div
+                  style={{
+                    width: 38,
+                    height: 38,
+                    background: "var(--red-muted)",
+                    borderRadius: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Store size={16} color="var(--red)" />
                 </div>
                 <div>
-                  <div className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">
+                  <div
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.625rem",
+                      color: "var(--charcoal-soft)",
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase" as const,
+                      marginBottom: 2,
+                    }}
+                  >
                     Seller Panel
                   </div>
-                  <div className="text-xs font-bold text-black">
+                  <div
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      color: "var(--charcoal)",
+                    }}
+                  >
                     Open Your Store
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-gray-300" />
+                <ChevronRight size={14} color="var(--border-mid)" />
               </div>
             </div>
           </div>

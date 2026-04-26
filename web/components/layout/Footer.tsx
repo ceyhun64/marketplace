@@ -1,9 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 
 const FOOTER_LINKS = {
   marketplace: {
@@ -42,56 +40,134 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full flex flex-col items-center px-4 md:px-6 pb-12 mt-32">
+    <footer
+      style={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column" as const,
+        alignItems: "center",
+        padding: "0 1.5rem 4rem",
+        marginTop: "6rem",
+      }}
+    >
       {/* Main Footer Container */}
-      <div className="w-full max-w-[1200px] bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden p-8 md:p-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
-          {/* Brand column */}
-          <div className="lg:col-span-1">
-            <Link href="/" className="flex items-center gap-2.5 mb-8 group">
-              <div className="w-9 h-9 bg-black rounded-lg flex items-center justify-center transition-transform group-hover:scale-105 shrink-0">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <rect x="2" y="2" width="5" height="5" fill="white" rx="1" />
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 1100,
+          background: "var(--white)",
+          border: "1px solid var(--border-light)",
+          borderRadius: 28,
+          boxShadow: "var(--shadow-sm)",
+          overflow: "hidden",
+          padding: "3.5rem",
+        }}
+      >
+        {/* Top: brand + links */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1.5fr 1fr 1fr 1fr",
+            gap: "3rem",
+          }}
+          className="lg:grid-cols-4 grid-cols-1"
+        >
+          {/* Brand */}
+          <div>
+            <Link
+              href="/"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.625rem",
+                marginBottom: "1.5rem",
+                textDecoration: "none",
+              }}
+            >
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  background: "var(--red)",
+                  borderRadius: 7,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 2px 8px rgba(200,16,46,0.25)",
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <rect x="1" y="1" width="5" height="5" fill="white" rx="1" />
                   <rect
-                    x="9"
-                    y="2"
+                    x="8"
+                    y="1"
                     width="5"
                     height="5"
-                    fill="#e5e7eb"
+                    fill="rgba(255,255,255,0.5)"
                     rx="1"
                   />
                   <rect
-                    x="2"
-                    y="9"
+                    x="1"
+                    y="8"
                     width="5"
                     height="5"
-                    fill="#e5e7eb"
+                    fill="rgba(255,255,255,0.5)"
                     rx="1"
                   />
-                  <rect x="9" y="9" width="5" height="5" fill="white" rx="1" />
+                  <rect x="8" y="8" width="5" height="5" fill="white" rx="1" />
                 </svg>
               </div>
-              <span className="text-black text-xl font-bold tracking-tight">
-                Marketplace
+              <span
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "1.25rem",
+                  fontWeight: 500,
+                  color: "var(--charcoal)",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                BAZR
               </span>
             </Link>
 
-            <p className="text-gray-500 text-[14px] leading-relaxed mb-8 max-w-[260px]">
+            <p
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: "0.875rem",
+                color: "var(--charcoal-soft)",
+                lineHeight: 1.8,
+                marginBottom: "1.75rem",
+                maxWidth: 240,
+              }}
+            >
               The modern meeting point of digital commerce. Discover with
               confidence, shop with pleasure.
             </p>
 
-            {/* Social Icons */}
-            <div className="flex gap-2">
+            <div style={{ display: "flex", gap: "0.5rem" }}>
               {[
-                { label: "Instagram", href: "#", icon: <InstagramIcon /> },
-                { label: "Twitter", href: "#", icon: <TwitterIcon /> },
-                { label: "LinkedIn", href: "#", icon: <LinkedInIcon /> },
+                { label: "Instagram", icon: <InstagramIcon /> },
+                { label: "Twitter", icon: <TwitterIcon /> },
+                { label: "LinkedIn", icon: <LinkedInIcon /> },
               ].map((s) => (
                 <a
                   key={s.label}
-                  href={s.href}
-                  className="w-9 h-9 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:bg-black hover:text-white transition-all duration-300"
+                  href="#"
+                  style={{
+                    width: 34,
+                    height: 34,
+                    background: "var(--off-white-2)",
+                    border: "1px solid var(--border-light)",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--charcoal-soft)",
+                    textDecoration: "none",
+                    transition:
+                      "background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out)",
+                  }}
                 >
                   {s.icon}
                 </a>
@@ -101,16 +177,52 @@ export default function Footer() {
 
           {/* Link columns */}
           {Object.values(FOOTER_LINKS).map((section) => (
-            <div key={section.title} className="lg:ml-auto">
-              <h3 className="text-[12px] uppercase tracking-wider text-black font-bold mb-8">
+            <div key={section.title}>
+              <div
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.6875rem",
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase" as const,
+                  color: "var(--charcoal-soft)",
+                  marginBottom: "1.25rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 16,
+                    height: 1,
+                    background: "var(--red)",
+                  }}
+                />
                 {section.title}
-              </h3>
-              <ul className="flex flex-col gap-4">
+              </div>
+              <ul
+                style={{
+                  listStyle: "none",
+                  padding: 0,
+                  margin: 0,
+                  display: "flex",
+                  flexDirection: "column" as const,
+                  gap: "0.875rem",
+                }}
+              >
                 {section.links.map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-gray-500 text-[14px] font-medium hover:text-black transition-colors inline-block"
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        fontSize: "0.875rem",
+                        color: "var(--charcoal-soft)",
+                        textDecoration: "none",
+                        transition:
+                          "color var(--duration-fast) var(--ease-out)",
+                      }}
                     >
                       {link.label}
                     </Link>
@@ -121,47 +233,129 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Newsletter Section */}
-        <div className="mt-20 p-8 md:p-10 bg-gray-50/50 border border-gray-100 rounded-[24px]">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-            <div className="max-w-md">
-              <h4 className="text-black text-xl mb-2 font-bold tracking-tight">
-                Join Our Newsletter
-              </h4>
-              <p className="text-gray-500 text-[14px]">
-                Get the latest stores and exclusive deals delivered to your
-                inbox every week.
-              </p>
+        {/* Newsletter */}
+        <div
+          style={{
+            marginTop: "3rem",
+            padding: "2rem 2.5rem",
+            background: "var(--off-white)",
+            border: "1px solid var(--border-light)",
+            borderRadius: 20,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "2rem",
+            flexWrap: "wrap" as const,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "1.375rem",
+                fontWeight: 500,
+                color: "var(--charcoal)",
+                marginBottom: "0.375rem",
+              }}
+            >
+              Join Our Newsletter
             </div>
-            <div className="flex items-center w-full lg:w-auto bg-white p-1.5 rounded-xl border border-gray-200 focus-within:border-black transition-all">
-              <Input
-                type="email"
-                placeholder="Your email address"
-                className="flex-1 lg:w-[280px] bg-transparent border-0 text-black placeholder:text-gray-400 focus-visible:ring-0 h-10 px-4"
-              />
-              <Button
-                type="button"
-                className="rounded-lg bg-black hover:bg-gray-800 text-white font-semibold text-xs px-6 h-10 transition-all active:scale-95"
-              >
-                Subscribe
-              </Button>
-            </div>
+            <p
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: "0.875rem",
+                color: "var(--charcoal-soft)",
+                lineHeight: 1.6,
+              }}
+            >
+              Get the latest stores and exclusive deals delivered weekly.
+            </p>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              background: "var(--white)",
+              border: "1.5px solid var(--border-mid)",
+              borderRadius: "0.75rem",
+              padding: "5px 5px 5px 14px",
+              gap: "0.5rem",
+              minWidth: 340,
+            }}
+          >
+            <input
+              type="email"
+              placeholder="Your email address"
+              style={{
+                flex: 1,
+                border: "none",
+                outline: "none",
+                background: "transparent",
+                fontFamily: "var(--font-body)",
+                fontSize: "0.875rem",
+                color: "var(--charcoal)",
+              }}
+            />
+            <button
+              type="button"
+              style={{
+                background: "var(--red)",
+                color: "white",
+                border: "none",
+                borderRadius: "0.5rem",
+                padding: "0.625rem 1.25rem",
+                fontFamily: "var(--font-body)",
+                fontSize: "0.8125rem",
+                fontWeight: 600,
+                cursor: "pointer",
+                flexShrink: 0,
+                boxShadow: "0 2px 8px rgba(200,16,46,0.2)",
+                transition: "background var(--duration-fast) var(--ease-out)",
+              }}
+            >
+              Subscribe
+            </button>
           </div>
         </div>
 
-        {/* Stats Strip */}
-        <div className="mt-16 pt-10 border-t border-gray-50 grid grid-cols-2 md:grid-cols-4 gap-6">
+        {/* Stats */}
+        <div
+          style={{
+            marginTop: "2.5rem",
+            paddingTop: "2rem",
+            borderTop: "1px solid var(--border-light)",
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: "1.5rem",
+          }}
+        >
           {[
             { value: "2.4K+", label: "Active Sellers" },
             { value: "48K+", label: "Product Variety" },
             { value: "180K", label: "Happy Customers" },
             { value: "4.8/5", label: "Satisfaction Rate" },
           ].map((stat) => (
-            <div key={stat.label} className="text-center md:text-left">
-              <div className="text-black text-lg font-bold mb-0.5">
+            <div key={stat.label}>
+              <div
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "1.5rem",
+                  fontWeight: 500,
+                  color: "var(--charcoal)",
+                  marginBottom: "0.25rem",
+                }}
+              >
                 {stat.value}
               </div>
-              <div className="text-gray-400 text-[10px] uppercase tracking-widest font-medium">
+              <div
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.625rem",
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase" as const,
+                  color: "var(--charcoal-soft)",
+                }}
+              >
                 {stat.label}
               </div>
             </div>
@@ -169,27 +363,62 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Bottom Legal Bar */}
-      <div className="w-full max-w-[1100px] mt-10 px-4 flex flex-col md:flex-row items-center justify-between gap-6">
-        <p className="text-[11px] text-gray-400 font-medium">
-          © {currentYear} Marketplace Studio. All rights reserved.
+      {/* Bottom legal */}
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 1100,
+          marginTop: "2rem",
+          padding: "0 0.5rem",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap" as const,
+          gap: "1rem",
+        }}
+      >
+        <p
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.6875rem",
+            color: "var(--charcoal-soft)",
+            letterSpacing: "0.05em",
+          }}
+        >
+          © {currentYear} BAZR Studio. All rights reserved.
         </p>
-        <div className="flex items-center gap-8">
+        <div style={{ display: "flex", gap: "1.5rem" }}>
           {["Privacy", "Terms", "Cookies"].map((item) => (
             <Link
               key={item}
               href="#"
-              className="text-[11px] text-gray-400 hover:text-black transition-colors font-medium"
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.6875rem",
+                color: "var(--charcoal-soft)",
+                textDecoration: "none",
+                letterSpacing: "0.05em",
+                transition: "color var(--duration-fast) var(--ease-out)",
+              }}
             >
               {item}
             </Link>
           ))}
         </div>
-        <div className="flex gap-4 opacity-40 hover:opacity-100 transition-opacity">
+        <div style={{ display: "flex", gap: "0.75rem", opacity: 0.5 }}>
           {["VISA", "STRIPE", "IYZICO"].map((pay) => (
             <span
               key={pay}
-              className="text-[9px] text-black font-bold border border-gray-200 px-2 py-1 rounded"
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.5625rem",
+                fontWeight: 700,
+                color: "var(--charcoal)",
+                border: "1px solid var(--border-mid)",
+                padding: "3px 8px",
+                borderRadius: 4,
+                letterSpacing: "0.08em",
+              }}
             >
               {pay}
             </span>
@@ -200,12 +429,11 @@ export default function Footer() {
   );
 }
 
-// Icon Components remains the same
 function InstagramIcon() {
   return (
     <svg
-      width="16"
-      height="16"
+      width="15"
+      height="15"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -221,7 +449,7 @@ function InstagramIcon() {
 }
 function TwitterIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
     </svg>
   );
@@ -229,8 +457,8 @@ function TwitterIcon() {
 function LinkedInIcon() {
   return (
     <svg
-      width="16"
-      height="16"
+      width="15"
+      height="15"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

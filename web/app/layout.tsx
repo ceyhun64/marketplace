@@ -1,26 +1,28 @@
 import type { Metadata } from "next";
-import { DM_Sans, DM_Serif_Display, Space_Mono } from "next/font/google";
+import { Manrope, Cormorant_Garamond, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import ClientLayoutWrapper from "@/components/layout/ClientLayoutWrapper";
 
-const dmSans = DM_Sans({
+const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-dm-sans",
-  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-manrope",
+  weight: ["300", "400", "500", "600", "700", "800"],
   display: "swap",
 });
-const dmSerifDisplay = DM_Serif_Display({
+
+const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
-  variable: "--font-dm-serif",
-  weight: ["400"],
+  variable: "--font-cormorant",
+  weight: ["300", "400", "500", "600"],
   display: "swap",
 });
-const spaceMono = Space_Mono({
+
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  variable: "--font-space-mono",
-  weight: ["400", "700"],
+  variable: "--font-jetbrains",
+  weight: ["300", "400", "500"],
   display: "swap",
 });
 
@@ -37,10 +39,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${dmSerifDisplay.variable} ${spaceMono.variable}`}
+      className={`${manrope.variable} ${cormorant.variable} ${jetbrainsMono.variable}`}
     >
       <body
-        style={{ fontFamily: "var(--font-dm-sans), sans-serif" }}
+        style={{ fontFamily: "var(--font-manrope), sans-serif" }}
         className="antialiased"
       >
         <QueryProvider>

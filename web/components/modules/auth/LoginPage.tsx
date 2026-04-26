@@ -4,12 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ArrowRight, Loader2, ShieldCheck } from "lucide-react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import { ArrowRight, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,7 +19,6 @@ export default function LoginPage() {
       await login(email, password);
       const { user } = useAuth.getState();
       if (!user) return;
-
       const roleRoutes: Record<string, string> = {
         Admin: "/admin",
         Merchant: "/merchant",
@@ -32,100 +26,383 @@ export default function LoginPage() {
         Customer: "/",
       };
       router.push(roleRoutes[user.role] ?? "/");
-    } catch {
-      // Error is managed inside useAuth
-    }
+    } catch {}
+  };
+
+  const inputStyle = {
+    width: "100%",
+    padding: "0.875rem 1rem",
+    background: "var(--off-white)",
+    border: "1.5px solid var(--border-mid)",
+    borderRadius: "0.5rem",
+    fontFamily: "var(--font-body)",
+    fontSize: "0.9375rem",
+    color: "var(--charcoal)",
+    outline: "none",
+    transition:
+      "border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out)",
+  };
+
+  const labelStyle = {
+    fontFamily: "var(--font-mono)",
+    fontSize: "0.6875rem",
+    letterSpacing: "0.14em",
+    textTransform: "uppercase" as const,
+    color: "var(--charcoal-mid)",
+    fontWeight: 500,
+    marginBottom: "0.5rem",
+    display: "block",
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center p-6">
-      {/* Decorative Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-[#C84B2F]/5 blur-[120px]" />
-        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-[#1A4A6B]/5 blur-[120px]" />
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1.5rem",
+        background: "var(--off-white)",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Background accents */}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        <div
+          style={{
+            position: "absolute",
+            top: "-10%",
+            right: "-5%",
+            width: "40%",
+            height: "50%",
+            background:
+              "radial-gradient(ellipse, rgba(200,16,46,0.05) 0%, transparent 70%)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: "-10%",
+            left: "-5%",
+            width: "35%",
+            height: "40%",
+            background:
+              "radial-gradient(ellipse, rgba(51,51,51,0.04) 0%, transparent 70%)",
+          }}
+        />
       </div>
 
-      <div className="w-full max-w-[440px] relative">
-        {/* Login Card */}
-        <div className="bg-white/80 backdrop-blur-xl border border-black/[0.03] rounded-[40px] p-8 md:p-10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)]">
-          <div className="mb-8">
-            <h1 className="text-3xl font-serif font-bold text-black mb-2">
-              Welcome Back
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 420,
+          position: "relative",
+          zIndex: 10,
+        }}
+      >
+        {/* Logo */}
+        <Link
+          href="/"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.625rem",
+            marginBottom: "2.5rem",
+            textDecoration: "none",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              background: "var(--red)",
+              borderRadius: 7,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 2px 8px rgba(200,16,46,0.25)",
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="1" width="5" height="5" fill="white" rx="1" />
+              <rect
+                x="8"
+                y="1"
+                width="5"
+                height="5"
+                fill="rgba(255,255,255,0.5)"
+                rx="1"
+              />
+              <rect
+                x="1"
+                y="8"
+                width="5"
+                height="5"
+                fill="rgba(255,255,255,0.5)"
+                rx="1"
+              />
+              <rect x="8" y="8" width="5" height="5" fill="white" rx="1" />
+            </svg>
+          </div>
+          <span
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "1.25rem",
+              fontWeight: 500,
+              color: "var(--charcoal)",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            BAZR
+          </span>
+        </Link>
+
+        {/* Card */}
+        <div
+          style={{
+            background: "var(--white)",
+            border: "1px solid var(--border-light)",
+            borderRadius: 20,
+            padding: "2.5rem",
+            boxShadow: "var(--shadow-md)",
+          }}
+        >
+          {/* Header */}
+          <div style={{ marginBottom: "2rem" }}>
+            <div
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.6875rem",
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "var(--red)",
+                marginBottom: "0.75rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}
+            >
+              <span
+                style={{
+                  width: 16,
+                  height: 1,
+                  background: "var(--red)",
+                  display: "inline-block",
+                }}
+              />
+              Account Access
+            </div>
+            <h1
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "2.25rem",
+                fontWeight: 400,
+                color: "var(--charcoal)",
+                letterSpacing: "-0.02em",
+                lineHeight: 1.1,
+                marginBottom: "0.5rem",
+              }}
+            >
+              Welcome{" "}
+              <em style={{ color: "var(--red)", fontStyle: "italic" }}>Back</em>
             </h1>
-            <p className="text-[#7A7060] text-sm">
-              Access your account to continue or{" "}
+            <p
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: "0.875rem",
+                color: "var(--charcoal-soft)",
+                lineHeight: 1.6,
+              }}
+            >
+              Don&apos;t have an account?{" "}
               <Link
                 href="/auth/register"
-                className="text-black font-bold hover:text-[#C84B2F] transition-colors underline decoration-black/10 underline-offset-4"
+                style={{
+                  color: "var(--red)",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                }}
               >
-                create a new account.
+                Register
               </Link>
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            style={{
+              display: "flex",
+              flexDirection: "column" as const,
+              gap: "1.25rem",
+            }}
+          >
             {error && (
-              <div className="px-5 py-4 bg-red-50 border border-red-100 rounded-2xl text-[13px] text-red-600 font-medium animate-in fade-in slide-in-from-top-1">
+              <div
+                style={{
+                  padding: "0.875rem 1rem",
+                  background: "var(--red-muted)",
+                  border: "1px solid var(--red-subtle)",
+                  borderRadius: "0.5rem",
+                  fontFamily: "var(--font-body)",
+                  fontSize: "0.8125rem",
+                  color: "var(--red)",
+                }}
+              >
                 {error}
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[#7A7060] ml-1">
-                Email Address
-              </Label>
-              <Input
+            <div>
+              <label style={labelStyle}>Email Address</label>
+              <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="you@example.com"
-                className="h-14 rounded-2xl border-black/[0.05] bg-white/50 focus:bg-white focus:ring-black/5 transition-all"
+                style={inputStyle}
+                onFocus={(e) => {
+                  (e.target as HTMLInputElement).style.borderColor =
+                    "var(--red)";
+                  (e.target as HTMLInputElement).style.background =
+                    "var(--white)";
+                  (e.target as HTMLInputElement).style.boxShadow =
+                    "0 0 0 3px var(--red-muted)";
+                }}
+                onBlur={(e) => {
+                  (e.target as HTMLInputElement).style.borderColor =
+                    "var(--border-mid)";
+                  (e.target as HTMLInputElement).style.background =
+                    "var(--off-white)";
+                  (e.target as HTMLInputElement).style.boxShadow = "none";
+                }}
               />
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between ml-1">
-                <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[#7A7060]">
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                <label style={{ ...labelStyle, marginBottom: 0 }}>
                   Password
-                </Label>
+                </label>
                 <Link
                   href="/auth/forgot-password"
-                  className="text-[11px] font-bold text-[#7A7060] hover:text-black transition-colors uppercase tracking-wider"
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.625rem",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase" as const,
+                    color: "var(--charcoal-soft)",
+                    textDecoration: "none",
+                    transition: "color var(--duration-fast) var(--ease-out)",
+                  }}
                 >
                   Forgot?
                 </Link>
               </div>
-              <Input
+              <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="••••••••"
-                className="h-14 rounded-2xl border-black/[0.05] bg-white/50 focus:bg-white focus:ring-black/5 transition-all"
+                style={inputStyle}
+                onFocus={(e) => {
+                  (e.target as HTMLInputElement).style.borderColor =
+                    "var(--red)";
+                  (e.target as HTMLInputElement).style.background =
+                    "var(--white)";
+                  (e.target as HTMLInputElement).style.boxShadow =
+                    "0 0 0 3px var(--red-muted)";
+                }}
+                onBlur={(e) => {
+                  (e.target as HTMLInputElement).style.borderColor =
+                    "var(--border-mid)";
+                  (e.target as HTMLInputElement).style.background =
+                    "var(--off-white)";
+                  (e.target as HTMLInputElement).style.boxShadow = "none";
+                }}
               />
             </div>
 
-            <Button
+            <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-14 bg-black hover:bg-[#C84B2F] text-white rounded-2xl font-bold text-sm uppercase tracking-[2px] transition-all group"
+              style={{
+                width: "100%",
+                padding: "0.875rem",
+                background: isLoading ? "var(--border-mid)" : "var(--red)",
+                color: "white",
+                border: "none",
+                borderRadius: "0.5rem",
+                fontFamily: "var(--font-body)",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                letterSpacing: "0.02em",
+                cursor: isLoading ? "not-allowed" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
+                boxShadow: isLoading
+                  ? "none"
+                  : "0 2px 8px rgba(200,16,46,0.25)",
+                transition:
+                  "background var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out)",
+                marginTop: "0.5rem",
+              }}
             >
               {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 size={18} className="animate-spin" />
               ) : (
-                <span className="flex items-center gap-2">
+                <>
                   Sign In
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </span>
+                  <ArrowRight size={15} />
+                </>
               )}
-            </Button>
+            </button>
           </form>
         </div>
 
-        {/* Footer Info */}
-        <p className="mt-8 text-center text-[10px] text-[#7A7060] font-mono uppercase tracking-widest opacity-60">
-          Secure login system &bull; 256-bit SSL Protection
+        {/* Footer note */}
+        <p
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.625rem",
+            color: "var(--charcoal-soft)",
+            textAlign: "center",
+            marginTop: "1.5rem",
+            letterSpacing: "0.08em",
+          }}
+        >
+          By signing in, you agree to our{" "}
+          <Link
+            href="/privacy"
+            style={{
+              color: "var(--charcoal-mid)",
+              textDecoration: "underline",
+            }}
+          >
+            Privacy Policy
+          </Link>{" "}
+          &amp;{" "}
+          <Link
+            href="/terms"
+            style={{
+              color: "var(--charcoal-mid)",
+              textDecoration: "underline",
+            }}
+          >
+            Terms
+          </Link>
         </p>
       </div>
     </div>

@@ -27,8 +27,6 @@ import {
 import { useAuth as useAuthStore } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type UserRole = "customer" | "merchant" | "admin" | "courier";
 
 interface CurrentUser {
@@ -38,8 +36,6 @@ interface CurrentUser {
   role: UserRole;
   avatarUrl?: string;
 }
-
-// ─── Hooks ───────────────────────────────────────────────────────────────────
 
 function useAuth() {
   const { user: storeUser, logout } = useAuthStore();
@@ -59,8 +55,6 @@ function useCartCount(): number {
   return cart.totalItems();
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
 const PUBLIC_NAV = [
   { label: "Categories", href: "/categories" },
   { label: "Stores", href: "/stores" },
@@ -74,17 +68,61 @@ const DASHBOARD_HREF: Record<UserRole, string> = {
   customer: "/profile",
 };
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
 function LogoMark() {
   return (
-    <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <rect x="2" y="2" width="5" height="5" fill="white" rx="1" />
-        <rect x="9" y="2" width="5" height="5" fill="#e5e7eb" rx="1" />
-        <rect x="2" y="9" width="5" height="5" fill="#e5e7eb" rx="1" />
-        <rect x="9" y="9" width="5" height="5" fill="white" rx="1" />
-      </svg>
+    <div
+      className="flex items-center gap-2.5 group"
+      style={{ textDecoration: "none" }}
+    >
+      {/* Red accent square */}
+      <div
+        style={{
+          width: 28,
+          height: 28,
+          background: "var(--red)",
+          borderRadius: 6,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transition:
+            "transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out)",
+          boxShadow: "0 2px 8px rgba(200,16,46,0.25)",
+        }}
+        className="group-hover:scale-105"
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <rect x="1" y="1" width="5" height="5" fill="white" rx="1" />
+          <rect
+            x="8"
+            y="1"
+            width="5"
+            height="5"
+            fill="rgba(255,255,255,0.5)"
+            rx="1"
+          />
+          <rect
+            x="1"
+            y="8"
+            width="5"
+            height="5"
+            fill="rgba(255,255,255,0.5)"
+            rx="1"
+          />
+          <rect x="8" y="8" width="5" height="5" fill="white" rx="1" />
+        </svg>
+      </div>
+      <span
+        style={{
+          fontFamily: "var(--font-display)",
+          fontSize: "1.25rem",
+          fontWeight: 500,
+          color: "var(--charcoal)",
+          letterSpacing: "-0.02em",
+          lineHeight: 1,
+        }}
+      >
+        BAZR
+      </span>
     </div>
   );
 }
@@ -95,7 +133,8 @@ function AvatarCircle({ user }: { user: CurrentUser }) {
       <img
         src={user.avatarUrl}
         alt={user.name}
-        className="w-8 h-8 rounded-full object-cover ring-1 ring-gray-100"
+        className="w-8 h-8 rounded-full object-cover"
+        style={{ border: "1.5px solid var(--border-mid)" }}
       />
     );
   }
@@ -107,13 +146,21 @@ function AvatarCircle({ user }: { user: CurrentUser }) {
     .slice(0, 2)
     .toUpperCase();
   return (
-    <div className="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center text-white text-[10px] font-medium">
+    <div
+      className="w-8 h-8 rounded-full flex items-center justify-center"
+      style={{
+        background: "var(--charcoal)",
+        color: "var(--off-white)",
+        fontSize: "10px",
+        fontFamily: "var(--font-mono)",
+        letterSpacing: "0.05em",
+        fontWeight: 500,
+      }}
+    >
       {initials}
     </div>
   );
 }
-
-// ─── Navbar Component ─────────────────────────────────────────────────────────
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -151,37 +198,67 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none p-4 md:p-5">
+      <header
+        className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none"
+        style={{ padding: "1rem 1.25rem" }}
+      >
         <div
           className={cn(
-            "w-full max-w-[1100px] transition-all duration-300 ease-in-out pointer-events-auto",
-            "rounded-2xl border bg-white/70 backdrop-blur-md",
-            scrolled
-              ? "border-gray-200/50 shadow-sm py-2 px-4 translate-y-[-4px]"
-              : "border-transparent py-3 px-6 shadow-none",
+            "w-full pointer-events-auto transition-all",
+            "rounded-2xl",
           )}
+          style={{
+            maxWidth: 1100,
+            background: scrolled
+              ? "rgba(255,255,255,0.9)"
+              : "rgba(255,255,255,0.75)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            border: scrolled
+              ? "1px solid var(--border-light)"
+              : "1px solid rgba(51,51,51,0.06)",
+            boxShadow: scrolled ? "var(--shadow-md)" : "var(--shadow-sm)",
+            padding: scrolled ? "0.625rem 1.25rem" : "0.875rem 1.5rem",
+            transition:
+              "background var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out), padding var(--duration-base) var(--ease-out)",
+          }}
         >
           <div className="flex items-center h-10 gap-4">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+            <Link
+              href="/"
+              style={{ textDecoration: "none" }}
+              className="shrink-0"
+            >
               <LogoMark />
-              <span className="hidden sm:block text-black text-lg font-bold tracking-tight">
-                Marketplace
-              </span>
             </Link>
 
-            {/* Desktop Navigation */}
+            {/* Desktop Nav */}
             <nav className="hidden lg:flex items-center gap-0.5 ml-4">
               {PUBLIC_NAV.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={cn(
-                    "px-4 py-2 text-[13px] font-medium transition-colors rounded-lg",
-                    pathname === link.href
-                      ? "text-black bg-gray-100"
-                      : "text-gray-500 hover:text-black hover:bg-gray-50",
-                  )}
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.8125rem",
+                    fontWeight: pathname === link.href ? 600 : 500,
+                    color:
+                      pathname === link.href
+                        ? "var(--charcoal)"
+                        : "var(--charcoal-soft)",
+                    padding: "0.5rem 1rem",
+                    borderRadius: "0.5rem",
+                    background:
+                      pathname === link.href
+                        ? "var(--off-white-2)"
+                        : "transparent",
+                    textDecoration: "none",
+                    transition:
+                      "color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out)",
+                    letterSpacing: "0.01em",
+                  }}
+                  className="hover:text-[var(--charcoal)]"
                 >
                   {link.label}
                 </Link>
@@ -190,18 +267,28 @@ export default function Navbar() {
 
             <div className="flex-1" />
 
-            {/* Action Group */}
+            {/* Actions */}
             <div className="flex items-center gap-1.5">
               {/* Search */}
               <div className="relative flex items-center">
                 <form
                   onSubmit={handleSearch}
                   className={cn(
-                    "flex items-center transition-all duration-300 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden",
-                    searchOpen
-                      ? "w-[200px] px-3 border-gray-200 shadow-inner"
-                      : "w-0 px-0 border-transparent",
+                    "flex items-center transition-all rounded-lg overflow-hidden",
+                    searchOpen ? "w-[200px] px-3" : "w-0 px-0",
                   )}
+                  style={{
+                    background: searchOpen
+                      ? "var(--off-white-2)"
+                      : "transparent",
+                    border: searchOpen
+                      ? "1.5px solid var(--border-mid)"
+                      : "1.5px solid transparent",
+                    boxShadow: searchOpen
+                      ? "inset 0 1px 3px rgba(51,51,51,0.05)"
+                      : "none",
+                    transition: "width var(--duration-slow) var(--ease-out)",
+                  }}
                 >
                   <Input
                     ref={searchRef}
@@ -209,11 +296,16 @@ export default function Navbar() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search..."
                     className="border-0 bg-transparent text-xs focus-visible:ring-0 h-8 p-0"
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      color: "var(--charcoal)",
+                    }}
                   />
                   <button
                     type="button"
                     onClick={() => setSearchOpen(false)}
-                    className="ml-2 text-gray-400 hover:text-black transition-colors"
+                    className="ml-2 transition-colors"
+                    style={{ color: "var(--charcoal-soft)" }}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -223,9 +315,13 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={() => setSearchOpen(true)}
-                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+                    className="p-2 rounded-lg transition-all"
+                    style={{
+                      color: "var(--charcoal-soft)",
+                      background: "transparent",
+                    }}
                   >
-                    <Search className="w-[18px] h-[18px]" strokeWidth={2} />
+                    <Search className="w-[17px] h-[17px]" strokeWidth={2} />
                   </button>
                 )}
               </div>
@@ -234,26 +330,45 @@ export default function Navbar() {
               <div className="hidden sm:flex items-center gap-0.5">
                 <Link
                   href="/wishlist"
-                  className="p-2 text-gray-600 hover:text-red-500 hover:bg-gray-50 rounded-full transition-all"
+                  className="p-2 rounded-lg transition-all"
+                  style={{
+                    color: "var(--charcoal-soft)",
+                    textDecoration: "none",
+                  }}
                 >
-                  <Heart className="w-[18px] h-[18px]" strokeWidth={2} />
+                  <Heart className="w-[17px] h-[17px]" strokeWidth={2} />
                 </Link>
 
                 <Link
                   href="/cart"
-                  className="relative p-2 text-gray-600 hover:text-black hover:bg-gray-50 rounded-full transition-all"
+                  className="relative p-2 rounded-lg transition-all"
+                  style={{
+                    color: "var(--charcoal-soft)",
+                    textDecoration: "none",
+                  }}
                 >
-                  <ShoppingBag className="w-[18px] h-[18px]" strokeWidth={2} />
+                  <ShoppingBag className="w-[17px] h-[17px]" strokeWidth={2} />
                   {cartCount > 0 && (
-                    <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-black text-white text-[8px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
+                    <span
+                      className="absolute top-1 right-1 w-3.5 h-3.5 text-[8px] font-bold rounded-full flex items-center justify-center"
+                      style={{
+                        background: "var(--red)",
+                        color: "white",
+                        fontFamily: "var(--font-mono)",
+                        border: "2px solid var(--off-white)",
+                      }}
+                    >
                       {cartCount}
                     </span>
                   )}
                 </Link>
               </div>
 
-              {/* Auth / User */}
-              <div className="pl-2 ml-1 border-l border-gray-100">
+              {/* Auth */}
+              <div
+                className="pl-2 ml-1"
+                style={{ borderLeft: "1px solid var(--border-light)" }}
+              >
                 {user ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -262,63 +377,104 @@ export default function Navbar() {
                         className="outline-none flex items-center gap-1.5 hover:opacity-80 transition-opacity"
                       >
                         <AvatarCircle user={user} />
-                        <ChevronDown className="w-3 h-3 text-gray-400" />
+                        <ChevronDown
+                          className="w-3 h-3"
+                          style={{ color: "var(--charcoal-soft)" }}
+                        />
                       </button>
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent
                       align="end"
                       sideOffset={12}
-                      className="w-52 p-1.5 rounded-xl border border-gray-100 bg-white shadow-lg animate-in fade-in zoom-in-95"
+                      className="w-52 p-1.5 rounded-xl animate-in fade-in zoom-in-95"
+                      style={{
+                        background: "var(--white)",
+                        border: "1px solid var(--border-light)",
+                        boxShadow: "var(--shadow-lg)",
+                      }}
                     >
                       <div className="px-3 py-2 mb-1">
-                        <p className="text-[11px] font-semibold text-black truncate uppercase tracking-wider">
+                        <p
+                          className="text-[11px] font-semibold truncate"
+                          style={{
+                            fontFamily: "var(--font-mono)",
+                            letterSpacing: "0.1em",
+                            color: "var(--charcoal)",
+                            textTransform: "uppercase",
+                          }}
+                        >
                           {user.name}
                         </p>
-                        <p className="text-[10px] text-gray-400 truncate">
+                        <p
+                          className="text-[10px] truncate mt-0.5"
+                          style={{ color: "var(--charcoal-soft)" }}
+                        >
                           {user.email}
                         </p>
                       </div>
 
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href="/profile"
-                          className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-                        >
-                          <User className="w-3.5 h-3.5" />
-                          Profile
-                        </Link>
-                      </DropdownMenuItem>
-
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href="/orders"
-                          className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-                        >
-                          <ClipboardList className="w-3.5 h-3.5" />
-                          Orders
-                        </Link>
-                      </DropdownMenuItem>
+                      {[
+                        { href: "/profile", icon: User, label: "Profile" },
+                        {
+                          href: "/orders",
+                          icon: ClipboardList,
+                          label: "Orders",
+                        },
+                      ].map(({ href, icon: Icon, label }) => (
+                        <DropdownMenuItem key={href} asChild>
+                          <Link
+                            href={href}
+                            className="flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-pointer"
+                            style={{
+                              fontSize: "0.75rem",
+                              fontFamily: "var(--font-body)",
+                              fontWeight: 500,
+                              color: "var(--charcoal-mid)",
+                              textDecoration: "none",
+                            }}
+                          >
+                            <Icon className="w-3.5 h-3.5" />
+                            {label}
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
 
                       {user.role !== "customer" && (
                         <DropdownMenuItem asChild>
                           <Link
                             href={DASHBOARD_HREF[user.role]}
-                            className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                            className="flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-pointer"
+                            style={{
+                              fontSize: "0.75rem",
+                              fontFamily: "var(--font-body)",
+                              fontWeight: 500,
+                              color: "var(--charcoal-mid)",
+                              textDecoration: "none",
+                            }}
                           >
                             <LayoutDashboard className="w-3.5 h-3.5" />
-                            Admin Panel
+                            Dashboard
                           </Link>
                         </DropdownMenuItem>
                       )}
 
-                      <DropdownMenuSeparator className="my-1 bg-gray-100" />
+                      <DropdownMenuSeparator
+                        className="my-1"
+                        style={{ background: "var(--border-light)" }}
+                      />
 
                       <DropdownMenuItem asChild>
                         <button
                           type="button"
                           onClick={handleLogout}
-                          className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                          className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-pointer"
+                          style={{
+                            fontSize: "0.75rem",
+                            fontFamily: "var(--font-body)",
+                            fontWeight: 500,
+                            color: "var(--red)",
+                          }}
                         >
                           <LogOut className="w-3.5 h-3.5" />
                           Logout
@@ -327,12 +483,28 @@ export default function Navbar() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <Button
-                    asChild
-                    className="h-9 px-5 rounded-lg bg-black text-white hover:bg-gray-800 transition-all text-xs font-medium"
+                  <Link
+                    href="/auth/login"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      padding: "0.5rem 1.25rem",
+                      borderRadius: "0.5rem",
+                      background: "var(--charcoal)",
+                      color: "var(--white)",
+                      fontSize: "0.8125rem",
+                      fontFamily: "var(--font-body)",
+                      fontWeight: 600,
+                      letterSpacing: "0.02em",
+                      textDecoration: "none",
+                      transition:
+                        "background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out)",
+                    }}
+                    className="hover:bg-[var(--charcoal-mid)] active:scale-95"
                   >
-                    <Link href="/auth/login">Login</Link>
-                  </Button>
+                    Sign In
+                  </Link>
                 )}
               </div>
             </div>
@@ -342,10 +514,10 @@ export default function Navbar() {
 
       {/* Spacer */}
       <div
-        className={cn(
-          "transition-all duration-300",
-          scrolled ? "h-24" : "h-28",
-        )}
+        style={{
+          height: scrolled ? "5.5rem" : "6.5rem",
+          transition: "height var(--duration-base) var(--ease-out)",
+        }}
       />
     </>
   );
