@@ -16,22 +16,28 @@ type FetchOptions = RequestInit & {
 export async function fetchISR<T>(
   path: string,
   options?: FetchOptions,
-): Promise<T> {
+): Promise<T | null> {
   const { revalidate = 60, tags, ...rest } = options ?? {};
 
-  const res = await fetch(`${API_URL}${path}`, {
-    ...rest,
-    next: {
-      revalidate,
-      ...(tags ? { tags } : {}),
-    },
-  });
+  try {
+    const res = await fetch(`${API_URL}${path}`, {
+      ...rest,
+      next: {
+        revalidate,
+        ...(tags ? { tags } : {}),
+      },
+    });
 
-  if (!res.ok) {
-    throw new Error(`Fetch ISR failed: ${res.status} ${path}`);
+    if (!res.ok) {
+      if (res.status === 404) return null;
+      throw new Error(`Fetch ISR failed: ${res.status} ${path}`);
+    }
+
+    return res.json() as Promise<T>;
+  } catch (err) {
+    console.error(`[fetchISR] ${path}`, err);
+    return null;
   }
-
-  return res.json() as Promise<T>;
 }
 
 /**
@@ -42,24 +48,32 @@ export async function fetchSSR<T>(
   path: string,
   token?: string,
   options?: RequestInit,
-): Promise<T> {
+): Promise<T | null> {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options?.headers ?? {}),
   };
 
-  const res = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers,
-    cache: "no-store",
-  });
+  try {
+    const res = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers,
+      cache: "no-store",
+    });
 
-  if (!res.ok) {
-    throw new Error(`Fetch SSR failed: ${res.status} ${path}`);
+    if (!res.ok) {
+      // 404 → null döndür, çökme
+      if (res.status === 404) return null;
+      throw new Error(`Fetch SSR failed: ${res.status} ${path}`);
+    }
+
+    return res.json() as Promise<T>;
+  } catch (err) {
+    // Network hatası veya JSON parse hatası
+    console.error(`[fetchSSR] ${path}`, err);
+    return null;
   }
-
-  return res.json() as Promise<T>;
 }
 
 /**

@@ -32,12 +32,19 @@ async function SearchResults({
   if (params.page) urlParams.set("page", params.page);
 
   const [results, categoriesData] = await Promise.all([
-    fetchSSR<{ data: any[] }>(`/products/search?${urlParams.toString()}`),
-    fetchISR<{ data: any[] }>(`/categories`),
+    fetchSSR<any>(`/api/products/search?${urlParams.toString()}`).catch(
+      () => null,
+    ),
+    fetchISR<any>(`/api/categories`).catch(() => null),
   ]);
 
-  const products = results?.data || [];
-  const categories = categoriesData?.data || [];
+  // Backend PagedResult<T> veya doğrudan array dönebilir
+  const products: any[] =
+    results?.items ?? results?.data ?? (Array.isArray(results) ? results : []);
+  const categories: any[] =
+    categoriesData?.items ??
+    categoriesData?.data ??
+    (Array.isArray(categoriesData) ? categoriesData : []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -46,8 +53,8 @@ async function SearchResults({
         <h1 className="text-2xl font-bold text-gray-900">
           {q ? (
             <>
-              Results for &ldquo;<span className="text-blue-600">{q}</span>&rdquo;
-              results
+              Results for &ldquo;<span className="text-blue-600">{q}</span>
+              &rdquo; results
             </>
           ) : (
             "All Products"
@@ -134,8 +141,7 @@ async function SearchResults({
                 No results found
               </h2>
               <p className="text-sm text-gray-500 mt-2">
-                Try different keywords or adjust filters
-                temizleyebilirsiniz.
+                Try different keywords or adjust filters temizleyebilirsiniz.
               </p>
               <Link
                 href="/"
@@ -148,15 +154,15 @@ async function SearchResults({
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
               {products.map((product: any) => (
                 <Link
-                  key={product.id}
-                  href={`/product/${product.id}`}
+                  key={product.id ?? product.Id}
+                  href={`/product/${product.id ?? product.Id}`}
                   className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
                 >
                   <div className="aspect-square bg-gray-50 overflow-hidden">
-                    {product.images?.[0] ? (
+                    {(product.images?.[0] ?? product.Images?.[0]) ? (
                       <img
-                        src={product.images[0]}
-                        alt={product.name}
+                        src={product.images?.[0] ?? product.Images?.[0]}
+                        alt={product.name ?? product.Name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
@@ -167,14 +173,15 @@ async function SearchResults({
                   </div>
                   <div className="p-3">
                     <p className="text-sm font-medium text-gray-900 line-clamp-2">
-                      {product.name}
+                      {product.name ?? product.Name}
                     </p>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      {product.categoryName}
+                      {product.categoryName ?? product.Category}
                     </p>
                     <p className="text-base font-bold text-gray-900 mt-2">
-                      {product.minPrice
-                        ? `₺${product.minPrice.toLocaleString("tr-TR")}`
+                      {(product.price ?? product.Price ?? product.minPrice) !=
+                      null
+                        ? `₺${(product.price ?? product.Price ?? product.minPrice).toLocaleString("tr-TR")}`
                         : "Fiyat sorunuz"}
                     </p>
                     {product.offerCount > 1 && (
