@@ -1,65 +1,99 @@
 "use client";
 
+import { useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import MerchantSalesChart from "@/components/modules/charts/MerchantSalesChart";
+import {
+  useMerchantStats,
+  useMerchantComparison,
+  useMerchantTopProducts,
+  useMerchantSalesChart,
+} from "@/queries/useAnalytics";
+import { formatPrice, formatCompactNumber, formatPercent } from "@/lib/format";
+import type { AnalyticsPeriod } from "@/types/api";
 
-const salesData = [
-  { gun: "Mon", marketplace: 3200, estore: 1100 },
-  { gun: "Tue", marketplace: 4100, estore: 1800 },
-  { gun: "Wed", marketplace: 2900, estore: 900 },
-  { gun: "Thu", marketplace: 5800, estore: 2100 },
-  { gun: "Fri", marketplace: 4700, estore: 1600 },
-  { gun: "Sat", marketplace: 2100, estore: 700 },
-  { gun: "Sun", marketplace: 1600, estore: 500 },
-];
-
-const topProducts = [
-  { name: "Samsung Galaxy S24", sales: 42, revenue: "₺188.9K", trend: "+12%" },
-  { name: "Apple iPhone 16 Pro", sales: 28, revenue: "₺153.9K", trend: "+8%" },
-  { name: "MacBook Air M3", sales: 15, revenue: "₺101.9K", trend: "+3%" },
-  { name: "Lenovo ThinkPad X1", sales: 11, revenue: "₺74.7K", trend: "-2%" },
-  { name: "Nike Air Max 2024", sales: 8, revenue: "₺35.9K", trend: "+19%" },
-];
-
-const comparison = [
-  { label: "Total Revenue", marketplace: "₺312K", estore: "₺148K" },
-  { label: "Order Count", marketplace: "104", estore: "49" },
-  { label: "Avg. Order Value", marketplace: "₺3,000", estore: "₺3,020" },
-  { label: "Conversion Rate", marketplace: "2.1%", estore: "4.8%" },
-];
-
-const kpis = [
-  { label: "Weekly Revenue", value: "₺24.4K", change: "+14.2%", up: true },
-  { label: "Total Orders", value: "153", change: "+9", up: true },
-  { label: "Active Offers", value: "6", change: "0", up: true },
-  { label: "Avg. Rating", value: "4.7", change: "+0.1", up: true },
+const PERIODS: { value: AnalyticsPeriod; label: string }[] = [
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
 ];
 
 export default function MerchantAnalyticsDashboard() {
+  const [period, setPeriod] = useState<AnalyticsPeriod>("weekly");
+
+  const { data: stats, isLoading: statsLoading } = useMerchantStats();
+  const { data: comparison, isLoading: compLoading } = useMerchantComparison();
+  const { data: topProducts, isLoading: topLoading } =
+    useMerchantTopProducts(5);
+  const { data: salesChart, isLoading: chartLoading } =
+    useMerchantSalesChart(period);
+
+  // Grafik için API verisini MerchantSalesChart formatına çevir
+  const chartData =
+    salesChart?.map((d) => ({
+      gun: new Date(d.date).toLocaleDateString("tr-TR", { weekday: "short" }),
+      marketplace: d.source === "MARKETPLACE" || !d.source ? d.revenue : 0,
+      estore: d.source === "ESTORE" ? d.revenue : 0,
+    })) ?? [];
+
+  const kpis = [
+    {
+      label: "Total Revenue",
+      value: stats ? formatPrice(stats.totalRevenue) : "—",
+      sub: "All channels",
+    },
+    {
+      label: "Total Orders",
+      value: stats?.totalOrders?.toString() ?? "—",
+      sub: "This period",
+    },
+    {
+      label: "Marketplace",
+      value: stats ? formatPrice(stats.marketplaceRevenue) : "—",
+      sub:
+        stats && stats.totalRevenue > 0
+          ? `${Math.round((stats.marketplaceRevenue / stats.totalRevenue) * 100)}% of total`
+          : "—",
+    },
+    {
+      label: "E-Store",
+      value: stats ? formatPrice(stats.estoreRevenue) : "—",
+      sub:
+        stats && stats.totalRevenue > 0
+          ? `${Math.round((stats.estoreRevenue / stats.totalRevenue) * 100)}% of total`
+          : "—",
+    },
+  ];
+
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">Analytics</h1>
-        <p className="text-sm text-gray-500 mt-1">Last 7 days performance</p>
+        <p className="text-sm text-gray-500 mt-1">
+          Sales performance by channel
+        </p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map((k) => (
-          <div
-            key={k.label}
-            className="bg-white rounded-xl border border-gray-100 p-5"
-          >
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
-              {k.label}
-            </p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{k.value}</p>
-            <p
-              className={`text-xs mt-1 font-medium ${k.up ? "text-emerald-600" : "text-rose-500"}`}
-            >
-              {k.change} this week
-            </p>
-          </div>
-        ))}
+        {statsLoading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-24 rounded-xl" />
+            ))
+          : kpis.map((k) => (
+              <div
+                key={k.label}
+                className="bg-white rounded-xl border border-gray-100 p-5"
+              >
+                <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+                  {k.label}
+                </p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {k.value}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">{k.sub}</p>
+              </div>
+            ))}
       </div>
 
       {/* Sales Chart */}
@@ -68,18 +102,43 @@ export default function MerchantAnalyticsDashboard() {
           <h2 className="text-sm font-semibold text-gray-700">
             Marketplace vs E-Store Revenue (₺)
           </h2>
-          <div className="flex gap-4 text-xs text-gray-500">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" />
-              Marketplace
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
-              E-Store
-            </span>
+          <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+            {PERIODS.map((p) => (
+              <button
+                key={p.value}
+                onClick={() => setPeriod(p.value)}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+                  period === p.value
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
-        <MerchantSalesChart data={salesData} />
+
+        {chartLoading ? (
+          <Skeleton className="h-[220px] w-full rounded-lg" />
+        ) : chartData.length > 0 ? (
+          <MerchantSalesChart data={chartData} />
+        ) : (
+          <div className="h-[220px] flex items-center justify-center text-sm text-gray-400">
+            No sales data for this period
+          </div>
+        )}
+
+        <div className="flex gap-4 mt-3 justify-end">
+          <span className="flex items-center gap-1.5 text-xs text-gray-500">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" />
+            Marketplace
+          </span>
+          <span className="flex items-center gap-1.5 text-xs text-gray-500">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
+            E-Store
+          </span>
+        </div>
       </div>
 
       {/* Channel Comparison + Top Products */}
@@ -88,54 +147,142 @@ export default function MerchantAnalyticsDashboard() {
           <h2 className="text-sm font-semibold text-gray-700 mb-4">
             Channel Comparison
           </h2>
-          <div className="divide-y divide-gray-100">
-            <div className="grid grid-cols-3 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-              <span>Metric</span>
-              <span className="text-center">Marketplace</span>
-              <span className="text-right">E-Store</span>
+          {compLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 rounded" />
+              ))}
             </div>
-            {comparison.map((c) => (
-              <div key={c.label} className="grid grid-cols-3 py-3 text-sm">
-                <span className="text-gray-600">{c.label}</span>
-                <span className="text-center font-semibold text-blue-600">
-                  {c.marketplace}
-                </span>
-                <span className="text-right font-semibold text-emerald-600">
-                  {c.estore}
-                </span>
+          ) : comparison ? (
+            <div className="divide-y divide-gray-100">
+              <div className="grid grid-cols-3 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                <span>Metric</span>
+                <span className="text-center">Marketplace</span>
+                <span className="text-right">E-Store</span>
               </div>
-            ))}
-          </div>
+              {[
+                {
+                  label: "Revenue",
+                  mk: formatPrice(comparison.marketplace.revenue),
+                  es: formatPrice(comparison.estore.revenue),
+                },
+                {
+                  label: "Orders",
+                  mk: comparison.marketplace.orders.toString(),
+                  es: comparison.estore.orders.toString(),
+                },
+                {
+                  label: "Avg. Order",
+                  mk:
+                    comparison.marketplace.orders > 0
+                      ? formatPrice(
+                          comparison.marketplace.revenue /
+                            comparison.marketplace.orders,
+                        )
+                      : "—",
+                  es:
+                    comparison.estore.orders > 0
+                      ? formatPrice(
+                          comparison.estore.revenue /
+                            comparison.estore.orders,
+                        )
+                      : "—",
+                },
+                {
+                  label: "Conv. Rate",
+                  mk: formatPercent(comparison.marketplace.conversionRate),
+                  es: formatPercent(comparison.estore.conversionRate),
+                },
+              ].map((row) => (
+                <div key={row.label} className="grid grid-cols-3 py-3 text-sm">
+                  <span className="text-gray-600">{row.label}</span>
+                  <span className="text-center font-semibold text-blue-600">
+                    {row.mk}
+                  </span>
+                  <span className="text-right font-semibold text-emerald-600">
+                    {row.es}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 text-center py-8">
+              No data available
+            </p>
+          )}
         </div>
 
         <div className="bg-white rounded-xl border border-gray-100 p-5">
           <h2 className="text-sm font-semibold text-gray-700 mb-4">
             Top Products
           </h2>
-          <div className="space-y-3">
-            {topProducts.map((p, i) => (
-              <div key={p.name} className="flex items-center gap-3">
-                <span className="text-xs font-bold text-gray-300 w-4">
-                  {i + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">
-                    {p.name}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {p.sales} sold · {p.revenue}
-                  </p>
+          {topLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 rounded" />
+              ))}
+            </div>
+          ) : topProducts && topProducts.length > 0 ? (
+            <div className="space-y-3">
+              {topProducts.map((p, i) => (
+                <div key={p.productId} className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-gray-300 w-4">
+                    {i + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">
+                      {p.productName}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {p.totalQuantity} sold · {formatPrice(p.totalRevenue)}
+                    </p>
+                  </div>
+                  <div className="text-right text-xs shrink-0">
+                    <p className="text-blue-500">
+                      MKT {formatCompactNumber(p.marketplaceRevenue)}
+                    </p>
+                    <p className="text-emerald-500">
+                      Store {formatCompactNumber(p.estoreRevenue)}
+                    </p>
+                  </div>
                 </div>
-                <span
-                  className={`text-xs font-semibold ${p.trend.startsWith("+") ? "text-emerald-600" : "text-rose-500"}`}
-                >
-                  {p.trend}
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 text-center py-8">
+              No product data yet
+            </p>
+          )}
         </div>
       </div>
+
+      {/* Summary Banner */}
+      {stats && (
+        <div className="bg-gray-900 text-white rounded-xl p-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <p className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-1">
+                Avg. Order Value
+              </p>
+              <p className="text-2xl font-bold">
+                {formatPrice(stats.averageOrderValue)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-1">
+                Active Products
+              </p>
+              <p className="text-2xl font-bold">{stats.totalProducts}</p>
+            </div>
+            <div>
+              <p className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-1">
+                Total Orders
+              </p>
+              <p className="text-2xl font-bold">{stats.totalOrders}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
