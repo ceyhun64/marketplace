@@ -117,10 +117,7 @@ export const SHIPPING_RATE_LABELS: Record<ShippingRate, string> = {
   REGULAR: "Standard (3-5 days)",
 };
 
-export const SHIPPING_COSTS: Record<ShippingRate, number> = {
-  EXPRESS: 49.9,
-  REGULAR: 19.9,
-};
+// Not: SHIPPING_COSTS sabiti @/lib/constants içinde tanımlıdır. Oradan import edin.
 
 // ── OrderSource ───────────────────────────────────────────────────────────────
 

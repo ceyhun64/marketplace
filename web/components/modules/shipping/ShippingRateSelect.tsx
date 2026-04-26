@@ -5,7 +5,7 @@ import { tr } from "date-fns/locale";
 import { Loader2, Zap, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ShippingRate } from "@/types/enums";
-import { SHIPPING_COSTS } from "@/types/enums";
+import { SHIPPING_COSTS } from "@/lib/constants";
 import {
   useAllShippingOptions,
   type ShippingOption,
