@@ -55,8 +55,19 @@ export function Sidebar({ links, role }: SidebarProps) {
     await logout();
     router.push("/auth/login");
   };
-  const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(href + "/");
+  const isActive = (href: string) => {
+    // Mevcut sayfa (pathname) tam olarak linke eşitse aktiftir
+    if (pathname === href) return true;
+
+    // Eğer link sadece kök dizin değilse (yani /admin/ gibi bir alt yol ise)
+    // ve pathname bu yol ile başlıyorsa yine aktiftir.
+    // Bu sayede /admin/merchants/new sayfasındayken "Merchants" aktif kalır.
+    if (href !== "/admin" && href !== "/merchant" && href !== "/courier") {
+      return pathname.startsWith(href + "/");
+    }
+
+    return false;
+  };
 
   return (
     <aside
@@ -138,7 +149,8 @@ export function Sidebar({ links, role }: SidebarProps) {
                 if (!active) {
                   (e.currentTarget as HTMLElement).style.background =
                     "rgba(255,255,255,0.08)";
-                  (e.currentTarget as HTMLElement).style.color = "var(--off-white)";
+                  (e.currentTarget as HTMLElement).style.color =
+                    "var(--off-white)";
                 }
               }}
               onMouseLeave={(e) => {
