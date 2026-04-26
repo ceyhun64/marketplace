@@ -1,24 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+import ShippingRateSelect from "@/components/modules/shipping/ShippingRateSelect";
+import type { ShippingRate } from "@/types/enums";
 
 interface CartItem {
   offerId: string;
   productName: string;
   merchantName: string;
+  merchantId: string;
   price: number;
   quantity: number;
   image?: string;
-}
-
-interface ETAResult {
-  expressEta: string;
-  regularEta: string;
-  expressPrice: number;
-  regularPrice: number;
 }
 
 // Simple cart store — in real project comes from Zustand use-cart.ts
@@ -60,45 +56,17 @@ export default function CheckoutPage() {
     address: "",
     zipCode: "",
   });
-  const [shippingRate, setShippingRate] = useState<"Express" | "Regular">(
-    "Regular",
-  );
-  const [eta, setEta] = useState<ETAResult | null>(null);
-  const [etaLoading, setEtaLoading] = useState(false);
+  const [shippingRate, setShippingRate] = useState<ShippingRate>("REGULAR");
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<typeof form>>({});
 
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
-  const shippingCost =
-    eta?.[shippingRate === "Express" ? "expressPrice" : "regularPrice"] ?? 0;
+  const RATE_COSTS: Record<ShippingRate, number> = {
+    EXPRESS: 49.9,
+    REGULAR: 19.9,
+  };
+  const shippingCost = RATE_COSTS[shippingRate];
   const total = subtotal + shippingCost;
-
-  // ETA hesapla (şehir seçince)
-  useEffect(() => {
-    if (!form.city || items.length === 0) return;
-    setEtaLoading(true);
-
-    // Demo: ilk merchant'tan ETA al
-    const firstOffer = items[0];
-    api
-      .get<ETAResult>("/api/fulfillment/calculate-eta", {
-        params: {
-          offerId: firstOffer.offerId,
-          destCity: form.city,
-        },
-      })
-      .then((r) => setEta(r.data))
-      .catch(() => {
-        // Fallback demo değerleri
-        setEta({
-          expressEta: new Date(Date.now() + 1 * 24 * 3600 * 1000).toISOString(),
-          regularEta: new Date(Date.now() + 3 * 24 * 3600 * 1000).toISOString(),
-          expressPrice: 49.9,
-          regularPrice: 19.9,
-        });
-      })
-      .finally(() => setEtaLoading(false));
-  }, [form.city]);
 
   function validate() {
     const e: Partial<typeof form> = {};
@@ -123,7 +91,7 @@ export default function CheckoutPage() {
         shippingAddress: `${form.address}, ${form.district}, ${form.city} ${form.zipCode}`,
         recipientName: form.fullName,
         recipientPhone: form.phone,
-        shippingRate,
+        shippingRate: shippingRate, // "EXPRESS" | "REGULAR"
         source: "Marketplace",
       });
       router.push(`/orders/${data.orderId}/tracking`);
@@ -310,100 +278,15 @@ export default function CheckoutPage() {
                   </button>
                 </div>
 
-                {etaLoading ? (
-                  <div className="text-center py-8">
-                    <div className="w-6 h-6 border-2 border-gray-900 border-t-transparent rounded-full animate-spin mx-auto" />
-                    <p className="text-sm text-gray-500 mt-2">
-                      Calculating ETA...
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {/* Express */}
-                    <button
-                      onClick={() => setShippingRate("Express")}
-                      className={`w-full text-left border-2 rounded-xl p-4 transition-all ${
-                        shippingRate === "Express"
-                          ? "border-gray-900 bg-gray-50"
-                          : "border-gray-100 hover:border-gray-300"
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold text-gray-900">
-                            ⚡ Express Shipping
-                          </p>
-                          <p className="text-sm text-gray-500 mt-0.5">
-                            {eta
-                              ? new Date(eta.expressEta).toLocaleDateString(
-                                  "en-US",
-                                  {
-                                    weekday: "long",
-                                    day: "numeric",
-                                    month: "long",
-                                  },
-                                ) + " delivery"
-                              : "1-2 business days"}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-gray-900">
-                            ₺{(eta?.expressPrice ?? 49.9).toFixed(2)}
-                          </p>
-                          {shippingRate === "Express" && (
-                            <p className="text-xs text-green-600 mt-0.5">
-                              ✓ Selected
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-
-                    {/* Regular */}
-                    <button
-                      onClick={() => setShippingRate("Regular")}
-                      className={`w-full text-left border-2 rounded-xl p-4 transition-all ${
-                        shippingRate === "Regular"
-                          ? "border-gray-900 bg-gray-50"
-                          : "border-gray-100 hover:border-gray-300"
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold text-gray-900">
-                            📦 Standard Shipping
-                          </p>
-                          <p className="text-sm text-gray-500 mt-0.5">
-                            {eta
-                              ? new Date(eta.regularEta).toLocaleDateString(
-                                  "en-US",
-                                  {
-                                    weekday: "long",
-                                    day: "numeric",
-                                    month: "long",
-                                  },
-                                ) + " delivery"
-                              : "3-5 business days"}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-gray-900">
-                            ₺{(eta?.regularPrice ?? 19.9).toFixed(2)}
-                          </p>
-                          {shippingRate === "Regular" && (
-                            <p className="text-xs text-green-600 mt-0.5">
-                              ✓ Selected
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                )}
+                <ShippingRateSelect
+                  merchantId={items[0]?.merchantId ?? ""}
+                  value={shippingRate}
+                  onChange={setShippingRate}
+                />
 
                 <button
                   onClick={() => setStep("payment")}
-                  className="mt-6 w-full py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                  className="mt-6 w-full py-3 bg-[var(--charcoal)] text-white rounded-lg font-medium hover:bg-[var(--charcoal-mid)] transition-colors"
                 >
                   Proceed to Payment →
                 </button>
@@ -498,36 +381,15 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>
                     Shipping (
-                    {shippingRate === "Express" ? "Express" : "Standard"})
+                    {shippingRate === "EXPRESS" ? "Express" : "Standard"})
                   </span>
-                  <span>
-                    {shippingCost > 0 ? `₺${shippingCost.toFixed(2)}` : "—"}
-                  </span>
+                  <span>₺{shippingCost.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-gray-900 pt-2 border-t border-gray-100">
                   <span>Toplam</span>
                   <span>₺{total.toLocaleString("tr-TR")}</span>
                 </div>
               </div>
-
-              {eta && step !== "address" && (
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <p className="text-xs text-gray-500">
-                    📅 Estimated delivery:{" "}
-                    <strong className="text-gray-800">
-                      {new Date(
-                        shippingRate === "Express"
-                          ? eta.expressEta
-                          : eta.regularEta,
-                      ).toLocaleDateString("tr-TR", {
-                        weekday: "short",
-                        day: "numeric",
-                        month: "long",
-                      })}
-                    </strong>
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </div>
