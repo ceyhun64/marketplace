@@ -67,3 +67,4 @@ api/api.http
 # Documentation & Architecture
 # ===========================
 system_architecture.html
+style_design.html
