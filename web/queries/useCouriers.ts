@@ -206,3 +206,33 @@ export function useConfirmDelivery() {
     },
   });
 }
+
+// ── Kurye Konum Güncelleme (Courier → PUT /api/couriers/me/location) ──────────
+
+/**
+ * Kurye'nin anlık GPS konumunu backend'e gönderir.
+ * Backend bu konumu DB'ye kaydeder ve aktif shipment gruplarına SignalR ile yayınlar.
+ *
+ * Kullanım:
+ * ```tsx
+ * const { mutate: sendLocation } = useUpdateCourierLocation();
+ *
+ * navigator.geolocation.watchPosition((pos) => {
+ *   sendLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+ * });
+ * ```
+ */
+export function useUpdateCourierLocation() {
+  return useMutation({
+    mutationFn: (coords: { latitude: number; longitude: number }) =>
+      api.put("/api/couriers/me/location", coords),
+    // Konum güncellemeleri sık olacağı için cache invalidation yapmıyoruz
+    // Başarısız olursa sessizce geçiyoruz — kritik değil
+    onError: (err) => {
+      // Sadece geliştirme ortamında logla
+      if (process.env.NODE_ENV === "development") {
+        console.warn("[CourierLocation] Konum gönderilemedi:", err);
+      }
+    },
+  });
+}

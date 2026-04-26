@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState, useCallback } from "react";
 import api from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,12 +16,15 @@ import {
   Printer,
   CheckCircle2,
   Truck,
-  ExternalLink,
   Phone,
   User,
   FileText,
   Navigation,
+  LocateFixed,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
+import { useUpdateCourierLocation } from "@/queries/useCouriers";
 
 type ShipmentStatus =
   | "PLACED"
@@ -93,17 +97,6 @@ const STATUS_LABELS: Record<ShipmentStatus, string> = {
   FAILED: "Delivery Failed",
 };
 
-const STATUS_ORDER: ShipmentStatus[] = [
-  "PLACED",
-  "PAYMENT_CONFIRMED",
-  "LABEL_GENERATED",
-  "COURIER_ASSIGNED",
-  "PICKED_UP",
-  "IN_TRANSIT",
-  "OUT_FOR_DELIVERY",
-  "DELIVERED",
-];
-
 function formatDateTime(dt: string) {
   return new Date(dt).toLocaleString("en-US", {
     day: "2-digit",
@@ -113,11 +106,99 @@ function formatDateTime(dt: string) {
   });
 }
 
+// ── Konum Gönderme Hook'u (Geolocation API + 30sn interval) ──────────────────
+
+function useCourierLocationBroadcast(active: boolean) {
+  const { mutate: sendLocation } = useUpdateCourierLocation();
+  const watchIdRef = useRef<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const lastCoordsRef = useRef<{ latitude: number; longitude: number } | null>(
+    null,
+  );
+
+  const send = useCallback(
+    (coords: { latitude: number; longitude: number }) => {
+      lastCoordsRef.current = coords;
+      sendLocation(coords);
+      setIsSending(true);
+      // Kısa süre sonra indicator'ı kapat
+      setTimeout(() => setIsSending(false), 1500);
+    },
+    [sendLocation],
+  );
+
+  useEffect(() => {
+    if (!active) {
+      // Durdur
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      setError("Bu cihaz konum özelliğini desteklemiyor.");
+      return;
+    }
+
+    // Geolocation API ile konumu izle
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        setError(null);
+        send({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        });
+      },
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) {
+          setError("Konum izni reddedildi.");
+        } else {
+          setError("Konum alınamadı.");
+        }
+      },
+      { enableHighAccuracy: true, maximumAge: 15_000, timeout: 10_000 },
+    );
+
+    // Konum değişmese bile 30sn'de bir son konumu gönder (heartbeat)
+    intervalRef.current = setInterval(() => {
+      if (lastCoordsRef.current) {
+        sendLocation(lastCoordsRef.current);
+      }
+    }, 30_000);
+
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [active, send, sendLocation]);
+
+  return { isSending, error };
+}
+
+// ── Ana Bileşen ───────────────────────────────────────────────────────────────
+
 export default function CourierShipmentDetailPage() {
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
   const shipmentId = params.id as string;
+
+  // Konum yayını: sadece kargo aktifken (alındı ama teslim edilmedi)
+  const [locationActive, setLocationActive] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["courier-shipment", shipmentId],
@@ -131,21 +212,24 @@ export default function CourierShipmentDetailPage() {
 
   const pickupMutation = useMutation({
     mutationFn: async () => {
-      const res = await api.post(`/api/fulfillment/${shipmentId}/pickup-confirm`);
+      const res = await api.post(
+        `/api/fulfillment/${shipmentId}/pickup-confirm`,
+      );
       return res.data;
     },
     onSuccess: () => {
-      toast.success("Package marked as picked up");
+      toast.success("Kargo teslim alındı olarak işaretlendi");
+      setLocationActive(true); // Teslim alındıktan sonra konum yayınını başlat
       queryClient.invalidateQueries({
         queryKey: ["courier-shipment", shipmentId],
       });
     },
-    onError: () => toast.error("Action failed"),
+    onError: () => toast.error("İşlem başarısız oldu"),
   });
 
   const deliveredMutation = useMutation({
     mutationFn: async () => {
-      const recipientName = prompt("Enter the recipient's name:");
+      const recipientName = prompt("Teslim alan kişinin adını girin:");
       if (!recipientName) return;
       const res = await api.post(`/api/fulfillment/${shipmentId}/delivered`, {
         recipientName,
@@ -153,27 +237,39 @@ export default function CourierShipmentDetailPage() {
       return res.data;
     },
     onSuccess: () => {
-      toast.success("Delivery completed! ✓");
+      toast.success("Teslimat tamamlandı! ✓");
+      setLocationActive(false); // Teslim tamamlandı, konum yayınını durdur
       queryClient.invalidateQueries({
         queryKey: ["courier-shipment", shipmentId],
       });
     },
-    onError: () => toast.error("Action failed"),
+    onError: () => toast.error("İşlem başarısız oldu"),
   });
 
   const shipment: ShipmentDetail | null = data?.data || null;
+
+  // Durum değiştiğinde konum yayın durumunu otomatik ayarla
+  useEffect(() => {
+    if (!shipment) return;
+    const activeStatuses: ShipmentStatus[] = [
+      "PICKED_UP",
+      "IN_TRANSIT",
+      "OUT_FOR_DELIVERY",
+    ];
+    const shouldBeActive = activeStatuses.includes(shipment.status);
+    setLocationActive(shouldBeActive);
+  }, [shipment?.status]);
+
+  const { isSending, error: locationError } =
+    useCourierLocationBroadcast(locationActive);
 
   const handlePrintLabel = () => {
     if (shipment?.labelUrl) {
       window.open(shipment.labelUrl, "_blank");
     } else {
-      toast.error("Label not yet generated");
+      toast.error("Kargo etiketi henüz oluşturulmadı");
     }
   };
-
-  const currentStatusIndex = shipment
-    ? STATUS_ORDER.indexOf(shipment.status)
-    : -1;
 
   if (isLoading) {
     return (
@@ -189,13 +285,13 @@ export default function CourierShipmentDetailPage() {
     return (
       <div className="p-6 text-center py-20">
         <Package className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-        <p className="text-gray-500">Shipment not found</p>
+        <p className="text-gray-500">Kargo bulunamadı</p>
         <Button
           variant="ghost"
           className="mt-3"
           onClick={() => router.push("/courier/shipments")}
         >
-          Go Back
+          Geri Git
         </Button>
       </div>
     );
@@ -222,7 +318,7 @@ export default function CourierShipmentDetailPage() {
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-lg font-bold text-gray-900">Shipment Details</h1>
+          <h1 className="text-lg font-bold text-gray-900">Kargo Detayı</h1>
           <p className="text-xs font-mono text-blue-600">
             {shipment.trackingNumber}
           </p>
@@ -242,6 +338,57 @@ export default function CourierShipmentDetailPage() {
         </span>
       </div>
 
+      {/* Konum Yayın Durumu */}
+      {locationActive && (
+        <div
+          className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-medium transition-all ${
+            locationError
+              ? "bg-red-50 text-red-600 border border-red-200"
+              : isSending
+                ? "bg-blue-50 text-blue-600 border border-blue-200"
+                : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+          }`}
+        >
+          {locationError ? (
+            <>
+              <WifiOff className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>{locationError}</span>
+            </>
+          ) : (
+            <>
+              <span
+                className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                  isSending ? "bg-blue-500 animate-pulse" : "bg-emerald-500"
+                }`}
+              />
+              <Wifi className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>
+                {isSending
+                  ? "Konum gönderiliyor..."
+                  : "Canlı konum yayınlanıyor"}
+              </span>
+              <button
+                onClick={() => setLocationActive(false)}
+                className="ml-auto text-xs underline opacity-60 hover:opacity-100"
+              >
+                Durdur
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Konum Yayınını Başlat Butonu (aktif değilse ve kargo alınmışsa) */}
+      {!locationActive && canDeliver && (
+        <button
+          onClick={() => setLocationActive(true)}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-gray-300 text-xs text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
+        >
+          <LocateFixed className="w-3.5 h-3.5" />
+          Canlı Konum Yayınını Başlat
+        </button>
+      )}
+
       {/* Action Buttons */}
       {!isCompleted && (
         <div className="grid grid-cols-2 gap-3">
@@ -251,7 +398,7 @@ export default function CourierShipmentDetailPage() {
             onClick={() => pickupMutation.mutate()}
           >
             <Package className="w-5 h-5 mr-2" />
-            {pickupMutation.isPending ? "Processing..." : "Picked Up"}
+            {pickupMutation.isPending ? "İşleniyor..." : "Teslim Aldım"}
           </Button>
           <Button
             className="h-14 text-sm font-semibold bg-green-600 hover:bg-green-700"
@@ -259,7 +406,7 @@ export default function CourierShipmentDetailPage() {
             onClick={() => deliveredMutation.mutate()}
           >
             <CheckCircle2 className="w-5 h-5 mr-2" />
-            {deliveredMutation.isPending ? "Processing..." : "Delivered"}
+            {deliveredMutation.isPending ? "İşleniyor..." : "Teslim Ettim"}
           </Button>
         </div>
       )}
@@ -267,7 +414,7 @@ export default function CourierShipmentDetailPage() {
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
           <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto mb-1" />
           <p className="text-green-700 font-semibold text-sm">
-            Delivery Completed
+            Teslimat Tamamlandı
           </p>
           {shipment.actualDeliveredAt && (
             <p className="text-green-600 text-xs mt-1">
@@ -286,10 +433,10 @@ export default function CourierShipmentDetailPage() {
             </div>
             <div>
               <p className="text-sm font-semibold text-gray-900">
-                Kargo Labeli
+                Kargo Etiketi
               </p>
               <p className="text-xs text-gray-500">
-                {shipment.labelUrl ? "Label ready" : "Label pending"}
+                {shipment.labelUrl ? "Etiket hazır" : "Etiket bekleniyor"}
               </p>
             </div>
           </div>
@@ -300,7 +447,7 @@ export default function CourierShipmentDetailPage() {
             disabled={!shipment.labelUrl}
           >
             <Printer className="w-4 h-4 mr-1.5" />
-            Print
+            Yazdır
           </Button>
         </CardContent>
       </Card>
@@ -311,13 +458,13 @@ export default function CourierShipmentDetailPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Clock className="w-4 h-4 text-blue-500" />
-              Delivery Time Window
+              Teslimat Zaman Penceresi
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {shipment.estimatedPickupWindow && (
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Pickup Window</span>
+                <span className="text-gray-500">Teslim Alma Penceresi</span>
                 <span className="font-medium text-gray-900">
                   {formatDateTime(shipment.estimatedPickupWindow.start)} –{" "}
                   {formatDateTime(shipment.estimatedPickupWindow.end)}
@@ -326,7 +473,7 @@ export default function CourierShipmentDetailPage() {
             )}
             {shipment.estimatedDeliveryWindow && (
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Delivery Window</span>
+                <span className="text-gray-500">Teslimat Penceresi</span>
                 <span className="font-medium text-gray-900">
                   {formatDateTime(shipment.estimatedDeliveryWindow.start)} –{" "}
                   {formatDateTime(shipment.estimatedDeliveryWindow.end)}
@@ -334,7 +481,7 @@ export default function CourierShipmentDetailPage() {
               </div>
             )}
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">Shipping Type</span>
+              <span className="text-gray-500">Kargo Tipi</span>
               <span
                 className={`font-semibold ${
                   shipment.shippingRate === "EXPRESS"
@@ -342,7 +489,9 @@ export default function CourierShipmentDetailPage() {
                     : "text-gray-700"
                 }`}
               >
-                {shipment.shippingRate === "EXPRESS" ? "⚡ Express" : "Regular"}
+                {shipment.shippingRate === "EXPRESS"
+                  ? "⚡ Ekspres"
+                  : "Standart"}
               </span>
             </div>
           </CardContent>
@@ -360,7 +509,7 @@ export default function CourierShipmentDetailPage() {
               </div>
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                  Pickup Address (Merchant)
+                  Teslim Alma Adresi (Satıcı)
                 </p>
                 <p className="text-sm font-semibold text-gray-900">
                   {shipment.merchant.name}
@@ -402,7 +551,7 @@ export default function CourierShipmentDetailPage() {
               </div>
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                  Delivery Address (Customer)
+                  Teslimat Adresi (Müşteri)
                 </p>
                 <p className="text-sm font-semibold text-gray-900">
                   {shipment.customer.name}
@@ -430,7 +579,7 @@ export default function CourierShipmentDetailPage() {
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold">
-              Order Contents
+              Sipariş İçeriği
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -454,13 +603,13 @@ export default function CourierShipmentDetailPage() {
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Truck className="w-4 h-4 text-gray-500" />
-            Status History
+            Durum Geçmişi
           </CardTitle>
         </CardHeader>
         <CardContent>
           {shipment.events?.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-4">
-              No status updates yet
+              Henüz durum güncellemesi yok
             </p>
           ) : (
             <div className="space-y-0">
