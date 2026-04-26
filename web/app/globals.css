@@ -52,7 +52,7 @@
 /* ─── DESIGN TOKENS (style_design.html uyumlu) ────────────────────── */
 :root {
   /* Primary Palette */
-  --red: #c8102e;
+  --red: #bb1023;
   --red-dark: #a00d24;
   --red-light: #e8193c;
   --red-muted: rgba(200, 16, 46, 0.08);
