@@ -2,9 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { ArrowRight, ShoppingBag, Star, Heart } from "lucide-react";
 
 interface ProductOffer {
@@ -157,8 +154,10 @@ const TABS = [
   { value: "new", label: "New Arrivals" },
   { value: "deals", label: "Deals" },
 ];
+
 export default function FeaturedProducts() {
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState("featured");
 
   const toggleWishlist = (id: string) => {
     setWishlist((prev) => {
@@ -169,23 +168,32 @@ export default function FeaturedProducts() {
   };
 
   return (
-    <section className="py-20 lg:py-24">
+    <section className="py-20 lg:py-24" style={{ background: "#f5f5f3" }}>
       <div className="max-w-[1300px] mx-auto px-6 lg:px-8">
         {/* Section header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] uppercase tracking-[3px] text-blue-600 font-bold">
+            <div className="flex items-center gap-3">
+              <span
+                className="inline-block w-6 h-px"
+                style={{ background: "#c8102e" }}
+              />
+              <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-[#6b6b6b]">
                 Curated Selection
               </span>
             </div>
-            <h2 className="text-black text-3xl lg:text-4xl font-bold tracking-tight">
-              What will you discover today?
+            <h2
+              className="text-[2.2rem] lg:text-[2.75rem] font-normal leading-[1.1] tracking-[-0.01em] text-[#333333]"
+              style={{ fontFamily: "'Cormorant Garamond', serif" }}
+            >
+              What will you <em style={{ color: "#c8102e" }}>discover</em>{" "}
+              today?
             </h2>
           </div>
           <Link
             href="/products"
-            className="flex items-center gap-2 text-sm font-bold text-black hover:opacity-70 transition-opacity group"
+            className="flex items-center gap-2 text-sm font-semibold text-[#333333] hover:text-[#c8102e] transition-colors group"
+            style={{ fontFamily: "'Manrope', sans-serif" }}
           >
             All Products
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -193,22 +201,37 @@ export default function FeaturedProducts() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="featured" className="mb-10">
-          <TabsList className="bg-transparent w-full justify-start rounded-none h-auto p-0 gap-8 border-b border-gray-100">
-            {TABS.map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className="text-sm font-bold px-0 py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:text-black text-gray-400 hover:text-black transition-all bg-transparent shadow-none"
-              >
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        <div
+          className="flex gap-8 mb-10 border-b"
+          style={{ borderColor: "rgba(51,51,51,0.08)" }}
+        >
+          {TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className="relative pb-4 text-sm font-semibold transition-colors duration-200"
+              style={{
+                fontFamily: "'Manrope', sans-serif",
+                color: activeTab === tab.value ? "#333333" : "#6b6b6b",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                letterSpacing: "0.02em",
+              }}
+            >
+              {tab.label}
+              {activeTab === tab.value && (
+                <span
+                  className="absolute bottom-0 left-0 right-0 h-[2px]"
+                  style={{ background: "#c8102e" }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
 
         {/* Products grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-6">
           {MOCK_PRODUCTS.map((product) => (
             <ProductCard
               key={product.id}
@@ -221,20 +244,46 @@ export default function FeaturedProducts() {
 
         {/* View All CTA */}
         <div className="mt-16 text-center">
-          <Button
-            variant="outline"
-            asChild
-            className="border-gray-200 text-black font-bold text-sm hover:bg-black hover:text-white hover:border-black transition-all rounded-xl px-10 py-6 h-auto"
+          <Link
+            href="/products"
+            className="inline-flex items-center gap-2 px-8 py-3.5 border font-semibold text-sm transition-all duration-250 rounded-lg"
+            style={{
+              fontFamily: "'Manrope', sans-serif",
+              borderColor: "rgba(51,51,51,0.15)",
+              color: "#333333",
+              letterSpacing: "0.02em",
+            }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "#c8102e";
+              el.style.borderColor = "#c8102e";
+              el.style.color = "#fff";
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "transparent";
+              el.style.borderColor = "rgba(51,51,51,0.15)";
+              el.style.color = "#333333";
+            }}
           >
-            <Link href="/products">Explore Full Catalog</Link>
-          </Button>
+            Explore Full Catalog
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </div>
     </section>
   );
 }
 
-function ProductCard({ product, isWishlisted, onWishlist }: any) {
+function ProductCard({
+  product,
+  isWishlisted,
+  onWishlist,
+}: {
+  product: ProductOffer;
+  isWishlisted: boolean;
+  onWishlist: () => void;
+}) {
   const discount = product.originalPrice
     ? Math.round(
         ((product.originalPrice - product.price) / product.originalPrice) * 100,
@@ -242,76 +291,127 @@ function ProductCard({ product, isWishlisted, onWishlist }: any) {
     : 0;
 
   return (
-    <div className="group relative bg-white transition-all duration-300">
+    <div
+      className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
+      style={{
+        boxShadow: "0 1px 3px rgba(51,51,51,0.06)",
+        border: "1px solid rgba(51,51,51,0.06)",
+      }}
+    >
+      {/* Red accent top */}
+      <div
+        className="h-[3px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
+        style={{ background: "#c8102e" }}
+      />
+
       {/* Image Container */}
-      <div className="relative aspect-[4/5] bg-gray-50 rounded-[24px] overflow-hidden flex items-center justify-center text-6xl transition-all group-hover:shadow-xl group-hover:shadow-gray-100">
+      <div
+        className="relative aspect-[4/5] overflow-hidden flex items-center justify-center text-6xl"
+        style={{ background: "#f5f5f3" }}
+      >
         <span className="transition-transform duration-500 group-hover:scale-110 select-none">
           {product.imageEmoji}
         </span>
 
         {/* Badges */}
-        <div className="absolute top-4 left-4 flex flex-col gap-2">
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {discount > 0 && (
-            <Badge className="bg-red-500 text-white border-none font-bold text-[10px] px-2 py-0.5 rounded-lg">
+            <span
+              className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium text-white"
+              style={{ background: "#c8102e", letterSpacing: "0.05em" }}
+            >
               -{discount}%
-            </Badge>
+            </span>
           )}
           {product.isBuyBox && (
-            <Badge className="bg-black text-white border-none font-bold text-[10px] px-2 py-0.5 rounded-lg uppercase">
-              Best Offer
-            </Badge>
+            <span
+              className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium text-white"
+              style={{ background: "#333333", letterSpacing: "0.05em" }}
+            >
+              BEST OFFER
+            </span>
           )}
         </div>
 
-        {/* Wishlist Button */}
+        {/* Wishlist */}
         <button
           onClick={(e) => {
             e.preventDefault();
             onWishlist();
           }}
-          className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 active:scale-90"
+          className="absolute top-3 right-3 w-9 h-9 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+          style={{ boxShadow: "0 2px 8px rgba(51,51,51,0.12)" }}
         >
           <Heart
-            className={`w-5 h-5 ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-400"}`}
+            className="w-4 h-4"
+            style={{
+              color: isWishlisted ? "#c8102e" : "#6b6b6b",
+              fill: isWishlisted ? "#c8102e" : "none",
+            }}
           />
         </button>
 
-        {/* Quick Add Button */}
-        <div className="absolute bottom-4 left-4 right-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-          <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-xl h-11 font-bold text-xs gap-2">
-            <ShoppingBag className="w-4 h-4" />
+        {/* Quick Add */}
+        <div className="absolute bottom-3 left-3 right-3 translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+          <button
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold text-white transition-colors"
+            style={{
+              background: "#333333",
+              fontFamily: "'Manrope', sans-serif",
+              letterSpacing: "0.03em",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#c8102e")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#333333")}
+          >
+            <ShoppingBag className="w-3.5 h-3.5" />
             Add to Cart
-          </Button>
+          </button>
         </div>
       </div>
 
       {/* Info */}
-      <div className="mt-5 space-y-2">
-        <div className="flex justify-between items-center text-[11px] font-bold uppercase tracking-wider text-gray-400">
-          <span>{product.categoryName}</span>
-          <span className="text-blue-600">{product.merchantName}</span>
+      <div className="p-4 space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#6b6b6b]">
+            {product.categoryName}
+          </span>
+          <span
+            className="font-mono text-[10px] uppercase tracking-[0.08em]"
+            style={{ color: "#c8102e" }}
+          >
+            {product.merchantName}
+          </span>
         </div>
 
         <Link href={`/product/${product.productId}`}>
-          <h3 className="text-black font-bold text-[15px] leading-tight hover:text-blue-600 transition-colors line-clamp-2">
+          <h3
+            className="font-bold text-[14px] leading-snug line-clamp-2 text-[#333333] hover:text-[#c8102e] transition-colors"
+            style={{ fontFamily: "'Manrope', sans-serif" }}
+          >
             {product.productName}
           </h3>
         </Link>
 
         <div className="flex items-center justify-between pt-1">
-          <div className="flex flex-col">
-            <span className="text-lg font-black text-black tracking-tighter">
+          <div>
+            <span
+              className="text-lg font-bold text-[#333333] tracking-tight"
+              style={{ fontFamily: "'Cormorant Garamond', serif" }}
+            >
               ₺{product.price.toLocaleString("en-US")}
             </span>
             {product.originalPrice && (
-              <span className="text-xs text-gray-400 line-through">
+              <span className="block text-xs text-[#6b6b6b] line-through font-mono">
                 ₺{product.originalPrice.toLocaleString("en-US")}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-lg">
-            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-            <span className="text-[11px] font-bold text-black">
+          <div
+            className="flex items-center gap-1 px-2 py-1 rounded-lg"
+            style={{ background: "#f5f5f3" }}
+          >
+            <Star className="w-3 h-3 fill-[#c8102e] text-[#c8102e]" />
+            <span className="font-mono text-[11px] font-medium text-[#333333]">
               {product.rating}
             </span>
           </div>

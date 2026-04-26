@@ -8,84 +8,152 @@ const STEPS = [
     title: "Find Product",
     description:
       "Search through thousands of items, browse categories, and find the best price.",
-    icon: <Search className="w-6 h-6" />,
-    accent: "bg-blue-500",
+    icon: <Search className="w-5 h-5" />,
   },
   {
     id: "02",
     title: "Secure Payment",
     description:
       "Pay safely with 256-bit SSL encryption via credit card or bank transfer.",
-    icon: <CreditCard className="w-6 h-6" />,
-    accent: "bg-purple-500",
+    icon: <CreditCard className="w-5 h-5" />,
   },
   {
     id: "03",
     title: "Track Order",
     description:
       "Monitor your order in real-time. See your courier's live location on the map.",
-    icon: <MapPin className="w-6 h-6" />,
-    accent: "bg-emerald-500",
+    icon: <MapPin className="w-5 h-5" />,
   },
   {
     id: "04",
     title: "Fast Delivery",
     description:
       "At your door within 24 hours. Get it today with our Express delivery option.",
-    icon: <PackageCheck className="w-6 h-6" />,
-    accent: "bg-orange-500",
+    icon: <PackageCheck className="w-5 h-5" />,
   },
 ];
 
 export default function HowItWorksSection() {
   return (
-    <section className="py-24 ">
-      <div className="max-w-[1200px] mx-auto px-6 lg:px-8">
+    <section
+      className="py-24"
+      style={{
+        background: "#333333",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Decorative circle */}
+      <div
+        className="absolute top-[-80px] right-[-80px] w-[280px] h-[280px] rounded-full pointer-events-none"
+        style={{ border: "50px solid rgba(200,16,46,0.08)" }}
+      />
+
+      <div className="max-w-[1300px] mx-auto px-6 lg:px-8 relative z-10">
         {/* Header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <span className="text-[11px] uppercase tracking-[4px] text-gray-400 font-bold">
-              How it works
-            </span>
+        <div className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <span
+                className="inline-block w-6 h-px"
+                style={{ background: "#c8102e" }}
+              />
+              <span
+                className="font-mono text-[11px] tracking-[0.18em] uppercase"
+                style={{ color: "rgba(255,255,255,0.4)" }}
+              >
+                How it works
+              </span>
+            </div>
+            <h2
+              className="font-normal leading-[1.1] tracking-[-0.01em] text-white"
+              style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: "clamp(2rem, 4vw, 2.75rem)",
+              }}
+            >
+              Shopping is <em style={{ color: "#c8102e" }}>this simple.</em>
+            </h2>
           </div>
-          <h2 className="text-black text-3xl lg:text-4xl font-bold tracking-tight">
-            Shopping is this simple.
-          </h2>
         </div>
 
         {/* Steps Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {STEPS.map((step) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {STEPS.map((step, i) => (
             <div
               key={step.id}
-              className="group relative p-8 bg-white border border-gray-100 rounded-[24px] hover:shadow-xl hover:shadow-gray-100 transition-all duration-300"
+              className="group relative p-7 rounded-2xl transition-all duration-300"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.07)",
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.background = "rgba(255,255,255,0.07)";
+                el.style.borderColor = "rgba(200,16,46,0.3)";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.background = "rgba(255,255,255,0.04)";
+                el.style.borderColor = "rgba(255,255,255,0.07)";
+              }}
             >
-              {/* Icon & ID */}
-              <div className="flex justify-between items-start mb-6">
+              {/* Red accent bottom bar */}
+              <div
+                className="absolute bottom-0 left-7 right-7 h-[2px] rounded-full origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"
+                style={{ background: "#c8102e" }}
+              />
+
+              <div className="flex justify-between items-start mb-7">
                 <div
-                  className={`w-12 h-12 ${step.accent} bg-opacity-10 rounded-xl flex items-center justify-center text-black`}
+                  className="w-11 h-11 rounded-[10px] flex items-center justify-center"
+                  style={{
+                    background: "rgba(200,16,46,0.15)",
+                    color: "#c8102e",
+                  }}
                 >
                   {step.icon}
                 </div>
-                <span className="text-3xl font-black text-gray-50 opacity-10 group-hover:opacity-20 transition-opacity">
+                <span
+                  className="font-light leading-none"
+                  style={{
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontSize: "2.5rem",
+                    color: "rgba(255,255,255,0.06)",
+                  }}
+                >
                   {step.id}
                 </span>
               </div>
 
-              {/* Content */}
-              <h3 className="text-black text-lg font-bold mb-3">
+              <h3
+                className="font-bold mb-3 text-white"
+                style={{
+                  fontFamily: "'Manrope', sans-serif",
+                  fontSize: "1.0625rem",
+                }}
+              >
                 {step.title}
               </h3>
-              <p className="text-gray-500 text-sm leading-relaxed">
+              <p
+                className="text-[0.8125rem] leading-relaxed"
+                style={{
+                  fontFamily: "'Manrope', sans-serif",
+                  color: "rgba(255,255,255,0.5)",
+                }}
+              >
                 {step.description}
               </p>
 
-              {/* Bottom Progress Accent */}
-              <div className="absolute bottom-0 left-8 right-8 h-[2px] bg-transparent overflow-hidden">
-                <div
-                  className={`h-full w-0 group-hover:w-full transition-all duration-500 ${step.accent}`}
-                />
-              </div>
+              {/* Connector arrow for non-last items */}
+              {i < STEPS.length - 1 && (
+                <div className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 z-10">
+                  <div
+                    className="w-6 h-px"
+                    style={{ background: "rgba(200,16,46,0.3)" }}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>

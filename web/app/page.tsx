@@ -4,8 +4,6 @@ import CategoryGrid from "@/components/modules/home/CategoryGrid";
 import FeaturedProducts from "@/components/modules/home/FeaturedProducts";
 import FeaturedStores from "@/components/modules/home/FeaturedStores";
 import HowItWorksSection from "@/components/modules/home/HowItWorks";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 
 export const metadata = {
   title: "Marketplace — Thousands of Sellers, One Platform",

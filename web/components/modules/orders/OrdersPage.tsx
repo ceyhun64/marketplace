@@ -22,7 +22,6 @@ interface OrderItem {
   quantity: number;
   unitPrice: number;
 }
-
 interface Order {
   id: string;
   status: OrderStatus;
@@ -34,53 +33,20 @@ interface Order {
   trackingNumber?: string;
 }
 
-const STATUS_META: Record<
-  OrderStatus,
-  { label: string; color: string; bg: string; step: number }
-> = {
-  Pending: { label: "Pending", color: "#92400e", bg: "#fef3c7", step: 0 },
-  PaymentConfirmed: {
-    label: "Payment Confirmed",
-    color: "#1e40af",
-    bg: "#dbeafe",
-    step: 1,
-  },
-  LabelGenerated: {
-    label: "Label Generated",
-    color: "#5b21b6",
-    bg: "#ede9fe",
-    step: 2,
-  },
-  CourierAssigned: {
-    label: "Courier Assigned",
-    color: "#0e7490",
-    bg: "#cffafe",
-    step: 3,
-  },
-  PickedUp: {
-    label: "Picked Up",
-    color: "#0f766e",
-    bg: "#ccfbf1",
-    step: 4,
-  },
-  InTransit: { label: "In Transit", color: "#1d4ed8", bg: "#dbeafe", step: 5 },
-  OutForDelivery: {
-    label: "Out for Delivery",
-    color: "#7c3aed",
-    bg: "#f3e8ff",
-    step: 6,
-  },
-  Delivered: {
-    label: "Delivered",
-    color: "#15803d",
-    bg: "#dcfce7",
-    step: 7,
-  },
-  Failed: { label: "Failed", color: "#b91c1c", bg: "#fee2e2", step: -1 },
-  Cancelled: { label: "Cancelled", color: "#6b7280", bg: "#f3f4f6", step: -1 },
+const STATUS_META: Record<OrderStatus, { label: string; step: number }> = {
+  Pending: { label: "Pending", step: 0 },
+  PaymentConfirmed: { label: "Payment Confirmed", step: 1 },
+  LabelGenerated: { label: "Label Generated", step: 2 },
+  CourierAssigned: { label: "Courier Assigned", step: 3 },
+  PickedUp: { label: "Picked Up", step: 4 },
+  InTransit: { label: "In Transit", step: 5 },
+  OutForDelivery: { label: "Out for Delivery", step: 6 },
+  Delivered: { label: "Delivered", step: 7 },
+  Failed: { label: "Failed", step: -1 },
+  Cancelled: { label: "Cancelled", step: -1 },
 };
 
-const FILTER_TABS: { key: string; label: string }[] = [
+const FILTER_TABS = [
   { key: "all", label: "All" },
   { key: "active", label: "Active" },
   { key: "Delivered", label: "Delivered" },
@@ -96,7 +62,6 @@ function statusMatch(status: OrderStatus, filter: string): boolean {
   return status === filter;
 }
 
-// ── Status normalizer (backend UPPER_SNAKE → component PascalCase) ────────────
 const ORDER_STATUS_MAP: Record<string, OrderStatus> = {
   PENDING: "Pending",
   PAYMENT_CONFIRMED: "PaymentConfirmed",
@@ -129,6 +94,14 @@ function normalizeOrder(raw: Order): Order {
   };
 }
 
+function statusColor(status: OrderStatus): { text: string; bg: string } {
+  if (status === "Delivered")
+    return { text: "#c8102e", bg: "rgba(200,16,46,0.08)" };
+  if (status === "Failed" || status === "Cancelled")
+    return { text: "#6b6b6b", bg: "rgba(51,51,51,0.08)" };
+  return { text: "#333333", bg: "rgba(51,51,51,0.06)" };
+}
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -146,29 +119,57 @@ export default function OrdersPage() {
   const filtered = orders.filter((o) => statusMatch(o.status, filter));
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" style={{ background: "#f5f5f3" }}>
       {/* Header */}
-      <div className="border-b border-gray-200 bg-white">
-        <div className="max-w-3xl mx-auto px-4 py-6">
-          <p className="text-xs text-gray-400 uppercase tracking-widest mb-1 font-mono">
-            My Account
-          </p>
-          <h1 className="text-2xl font-bold text-gray-900">My Orders</h1>
+      <div
+        style={{
+          borderBottom: "1px solid rgba(51,51,51,0.08)",
+          background: "#fff",
+        }}
+      >
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <div className="flex items-center gap-3 mb-3">
+            <span
+              className="inline-block w-6 h-px"
+              style={{ background: "#c8102e" }}
+            />
+            <span
+              className="font-mono text-[11px] tracking-[0.18em] uppercase"
+              style={{ color: "#6b6b6b" }}
+            >
+              My Account
+            </span>
+          </div>
+          <h1
+            className="font-normal text-[#333333]"
+            style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "2.2rem",
+            }}
+          >
+            My <em style={{ color: "#c8102e" }}>Orders</em>
+          </h1>
         </div>
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Filter tabs */}
-        <div className="flex gap-2 mb-6 flex-wrap">
+        <div className="flex gap-2 mb-8 flex-wrap">
           {FILTER_TABS.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setFilter(tab.key)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                filter === tab.key
-                  ? "bg-gray-900 text-white"
-                  : "bg-white border border-gray-200 text-gray-600 hover:border-gray-400"
-              }`}
+              className="px-4 py-2 rounded-lg text-[13px] font-semibold transition-all"
+              style={{
+                background: filter === tab.key ? "#333333" : "#fff",
+                color: filter === tab.key ? "#fff" : "#6b6b6b",
+                border:
+                  filter === tab.key
+                    ? "1.5px solid #333333"
+                    : "1.5px solid rgba(51,51,51,0.12)",
+                fontFamily: "'Manrope', sans-serif",
+                letterSpacing: "0.02em",
+              }}
             >
               {tab.label}
             </button>
@@ -181,17 +182,26 @@ export default function OrdersPage() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-28 bg-white rounded-xl border border-gray-200 animate-pulse"
+                className="h-28 rounded-2xl animate-pulse"
+                style={{
+                  background: "#fff",
+                  border: "1px solid rgba(51,51,51,0.08)",
+                }}
               />
             ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-4xl mb-3">📦</div>
-            <p className="text-gray-500">No orders found in this category.</p>
+            <div className="text-4xl mb-4">📦</div>
+            <p
+              style={{ color: "#6b6b6b", fontFamily: "'Manrope', sans-serif" }}
+            >
+              No orders found in this category.
+            </p>
             <Link
               href="/"
-              className="inline-block mt-4 text-sm text-gray-900 underline underline-offset-2"
+              className="inline-block mt-4 text-sm font-semibold"
+              style={{ color: "#c8102e", fontFamily: "'Manrope', sans-serif" }}
             >
               Start shopping →
             </Link>
@@ -200,94 +210,157 @@ export default function OrdersPage() {
           <div className="space-y-3">
             {filtered.map((order) => {
               const meta = STATUS_META[order.status];
+              const sc = statusColor(order.status);
               const isExpanded = expandedId === order.id;
 
               return (
                 <div
                   key={order.id}
-                  className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+                  className="bg-white rounded-2xl overflow-hidden"
+                  style={{
+                    border: "1px solid rgba(51,51,51,0.08)",
+                    boxShadow: "0 1px 3px rgba(51,51,51,0.04)",
+                  }}
                 >
-                  {/* Main row */}
+                  {/* Red accent top */}
+                  {order.status === "Delivered" && (
+                    <div
+                      className="h-[3px]"
+                      style={{ background: "#c8102e" }}
+                    />
+                  )}
+
                   <button
-                    className="w-full text-left p-5 hover:bg-gray-50 transition-colors"
+                    className="w-full text-left p-5 transition-colors"
                     onClick={() => setExpandedId(isExpanded ? null : order.id)}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "#f5f5f3")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "transparent")
+                    }
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1.5">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <span
-                            className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                            className="text-[11px] font-mono font-medium px-2.5 py-1 rounded-full"
                             style={{
-                              color: meta.color,
-                              background: meta.bg,
+                              color: sc.text,
+                              background: sc.bg,
+                              letterSpacing: "0.06em",
+                              textTransform: "uppercase",
                             }}
                           >
                             {meta.label}
                           </span>
-                          <span className="text-xs text-gray-400">
+                          <span
+                            className="font-mono text-[11px]"
+                            style={{ color: "#6b6b6b" }}
+                          >
                             {order.source === "Marketplace"
                               ? "Marketplace"
                               : "E-Store"}
                           </span>
-                          <span className="text-xs text-gray-400">·</span>
-                          <span className="text-xs text-gray-400">
+                          <span
+                            className="font-mono text-[11px]"
+                            style={{ color: "#6b6b6b" }}
+                          >
+                            ·
+                          </span>
+                          <span
+                            className="font-mono text-[11px]"
+                            style={{ color: "#6b6b6b" }}
+                          >
                             {order.shippingRate === "Express"
                               ? "⚡ Express"
                               : "📦 Standard"}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-700 truncate">
+                        <p
+                          className="text-[0.875rem] mb-1 truncate"
+                          style={{
+                            color: "#333333",
+                            fontFamily: "'Manrope', sans-serif",
+                          }}
+                        >
                           {order.items
                             .slice(0, 2)
                             .map((i) => `${i.productName} ×${i.quantity}`)
                             .join(", ")}
                           {order.items.length > 2 &&
-                            ` +${order.items.length - 2} more items`}
+                            ` +${order.items.length - 2} more`}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1 font-mono">
+                        <p
+                          className="font-mono text-[11px]"
+                          style={{ color: "#6b6b6b" }}
+                        >
                           #{order.id.slice(0, 8).toUpperCase()} ·{" "}
                           {new Date(order.createdAt).toLocaleDateString(
                             "en-US",
-                            {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric",
-                            },
+                            { day: "numeric", month: "long", year: "numeric" },
                           )}
                         </p>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <p className="font-bold text-gray-900">
+                        <p
+                          className="font-bold text-[#333333]"
+                          style={{
+                            fontFamily: "'Cormorant Garamond', serif",
+                            fontSize: "1.25rem",
+                          }}
+                        >
                           ₺{order.totalAmount.toLocaleString("tr-TR")}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p
+                          className="font-mono text-[11px] mt-1"
+                          style={{ color: "#c8102e" }}
+                        >
                           {isExpanded ? "▲" : "▼"}
                         </p>
                       </div>
                     </div>
                   </button>
 
-                  {/* Expanded detail */}
                   {isExpanded && (
-                    <div className="border-t border-gray-100 px-5 py-4 bg-gray-50 space-y-4">
-                      {/* Items */}
+                    <div
+                      className="px-5 py-4 space-y-4"
+                      style={{
+                        borderTop: "1px solid rgba(51,51,51,0.06)",
+                        background: "#f5f5f3",
+                      }}
+                    >
                       <div>
-                        <p className="text-xs text-gray-400 uppercase tracking-widest mb-2 font-mono">
+                        <p
+                          className="font-mono text-[10px] uppercase tracking-[0.15em] mb-3"
+                          style={{ color: "#6b6b6b" }}
+                        >
                           Products
                         </p>
-                        <div className="space-y-1.5">
+                        <div className="space-y-2">
                           {order.items.map((item) => (
                             <div
                               key={item.id}
-                              className="flex justify-between text-sm"
+                              className="flex justify-between text-[0.875rem]"
                             >
-                              <span className="text-gray-700">
+                              <span
+                                style={{
+                                  color: "#4a4a4a",
+                                  fontFamily: "'Manrope', sans-serif",
+                                }}
+                              >
                                 {item.productName}{" "}
-                                <span className="text-gray-400">
+                                <span style={{ color: "#6b6b6b" }}>
                                   ×{item.quantity}
                                 </span>
                               </span>
-                              <span className="text-gray-900 font-medium">
+                              <span
+                                className="font-bold"
+                                style={{
+                                  color: "#333333",
+                                  fontFamily: "'Cormorant Garamond', serif",
+                                }}
+                              >
                                 ₺
                                 {(
                                   item.unitPrice * item.quantity
@@ -297,22 +370,42 @@ export default function OrdersPage() {
                           ))}
                         </div>
                       </div>
-
-                      {/* Actions */}
                       <div className="flex gap-2 pt-1">
                         {order.trackingNumber && (
                           <Link
                             href={`/orders/${order.id}/tracking`}
-                            className="flex-1 text-center py-2 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                            className="flex-1 text-center py-2.5 text-sm font-semibold text-white rounded-lg transition-colors"
+                            style={{
+                              background: "#333333",
+                              fontFamily: "'Manrope', sans-serif",
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background = "#c8102e")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = "#333333")
+                            }
                           >
-                            Kargo Takip →
+                            Track Order →
                           </Link>
                         )}
                         <Link
                           href={`/orders/${order.id}`}
-                          className="flex-1 text-center py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:border-gray-500 transition-colors"
+                          className="flex-1 text-center py-2.5 text-sm font-semibold rounded-lg transition-colors"
+                          style={{
+                            border: "1.5px solid rgba(51,51,51,0.15)",
+                            color: "#333333",
+                            fontFamily: "'Manrope', sans-serif",
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.borderColor = "#c8102e")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.borderColor =
+                              "rgba(51,51,51,0.15)")
+                          }
                         >
-                          Detaylar
+                          Details
                         </Link>
                       </div>
                     </div>

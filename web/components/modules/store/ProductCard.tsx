@@ -3,26 +3,16 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ShoppingCart, Store, Tag } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/types/entities";
 
-// ── Props ─────────────────────────────────────────────────────────────────────
-
 interface ProductCardProps {
   product: Product;
-  /**
-   * "marketplace" → /product/[id]
-   * "store"       → /store/[slug]/product/[id]
-   */
   context?: "marketplace" | "store";
   storeSlug?: string;
   onAddToCart?: (product: Product) => void;
   className?: string;
 }
-
-// ── Component ─────────────────────────────────────────────────────────────────
 
 export function ProductCard({
   product,
@@ -42,14 +32,26 @@ export function ProductCard({
   return (
     <div
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-md",
+        "group relative flex flex-col overflow-hidden bg-white transition-all duration-300 hover:-translate-y-1",
         className,
       )}
+      style={{
+        borderRadius: "16px",
+        border: "1px solid rgba(51,51,51,0.08)",
+        boxShadow: "0 1px 3px rgba(51,51,51,0.06)",
+      }}
     >
-      {/* Görsel */}
+      {/* Red top accent */}
+      <div
+        className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 z-10"
+        style={{ background: "#c8102e" }}
+      />
+
+      {/* Image */}
       <Link
         href={href}
         className="relative block aspect-square overflow-hidden"
+        style={{ background: "#f5f5f3" }}
       >
         <Image
           src={coverImage}
@@ -62,56 +64,77 @@ export function ProductCard({
           )}
         />
 
-        {/* Stok bitti rozeti */}
         {isOutOfStock && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm">
-            <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+          <div
+            className="absolute inset-0 flex items-center justify-center backdrop-blur-sm"
+            style={{ background: "rgba(245,245,243,0.7)" }}
+          >
+            <span
+              className="rounded-full px-3 py-1 text-xs font-mono font-medium"
+              style={{
+                background: "rgba(51,51,51,0.08)",
+                color: "#6b6b6b",
+                letterSpacing: "0.05em",
+              }}
+            >
               Out of Stock
             </span>
           </div>
         )}
 
-        {/* Label rozeti — max 2 adet */}
         {product.tags.length > 0 && (
-          <div className="absolute left-2 top-2 flex flex-wrap gap-1">
+          <div className="absolute left-2.5 top-2.5 flex flex-wrap gap-1">
             {product.tags.slice(0, 2).map((tag) => (
-              <Badge
+              <span
                 key={tag}
-                variant="secondary"
-                className="text-[10px] px-1.5 py-0 backdrop-blur-sm"
+                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium"
+                style={{
+                  background: "rgba(200,16,46,0.08)",
+                  color: "#c8102e",
+                  border: "1px solid rgba(200,16,46,0.15)",
+                  letterSpacing: "0.05em",
+                }}
               >
-                <Tag className="mr-0.5 h-2.5 w-2.5" />
+                <Tag className="h-2.5 w-2.5" />
                 {tag}
-              </Badge>
+              </span>
             ))}
           </div>
         )}
       </Link>
 
-      {/* Bilgiler */}
-      <div className="flex flex-1 flex-col gap-2 p-3">
-        {/* Store adı (marketplace context'inde göster) */}
+      {/* Info */}
+      <div className="flex flex-1 flex-col gap-2 p-3.5">
         {context === "marketplace" && product.merchantStoreName && (
           <Link
             href={`/store/${product.merchantSlug}`}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1 text-[11px] font-mono transition-colors"
+            style={{ color: "#6b6b6b", letterSpacing: "0.05em" }}
             onClick={(e) => e.stopPropagation()}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#c8102e")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#6b6b6b")}
           >
             <Store className="h-3 w-3" />
             {product.merchantStoreName}
           </Link>
         )}
 
-        {/* Product Name */}
         <Link href={href}>
-          <h3 className="line-clamp-2 text-sm font-medium leading-snug hover:underline">
+          <h3
+            className="line-clamp-2 text-[0.875rem] font-bold leading-snug transition-colors text-[#333333]"
+            style={{ fontFamily: "'Manrope', sans-serif" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#c8102e")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#333333")}
+          >
             {product.name}
           </h3>
         </Link>
 
-        {/* Fiyat + Sepet */}
         <div className="mt-auto flex items-center justify-between gap-2">
-          <span className="text-base font-semibold tabular-nums">
+          <span
+            className="text-base font-bold text-[#333333]"
+            style={{ fontFamily: "'Cormorant Garamond', serif" }}
+          >
             {product.price.toLocaleString("tr-TR", {
               style: "currency",
               currency: "TRY",
@@ -119,25 +142,42 @@ export function ProductCard({
           </span>
 
           {onAddToCart && (
-            <Button
-              size="icon"
-              variant="outline"
-              className="h-8 w-8 shrink-0"
+            <button
+              className="h-8 w-8 shrink-0 flex items-center justify-center rounded-lg border transition-all"
+              style={{
+                border: "1.5px solid rgba(51,51,51,0.15)",
+                color: "#333333",
+                background: "transparent",
+              }}
               disabled={isOutOfStock}
               onClick={(e) => {
                 e.preventDefault();
                 onAddToCart(product);
               }}
               aria-label="Sepete ekle"
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.background = "#c8102e";
+                el.style.borderColor = "#c8102e";
+                el.style.color = "#fff";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.background = "transparent";
+                el.style.borderColor = "rgba(51,51,51,0.15)";
+                el.style.color = "#333333";
+              }}
             >
-              <ShoppingCart className="h-4 w-4" />
-            </Button>
+              <ShoppingCart className="h-3.5 w-3.5" />
+            </button>
           )}
         </div>
 
-        {/* Stok uyarısı — az kaldıysa */}
         {product.stock > 0 && product.stock <= 5 && (
-          <p className="text-xs text-orange-600 dark:text-orange-400">
+          <p
+            className="font-mono text-[10px] font-medium"
+            style={{ color: "#c8102e", letterSpacing: "0.05em" }}
+          >
             Son {product.stock} adet!
           </p>
         )}
