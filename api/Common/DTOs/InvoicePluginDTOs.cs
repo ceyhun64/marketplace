@@ -71,6 +71,7 @@ public class PluginDto
     public string? DeveloperName { get; set; }
     public string? DocumentationUrl { get; set; }
     public bool IsSubscribed { get; set; } // current merchant için
+    public DateTime CreatedAt { get; set; }
 }
 
 public class MerchantPluginDto
@@ -109,4 +110,10 @@ public class CreatePluginDto
     public string MinimumPlan { get; set; } = "Pro";
     public string? DeveloperName { get; set; }
     public string? DocumentationUrl { get; set; }
+    public bool IsFeatured { get; set; } = false;
+}
+
+public class TogglePluginDto
+{
+    public bool IsActive { get; set; }
 }
