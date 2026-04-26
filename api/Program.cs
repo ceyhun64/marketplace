@@ -176,9 +176,16 @@ try
     builder.Services.AddScoped<IPaymentService, PaymentService>();
     builder.Services.AddScoped<ICourierService, CourierService>(); // ← EKLE
 
+    // ── Milestone 2: Webhook Service ─────────────────────────────────────────
+    builder.Services.AddHttpClient("webhook");
+    builder.Services.AddScoped<api.Infrastructure.Webhooks.IWebhookService,
+        api.Infrastructure.Webhooks.WebhookService>();
+
     // ── Hangfire Jobs ─────────────────────────────────────────────────────────
     builder.Services.AddTransient<OrderStatusJob>();
     builder.Services.AddTransient<NotificationJob>();
+    builder.Services.AddTransient<DelayedShipmentJob>();    // Milestone 2
+    builder.Services.AddTransient<ShipmentStatusSyncJob>(); // Milestone 2
 
     // ── Controllers + Swagger ─────────────────────────────────────────────────
     builder
@@ -278,6 +285,19 @@ try
         "process-pending-notifications",
         job => job.RunAsync(),
         "* * * * *"
+    );
+
+    // ── Milestone 2 Recurring Jobs ────────────────────────────────────────────
+    RecurringJob.AddOrUpdate<DelayedShipmentJob>(
+        "check-delayed-shipments",
+        job => job.RunAsync(),
+        "0 * * * *"       // Her saat başı
+    );
+
+    RecurringJob.AddOrUpdate<ShipmentStatusSyncJob>(
+        "sync-shipment-statuses",
+        job => job.RunAsync(),
+        "*/30 * * * *"    // Her 30 dakikada bir
     );
 
     await app.RunAsync();

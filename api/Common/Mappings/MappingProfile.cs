@@ -39,14 +39,36 @@ public class MappingProfile : Profile
                             ? $"{s.Courier.User.FirstName} {s.Courier.User.LastName}".Trim()
                             : null
                     )
+            )
+            .ForMember(
+                d => d.History,
+                o => o.MapFrom(s => s.StatusHistory.OrderByDescending(h => h.ChangedAt))
             );
 
         CreateMap<ShipmentStatusHistory, ShipmentStatusHistoryDto>()
+            .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()))
             .ForMember(d => d.ChangedAt, o => o.MapFrom(s => s.ChangedAt));
 
         CreateMap<Courier, CourierDto>()
             .ForMember(d => d.Email, o => o.MapFrom(s => s.User != null ? s.User.Email : null));
 
         CreateMap<Subscription, SubscriptionDto>();
+
+        // ── Milestone 2: Fulfillment ek maplar ───────────────────────────────
+
+        CreateMap<Courier, CourierAssignmentSummaryDto>()
+            .ForMember(
+                d => d.CourierName,
+                o => o.MapFrom(s => s.User != null
+                    ? $"{s.User.FirstName} {s.User.LastName}".Trim()
+                    : string.Empty)
+            )
+            .ForMember(
+                d => d.ActiveShipmentCount,
+                o => o.MapFrom(s => s.Shipments.Count(sh =>
+                    sh.Status != Domain.Enums.ShipmentStatus.Delivered
+                    && sh.Status != Domain.Enums.ShipmentStatus.Failed
+                ))
+            );
     }
 }
