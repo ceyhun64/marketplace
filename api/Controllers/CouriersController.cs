@@ -1,7 +1,11 @@
 using api.Common.DTOs;
+using api.Infrastructure.Hubs;
+using api.Infrastructure.Persistence;
 using api.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace api.Controllers;
 
@@ -11,10 +15,21 @@ namespace api.Controllers;
 public class CouriersController : ControllerBase
 {
     private readonly ICourierService _courierService;
+    private readonly AppDbContext _db;
+    private readonly IHubContext<TrackingHub> _hub;
+    private readonly ICurrentUserService _currentUser;
 
-    public CouriersController(ICourierService courierService)
+    public CouriersController(
+        ICourierService courierService,
+        AppDbContext db,
+        IHubContext<TrackingHub> hub,
+        ICurrentUserService currentUser
+    )
     {
         _courierService = courierService;
+        _db = db;
+        _hub = hub;
+        _currentUser = currentUser;
     }
 
     // GET /api/couriers — Admin
@@ -40,7 +55,7 @@ public class CouriersController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateCourierDto request)
     {
         var result = await _courierService.CreateAsync(request);
-        if (!result.Success)
+        if (!result.Success || result.Data is null)
             return BadRequest(new ApiResponse<string>(result.Message));
         return CreatedAtAction(
             nameof(GetById),
@@ -89,5 +104,51 @@ public class CouriersController : ControllerBase
         if (!result.Success)
             return BadRequest(new ApiResponse<string>(result.Message));
         return Ok(new ApiResponse<string>("Kurye silindi."));
+    }
+
+    // PUT /api/couriers/me/location — Courier
+    // Kurye kendi anlık konumunu günceller; SignalR ile admin + müşterilere yayınlanır.
+    [HttpPut("me/location")]
+    [Authorize(Policy = "CourierOnly")]
+    public async Task<IActionResult> UpdateMyLocation([FromBody] CourierLocationDto dto)
+    {
+        var courier = await _db.Couriers.FirstOrDefaultAsync(c => c.UserId == _currentUser.UserId);
+
+        if (courier == null)
+            return NotFound(new ApiResponse<string>("Kurye profili bulunamadı."));
+
+        courier.CurrentLatitude = dto.Latitude;
+        courier.CurrentLongitude = dto.Longitude;
+        courier.LastLocationUpdate = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        // Aktif shipment'ları bul ve ilgili gruplara konum yay
+        var activeShipmentIds = await _db
+            .Shipments.Where(s =>
+                s.CourierId == courier.Id
+                && s.Status != Domain.Enums.ShipmentStatus.Delivered
+                && s.Status != Domain.Enums.ShipmentStatus.Failed
+            )
+            .Select(s => s.Id.ToString())
+            .ToListAsync();
+
+        var payload = new
+        {
+            courierId = courier.Id,
+            latitude = dto.Latitude,
+            longitude = dto.Longitude,
+            timestamp = DateTime.UtcNow,
+        };
+
+        foreach (var shipmentId in activeShipmentIds)
+        {
+            await _hub
+                .Clients.Group($"shipment-{shipmentId}")
+                .SendAsync("LocationUpdated", payload);
+        }
+
+        await _hub.Clients.Group("admin-tracking").SendAsync("CourierLocationUpdated", payload);
+
+        return Ok(new ApiResponse<string>("Konum güncellendi."));
     }
 }

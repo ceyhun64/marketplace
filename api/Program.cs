@@ -130,7 +130,11 @@ try
     builder.Services.AddHangfireServer();
 
     // ── SignalR ───────────────────────────────────────────────────────────────
-    builder.Services.AddSignalR();
+    builder.Services.AddSignalR()
+        .AddStackExchangeRedis(redisConn, options =>
+        {
+            options.Configuration.ChannelPrefix = "marketplace";
+        });
 
     // ── Rate Limiting ─────────────────────────────────────────────────────────
     builder.Services.AddMemoryCache();
@@ -177,6 +181,7 @@ try
     builder.Services.AddScoped<ICourierService, CourierService>(); // ← EKLE
     builder.Services.AddScoped<IAnalyticsService, AnalyticsService>(); // Milestone 2
     builder.Services.AddScoped<ISubscriptionService, SubscriptionService>(); // Milestone 2
+    builder.Services.AddScoped<IInvoiceGeneratorService, InvoiceGeneratorService>(); // Milestone 2
 
     // ── Milestone 2: Webhook Service ─────────────────────────────────────────
     builder.Services.AddHttpClient("webhook");

@@ -29,7 +29,8 @@ public class FulfillmentService : IFulfillmentService
 
     private static readonly Dictionary<ShipmentStatus, ShipmentStatus[]> ValidTransitions = new()
     {
-        [ShipmentStatus.Pending] = [ShipmentStatus.CourierAssigned],
+        [ShipmentStatus.Pending] = [ShipmentStatus.LabelGenerated, ShipmentStatus.CourierAssigned],
+        [ShipmentStatus.LabelGenerated] = [ShipmentStatus.CourierAssigned, ShipmentStatus.Failed],
         [ShipmentStatus.CourierAssigned] = [ShipmentStatus.PickedUp, ShipmentStatus.Failed],
         [ShipmentStatus.PickedUp] = [ShipmentStatus.InTransit, ShipmentStatus.Failed],
         [ShipmentStatus.InTransit] = [ShipmentStatus.OutForDelivery, ShipmentStatus.Failed],
@@ -86,7 +87,7 @@ public class FulfillmentService : IFulfillmentService
         await _hub
             .Clients.Group($"shipment-{shipment.Id}")
             .SendAsync(
-                "StatusUpdated",
+                "ShipmentStatusUpdated",
                 new
                 {
                     shipmentId = shipment.Id,

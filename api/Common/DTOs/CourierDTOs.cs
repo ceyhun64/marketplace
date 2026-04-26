@@ -26,3 +26,10 @@ public class UpdateCourierDto
     public string? PhoneNumber { get; set; }
     public bool? IsActive { get; set; }
 }
+
+/// <summary>Kurye anlık konum güncelleme isteği — PUT /api/couriers/me/location</summary>
+public class CourierLocationDto
+{
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+}
