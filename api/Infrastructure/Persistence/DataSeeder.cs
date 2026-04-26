@@ -384,6 +384,100 @@ public static class DataSeeder
             Console.WriteLine("✅ Demo kurye: courier@marketplace.com / Courier123!");
         }
 
+        // ── 6. Demo Plugin'ler ────────────────────────────────────────────────
+        if (!await db.Plugins.AnyAsync())
+        {
+            db.Plugins.AddRange(
+                new Plugin
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Google Analytics",
+                    Slug = "google-analytics",
+                    Description =
+                        "Mağazanıza Google Analytics entegrasyonu ekleyin. Ziyaretçi, dönüşüm ve gelir raporlarını anlık takip edin.",
+                    Category = "Analytics",
+                    MonthlyPrice = 0m,
+                    IsActive = true,
+                    IsFeatured = true,
+                    MinimumPlan = PlanType.Basic,
+                    DeveloperName = "Google LLC",
+                    DocumentationUrl = "https://analytics.google.com",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                },
+                new Plugin
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Live Chat",
+                    Slug = "live-chat",
+                    Description =
+                        "Müşterilerinizle gerçek zamanlı sohbet edin. Ziyaretçileri hızlı yanıtlarla satışa dönüştürün.",
+                    Category = "Chat",
+                    MonthlyPrice = 49.90m,
+                    IsActive = true,
+                    IsFeatured = true,
+                    MinimumPlan = PlanType.Pro,
+                    DeveloperName = "LiveChat Inc.",
+                    DocumentationUrl = "https://www.livechat.com",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                },
+                new Plugin
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "SEO Optimizer",
+                    Slug = "seo-optimizer",
+                    Description =
+                        "Meta etiketleri, XML sitemap ve yapısal veri otomatik yönetimi. Arama motoru görünürlüğünüzü artırın.",
+                    Category = "SEO",
+                    MonthlyPrice = 29.90m,
+                    IsActive = true,
+                    IsFeatured = false,
+                    MinimumPlan = PlanType.Pro,
+                    DeveloperName = "Marketplace Team",
+                    DocumentationUrl = null,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                },
+                new Plugin
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "E-Posta Marketing",
+                    Slug = "email-marketing",
+                    Description =
+                        "Otomatik kampanya gönderimi, segmentasyon ve açılma oranı takibi. Mailchimp ve SendGrid destekli.",
+                    Category = "Marketing",
+                    MonthlyPrice = 79.90m,
+                    IsActive = true,
+                    IsFeatured = false,
+                    MinimumPlan = PlanType.Pro,
+                    DeveloperName = "Marketing Suite",
+                    DocumentationUrl = null,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                },
+                new Plugin
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Muhasebe Entegrasyonu",
+                    Slug = "accounting",
+                    Description =
+                        "Fatura, ödeme ve muhasebe kayıtlarını otomatik senkronize edin. Logo, Mikro ve Paraşüt destekli.",
+                    Category = "Accounting",
+                    MonthlyPrice = 149.90m,
+                    IsActive = true,
+                    IsFeatured = false,
+                    MinimumPlan = PlanType.Enterprise,
+                    DeveloperName = "FinTech Partners",
+                    DocumentationUrl = null,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                }
+            );
+            await db.SaveChangesAsync();
+            Console.WriteLine("✅ 5 demo plugin oluşturuldu.");
+        }
+
         Console.WriteLine("\n🚀 Seed tamamlandı.");
         Console.WriteLine("   Admin    : admin@marketplace.com     / Admin123!");
         Console.WriteLine("   Merchant1: merchant1@marketplace.com / Merchant123!");

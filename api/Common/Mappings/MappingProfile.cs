@@ -54,21 +54,47 @@ public class MappingProfile : Profile
 
         CreateMap<Subscription, SubscriptionDto>();
 
+        // ── Plugin & MerchantPlugin maplar ───────────────────────────────────
+
+        CreateMap<Plugin, PluginDto>()
+            .ForMember(d => d.MinimumPlan, o => o.MapFrom(s => s.MinimumPlan.ToString()))
+            .ForMember(d => d.IsSubscribed, o => o.Ignore()); // caller sets per-merchant flag
+
+        CreateMap<MerchantPlugin, MerchantPluginDto>()
+            .ForMember(
+                d => d.PluginName,
+                o => o.MapFrom(s => s.Plugin != null ? s.Plugin.Name : string.Empty)
+            )
+            .ForMember(
+                d => d.PluginSlug,
+                o => o.MapFrom(s => s.Plugin != null ? s.Plugin.Slug : string.Empty)
+            )
+            .ForMember(
+                d => d.PluginIconUrl,
+                o => o.MapFrom(s => s.Plugin != null ? s.Plugin.IconUrl : null)
+            );
+
         // ── Milestone 2: Fulfillment ek maplar ───────────────────────────────
 
         CreateMap<Courier, CourierAssignmentSummaryDto>()
             .ForMember(
                 d => d.CourierName,
-                o => o.MapFrom(s => s.User != null
-                    ? $"{s.User.FirstName} {s.User.LastName}".Trim()
-                    : string.Empty)
+                o =>
+                    o.MapFrom(s =>
+                        s.User != null
+                            ? $"{s.User.FirstName} {s.User.LastName}".Trim()
+                            : string.Empty
+                    )
             )
             .ForMember(
                 d => d.ActiveShipmentCount,
-                o => o.MapFrom(s => s.Shipments.Count(sh =>
-                    sh.Status != Domain.Enums.ShipmentStatus.Delivered
-                    && sh.Status != Domain.Enums.ShipmentStatus.Failed
-                ))
+                o =>
+                    o.MapFrom(s =>
+                        s.Shipments.Count(sh =>
+                            sh.Status != Domain.Enums.ShipmentStatus.Delivered
+                            && sh.Status != Domain.Enums.ShipmentStatus.Failed
+                        )
+                    )
             );
     }
 }

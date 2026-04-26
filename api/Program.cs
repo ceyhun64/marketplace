@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text;
 using api.Infrastructure.Hubs;
 using api.Infrastructure.Jobs;
+using api.Infrastructure.Middleware;
 using api.Infrastructure.Persistence;
 using api.Infrastructure.Services;
 using AspNetCoreRateLimit;
@@ -130,11 +131,15 @@ try
     builder.Services.AddHangfireServer();
 
     // ── SignalR ───────────────────────────────────────────────────────────────
-    builder.Services.AddSignalR()
-        .AddStackExchangeRedis(redisConn, options =>
-        {
-            options.Configuration.ChannelPrefix = "marketplace";
-        });
+    builder
+        .Services.AddSignalR()
+        .AddStackExchangeRedis(
+            redisConn,
+            options =>
+            {
+                options.Configuration.ChannelPrefix = "marketplace";
+            }
+        );
 
     // ── Rate Limiting ─────────────────────────────────────────────────────────
     builder.Services.AddMemoryCache();
@@ -273,6 +278,7 @@ try
     app.UseSerilogRequestLogging();
     app.UseIpRateLimiting();
     app.UseCors("Frontend");
+    app.UseCustomDomain(); // Milestone 2: custom domain → merchant slug resolution
     app.UseAuthentication();
     app.UseAuthorization();
 
