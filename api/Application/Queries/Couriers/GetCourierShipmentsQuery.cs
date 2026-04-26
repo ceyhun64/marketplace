@@ -1,6 +1,7 @@
 using api.Common.DTOs;
 using api.Domain.Enums;
 using api.Infrastructure.Persistence;
+using api.Infrastructure.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,9 +9,6 @@ namespace api.Application.Queries.Couriers;
 
 public record GetCourierShipmentsQuery(Guid CourierUserId, string? Status)
     : IRequest<ServiceResult<IEnumerable<ShipmentDto>>>;
-
-// ServiceResult burada import için alias
-using api.Infrastructure.Services;
 
 public class GetCourierShipmentsQueryHandler
     : IRequestHandler<GetCourierShipmentsQuery, ServiceResult<IEnumerable<ShipmentDto>>>
@@ -49,7 +47,9 @@ public class GetCourierShipmentsQueryHandler
         )
             query = query.Where(s => s.Status == parsedStatus);
 
-        var shipments = await query.OrderByDescending(s => s.CreatedAt).ToListAsync(cancellationToken);
+        var shipments = await query
+            .OrderByDescending(s => s.CreatedAt)
+            .ToListAsync(cancellationToken);
 
         var dtos = shipments.Select(s => new ShipmentDto
         {

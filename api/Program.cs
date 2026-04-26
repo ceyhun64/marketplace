@@ -175,16 +175,20 @@ try
     builder.Services.AddScoped<INotificationService, NotificationService>();
     builder.Services.AddScoped<IPaymentService, PaymentService>();
     builder.Services.AddScoped<ICourierService, CourierService>(); // ← EKLE
+    builder.Services.AddScoped<IAnalyticsService, AnalyticsService>(); // Milestone 2
+    builder.Services.AddScoped<ISubscriptionService, SubscriptionService>(); // Milestone 2
 
     // ── Milestone 2: Webhook Service ─────────────────────────────────────────
     builder.Services.AddHttpClient("webhook");
-    builder.Services.AddScoped<api.Infrastructure.Webhooks.IWebhookService,
-        api.Infrastructure.Webhooks.WebhookService>();
+    builder.Services.AddScoped<
+        api.Infrastructure.Webhooks.IWebhookService,
+        api.Infrastructure.Webhooks.WebhookService
+    >();
 
     // ── Hangfire Jobs ─────────────────────────────────────────────────────────
     builder.Services.AddTransient<OrderStatusJob>();
     builder.Services.AddTransient<NotificationJob>();
-    builder.Services.AddTransient<DelayedShipmentJob>();    // Milestone 2
+    builder.Services.AddTransient<DelayedShipmentJob>(); // Milestone 2
     builder.Services.AddTransient<ShipmentStatusSyncJob>(); // Milestone 2
 
     // ── Controllers + Swagger ─────────────────────────────────────────────────
@@ -291,13 +295,13 @@ try
     RecurringJob.AddOrUpdate<DelayedShipmentJob>(
         "check-delayed-shipments",
         job => job.RunAsync(),
-        "0 * * * *"       // Her saat başı
+        "0 * * * *" // Her saat başı
     );
 
     RecurringJob.AddOrUpdate<ShipmentStatusSyncJob>(
         "sync-shipment-statuses",
         job => job.RunAsync(),
-        "*/30 * * * *"    // Her 30 dakikada bir
+        "*/30 * * * *" // Her 30 dakikada bir
     );
 
     await app.RunAsync();

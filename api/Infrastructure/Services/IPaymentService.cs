@@ -1,4 +1,5 @@
 namespace api.Infrastructure.Services;
+
 using api.Common.DTOs;
 
 public interface IPaymentService
@@ -10,4 +11,9 @@ public interface IPaymentService
     Task HandleWebhookAsync(IyzicoWebhookDto webhook);
     Task<ServiceResult<bool>> RefundAsync(Guid orderId, RefundRequestDto request);
     Task<PaymentStatusDto?> GetPaymentStatusAsync(Guid orderId);
+    Task<ServiceResult<string>> ProcessSubscriptionPaymentAsync(
+        string paymentToken,
+        decimal amount,
+        string description
+    );
 }

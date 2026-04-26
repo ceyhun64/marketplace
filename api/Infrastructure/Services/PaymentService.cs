@@ -43,4 +43,19 @@ public class PaymentService : IPaymentService
         _logger.LogInformation("GetPaymentStatus: OrderId={Id}", orderId);
         return Task.FromResult<PaymentStatusDto?>(null);
     }
+
+    public Task<ServiceResult<string>> ProcessSubscriptionPaymentAsync(
+        string paymentToken,
+        decimal amount,
+        string description
+    )
+    {
+        // TODO: iyzico abonelik ödemesi entegrasyonu
+        _logger.LogInformation(
+            "ProcessSubscriptionPayment: Amount={Amount} Desc={Desc}",
+            amount,
+            description
+        );
+        return Task.FromResult(ServiceResult<string>.Ok($"sub_payment_{Guid.NewGuid():N}"));
+    }
 }
