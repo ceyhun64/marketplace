@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "bERpl/aoIeg=",
+  "dgSpecHash": "8GPOYlq8+w4=",
   "success": true,
   "projectFilePath": "C:\\PROJECTS\\marketplace\\api\\api.csproj",
   "expectedPackageFiles": [
@@ -50,6 +50,7 @@
     "C:\\Users\\Ceyhun\\.nuget\\packages\\pipelines.sockets.unofficial\\2.2.8\\pipelines.sockets.unofficial.2.2.8.nupkg.sha512",
     "C:\\Users\\Ceyhun\\.nuget\\packages\\qrcoder\\1.8.0\\qrcoder.1.8.0.nupkg.sha512",
     "C:\\Users\\Ceyhun\\.nuget\\packages\\questpdf\\2026.2.4\\questpdf.2026.2.4.nupkg.sha512",
+    "C:\\Users\\Ceyhun\\.nuget\\packages\\sendgrid\\9.29.3\\sendgrid.9.29.3.nupkg.sha512",
     "C:\\Users\\Ceyhun\\.nuget\\packages\\serilog\\4.3.0\\serilog.4.3.0.nupkg.sha512",
     "C:\\Users\\Ceyhun\\.nuget\\packages\\serilog.aspnetcore\\10.0.0\\serilog.aspnetcore.10.0.0.nupkg.sha512",
     "C:\\Users\\Ceyhun\\.nuget\\packages\\serilog.extensions.hosting\\10.0.0\\serilog.extensions.hosting.10.0.0.nupkg.sha512",
@@ -60,6 +61,7 @@
     "C:\\Users\\Ceyhun\\.nuget\\packages\\serilog.sinks.debug\\3.0.0\\serilog.sinks.debug.3.0.0.nupkg.sha512",
     "C:\\Users\\Ceyhun\\.nuget\\packages\\serilog.sinks.file\\7.0.0\\serilog.sinks.file.7.0.0.nupkg.sha512",
     "C:\\Users\\Ceyhun\\.nuget\\packages\\stackexchange.redis\\2.12.14\\stackexchange.redis.2.12.14.nupkg.sha512",
+    "C:\\Users\\Ceyhun\\.nuget\\packages\\starkbank-ecdsa\\1.3.3\\starkbank-ecdsa.1.3.3.nupkg.sha512",
     "C:\\Users\\Ceyhun\\.nuget\\packages\\swashbuckle.aspnetcore\\6.9.0\\swashbuckle.aspnetcore.6.9.0.nupkg.sha512",
     "C:\\Users\\Ceyhun\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\6.9.0\\swashbuckle.aspnetcore.swagger.6.9.0.nupkg.sha512",
     "C:\\Users\\Ceyhun\\.nuget\\packages\\swashbuckle.aspnetcore.swaggergen\\6.9.0\\swashbuckle.aspnetcore.swaggergen.6.9.0.nupkg.sha512",
@@ -73,7 +75,8 @@
     "C:\\Users\\Ceyhun\\.nuget\\packages\\system.composition.typedparts\\9.0.0\\system.composition.typedparts.9.0.0.nupkg.sha512",
     "C:\\Users\\Ceyhun\\.nuget\\packages\\system.drawing.common\\6.0.0\\system.drawing.common.6.0.0.nupkg.sha512",
     "C:\\Users\\Ceyhun\\.nuget\\packages\\system.identitymodel.tokens.jwt\\8.0.1\\system.identitymodel.tokens.jwt.8.0.1.nupkg.sha512",
-    "C:\\Users\\Ceyhun\\.nuget\\packages\\system.io.hashing\\10.0.2\\system.io.hashing.10.0.2.nupkg.sha512"
+    "C:\\Users\\Ceyhun\\.nuget\\packages\\system.io.hashing\\10.0.2\\system.io.hashing.10.0.2.nupkg.sha512",
+    "C:\\Users\\Ceyhun\\.nuget\\packages\\twilio\\7.6.0\\twilio.7.6.0.nupkg.sha512"
   ],
   "logs": []
 }

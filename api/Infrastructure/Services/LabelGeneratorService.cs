@@ -1,8 +1,6 @@
 using api.Domain.Entities;
 using api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using QRCoder;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -35,7 +33,8 @@ public class LabelGeneratorService : ILabelGeneratorService
         var shipment = await LoadShipmentAsync(shipmentId);
         if (shipment is null)
             throw new InvalidOperationException($"Shipment {shipmentId} bulunamadı.");
-        return BuildLabelPdf(shipment);
+
+        return BuildLabelPdf(shipment, _config["PLATFORM_URL"] ?? "https://platform.com");
     }
 
     public async Task<string> GenerateAndUploadLabelAsync(Shipment shipment)
@@ -44,23 +43,41 @@ public class LabelGeneratorService : ILabelGeneratorService
         if (shipment.Order is null)
             shipment = await LoadShipmentAsync(shipment.Id) ?? shipment;
 
-        var pdfBytes = BuildLabelPdf(shipment);
+        var platformUrl = _config["PLATFORM_URL"] ?? "https://platform.com";
+        var pdfBytes = BuildLabelPdf(shipment, platformUrl);
         var url = await UploadLabelAsync(pdfBytes, shipment.TrackingNumber);
 
         shipment.LabelUrl = url;
         await _db.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "✅ Kargo etiketi oluşturuldu ve yüklendi: TrackingNo={TrackingNo} Url={Url}",
+            shipment.TrackingNumber,
+            url
+        );
 
         return url;
     }
 
     // ── QuestPDF Kargo Etiketi ────────────────────────────────────────────────
 
-    private static byte[] BuildLabelPdf(Shipment shipment)
+    private static byte[] BuildLabelPdf(Shipment shipment, string platformUrl)
     {
-        var qrBytes = GenerateQrCode(shipment.TrackingNumber);
+        var qrBytes = GenerateQrCode(shipment.TrackingNumber, platformUrl);
         var order = shipment.Order;
         var courier = shipment.Courier;
-        var merchant = order?.Items.FirstOrDefault()?.MerchantId; // sadece ID lazım
+
+        // Merchant bilgisi: ürünler üzerinden merchant profile'a eriş
+        var merchant = order?.Items
+            .Select(i => i.Product?.Merchant)
+            .FirstOrDefault(m => m != null);
+
+        var senderName = merchant?.StoreName ?? "Satıcı";
+        var senderCity = merchant?.City ?? "";
+        var senderAddress = merchant?.Address ?? "";
+
+        var shippingRateLabel = order?.ShippingRate.ToString().ToUpper() ?? "REGULAR";
+        var eta = shipment.EstimatedDelivery.ToLocalTime().ToString("dd.MM.yyyy");
 
         return Document
             .Create(container =>
@@ -68,7 +85,7 @@ public class LabelGeneratorService : ILabelGeneratorService
                 container.Page(page =>
                 {
                     page.Size(PageSizes.A6.Landscape());
-                    page.Margin(16);
+                    page.Margin(12);
                     page.DefaultTextStyle(x => x.FontSize(9).FontFamily("Arial"));
 
                     page.Content()
@@ -76,7 +93,7 @@ public class LabelGeneratorService : ILabelGeneratorService
                         .BorderColor(Colors.Black)
                         .Column(col =>
                         {
-                            // ── Başlık bandı ────────────────────────────────
+                            // ── Başlık bandı ─────────────────────────────────
                             col.Item()
                                 .Background(Colors.Black)
                                 .Padding(8)
@@ -91,6 +108,7 @@ public class LabelGeneratorService : ILabelGeneratorService
                                                 .FontColor(Colors.White)
                                                 .Bold()
                                                 .FontSize(13);
+
                                             inner
                                                 .Item()
                                                 .Text(shipment.TrackingNumber)
@@ -103,20 +121,22 @@ public class LabelGeneratorService : ILabelGeneratorService
                                         .AlignRight()
                                         .Column(inner =>
                                         {
+                                            // EXPRESS'te turuncu, REGULAR'da gri
+                                            var rateColor =
+                                                shippingRateLabel == "EXPRESS"
+                                                    ? Colors.Orange.Medium
+                                                    : Colors.Grey.Lighten2;
+
                                             inner
                                                 .Item()
-                                                .Text(
-                                                    shipment.Order?.ShippingRate.ToString()
-                                                        ?? "REGULAR"
-                                                )
-                                                .FontColor(Colors.Orange.Medium)
+                                                .Text(shippingRateLabel)
+                                                .FontColor(rateColor)
                                                 .Bold()
                                                 .FontSize(11);
+
                                             inner
                                                 .Item()
-                                                .Text(
-                                                    $"ETA: {shipment.EstimatedDelivery:dd.MM.yyyy}"
-                                                )
+                                                .Text($"ETA: {eta}")
                                                 .FontColor(Colors.Grey.Lighten3)
                                                 .FontSize(8);
                                         });
@@ -131,44 +151,68 @@ public class LabelGeneratorService : ILabelGeneratorService
                                     row.RelativeItem(3)
                                         .Column(addr =>
                                         {
-                                            // Gönderici
+                                            // Gönderici (Merchant)
                                             addr.Item()
                                                 .Text("GÖNDERİCİ")
                                                 .FontSize(7)
                                                 .FontColor(Colors.Grey.Darken2)
                                                 .Bold();
+
                                             addr.Item()
-                                                .Text(
-                                                    order
-                                                        ?.Items.FirstOrDefault()
-                                                        ?.MerchantId.ToString()[..8]
-                                                        ?? "Merchant"
-                                                )
-                                                .Bold();
+                                                .Text(senderName)
+                                                .Bold()
+                                                .FontSize(10);
+
+                                            if (!string.IsNullOrEmpty(senderAddress))
+                                                addr.Item()
+                                                    .Text(senderAddress)
+                                                    .FontColor(Colors.Grey.Darken1)
+                                                    .FontSize(8);
+
+                                            if (!string.IsNullOrEmpty(senderCity))
+                                                addr.Item()
+                                                    .Text(senderCity)
+                                                    .FontColor(Colors.Grey.Darken1)
+                                                    .FontSize(8);
+
                                             addr.Item().PaddingBottom(10).Text(" ");
 
-                                            // Alıcı
+                                            // Alıcı (Customer)
                                             addr.Item()
                                                 .Text("ALICI")
                                                 .FontSize(7)
                                                 .FontColor(Colors.Grey.Darken2)
                                                 .Bold();
+
                                             addr.Item()
                                                 .Text(order?.RecipientName ?? "-")
                                                 .Bold()
                                                 .FontSize(11);
-                                            addr.Item()
-                                                .Text(order?.RecipientPhone ?? "-")
-                                                .FontColor(Colors.Grey.Darken1);
-                                            addr.Item()
-                                                .Text($"{order?.AddressLine}, {order?.District}");
+
+                                            if (!string.IsNullOrEmpty(order?.RecipientPhone))
+                                                addr.Item()
+                                                    .Text(order.RecipientPhone)
+                                                    .FontColor(Colors.Grey.Darken1);
+
                                             addr.Item()
                                                 .Text(
-                                                    $"{order?.City} {order?.PostalCode} / {order?.Country}"
+                                                    BuildAddressLine(
+                                                        order?.AddressLine,
+                                                        order?.District
+                                                    )
+                                                );
+
+                                            addr.Item()
+                                                .Text(
+                                                    BuildCityLine(
+                                                        order?.City,
+                                                        order?.PostalCode,
+                                                        order?.Country
+                                                    )
                                                 )
                                                 .Bold();
 
-                                            // Kurye
+                                            // Kurye bilgisi
                                             if (courier is not null)
                                             {
                                                 addr.Item().PaddingTop(8).Text(" ");
@@ -177,16 +221,19 @@ public class LabelGeneratorService : ILabelGeneratorService
                                                     .FontSize(7)
                                                     .FontColor(Colors.Grey.Darken2)
                                                     .Bold();
+
                                                 addr.Item()
                                                     .Text(
-                                                        $"{courier.User?.FirstName} {courier.User?.LastName}"
+                                                        $"{courier.User?.FirstName} {courier.User?.LastName}".Trim()
                                                     )
                                                     .Bold();
-                                                addr.Item()
-                                                    .Text(
-                                                        $"{courier.VehicleType} — {courier.PlateNumber}"
-                                                    )
-                                                    .FontColor(Colors.Grey.Darken1);
+
+                                                if (!string.IsNullOrEmpty(courier.PlateNumber))
+                                                    addr.Item()
+                                                        .Text(
+                                                            $"{courier.VehicleType} — {courier.PlateNumber}"
+                                                        )
+                                                        .FontColor(Colors.Grey.Darken1);
                                             }
                                         });
 
@@ -219,6 +266,7 @@ public class LabelGeneratorService : ILabelGeneratorService
                                         )
                                         .FontSize(8)
                                         .FontColor(Colors.Grey.Darken2);
+
                                     row.AutoItem()
                                         .Text(
                                             $"Oluşturuldu: {DateTime.UtcNow:dd.MM.yyyy HH:mm} UTC"
@@ -234,12 +282,11 @@ public class LabelGeneratorService : ILabelGeneratorService
 
     // ── QR Kodu ───────────────────────────────────────────────────────────────
 
-    private static byte[] GenerateQrCode(string trackingNumber)
+    private static byte[] GenerateQrCode(string trackingNumber, string platformUrl)
     {
-        var appUrl = "https://platform.com"; // config'den okunabilir
         using var qrGenerator = new QRCodeGenerator();
         using var qrData = qrGenerator.CreateQrCode(
-            $"{appUrl}/track/{trackingNumber}",
+            $"{platformUrl}/track/{trackingNumber}",
             QRCodeGenerator.ECCLevel.M
         );
         using var qrCode = new PngByteQRCode(qrData);
@@ -250,23 +297,30 @@ public class LabelGeneratorService : ILabelGeneratorService
 
     private async Task<string> UploadLabelAsync(byte[] pdfBytes, string trackingNumber)
     {
-        var cloudName = _config["Cloudinary:CloudName"];
-        var apiKey = _config["Cloudinary:ApiKey"];
-        var apiSecret = _config["Cloudinary:ApiSecret"];
+        var cloudName = _config["Cloudinary:CloudName"] ?? _config["CLOUDINARY_CLOUD_NAME"];
+        var apiKey = _config["Cloudinary:ApiKey"] ?? _config["CLOUDINARY_API_KEY"];
+        var apiSecret = _config["Cloudinary:ApiSecret"] ?? _config["CLOUDINARY_API_SECRET"];
 
-        if (string.IsNullOrEmpty(cloudName))
+        if (string.IsNullOrEmpty(cloudName) || string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(apiSecret))
+        {
+            _logger.LogWarning(
+                "⚠️  Cloudinary yapılandırması eksik — etiket yerel path'e kaydedildi: {TrackingNo}",
+                trackingNumber
+            );
             return $"/labels/{trackingNumber}.pdf";
+        }
 
         var uploadUrl = $"https://api.cloudinary.com/v1_1/{cloudName}/raw/upload";
         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
         var publicId = $"labels/{trackingNumber}";
 
+        // HMAC-SHA1 imzası
         var signatureString = $"public_id={publicId}&timestamp={timestamp}{apiSecret}";
         var signature = ComputeSha1(signatureString);
 
         using var content = new MultipartFormDataContent();
         content.Add(new ByteArrayContent(pdfBytes), "file", $"{trackingNumber}.pdf");
-        content.Add(new StringContent(apiKey!), "api_key");
+        content.Add(new StringContent(apiKey), "api_key");
         content.Add(new StringContent(timestamp), "timestamp");
         content.Add(new StringContent(publicId), "public_id");
         content.Add(new StringContent(signature), "signature");
@@ -279,30 +333,58 @@ public class LabelGeneratorService : ILabelGeneratorService
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("Label CDN yükleme başarısız: {Status}", response.StatusCode);
+                var err = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning(
+                    "⚠️  Cloudinary yükleme başarısız: {Status} — {Error}",
+                    (int)response.StatusCode,
+                    err
+                );
                 return $"/labels/{trackingNumber}.pdf";
             }
 
             var json = System.Text.Json.JsonDocument.Parse(
                 await response.Content.ReadAsStringAsync()
             );
+
             return json.RootElement.GetProperty("secure_url").GetString()
                 ?? $"/labels/{trackingNumber}.pdf";
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Label Cloudinary yükleme exception: {Tracking}", trackingNumber);
+            _logger.LogError(
+                ex,
+                "❌ Cloudinary yükleme exception: TrackingNo={TrackingNo}",
+                trackingNumber
+            );
             return $"/labels/{trackingNumber}.pdf";
         }
     }
+
+    // ── Yardımcı metodlar ─────────────────────────────────────────────────────
 
     private async Task<Shipment?> LoadShipmentAsync(Guid shipmentId) =>
         await _db
             .Shipments.Include(s => s.Order)
                 .ThenInclude(o => o!.Items)
+                    .ThenInclude(i => i.Product)
+                        .ThenInclude(p => p!.Merchant)
             .Include(s => s.Courier)
                 .ThenInclude(c => c!.User)
             .FirstOrDefaultAsync(s => s.Id == shipmentId);
+
+    private static string BuildAddressLine(string? addressLine, string? district)
+    {
+        var parts = new[] { addressLine, district }
+            .Where(s => !string.IsNullOrEmpty(s));
+        return string.Join(", ", parts);
+    }
+
+    private static string BuildCityLine(string? city, string? postalCode, string? country)
+    {
+        var parts = new[] { city, postalCode, country }
+            .Where(s => !string.IsNullOrEmpty(s));
+        return string.Join(" / ", parts);
+    }
 
     private static string ComputeSha1(string input)
     {
