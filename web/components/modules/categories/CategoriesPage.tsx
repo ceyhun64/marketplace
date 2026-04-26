@@ -110,7 +110,7 @@ export default function CategoriesPage() {
     <main className="min-h-screen ">
       {/* Hero bar */}
       <div className="bg-[#0D0D0D] py-14 px-4">
-        <div className="max-w-[1200px] mx-auto">
+        <div className="max-w-[1300px] mx-auto">
           <div className="inline-flex items-center gap-2 mb-4">
             <Grid3X3 className="w-4 h-4 text-[#C84B2F]" />
             <span className="font-mono text-[10px] uppercase tracking-[3px] text-[#7A7060]">
@@ -138,7 +138,7 @@ export default function CategoriesPage() {
       </div>
 
       {/* Grid */}
-      <div className="max-w-[1200px] mx-auto px-4 lg:px-8 py-12">
+      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-12">
         {isError && (
           <div className="text-center py-16 text-[#C84B2F] font-semibold">
             Failed to load categories. Please try again.

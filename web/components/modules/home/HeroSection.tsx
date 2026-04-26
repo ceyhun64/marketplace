@@ -84,7 +84,7 @@ export default function HeroSection() {
       <div
         style={{
           position: "relative",
-          maxWidth: 1100,
+          maxWidth: 1300,
           margin: "0 auto",
           padding: "0 2rem",
           width: "100%",

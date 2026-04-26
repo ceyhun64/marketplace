@@ -168,7 +168,7 @@ export default function FeaturedProducts() {
   };
 
   return (
-    <section className="py-20 lg:py-24" style={{ background: "#f5f5f3" }}>
+    <section className="py-20 lg:py-24">
       <div className="max-w-[1300px] mx-auto px-6 lg:px-8">
         {/* Section header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">

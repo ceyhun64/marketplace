@@ -91,7 +91,7 @@ export default function CartPage() {
 
   return (
     <main className="min-h-screen py-12 px-4" style={{ background: "#f5f5f3" }}>
-      <div className="max-w-[1200px] mx-auto">
+      <div className="max-w-[1300px] mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <div>

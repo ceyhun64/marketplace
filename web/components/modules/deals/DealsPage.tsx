@@ -141,7 +141,7 @@ export default function DealsPage() {
         <div className="absolute -top-10 -right-10 w-48 h-48 border-[20px] border-[#C84B2F]/10 rounded-full" />
         <div className="absolute -bottom-16 left-32 w-32 h-32 border-[16px] border-[#1A4A6B]/15 rounded-full" />
 
-        <div className="max-w-[1200px] mx-auto relative z-10">
+        <div className="max-w-[1300px] mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 mb-4">
             <Zap className="w-4 h-4 text-[#C84B2F]" />
             <span className="font-mono text-[10px] uppercase tracking-[3px] text-[#7A7060]">
@@ -180,7 +180,7 @@ export default function DealsPage() {
 
       {/* CTA banner */}
       <div className="bg-[#1A4A6B] text-white py-3 px-4">
-        <div className="max-w-[1200px] mx-auto flex items-center justify-between text-[13px]">
+        <div className="max-w-[1300px] mx-auto flex items-center justify-between text-[13px]">
           <div className="flex items-center gap-2 font-semibold">
             <Star className="w-4 h-4 text-yellow-400" fill="currentColor" />
             Free shipping on orders over ₺500
@@ -195,7 +195,7 @@ export default function DealsPage() {
       </div>
 
       {/* Product grid */}
-      <div className="max-w-[1200px] mx-auto px-4 lg:px-8 py-12">
+      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-12">
         {isError && (
           <div className="text-center py-20 text-[#C84B2F] font-semibold">
             Failed to load deals. Please try again.

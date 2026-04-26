@@ -54,7 +54,7 @@ export default function Footer() {
       <div
         style={{
           width: "100%",
-          maxWidth: 1100,
+          maxWidth: 1300,
           background: "var(--white)",
           border: "1px solid var(--border-light)",
           borderRadius: 28,

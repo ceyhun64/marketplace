@@ -18,25 +18,21 @@ export const metadata = {
 
 export default async function HomePage() {
   return (
-    <main >
-
+    <main>
       {/* 1. Hero — Modern arama ve görsel anlatım */}
       <HeroSection />
 
-      <div className="space-y-8 pb-20">
-        {/* 2. Kategoriler */}
-        <CategoryGrid />
+      {/* 2. Kategoriler */}
+      <CategoryGrid />
 
-        {/* 3. Öne Çıkan Ürünler */}
-        <FeaturedProducts />
+      {/* 3. Öne Çıkan Ürünler */}
+      <FeaturedProducts />
 
-        {/* 4. Öne Çıkan Storelar */}
-        <FeaturedStores />
+      {/* 4. Öne Çıkan Storelar */}
+      <FeaturedStores />
 
-        {/* 5. Nasıl Çalışır? - Artık ayrı bir bileşen */}
-        <HowItWorksSection />
-      </div>
-
+      {/* 5. Nasıl Çalışır? - Artık ayrı bir bileşen */}
+      <HowItWorksSection />
     </main>
   );
 }

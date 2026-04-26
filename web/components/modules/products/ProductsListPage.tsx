@@ -343,7 +343,7 @@ export default function ProductsListPage() {
           className="absolute top-[-60px] right-[-60px] w-[220px] h-[220px] rounded-full pointer-events-none"
           style={{ border: "40px solid rgba(200,16,46,0.08)" }}
         />
-        <div className="max-w-[1200px] mx-auto relative z-10">
+        <div className="max-w-[1300px] mx-auto relative z-10">
           <div className="flex items-center gap-3 mb-4">
             <span
               className="inline-block w-6 h-px"
@@ -425,7 +425,7 @@ export default function ProductsListPage() {
         </div>
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-4 lg:px-8 py-8">
+      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-8">
         {/* Toolbar */}
         <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
           <div className="flex items-center gap-3">

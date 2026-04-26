@@ -208,7 +208,7 @@ export default function Navbar() {
             "rounded-2xl",
           )}
           style={{
-            maxWidth: 1400,
+            maxWidth: 1300,
             background: scrolled
               ? "rgba(255,255,255,0.9)"
               : "rgba(255,255,255,0.75)",
