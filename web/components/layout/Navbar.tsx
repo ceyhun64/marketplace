@@ -127,6 +127,7 @@ function LogoMark() {
   );
 }
 
+
 function AvatarCircle({ user }: { user: CurrentUser }) {
   if (user.avatarUrl) {
     return (
@@ -138,26 +139,19 @@ function AvatarCircle({ user }: { user: CurrentUser }) {
       />
     );
   }
-  const initials = (user.name ?? "")
-    .split(" ")
-    .map((w) => w[0])
-    .filter(Boolean)
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+
   return (
     <div
       className="w-8 h-8 rounded-full flex items-center justify-center"
       style={{
         background: "var(--charcoal)",
         color: "var(--off-white)",
-        fontSize: "10px",
-        fontFamily: "var(--font-mono)",
-        letterSpacing: "0.05em",
-        fontWeight: 500,
       }}
     >
-      {initials}
+      {/* Lucide-react ikonu örneği */}
+      <User size={16} strokeWidth={2.5} />
+
+      {/* Eğer kütüphane kullanmıyorsan buraya direkt SVG de koyabilirsin */}
     </div>
   );
 }
