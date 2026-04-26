@@ -46,11 +46,11 @@ public class DelayedShipmentJob
             .Shipments.Include(s => s.Order)
                 .ThenInclude(o => o.Customer)
             .Include(s => s.Order)
-                .ThenInclude(o => o.Merchant)
-                    .ThenInclude(m => m.User)
-            .Where(s =>
-                activeStatuses.Contains(s.Status) && s.EstimatedDelivery < DateTime.UtcNow
-            )
+                .ThenInclude(o => o.Items)
+                    .ThenInclude(i => i.Product)
+                        .ThenInclude(p => p.Merchant)
+                            .ThenInclude(m => m.User)
+            .Where(s => activeStatuses.Contains(s.Status) && s.EstimatedDelivery < DateTime.UtcNow)
             .ToListAsync();
 
         _logger.LogInformation(
@@ -60,9 +60,8 @@ public class DelayedShipmentJob
 
         foreach (var shipment in delayedShipments)
         {
-            var hoursLate = (int)Math.Ceiling(
-                (DateTime.UtcNow - shipment.EstimatedDelivery).TotalHours
-            );
+            var hoursLate = (int)
+                Math.Ceiling((DateTime.UtcNow - shipment.EstimatedDelivery).TotalHours);
 
             _logger.LogWarning(
                 "[DelayedShipmentJob] Gecikmiş Shipment={Id} TrackingNo={TrackingNo} HoursLate={Hours}",
@@ -84,8 +83,10 @@ public class DelayedShipmentJob
                 );
             }
 
-            // Merchant'a bildirim
-            var merchantEmail = shipment.Order?.Merchant?.User?.Email;
+            // Merchant e-postasına OrderItems üzerinden ulaşılır
+            var merchantEmail = shipment
+                .Order?.Items.Select(i => i.Product?.Merchant?.User?.Email)
+                .FirstOrDefault(e => !string.IsNullOrEmpty(e));
             if (!string.IsNullOrEmpty(merchantEmail))
             {
                 await _notificationService.SendEmailAsync(

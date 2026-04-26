@@ -87,12 +87,10 @@ public class NotificationService : INotificationService
                     $"Siparişiniz kurye tarafından alınmak üzere hazırlanıyor. Takip: {shipment.TrackingNumber}",
                 ShipmentStatus.PickedUp =>
                     $"Siparişiniz kargoya verildi. Takip: {shipment.TrackingNumber}",
-                ShipmentStatus.InTransit =>
-                    $"Siparişiniz yolda! Takip: {shipment.TrackingNumber}",
+                ShipmentStatus.InTransit => $"Siparişiniz yolda! Takip: {shipment.TrackingNumber}",
                 ShipmentStatus.OutForDelivery =>
                     $"Siparişiniz bugün teslim edilecek. Takip: {shipment.TrackingNumber}",
-                ShipmentStatus.Delivered =>
-                    "Siparişiniz teslim edildi. İyi alışverişler! 🎉",
+                ShipmentStatus.Delivered => "Siparişiniz teslim edildi. İyi alışverişler! 🎉",
                 ShipmentStatus.Failed =>
                     "Teslimat gerçekleştirilemedi. Lütfen destek hattımızla iletişime geçin.",
                 _ => null,
@@ -107,8 +105,8 @@ public class NotificationService : INotificationService
                 message
             );
 
-            if (!string.IsNullOrEmpty(customer.PhoneNumber))
-                await SendSmsAsync(customer.PhoneNumber, message);
+            if (!string.IsNullOrEmpty(customer.Phone))
+                await SendSmsAsync(customer.Phone, message);
 
             _logger.LogInformation(
                 "✅ Kargo bildirimi gönderildi: ShipmentId={Id} Status={Status}",
@@ -145,11 +143,7 @@ public class NotificationService : INotificationService
 
     public Task SendOrderUpdateNotificationAsync(string userId, string message)
     {
-        _logger.LogInformation(
-            "🔔 Push bildirimi: UserId={User} Mesaj={Message}",
-            userId,
-            message
-        );
+        _logger.LogInformation("🔔 Push bildirimi: UserId={User} Mesaj={Message}", userId, message);
         return Task.CompletedTask;
     }
 
@@ -189,11 +183,11 @@ public class NotificationService : INotificationService
                     .ThenInclude(c => c!.User)
                 .FirstOrDefaultAsync(s => s.Id == shipmentId);
 
-            if (shipment?.Courier?.User?.PhoneNumber == null)
+            if (shipment?.Courier?.User?.Phone == null)
                 return;
 
             await SendSmsAsync(
-                shipment.Courier.User.PhoneNumber,
+                shipment.Courier.User.Phone,
                 $"Kargo etiketiniz hazır. Takip No: {shipment.TrackingNumber}. "
                     + "Etiketi portalde görüntüleyebilirsiniz."
             );

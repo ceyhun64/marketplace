@@ -44,8 +44,11 @@ public class OrderStatusJob
     {
         var threshold = DateTime.UtcNow.AddDays(-1);
         var staleOrders = await _context
-            .Orders.Include(o => o.Merchant).ThenInclude(m => m.User)
-            .Include(o => o.Customer)
+            .Orders.Include(o => o.Customer)
+            .Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+                    .ThenInclude(p => p.Merchant)
+                        .ThenInclude(m => m.User)
             .Where(o => o.Status == OrderStatus.PaymentConfirmed && o.UpdatedAt < threshold)
             .ToListAsync();
 
@@ -53,9 +56,14 @@ public class OrderStatusJob
         {
             _logger.LogWarning("[OrderStatusJob] 24h+ PaymentConfirmed: OrderId={Id}", order.Id);
 
-            if (!string.IsNullOrEmpty(order.Merchant?.User?.Email))
+            // Merchant bilgisine OrderItems üzerinden ulaşılır (Order'da doğrudan Merchant yok)
+            var merchantEmail = order
+                .Items.Select(i => i.Product?.Merchant?.User?.Email)
+                .FirstOrDefault(e => !string.IsNullOrEmpty(e));
+
+            if (!string.IsNullOrEmpty(merchantEmail))
                 await _notificationService.SendEmailAsync(
-                    order.Merchant.User.Email,
+                    merchantEmail,
                     $"Acil: Sipariş bekleniyor — #{order.Id}",
                     $"Sipariş #{order.Id} hazırlanmayı 24+ saat bekliyor. Lütfen inceleyin."
                 );
@@ -76,18 +84,14 @@ public class OrderStatusJob
             .CountAsync();
 
         if (waiting > 0)
-            _logger.LogWarning(
-                "[OrderStatusJob] {Count} sipariş 2h+ kurye bekliyor.",
-                waiting
-            );
+            _logger.LogWarning("[OrderStatusJob] {Count} sipariş 2h+ kurye bekliyor.", waiting);
     }
 
     private async Task ValidateCancelledStockRestorationAsync()
     {
         var count = await _context
             .Orders.Where(o =>
-                o.Status == OrderStatus.Cancelled
-                && o.UpdatedAt > DateTime.UtcNow.AddHours(-1)
+                o.Status == OrderStatus.Cancelled && o.UpdatedAt > DateTime.UtcNow.AddHours(-1)
             )
             .CountAsync();
 

@@ -38,7 +38,7 @@ public class PackOrderCommandHandler : IRequestHandler<PackOrderCommand, Service
                 .ThenInclude(i => i.Product)
             .Include(o => o.Customer)
             .FirstOrDefaultAsync(
-                o => o.Id == request.OrderId && o.MerchantId == merchant.Id,
+                o => o.Id == request.OrderId && o.Items.Any(i => i.MerchantId == merchant.Id),
                 cancellationToken
             );
 
@@ -69,18 +69,17 @@ public class PackOrderCommandHandler : IRequestHandler<PackOrderCommand, Service
             Id = o.Id,
             Status = o.Status.ToString(),
             TotalAmount = o.TotalAmount,
-            VatAmount = o.VatAmount,
             ShippingRate = o.ShippingRate.ToString(),
             Source = o.Source.ToString(),
             CreatedAt = o.CreatedAt,
-            Items = o.Items
-                .Select(i => new OrderItemDto
+            Items = o
+                .Items.Select(i => new OrderItemDto
                 {
                     ProductId = i.ProductId,
                     ProductName = i.ProductName,
                     UnitPrice = i.UnitPrice,
                     Quantity = i.Quantity,
-                    LineTotal = i.LineTotal,
+                    SubTotal = i.LineTotal, // OrderItem.LineTotal (computed) → DTO.SubTotal
                 })
                 .ToList(),
         };
