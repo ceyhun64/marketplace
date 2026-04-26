@@ -52,10 +52,10 @@ export default function Footer() {
     >
       {/* Main Footer Container */}
       <div
+      className="bg-linear-to-r from-red-200/50 via-red-100/20 to-transparent"
         style={{
           width: "100%",
           maxWidth: 1300,
-          background: "var(--white)",
           border: "1px solid var(--border-light)",
           borderRadius: 28,
           boxShadow: "var(--shadow-sm)",

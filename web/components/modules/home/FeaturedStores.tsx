@@ -80,24 +80,24 @@ export default function FeaturedStores() {
             <div className="flex items-center gap-3">
               <span
                 className="inline-block w-6 h-px"
-                style={{ background: "#c8102e" }}
+                style={{ background: "var(--red)" }}
               />
-              <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-[#6b6b6b]">
+              <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-[var(--charcoal-soft)]">
                 Elite Partners
               </span>
             </div>
             <h2
-              className="text-[2.2rem] lg:text-[2.75rem] font-normal leading-[1.1] tracking-[-0.01em] text-[#333333]"
-              style={{ fontFamily: "'Cormorant Garamond', serif" }}
+              className="text-[2.2rem] lg:text-[2.75rem] font-normal leading-[1.1] tracking-[-0.01em] text-[var(--charcoal)]"
+              style={{ fontFamily: "var(--font-display)" }}
             >
               Trusted sellers,{" "}
-              <em style={{ color: "#c8102e" }}>verified quality.</em>
+              <em style={{ color: "var(--red)" }}>verified quality.</em>
             </h2>
           </div>
           <Link
             href="/stores"
-            className="hidden sm:flex items-center gap-2 text-sm font-semibold text-[#333333] hover:text-[#c8102e] transition-colors group"
-            style={{ fontFamily: "'Manrope', sans-serif" }}
+            className="hidden sm:flex items-center gap-2 text-sm font-semibold text-[var(--charcoal)] hover:text-[var(--red)] transition-colors group"
+            style={{ fontFamily: "var(--font-body)" }}
           >
             All Stores
             <ArrowUpRight className="w-4 h-4" />
@@ -130,7 +130,7 @@ export default function FeaturedStores() {
               {/* Top accent */}
               <div
                 className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
-                style={{ background: "#c8102e" }}
+                style={{ background: "var(--red)" }}
               />
 
               <div className="flex justify-between items-start mb-7">
@@ -142,10 +142,10 @@ export default function FeaturedStores() {
                 </div>
                 <div
                   className="flex items-center gap-1 px-2.5 py-1 rounded-full"
-                  style={{ background: "#f5f5f3" }}
+                  style={{ background: "var(--off-white)" }}
                 >
-                  <Star className="w-3 h-3 fill-[#c8102e] text-[#c8102e]" />
-                  <span className="font-mono text-[11px] font-medium text-[#333333]">
+                  <Star className="w-3 h-3 fill-[var(--red)] text-[var(--red)]" />
+                  <span className="font-mono text-[11px] font-medium text-[var(--charcoal)]">
                     {store.rating}
                   </span>
                 </div>
@@ -154,22 +154,22 @@ export default function FeaturedStores() {
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5">
                   <h3
-                    className="text-[1rem] font-bold text-[#333333] group-hover:text-[#c8102e] transition-colors"
-                    style={{ fontFamily: "'Manrope', sans-serif" }}
+                    className="text-[1rem] font-bold text-[var(--charcoal)] group-hover:text-[var(--red)] transition-colors"
+                    style={{ fontFamily: "var(--font-body)" }}
                   >
                     {store.name}
                   </h3>
                   {store.featured && (
                     <CheckCircle2
                       className="w-3.5 h-3.5 flex-shrink-0"
-                      style={{ color: "#c8102e" }}
+                      style={{ color: "var(--red)" }}
                     />
                   )}
                 </div>
 
                 <p
-                  className="text-[#6b6b6b] text-[0.8125rem] leading-relaxed line-clamp-2"
-                  style={{ fontFamily: "'Manrope', sans-serif" }}
+                  className="text-[var(--charcoal-soft)] text-[0.8125rem] leading-relaxed line-clamp-2"
+                  style={{ fontFamily: "var(--font-body)" }}
                 >
                   {store.description}
                 </p>
@@ -177,23 +177,23 @@ export default function FeaturedStores() {
                 <div className="flex items-center gap-3 pt-3">
                   <div
                     className="text-center px-3 py-1.5 rounded-lg"
-                    style={{ background: "#f5f5f3" }}
+                    style={{ background: "var(--off-white)" }}
                   >
-                    <div className="font-mono text-[10px] text-[#6b6b6b] uppercase tracking-[0.08em]">
+                    <div className="font-mono text-[10px] text-[var(--charcoal-soft)] uppercase tracking-[0.08em]">
                       Products
                     </div>
-                    <div className="font-bold text-[0.8125rem] text-[#333333]">
+                    <div className="font-bold text-[0.8125rem] text-[var(--charcoal)]">
                       {store.productCount}+
                     </div>
                   </div>
                   <div
                     className="text-center px-3 py-1.5 rounded-lg"
-                    style={{ background: "#f5f5f3" }}
+                    style={{ background: "var(--off-white)" }}
                   >
-                    <div className="font-mono text-[10px] text-[#6b6b6b] uppercase tracking-[0.08em]">
+                    <div className="font-mono text-[10px] text-[var(--charcoal-soft)] uppercase tracking-[0.08em]">
                       Reviews
                     </div>
-                    <div className="font-bold text-[0.8125rem] text-[#333333]">
+                    <div className="font-bold text-[0.8125rem] text-[var(--charcoal)]">
                       {store.reviewCount.toLocaleString()}
                     </div>
                   </div>
@@ -204,14 +204,14 @@ export default function FeaturedStores() {
                 className="mt-6 pt-5 flex items-center justify-between"
                 style={{ borderTop: "1px solid rgba(51,51,51,0.06)" }}
               >
-                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#333333]">
+                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--charcoal)]">
                   Visit Store
                 </span>
                 <div
                   className="w-7 h-7 rounded-full flex items-center justify-center transition-all"
                   style={{ background: "rgba(51,51,51,0.06)" }}
                 >
-                  <ArrowUpRight className="w-3.5 h-3.5 text-[#333333]" />
+                  <ArrowUpRight className="w-3.5 h-3.5 text-[var(--charcoal)]" />
                 </div>
               </div>
             </Link>
@@ -221,7 +221,7 @@ export default function FeaturedStores() {
         {/* Seller CTA */}
         <div
           className="mt-10 rounded-2xl p-8 lg:p-12 relative overflow-hidden"
-          style={{ background: "#333333" }}
+          style={{ background: "var(--charcoal)" }}
         >
           {/* Decorative circle */}
           <div
@@ -238,31 +238,31 @@ export default function FeaturedStores() {
               </span>
               <h3
                 className="text-white text-2xl lg:text-3xl font-normal max-w-md leading-[1.2] tracking-[-0.01em]"
-                style={{ fontFamily: "'Cormorant Garamond', serif" }}
+                style={{ fontFamily: "var(--font-display)" }}
               >
                 Open your own e-store and reach{" "}
-                <em style={{ color: "#c8102e" }}>millions of customers.</em>
+                <em style={{ color: "var(--red)" }}>millions of customers.</em>
               </h3>
             </div>
             <Link
               href="/auth/register?role=merchant"
               className="flex-shrink-0 inline-flex items-center gap-2 px-8 py-4 rounded-lg font-semibold text-sm transition-all"
               style={{
-                background: "#ffffff",
-                color: "#333333",
-                fontFamily: "'Manrope', sans-serif",
+                background: "var(--white)",
+                color: "var(--charcoal)",
+                fontFamily: "var(--font-body)",
                 letterSpacing: "0.02em",
                 boxShadow: "0 8px 32px rgba(200,16,46,0.2)",
               }}
               onMouseEnter={(e) => {
                 const el = e.currentTarget as HTMLElement;
-                el.style.background = "#c8102e";
+                el.style.background = "var(--red)";
                 el.style.color = "#fff";
               }}
               onMouseLeave={(e) => {
                 const el = e.currentTarget as HTMLElement;
-                el.style.background = "#ffffff";
-                el.style.color = "#333333";
+                el.style.background = "var(--white)";
+                el.style.color = "var(--charcoal)";
               }}
             >
               Start Selling Now

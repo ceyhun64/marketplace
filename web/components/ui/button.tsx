@@ -4,36 +4,36 @@ import { Slot } from "radix-ui";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all duration-150 outline-none select-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/40 active:not-aria-[haspopup]:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all duration-150 outline-none select-none focus-visible:ring-2 focus-visible:ring-[var(--red)]/40 active:not-aria-[haspopup]:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
         /* Primary — brand red */
         default:
-          "bg-[var(--brand-red)] text-white shadow-[0_2px_6px_rgba(204,16,22,0.30)] hover:bg-[#A80D12] rounded-md",
+          "bg-[var(--red)] text-white shadow-[0_2px_6px_rgba(204,16,22,0.30)] hover:bg-[var(--red-dark)] rounded-md",
 
         /* Secondary — charcoal outline */
         outline:
-          "border-[var(--brand-charcoal)] text-[var(--brand-charcoal)] bg-transparent hover:bg-[var(--brand-charcoal)] hover:text-white rounded-md",
+          "border-[var(--charcoal)] text-[var(--charcoal)] bg-transparent hover:bg-[var(--charcoal)] hover:text-white rounded-md",
 
         /* Ghost — subtle */
         ghost:
-          "text-[var(--brand-charcoal)] hover:bg-[var(--brand-offwhite)] rounded-md",
+          "text-[var(--charcoal)] hover:bg-[var(--off-white)] rounded-md",
 
         /* Danger outline — red border */
         destructive:
-          "border-[var(--brand-red)] text-[var(--brand-red)] bg-transparent hover:bg-[var(--brand-red)] hover:text-white rounded-md",
+          "border-[var(--red)] text-[var(--red)] bg-transparent hover:bg-[var(--red)] hover:text-white rounded-md",
 
         /* Link */
-        link: "text-[var(--brand-red)] underline-offset-4 hover:underline p-0 h-auto",
+        link: "text-[var(--red)] underline-offset-4 hover:underline p-0 h-auto",
 
         /* Secondary (alias) */
         secondary:
-          "bg-[var(--brand-offwhite)] text-[var(--brand-charcoal)] border-[var(--brand-border)] hover:bg-[var(--brand-border)] rounded-md",
+          "bg-[var(--off-white)] text-[var(--charcoal)] border-[var(--border-light)] hover:bg-[var(--border-light)] rounded-md",
 
         /* Brand (alias for default) */
         brand:
-          "bg-[var(--brand-red)] text-white shadow-[0_2px_6px_rgba(204,16,22,0.30)] hover:bg-[#A80D12] rounded-md",
+          "bg-[var(--red)] text-white shadow-[0_2px_6px_rgba(204,16,22,0.30)] hover:bg-[var(--red-dark)] rounded-md",
       },
       size: {
         default: "h-10 gap-2 px-4",

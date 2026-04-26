@@ -44,14 +44,14 @@ export function ProductCard({
       {/* Red top accent */}
       <div
         className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 z-10"
-        style={{ background: "#c8102e" }}
+        style={{ background: "var(--red)" }}
       />
 
       {/* Image */}
       <Link
         href={href}
         className="relative block aspect-square overflow-hidden"
-        style={{ background: "#f5f5f3" }}
+        style={{ background: "var(--off-white)" }}
       >
         <Image
           src={coverImage}
@@ -73,7 +73,7 @@ export function ProductCard({
               className="rounded-full px-3 py-1 text-xs font-mono font-medium"
               style={{
                 background: "rgba(51,51,51,0.08)",
-                color: "#6b6b6b",
+                color: "var(--charcoal-soft)",
                 letterSpacing: "0.05em",
               }}
             >
@@ -90,7 +90,7 @@ export function ProductCard({
                 className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium"
                 style={{
                   background: "rgba(200,16,46,0.08)",
-                  color: "#c8102e",
+                  color: "var(--red)",
                   border: "1px solid rgba(200,16,46,0.15)",
                   letterSpacing: "0.05em",
                 }}
@@ -109,10 +109,10 @@ export function ProductCard({
           <Link
             href={`/store/${product.merchantSlug}`}
             className="flex items-center gap-1 text-[11px] font-mono transition-colors"
-            style={{ color: "#6b6b6b", letterSpacing: "0.05em" }}
+            style={{ color: "var(--charcoal-soft)", letterSpacing: "0.05em" }}
             onClick={(e) => e.stopPropagation()}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#c8102e")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#6b6b6b")}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--red)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--charcoal-soft)")}
           >
             <Store className="h-3 w-3" />
             {product.merchantStoreName}
@@ -121,10 +121,10 @@ export function ProductCard({
 
         <Link href={href}>
           <h3
-            className="line-clamp-2 text-[0.875rem] font-bold leading-snug transition-colors text-[#333333]"
-            style={{ fontFamily: "'Manrope', sans-serif" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#c8102e")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#333333")}
+            className="line-clamp-2 text-[0.875rem] font-bold leading-snug transition-colors text-[var(--charcoal)]"
+            style={{ fontFamily: "var(--font-body)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--red)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--charcoal)")}
           >
             {product.name}
           </h3>
@@ -132,8 +132,8 @@ export function ProductCard({
 
         <div className="mt-auto flex items-center justify-between gap-2">
           <span
-            className="text-base font-bold text-[#333333]"
-            style={{ fontFamily: "'Cormorant Garamond', serif" }}
+            className="text-base font-bold text-[var(--charcoal)]"
+            style={{ fontFamily: "var(--font-display)" }}
           >
             {product.price.toLocaleString("tr-TR", {
               style: "currency",
@@ -146,7 +146,7 @@ export function ProductCard({
               className="h-8 w-8 shrink-0 flex items-center justify-center rounded-lg border transition-all"
               style={{
                 border: "1.5px solid rgba(51,51,51,0.15)",
-                color: "#333333",
+                color: "var(--charcoal)",
                 background: "transparent",
               }}
               disabled={isOutOfStock}
@@ -157,15 +157,15 @@ export function ProductCard({
               aria-label="Sepete ekle"
               onMouseEnter={(e) => {
                 const el = e.currentTarget as HTMLElement;
-                el.style.background = "#c8102e";
-                el.style.borderColor = "#c8102e";
+                el.style.background = "var(--red)";
+                el.style.borderColor = "var(--red)";
                 el.style.color = "#fff";
               }}
               onMouseLeave={(e) => {
                 const el = e.currentTarget as HTMLElement;
                 el.style.background = "transparent";
                 el.style.borderColor = "rgba(51,51,51,0.15)";
-                el.style.color = "#333333";
+                el.style.color = "var(--charcoal)";
               }}
             >
               <ShoppingCart className="h-3.5 w-3.5" />
@@ -176,7 +176,7 @@ export function ProductCard({
         {product.stock > 0 && product.stock <= 5 && (
           <p
             className="font-mono text-[10px] font-medium"
-            style={{ color: "#c8102e", letterSpacing: "0.05em" }}
+            style={{ color: "var(--red)", letterSpacing: "0.05em" }}
           >
             Son {product.stock} adet!
           </p>

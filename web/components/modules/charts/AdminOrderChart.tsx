@@ -15,7 +15,7 @@ interface Props {
 const chartConfig = {
   siparis: {
     label: "Orders",
-    color: "#6366f1",
+    color: "var(--chart-2)",
   },
 } satisfies ChartConfig;
 
@@ -33,7 +33,7 @@ export default function OrderChart({ data }: Props) {
             />
           }
         />
-        <Bar dataKey="siparis" fill="#6366f1" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="siparis" fill="var(--chart-2)" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ChartContainer>
   );

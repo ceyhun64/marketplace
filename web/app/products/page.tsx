@@ -11,7 +11,7 @@ export const metadata = {
 function ProductsPageFallback() {
   return (
     <main className="min-h-screen ">
-      <div className="bg-[#0D0D0D] py-10 px-4">
+      <div className="bg-[var(--charcoal)] py-10 px-4">
         <div className="max-w-[1300px] mx-auto">
           <Skeleton className="h-12 w-64 bg-white/10 rounded mb-4" />
           <Skeleton className="h-12 w-96 bg-white/10 rounded-full" />

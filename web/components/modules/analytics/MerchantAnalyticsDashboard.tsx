@@ -51,25 +51,25 @@ export default function MerchantAnalyticsDashboard() {
               {
                 label: "Toplam Gelir",
                 value: stats ? formatPrice(stats.totalRevenue) : "—",
-                color: "#2D7A4F",
+                color: "var(--chart-3)",
                 icon: "💰",
               },
               {
                 label: "Total Orders",
                 value: stats?.totalOrders ?? "—",
-                color: "#1A4A6B",
+                color: "var(--charcoal-mid)",
                 icon: "🛒",
               },
               {
                 label: "Product Count",
                 value: stats?.totalProducts ?? "—",
-                color: "#8B5E1A",
+                color: "var(--chart-4)",
                 icon: "📦",
               },
               {
                 label: "Avg. Order",
                 value: stats ? formatPrice(stats.averageOrderValue) : "—",
-                color: "#C84B2F",
+                color: "var(--red)",
                 icon: "📊",
               },
             ].map(({ label, value, color, icon }) => (
@@ -79,11 +79,11 @@ export default function MerchantAnalyticsDashboard() {
               >
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xl">{icon}</span>
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-[#7A7060]">
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--charcoal-soft)]">
                     {label}
                   </p>
                 </div>
-                <p className="text-2xl font-bold font-serif" style={{ color }}>
+                <p className="text-2xl font-bold font-heading" style={{ color }}>
                   {value}
                 </p>
               </div>
@@ -94,8 +94,8 @@ export default function MerchantAnalyticsDashboard() {
       <div className="bg-white border border-gray-200 rounded-xl p-5">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h3 className="font-semibold text-[#0D0D0D]">Sales Chart</h3>
-            <p className="text-xs text-[#7A7060] font-mono">
+            <h3 className="font-semibold text-[var(--charcoal)]">Sales Chart</h3>
+            <p className="text-xs text-[var(--charcoal-soft)] font-mono">
               Gelir & sipariş trendi
             </p>
           </div>
@@ -106,8 +106,8 @@ export default function MerchantAnalyticsDashboard() {
                 onClick={() => setPeriod(value)}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                   period === value
-                    ? "bg-white text-[#0D0D0D] shadow-sm"
-                    : "text-[#7A7060] hover:text-[#0D0D0D]"
+                    ? "bg-white text-[var(--charcoal)] shadow-sm"
+                    : "text-[var(--charcoal-soft)] hover:text-[var(--charcoal)]"
                 }`}
               >
                 {label}
@@ -126,19 +126,19 @@ export default function MerchantAnalyticsDashboard() {
             >
               <defs>
                 <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#C84B2F" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#C84B2F" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--red)" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="var(--red)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F0EDE5" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 10, fill: "#7A7060" }}
+                tick={{ fontSize: 10, fill: "var(--charcoal-soft)" }}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
-                tick={{ fontSize: 10, fill: "#7A7060" }}
+                tick={{ fontSize: 10, fill: "var(--charcoal-soft)" }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v) => formatCompactNumber(v)}
@@ -146,7 +146,7 @@ export default function MerchantAnalyticsDashboard() {
               <Tooltip
                 contentStyle={{
                   borderRadius: "12px",
-                  border: "1px solid #E5E0D8",
+                  border: "1px solid var(--border-light)",
                   fontSize: 12,
                 }}
                 // val: number yerine val: any kullanarak veya tipi kaldırarak çözebilirsin
@@ -155,7 +155,7 @@ export default function MerchantAnalyticsDashboard() {
               <Area
                 type="monotone"
                 dataKey="revenue"
-                stroke="#C84B2F"
+                stroke="var(--red)"
                 strokeWidth={2}
                 fill="url(#revenueGrad)"
                 dot={false}
@@ -169,10 +169,10 @@ export default function MerchantAnalyticsDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Comparison stats */}
         <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-[#0D0D0D] mb-1">
+          <h3 className="font-semibold text-[var(--charcoal)] mb-1">
             Kanal Karşılaştırması
           </h3>
-          <p className="text-xs text-[#7A7060] font-mono mb-5">
+          <p className="text-xs text-[var(--charcoal-soft)] font-mono mb-5">
             Pazaryeri vs E-Store
           </p>
 
@@ -183,14 +183,14 @@ export default function MerchantAnalyticsDashboard() {
               {[
                 {
                   label: "Pazaryeri",
-                  color: "#C84B2F",
+                  color: "var(--red)",
                   revenue: comparison.marketplace.revenue,
                   orders: comparison.marketplace.orders,
                   conversion: comparison.marketplace.conversionRate,
                 },
                 {
                   label: "E-Store",
-                  color: "#1A4A6B",
+                  color: "var(--charcoal-mid)",
                   revenue: comparison.estore.revenue,
                   orders: comparison.estore.orders,
                   conversion: comparison.estore.conversionRate,
@@ -203,11 +203,11 @@ export default function MerchantAnalyticsDashboard() {
                 return (
                   <div key={label}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-[#0D0D0D]">
+                      <span className="text-sm font-medium text-[var(--charcoal)]">
                         {label}
                       </span>
                       <span
-                        className="font-serif font-semibold text-sm"
+                        className="font-heading font-semibold text-sm"
                         style={{ color }}
                       >
                         {formatPrice(revenue)}
@@ -220,10 +220,10 @@ export default function MerchantAnalyticsDashboard() {
                       />
                     </div>
                     <div className="flex gap-4 mt-1">
-                      <span className="text-xs text-[#7A7060]">
+                      <span className="text-xs text-[var(--charcoal-soft)]">
                         {orders} sipariş
                       </span>
-                      <span className="text-xs text-[#7A7060]">
+                      <span className="text-xs text-[var(--charcoal-soft)]">
                         Dönüşüm: {formatPercent(conversion)}
                       </span>
                     </div>
@@ -232,16 +232,16 @@ export default function MerchantAnalyticsDashboard() {
               })}
             </div>
           ) : (
-            <p className="text-sm text-[#7A7060] text-center py-8">Veri yok</p>
+            <p className="text-sm text-[var(--charcoal-soft)] text-center py-8">Veri yok</p>
           )}
         </div>
 
         {/* Top products */}
         <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-[#0D0D0D] mb-1">
+          <h3 className="font-semibold text-[var(--charcoal)] mb-1">
             En Çok Satan Ürünler
           </h3>
-          <p className="text-xs text-[#7A7060] font-mono mb-5">Top 5 ürün</p>
+          <p className="text-xs text-[var(--charcoal-soft)] font-mono mb-5">Top 5 ürün</p>
 
           {topLoading ? (
             <div className="space-y-2">
@@ -250,7 +250,7 @@ export default function MerchantAnalyticsDashboard() {
               ))}
             </div>
           ) : topProducts.length === 0 ? (
-            <p className="text-sm text-[#7A7060] text-center py-8">
+            <p className="text-sm text-[var(--charcoal-soft)] text-center py-8">
               Henüz satış yok
             </p>
           ) : (
@@ -260,18 +260,18 @@ export default function MerchantAnalyticsDashboard() {
                   key={p.productId}
                   className="flex items-center gap-3 p-2 rounded-lg hover:/60 transition-colors"
                 >
-                  <span className="font-mono text-xs text-[#7A7060] w-5 shrink-0">
+                  <span className="font-mono text-xs text-[var(--charcoal-soft)] w-5 shrink-0">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#0D0D0D] truncate">
+                    <p className="text-sm font-medium text-[var(--charcoal)] truncate">
                       {p.productName}
                     </p>
-                    <p className="text-xs text-[#7A7060]">
+                    <p className="text-xs text-[var(--charcoal-soft)]">
                       {p.totalQuantity} adet satıldı
                     </p>
                   </div>
-                  <span className="font-serif font-semibold text-sm text-[#2D7A4F] shrink-0">
+                  <span className="font-heading font-semibold text-sm text-[var(--chart-3)] shrink-0">
                     {formatPrice(p.totalRevenue)}
                   </span>
                 </div>

@@ -176,24 +176,24 @@ export default function FeaturedProducts() {
             <div className="flex items-center gap-3">
               <span
                 className="inline-block w-6 h-px"
-                style={{ background: "#c8102e" }}
+                style={{ background: "var(--red)" }}
               />
-              <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-[#6b6b6b]">
+              <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-[var(--charcoal-soft)]">
                 Curated Selection
               </span>
             </div>
             <h2
-              className="text-[2.2rem] lg:text-[2.75rem] font-normal leading-[1.1] tracking-[-0.01em] text-[#333333]"
-              style={{ fontFamily: "'Cormorant Garamond', serif" }}
+              className="text-[2.2rem] lg:text-[2.75rem] font-normal leading-[1.1] tracking-[-0.01em] text-[var(--charcoal)]"
+              style={{ fontFamily: "var(--font-display)" }}
             >
-              What will you <em style={{ color: "#c8102e" }}>discover</em>{" "}
+              What will you <em style={{ color: "var(--red)" }}>discover</em>{" "}
               today?
             </h2>
           </div>
           <Link
             href="/products"
-            className="flex items-center gap-2 text-sm font-semibold text-[#333333] hover:text-[#c8102e] transition-colors group"
-            style={{ fontFamily: "'Manrope', sans-serif" }}
+            className="flex items-center gap-2 text-sm font-semibold text-[var(--charcoal)] hover:text-[var(--red)] transition-colors group"
+            style={{ fontFamily: "var(--font-body)" }}
           >
             All Products
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -211,8 +211,8 @@ export default function FeaturedProducts() {
               onClick={() => setActiveTab(tab.value)}
               className="relative pb-4 text-sm font-semibold transition-colors duration-200"
               style={{
-                fontFamily: "'Manrope', sans-serif",
-                color: activeTab === tab.value ? "#333333" : "#6b6b6b",
+                fontFamily: "var(--font-body)",
+                color: activeTab === tab.value ? "var(--charcoal)" : "var(--charcoal-soft)",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
@@ -223,7 +223,7 @@ export default function FeaturedProducts() {
               {activeTab === tab.value && (
                 <span
                   className="absolute bottom-0 left-0 right-0 h-[2px]"
-                  style={{ background: "#c8102e" }}
+                  style={{ background: "var(--red)" }}
                 />
               )}
             </button>
@@ -248,22 +248,22 @@ export default function FeaturedProducts() {
             href="/products"
             className="inline-flex items-center gap-2 px-8 py-3.5 border font-semibold text-sm transition-all duration-250 rounded-lg"
             style={{
-              fontFamily: "'Manrope', sans-serif",
+              fontFamily: "var(--font-body)",
               borderColor: "rgba(51,51,51,0.15)",
-              color: "#333333",
+              color: "var(--charcoal)",
               letterSpacing: "0.02em",
             }}
             onMouseEnter={(e) => {
               const el = e.currentTarget as HTMLElement;
-              el.style.background = "#c8102e";
-              el.style.borderColor = "#c8102e";
+              el.style.background = "var(--red)";
+              el.style.borderColor = "var(--red)";
               el.style.color = "#fff";
             }}
             onMouseLeave={(e) => {
               const el = e.currentTarget as HTMLElement;
               el.style.background = "transparent";
               el.style.borderColor = "rgba(51,51,51,0.15)";
-              el.style.color = "#333333";
+              el.style.color = "var(--charcoal)";
             }}
           >
             Explore Full Catalog
@@ -301,13 +301,13 @@ function ProductCard({
       {/* Red accent top */}
       <div
         className="h-[3px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
-        style={{ background: "#c8102e" }}
+        style={{ background: "var(--red)" }}
       />
 
       {/* Image Container */}
       <div
         className="relative aspect-[4/5] overflow-hidden flex items-center justify-center text-6xl"
-        style={{ background: "#f5f5f3" }}
+        style={{ background: "var(--off-white)" }}
       >
         <span className="transition-transform duration-500 group-hover:scale-110 select-none">
           {product.imageEmoji}
@@ -318,7 +318,7 @@ function ProductCard({
           {discount > 0 && (
             <span
               className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium text-white"
-              style={{ background: "#c8102e", letterSpacing: "0.05em" }}
+              style={{ background: "var(--red)", letterSpacing: "0.05em" }}
             >
               -{discount}%
             </span>
@@ -326,7 +326,7 @@ function ProductCard({
           {product.isBuyBox && (
             <span
               className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium text-white"
-              style={{ background: "#333333", letterSpacing: "0.05em" }}
+              style={{ background: "var(--charcoal)", letterSpacing: "0.05em" }}
             >
               BEST OFFER
             </span>
@@ -345,8 +345,8 @@ function ProductCard({
           <Heart
             className="w-4 h-4"
             style={{
-              color: isWishlisted ? "#c8102e" : "#6b6b6b",
-              fill: isWishlisted ? "#c8102e" : "none",
+              color: isWishlisted ? "var(--red)" : "var(--charcoal-soft)",
+              fill: isWishlisted ? "var(--red)" : "none",
             }}
           />
         </button>
@@ -356,12 +356,12 @@ function ProductCard({
           <button
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold text-white transition-colors"
             style={{
-              background: "#333333",
-              fontFamily: "'Manrope', sans-serif",
+              background: "var(--charcoal)",
+              fontFamily: "var(--font-body)",
               letterSpacing: "0.03em",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#c8102e")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "#333333")}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--red)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "var(--charcoal)")}
           >
             <ShoppingBag className="w-3.5 h-3.5" />
             Add to Cart
@@ -372,12 +372,12 @@ function ProductCard({
       {/* Info */}
       <div className="p-4 space-y-2">
         <div className="flex justify-between items-center">
-          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#6b6b6b]">
+          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--charcoal-soft)]">
             {product.categoryName}
           </span>
           <span
             className="font-mono text-[10px] uppercase tracking-[0.08em]"
-            style={{ color: "#c8102e" }}
+            style={{ color: "var(--red)" }}
           >
             {product.merchantName}
           </span>
@@ -385,8 +385,8 @@ function ProductCard({
 
         <Link href={`/product/${product.productId}`}>
           <h3
-            className="font-bold text-[14px] leading-snug line-clamp-2 text-[#333333] hover:text-[#c8102e] transition-colors"
-            style={{ fontFamily: "'Manrope', sans-serif" }}
+            className="font-bold text-[14px] leading-snug line-clamp-2 text-[var(--charcoal)] hover:text-[var(--red)] transition-colors"
+            style={{ fontFamily: "var(--font-body)" }}
           >
             {product.productName}
           </h3>
@@ -395,23 +395,23 @@ function ProductCard({
         <div className="flex items-center justify-between pt-1">
           <div>
             <span
-              className="text-lg font-bold text-[#333333] tracking-tight"
-              style={{ fontFamily: "'Cormorant Garamond', serif" }}
+              className="text-lg font-bold text-[var(--charcoal)] tracking-tight"
+              style={{ fontFamily: "var(--font-display)" }}
             >
               ₺{product.price.toLocaleString("en-US")}
             </span>
             {product.originalPrice && (
-              <span className="block text-xs text-[#6b6b6b] line-through font-mono">
+              <span className="block text-xs text-[var(--charcoal-soft)] line-through font-mono">
                 ₺{product.originalPrice.toLocaleString("en-US")}
               </span>
             )}
           </div>
           <div
             className="flex items-center gap-1 px-2 py-1 rounded-lg"
-            style={{ background: "#f5f5f3" }}
+            style={{ background: "var(--off-white)" }}
           >
-            <Star className="w-3 h-3 fill-[#c8102e] text-[#c8102e]" />
-            <span className="font-mono text-[11px] font-medium text-[#333333]">
+            <Star className="w-3 h-3 fill-[var(--red)] text-[var(--red)]" />
+            <span className="font-mono text-[11px] font-medium text-[var(--charcoal)]">
               {product.rating}
             </span>
           </div>

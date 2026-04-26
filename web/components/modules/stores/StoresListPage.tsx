@@ -60,7 +60,7 @@ function StoreCard({ store }: { store: MerchantProfile }) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Store className="w-10 h-10 text-[#0D0D0D]/10" />
+            <Store className="w-10 h-10 text-[var(--charcoal)]/10" />
           </div>
         )}
       </div>
@@ -77,30 +77,30 @@ function StoreCard({ store }: { store: MerchantProfile }) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="font-bold text-[#0D0D0D] text-lg">
+              <span className="font-bold text-[var(--charcoal)] text-lg">
                 {store.storeName.charAt(0).toUpperCase()}
               </span>
             )}
           </div>
           <div className="min-w-0">
-            <h3 className="font-bold text-[#0D0D0D] text-[15px] truncate group-hover:text-[#C84B2F] transition-colors">
+            <h3 className="font-bold text-[var(--charcoal)] text-[15px] truncate group-hover:text-[var(--red)] transition-colors">
               {store.storeName}
             </h3>
-            <p className="text-[11px] font-mono text-[#7A7060] truncate">
+            <p className="text-[11px] font-mono text-[var(--charcoal-soft)] truncate">
               @{store.slug}
             </p>
           </div>
         </div>
 
         {store.description && (
-          <p className="text-[13px] text-[#7A7060] leading-relaxed mb-4 line-clamp-2">
+          <p className="text-[13px] text-[var(--charcoal-soft)] leading-relaxed mb-4 line-clamp-2">
             {store.description}
           </p>
         )}
 
         <Link
           href={`/store/${store.slug}`}
-          className="block w-full text-center h-9 leading-9 rounded-full bg-[#0D0D0D] hover:bg-[#C84B2F] text-white text-[13px] font-bold transition-colors"
+          className="block w-full text-center h-9 leading-9 rounded-full bg-[var(--charcoal)] hover:bg-[var(--red)] text-white text-[13px] font-bold transition-colors"
         >
           Visit Store
         </Link>
@@ -123,32 +123,32 @@ export default function StoresListPage() {
   return (
     <main className="min-h-screen ">
       {/* Hero */}
-      <div className="bg-[#0D0D0D] py-14 px-4">
+      <div className="bg-[var(--charcoal)] py-14 px-4">
         <div className="max-w-[1300px] mx-auto">
           <div className="inline-flex items-center gap-2 mb-4">
-            <Store className="w-4 h-4 text-[#1A4A6B]" />
-            <span className="font-mono text-[10px] uppercase tracking-[3px] text-[#7A7060]">
+            <Store className="w-4 h-4 text-[var(--charcoal-mid)]" />
+            <span className="font-mono text-[10px] uppercase tracking-[3px] text-[var(--charcoal-soft)]">
               Independent Stores
             </span>
           </div>
           <h1
-            className="text-[#F5F2EB] text-[36px] lg:text-[48px] leading-tight mb-2"
-            style={{ fontFamily: "'DM Serif Display', serif" }}
+            className="text-[var(--off-white)] text-[36px] lg:text-[48px] leading-tight mb-2"
+            style={{ fontFamily: "var(--font-display)" }}
           >
             All Stores
           </h1>
-          <p className="text-[#7A7060] text-[15px] mb-6">
+          <p className="text-[var(--charcoal-soft)] text-[15px] mb-6">
             Discover unique e-stores from our trusted sellers.
           </p>
 
           {/* Search */}
           <div className="relative max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7A7060]" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--charcoal-soft)]" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search stores…"
-              className="pl-10 h-12 rounded-full bg-white/10 border-white/10 text-white placeholder:text-[#7A7060] focus-visible:ring-white/20 focus-visible:border-white/30"
+              className="pl-10 h-12 rounded-full bg-white/10 border-white/10 text-white placeholder:text-[var(--charcoal-soft)] focus-visible:ring-white/20 focus-visible:border-white/30"
             />
           </div>
         </div>
@@ -157,14 +157,14 @@ export default function StoresListPage() {
       {/* Stats bar */}
       {!isLoading && !isError && stores && (
         <div className="bg-white border-b border-black/5 py-3 px-4">
-          <div className="max-w-[1300px] mx-auto flex items-center gap-6 text-[13px] text-[#7A7060]">
-            <span className="font-semibold text-[#0D0D0D]">
+          <div className="max-w-[1300px] mx-auto flex items-center gap-6 text-[13px] text-[var(--charcoal-soft)]">
+            <span className="font-semibold text-[var(--charcoal)]">
               {filtered.length} stores
             </span>
             {query && (
               <span>
                 showing results for{" "}
-                <strong className="text-[#C84B2F]">"{query}"</strong>
+                <strong className="text-[var(--red)]">"{query}"</strong>
               </span>
             )}
           </div>
@@ -174,7 +174,7 @@ export default function StoresListPage() {
       {/* Grid */}
       <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-12">
         {isError && (
-          <div className="text-center py-20 text-[#C84B2F] font-semibold">
+          <div className="text-center py-20 text-[var(--red)] font-semibold">
             Failed to load stores. Please try again.
           </div>
         )}
@@ -189,8 +189,8 @@ export default function StoresListPage() {
 
         {!isLoading && !isError && filtered.length === 0 && (
           <div className="text-center py-20">
-            <Store className="w-14 h-14 text-[#0D0D0D]/10 mx-auto mb-4" />
-            <p className="text-[#7A7060] text-lg font-semibold">
+            <Store className="w-14 h-14 text-[var(--charcoal)]/10 mx-auto mb-4" />
+            <p className="text-[var(--charcoal-soft)] text-lg font-semibold">
               {query ? `No stores match "${query}".` : "No stores found."}
             </p>
           </div>

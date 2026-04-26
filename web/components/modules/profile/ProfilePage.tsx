@@ -21,12 +21,12 @@ interface Address {
 const inputStyle = {
   width: "100%",
   padding: "0.75rem 1rem",
-  background: "#f5f5f3",
+  background: "var(--off-white)",
   border: "1.5px solid rgba(51,51,51,0.15)",
   borderRadius: "8px",
-  fontFamily: "'Manrope', sans-serif",
+  fontFamily: "var(--font-body)",
   fontSize: "0.875rem",
-  color: "#333333",
+  color: "var(--charcoal)",
   outline: "none",
   transition: "border-color 150ms, background 150ms, box-shadow 150ms",
 };
@@ -34,10 +34,10 @@ const inputStyle = {
 const labelStyle = {
   fontSize: "0.6875rem",
   fontWeight: 600,
-  color: "#4a4a4a",
+  color: "var(--charcoal-mid)",
   letterSpacing: "0.04em",
   textTransform: "uppercase" as const,
-  fontFamily: "'Manrope', sans-serif",
+  fontFamily: "var(--font-body)",
   display: "block",
   marginBottom: "0.5rem",
 };
@@ -62,8 +62,8 @@ function StyledInput({
       placeholder={placeholder}
       style={{
         ...inputStyle,
-        borderColor: focused ? "#c8102e" : "rgba(51,51,51,0.15)",
-        background: focused ? "#fff" : "#f5f5f3",
+        borderColor: focused ? "var(--red)" : "rgba(51,51,51,0.15)",
+        background: focused ? "#fff" : "var(--off-white)",
         boxShadow: focused ? "0 0 0 3px rgba(200,16,46,0.08)" : "none",
       }}
       onFocus={() => setFocused(true)}
@@ -147,7 +147,7 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="min-h-screen" style={{ background: "#f5f5f3" }}>
+    <div className="min-h-screen" style={{ background: "var(--off-white)" }}>
       {/* Header */}
       <div
         style={{
@@ -159,11 +159,11 @@ export default function ProfilePage() {
           <div className="flex items-center gap-3 mb-4">
             <span
               className="inline-block w-6 h-px"
-              style={{ background: "#c8102e" }}
+              style={{ background: "var(--red)" }}
             />
             <span
               className="font-mono text-[11px] tracking-[0.18em] uppercase"
-              style={{ color: "#6b6b6b" }}
+              style={{ color: "var(--charcoal-soft)" }}
             >
               My Account
             </span>
@@ -173,22 +173,22 @@ export default function ProfilePage() {
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white"
                 style={{
-                  background: "#333333",
-                  fontFamily: "'Cormorant Garamond', serif",
+                  background: "var(--charcoal)",
+                  fontFamily: "var(--font-display)",
                 }}
               >
                 {(user?.name ?? user?.email ?? "?")[0].toUpperCase()}
               </div>
               <div>
                 <h1
-                  className="font-bold text-[1.25rem] text-[#333333]"
-                  style={{ fontFamily: "'Manrope', sans-serif" }}
+                  className="font-bold text-[1.25rem] text-[var(--charcoal)]"
+                  style={{ fontFamily: "var(--font-body)" }}
                 >
                   {user?.name || user?.email}
                 </h1>
                 <p
                   className="font-mono text-[11px] mt-0.5"
-                  style={{ color: "#6b6b6b" }}
+                  style={{ color: "var(--charcoal-soft)" }}
                 >
                   {user?.email}
                 </p>
@@ -199,18 +199,18 @@ export default function ProfilePage() {
               className="text-sm font-semibold px-4 py-2 rounded-lg transition-all"
               style={{
                 border: "1.5px solid rgba(51,51,51,0.15)",
-                color: "#333333",
-                fontFamily: "'Manrope', sans-serif",
+                color: "var(--charcoal)",
+                fontFamily: "var(--font-body)",
               }}
               onMouseEnter={(e) => {
                 const el = e.currentTarget as HTMLElement;
-                el.style.borderColor = "#c8102e";
-                el.style.color = "#c8102e";
+                el.style.borderColor = "var(--red)";
+                el.style.color = "var(--red)";
               }}
               onMouseLeave={(e) => {
                 const el = e.currentTarget as HTMLElement;
                 el.style.borderColor = "rgba(51,51,51,0.15)";
-                el.style.color = "#333333";
+                el.style.color = "var(--charcoal)";
               }}
             >
               My Orders →
@@ -231,8 +231,8 @@ export default function ProfilePage() {
               onClick={() => setTab(t.key)}
               className="px-4 py-3 text-sm font-semibold relative transition-colors"
               style={{
-                color: tab === t.key ? "#333333" : "#6b6b6b",
-                fontFamily: "'Manrope', sans-serif",
+                color: tab === t.key ? "var(--charcoal)" : "var(--charcoal-soft)",
+                fontFamily: "var(--font-body)",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
@@ -242,7 +242,7 @@ export default function ProfilePage() {
               {tab === t.key && (
                 <span
                   className="absolute bottom-0 left-0 right-0 h-[2px]"
-                  style={{ background: "#c8102e" }}
+                  style={{ background: "var(--red)" }}
                 />
               )}
             </button>
@@ -290,14 +290,14 @@ export default function ProfilePage() {
                   disabled={saving}
                   className="px-6 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-50"
                   style={{
-                    background: "#333333",
-                    fontFamily: "'Manrope', sans-serif",
+                    background: "var(--charcoal)",
+                    fontFamily: "var(--font-body)",
                   }}
                   onMouseEnter={(e) =>
-                    !saving && (e.currentTarget.style.background = "#c8102e")
+                    !saving && (e.currentTarget.style.background = "var(--red)")
                   }
                   onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "#333333")
+                    (e.currentTarget.style.background = "var(--charcoal)")
                   }
                 >
                   {saving ? "Saving..." : "Save Changes"}
@@ -305,7 +305,7 @@ export default function ProfilePage() {
                 {saved && (
                   <span
                     className="font-mono text-[12px]"
-                    style={{ color: "#c8102e" }}
+                    style={{ color: "var(--red)" }}
                   >
                     ✓ Saved
                   </span>
@@ -352,7 +352,7 @@ export default function ProfilePage() {
               {pwError && (
                 <p
                   className="font-mono text-[12px]"
-                  style={{ color: "#c8102e" }}
+                  style={{ color: "var(--red)" }}
                 >
                   {pwError}
                 </p>
@@ -363,14 +363,14 @@ export default function ProfilePage() {
                   disabled={saving}
                   className="px-6 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-50"
                   style={{
-                    background: "#333333",
-                    fontFamily: "'Manrope', sans-serif",
+                    background: "var(--charcoal)",
+                    fontFamily: "var(--font-body)",
                   }}
                   onMouseEnter={(e) =>
-                    !saving && (e.currentTarget.style.background = "#c8102e")
+                    !saving && (e.currentTarget.style.background = "var(--red)")
                   }
                   onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "#333333")
+                    (e.currentTarget.style.background = "var(--charcoal)")
                   }
                 >
                   {saving ? "Changing..." : "Change Password"}
@@ -378,7 +378,7 @@ export default function ProfilePage() {
                 {pwSaved && (
                   <span
                     className="font-mono text-[12px]"
-                    style={{ color: "#c8102e" }}
+                    style={{ color: "var(--red)" }}
                   >
                     ✓ Changed
                   </span>
@@ -404,8 +404,8 @@ export default function ProfilePage() {
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <span
-                        className="font-bold text-[#333333]"
-                        style={{ fontFamily: "'Manrope', sans-serif" }}
+                        className="font-bold text-[var(--charcoal)]"
+                        style={{ fontFamily: "var(--font-body)" }}
                       >
                         {addr.title}
                       </span>
@@ -414,7 +414,7 @@ export default function ProfilePage() {
                           className="font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-[0.08em]"
                           style={{
                             background: "rgba(200,16,46,0.08)",
-                            color: "#c8102e",
+                            color: "var(--red)",
                           }}
                         >
                           Default
@@ -422,23 +422,23 @@ export default function ProfilePage() {
                       )}
                     </div>
                     <p
-                      className="text-[0.875rem] text-[#333333]"
-                      style={{ fontFamily: "'Manrope', sans-serif" }}
+                      className="text-[0.875rem] text-[var(--charcoal)]"
+                      style={{ fontFamily: "var(--font-body)" }}
                     >
                       {addr.fullName}
                     </p>
                     <p
                       className="text-[0.875rem]"
                       style={{
-                        color: "#6b6b6b",
-                        fontFamily: "'Manrope', sans-serif",
+                        color: "var(--charcoal-soft)",
+                        fontFamily: "var(--font-body)",
                       }}
                     >
                       {addr.address}, {addr.district}/{addr.city}
                     </p>
                     <p
                       className="font-mono text-[12px] mt-1"
-                      style={{ color: "#6b6b6b" }}
+                      style={{ color: "var(--charcoal-soft)" }}
                     >
                       {addr.phone}
                     </p>
@@ -448,7 +448,7 @@ export default function ProfilePage() {
                       className="text-[12px] font-semibold px-2.5 py-1 rounded-lg transition-colors"
                       style={{
                         border: "1.5px solid rgba(51,51,51,0.12)",
-                        color: "#333333",
+                        color: "var(--charcoal)",
                       }}
                     >
                       Edit
@@ -457,7 +457,7 @@ export default function ProfilePage() {
                       className="text-[12px] font-semibold px-2.5 py-1 rounded-lg transition-colors"
                       style={{
                         border: "1.5px solid rgba(200,16,46,0.2)",
-                        color: "#c8102e",
+                        color: "var(--red)",
                       }}
                     >
                       Delete
@@ -470,19 +470,19 @@ export default function ProfilePage() {
               className="w-full py-4 rounded-2xl text-sm font-semibold transition-colors"
               style={{
                 border: "2px dashed rgba(51,51,51,0.12)",
-                color: "#6b6b6b",
+                color: "var(--charcoal-soft)",
                 background: "transparent",
-                fontFamily: "'Manrope', sans-serif",
+                fontFamily: "var(--font-body)",
               }}
               onMouseEnter={(e) => {
                 const el = e.currentTarget as HTMLElement;
                 el.style.borderColor = "rgba(200,16,46,0.3)";
-                el.style.color = "#c8102e";
+                el.style.color = "var(--red)";
               }}
               onMouseLeave={(e) => {
                 const el = e.currentTarget as HTMLElement;
                 el.style.borderColor = "rgba(51,51,51,0.12)";
-                el.style.color = "#6b6b6b";
+                el.style.color = "var(--charcoal-soft)";
               }}
             >
               + Add New Address
@@ -499,14 +499,14 @@ export default function ProfilePage() {
             onClick={() => logout()}
             className="text-sm font-semibold transition-colors"
             style={{
-              color: "#6b6b6b",
-              fontFamily: "'Manrope', sans-serif",
+              color: "var(--charcoal-soft)",
+              fontFamily: "var(--font-body)",
               background: "none",
               border: "none",
               cursor: "pointer",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#c8102e")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#6b6b6b")}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--red)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--charcoal-soft)")}
           >
             Log Out
           </button>

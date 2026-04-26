@@ -101,8 +101,8 @@ export default function AdminAnalyticsPage() {
 
   // Pie chart uses hardcoded split since overview has no per-source breakdown
   const sourceData = [
-    { name: "Marketplace", value: 68, color: "#3b82f6" },
-    { name: "E-Store", value: 32, color: "#10b981" },
+    { name: "Marketplace", value: 68, color: "var(--chart-2)" },
+    { name: "E-Store", value: 32, color: "var(--chart-3)" },
   ];
 
   return (

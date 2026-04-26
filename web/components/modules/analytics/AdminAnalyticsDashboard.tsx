@@ -42,25 +42,25 @@ export default function AdminAnalyticsDashboard() {
                 label: "Toplam GMV",
                 value: overview ? formatPrice(overview.totalGmv) : "—",
                 icon: "💰",
-                color: "#2D7A4F",
+                color: "var(--chart-3)",
               },
               {
                 label: "Total Orders",
                 value: overview?.totalOrders ?? "—",
                 icon: "🛒",
-                color: "#1A4A6B",
+                color: "var(--charcoal-mid)",
               },
               {
                 label: "Merchant Count",
                 value: overview?.totalMerchants ?? "—",
                 icon: "🏪",
-                color: "#C84B2F",
+                color: "var(--red)",
               },
               {
                 label: "Customer Count",
                 value: overview?.totalCustomers ?? "—",
                 icon: "👥",
-                color: "#8B5E1A",
+                color: "var(--chart-4)",
               },
               {
                 label: "Ort. Teslimat",
@@ -68,7 +68,7 @@ export default function AdminAnalyticsDashboard() {
                   ? `${Math.round(overview.averageDeliveryHours)}s`
                   : "—",
                 icon: "🚚",
-                color: "#1A4A6B",
+                color: "var(--charcoal-mid)",
               },
               {
                 label: "Fulfillment Başarı",
@@ -76,7 +76,7 @@ export default function AdminAnalyticsDashboard() {
                   ? formatPercent(overview.fulfillmentSuccessRate)
                   : "—",
                 icon: "✅",
-                color: "#2D7A4F",
+                color: "var(--chart-3)",
               },
             ].map(({ label, value, icon, color }) => (
               <div
@@ -85,11 +85,11 @@ export default function AdminAnalyticsDashboard() {
               >
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xl">{icon}</span>
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-[#7A7060]">
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--charcoal-soft)]">
                     {label}
                   </p>
                 </div>
-                <p className="text-2xl font-bold font-serif" style={{ color }}>
+                <p className="text-2xl font-bold font-heading" style={{ color }}>
                   {value}
                 </p>
               </div>
@@ -100,8 +100,8 @@ export default function AdminAnalyticsDashboard() {
       <div className="bg-white border border-gray-200 rounded-xl p-5">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h3 className="font-semibold text-[#0D0D0D]">Platform Geliri</h3>
-            <p className="text-xs text-[#7A7060] font-mono">
+            <h3 className="font-semibold text-[var(--charcoal)]">Platform Geliri</h3>
+            <p className="text-xs text-[var(--charcoal-soft)] font-mono">
               Tüm mağazalar geneli
             </p>
           </div>
@@ -112,8 +112,8 @@ export default function AdminAnalyticsDashboard() {
                 onClick={() => setPeriod(p)}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                   period === p
-                    ? "bg-white text-[#0D0D0D] shadow-sm"
-                    : "text-[#7A7060] hover:text-[#0D0D0D]"
+                    ? "bg-white text-[var(--charcoal)] shadow-sm"
+                    : "text-[var(--charcoal-soft)] hover:text-[var(--charcoal)]"
                 }`}
               >
                 {p === "daily"
@@ -134,15 +134,15 @@ export default function AdminAnalyticsDashboard() {
               data={revenue?.salesChart ?? []}
               margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#F0EDE5" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 10, fill: "#7A7060" }}
+                tick={{ fontSize: 10, fill: "var(--charcoal-soft)" }}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
-                tick={{ fontSize: 10, fill: "#7A7060" }}
+                tick={{ fontSize: 10, fill: "var(--charcoal-soft)" }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v) => formatCompactNumber(v)}
@@ -150,13 +150,13 @@ export default function AdminAnalyticsDashboard() {
               <Tooltip
                 contentStyle={{
                   borderRadius: "12px",
-                  border: "1px solid #E5E0D8",
+                  border: "1px solid var(--border-light)",
                   fontSize: 12,
                 }}
                 formatter={(val: any) => [formatPrice(val), "Gelir"]}
               />
 
-              <Bar dataKey="revenue" fill="#1A4A6B" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="revenue" fill="var(--charcoal-mid)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -165,10 +165,10 @@ export default function AdminAnalyticsDashboard() {
       {/* Fulfillment Stats */}
       {!fulfillmentLoading && fulfillment && (
         <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-[#0D0D0D] mb-1">
+          <h3 className="font-semibold text-[var(--charcoal)] mb-1">
             Fulfillment Performansı
           </h3>
-          <p className="text-xs text-[#7A7060] font-mono mb-5">
+          <p className="text-xs text-[var(--charcoal-soft)] font-mono mb-5">
             Ortalama teslimat, başarı oranı
           </p>
           <div className="grid grid-cols-3 gap-4">
@@ -191,10 +191,10 @@ export default function AdminAnalyticsDashboard() {
             ].map(({ label, value, icon }) => (
               <div key={label} className="text-center p-4  rounded-xl">
                 <div className="text-2xl mb-1">{icon}</div>
-                <p className="text-xl font-bold font-serif text-[#0D0D0D]">
+                <p className="text-xl font-bold font-heading text-[var(--charcoal)]">
                   {value}
                 </p>
-                <p className="text-xs text-[#7A7060] mt-0.5 font-mono">
+                <p className="text-xs text-[var(--charcoal-soft)] mt-0.5 font-mono">
                   {label}
                 </p>
               </div>

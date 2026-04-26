@@ -47,22 +47,22 @@ export default function TrackingTimeline({
   return (
     <div className="space-y-6">
       {/* Tracking No + ETA */}
-      <div className="bg-[#0D0D0D] rounded-2xl p-5 text-[#F5F2EB]">
+      <div className="bg-[var(--charcoal)] rounded-2xl p-5 text-[var(--off-white)]">
         <div className="flex items-start justify-between">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[3px] text-[#7A7060] mb-1">
+            <p className="font-mono text-[10px] uppercase tracking-[3px] text-[var(--charcoal-soft)] mb-1">
               Takip Numarası
             </p>
-            <p className="font-mono text-lg font-bold tracking-widest text-[#F5F2EB]">
+            <p className="font-mono text-lg font-bold tracking-widest text-[var(--off-white)]">
               {trackingNumber}
             </p>
           </div>
           {(estimatedDeliveryStart || estimatedDeliveryEnd) && !isFailed && (
             <div className="text-right">
-              <p className="font-mono text-[10px] uppercase tracking-[3px] text-[#7A7060] mb-1">
+              <p className="font-mono text-[10px] uppercase tracking-[3px] text-[var(--charcoal-soft)] mb-1">
                 Tahmini Teslim
               </p>
-              <p className="text-sm font-semibold text-[#2D7A4F]">
+              <p className="text-sm font-semibold text-[var(--chart-3)]">
                 {estimatedDeliveryStart &&
                   new Date(estimatedDeliveryStart).toLocaleDateString("tr-TR", {
                     day: "numeric",
@@ -77,36 +77,36 @@ export default function TrackingTimeline({
       {/* Courier Info */}
       {courierName && (
         <div className="flex items-center gap-4 bg-white border border-gray-200 rounded-2xl p-4">
-          <div className="w-12 h-12 rounded-full bg-[#1A4A6B]/10 flex items-center justify-center text-xl">
+          <div className="w-12 h-12 rounded-full bg-[var(--charcoal-mid)]/10 flex items-center justify-center text-xl">
             🚴
           </div>
           <div className="flex-1">
-            <p className="font-semibold text-[#0D0D0D]">{courierName}</p>
+            <p className="font-semibold text-[var(--charcoal)]">{courierName}</p>
             <div className="flex items-center gap-3 mt-0.5">
               {courierPhone && (
                 <a
                   href={`tel:${courierPhone}`}
-                  className="text-xs text-[#1A4A6B] font-mono hover:underline"
+                  className="text-xs text-[var(--charcoal-mid)] font-mono hover:underline"
                 >
                   {courierPhone}
                 </a>
               )}
               {courierVehicle && (
-                <span className="text-xs text-[#7A7060]">
+                <span className="text-xs text-[var(--charcoal-soft)]">
                   · {courierVehicle}
                 </span>
               )}
             </div>
           </div>
           <div className="text-right">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-[#7A7060]">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--charcoal-soft)]">
               Kurye
             </p>
             <p
               className={`text-xs font-medium mt-0.5 ${
                 currentStatus === "DELIVERED"
-                  ? "text-[#2D7A4F]"
-                  : "text-[#C84B2F]"
+                  ? "text-[var(--chart-3)]"
+                  : "text-[var(--red)]"
               }`}
             >
               {STATUS_ICONS[currentStatus]}{" "}
@@ -118,7 +118,7 @@ export default function TrackingTimeline({
 
       {/* Timeline Steps */}
       <div className="bg-white border border-gray-200 rounded-2xl p-5">
-        <p className="font-mono text-[10px] uppercase tracking-[3px] text-[#7A7060] mb-5">
+        <p className="font-mono text-[10px] uppercase tracking-[3px] text-[var(--charcoal-soft)] mb-5">
           Sipariş Durumu
         </p>
 
@@ -140,9 +140,9 @@ export default function TrackingTimeline({
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0 border-2 transition-all ${
                         isCurrent
-                          ? "border-[#C84B2F] bg-[#C84B2F] text-white shadow-lg shadow-[#C84B2F]/20 scale-110"
+                          ? "border-[var(--red)] bg-[var(--red)] text-white shadow-lg shadow-[var(--red)]/20 scale-110"
                           : isDone
-                            ? "border-[#2D7A4F] bg-[#2D7A4F] text-white"
+                            ? "border-[var(--chart-3)] bg-[var(--chart-3)] text-white"
                             : "border-gray-200 bg-gray-50 text-gray-300"
                       }`}
                     >
@@ -152,7 +152,7 @@ export default function TrackingTimeline({
                       <div
                         className={`w-0.5 h-10 mt-1 rounded-full transition-colors ${
                           isDone && currentIdx > idx
-                            ? "bg-[#2D7A4F]"
+                            ? "bg-[var(--chart-3)]"
                             : "bg-gray-100"
                         }`}
                       />
@@ -164,9 +164,9 @@ export default function TrackingTimeline({
                     <p
                       className={`text-sm font-semibold ${
                         isCurrent
-                          ? "text-[#C84B2F]"
+                          ? "text-[var(--red)]"
                           : isDone
-                            ? "text-[#0D0D0D]"
+                            ? "text-[var(--charcoal)]"
                             : "text-gray-300"
                       }`}
                     >
@@ -174,16 +174,16 @@ export default function TrackingTimeline({
                     </p>
                     {event ? (
                       <div className="mt-0.5">
-                        <p className="text-xs text-[#7A7060]">
+                        <p className="text-xs text-[var(--charcoal-soft)]">
                           {formatDateTime(event.createdAt)}
                         </p>
                         {event.note && (
-                          <p className="text-xs text-[#7A7060] mt-0.5">
+                          <p className="text-xs text-[var(--charcoal-soft)] mt-0.5">
                             {event.note}
                           </p>
                         )}
                         {event.location && (
-                          <p className="text-xs text-[#1A4A6B] mt-0.5 font-mono">
+                          <p className="text-xs text-[var(--charcoal-mid)] mt-0.5 font-mono">
                             📍 {event.location}
                           </p>
                         )}
@@ -207,7 +207,7 @@ export default function TrackingTimeline({
                 <p className="text-sm font-semibold text-red-500">
                   Teslimat Başarısız
                 </p>
-                <p className="text-xs text-[#7A7060] mt-0.5">
+                <p className="text-xs text-[var(--charcoal-soft)] mt-0.5">
                   {events.find((e) => e.status === "FAILED")?.note ??
                     "Teslimat gerçekleştirilemedi."}
                 </p>

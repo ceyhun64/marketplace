@@ -15,7 +15,7 @@ interface Props {
 const chartConfig = {
   gelir: {
     label: "Gelir",
-    color: "#3b82f6",
+    color: "var(--chart-2)",
   },
 } satisfies ChartConfig;
 
@@ -42,7 +42,7 @@ export default function RevenueChart({ data }: Props) {
         <Line
           type="monotone"
           dataKey="gelir"
-          stroke="#3b82f6"
+          stroke="var(--chart-2)"
           strokeWidth={2}
           dot={false}
         />

@@ -30,7 +30,7 @@ export default function CourierShipmentList() {
       <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
         <div className="text-4xl mb-3">🚴</div>
         <p className="text-sm font-medium text-gray-700">No assigned packages</p>
-        <p className="text-xs text-[#7A7060] mt-1">
+        <p className="text-xs text-[var(--charcoal-soft)] mt-1">
           New assignments will appear here.
         </p>
       </div>
@@ -49,7 +49,7 @@ export default function CourierShipmentList() {
       {/* Aktif paketler */}
       {active.length > 0 && (
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[3px] text-[#7A7060] mb-3">
+          <p className="font-mono text-[10px] uppercase tracking-[3px] text-[var(--charcoal-soft)] mb-3">
             Active Packages ({active.length})
           </p>
           <div className="space-y-3">
@@ -61,7 +61,7 @@ export default function CourierShipmentList() {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-[#1A4A6B]">
+                      <span className="font-mono text-xs font-bold text-[var(--charcoal-mid)]">
                         {shipment.trackingNumber}
                       </span>
                       <span
@@ -72,7 +72,7 @@ export default function CourierShipmentList() {
                     </div>
                     {shipment.estimatedDeliveryStart &&
                       shipment.estimatedDeliveryEnd && (
-                        <p className="text-xs text-[#7A7060] mt-1 font-mono">
+                        <p className="text-xs text-[var(--charcoal-soft)] mt-1 font-mono">
                           📅{" "}
                           {formatEtaWindow(
                             shipment.estimatedDeliveryStart,
@@ -83,7 +83,7 @@ export default function CourierShipmentList() {
                   </div>
                   <Link
                     href={`/courier/shipments/${shipment.id}`}
-                    className="text-xs text-[#1A4A6B] hover:underline font-medium"
+                    className="text-xs text-[var(--charcoal-mid)] hover:underline font-medium"
                   >
                     Details →
                   </Link>
@@ -95,7 +95,7 @@ export default function CourierShipmentList() {
                     href={shipment.labelUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-[#7A7060] hover:text-[#0D0D0D] border border-gray-200 rounded-lg px-3 py-1.5 mb-3 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs text-[var(--charcoal-soft)] hover:text-[var(--charcoal)] border border-gray-200 rounded-lg px-3 py-1.5 mb-3 transition-colors"
                   >
                     🏷️ View / Print Label
                   </a>
@@ -107,7 +107,7 @@ export default function CourierShipmentList() {
                     <button
                       onClick={() => pickupMutation.mutate(shipment.id)}
                       disabled={pickupMutation.isPending}
-                      className="flex-1 bg-[#1A4A6B] text-white rounded-lg py-2 text-xs font-medium hover:bg-[#1A4A6B]/80 disabled:opacity-50 transition-colors"
+                      className="flex-1 bg-[var(--charcoal-mid)] text-white rounded-lg py-2 text-xs font-medium hover:bg-[var(--charcoal-mid)]/80 disabled:opacity-50 transition-colors"
                     >
                       {pickupMutation.isPending ? "..." : "📦 Picked Up"}
                     </button>
@@ -118,7 +118,7 @@ export default function CourierShipmentList() {
                     <button
                       onClick={() => deliveryMutation.mutate(shipment.id)}
                       disabled={deliveryMutation.isPending}
-                      className="flex-1 bg-[#2D7A4F] text-white rounded-lg py-2 text-xs font-medium hover:bg-[#2D7A4F]/80 disabled:opacity-50 transition-colors"
+                      className="flex-1 bg-[var(--chart-3)] text-white rounded-lg py-2 text-xs font-medium hover:bg-[var(--chart-3)]/80 disabled:opacity-50 transition-colors"
                     >
                       {deliveryMutation.isPending ? "..." : "✅ Delivered"}
                     </button>
@@ -133,7 +133,7 @@ export default function CourierShipmentList() {
       {/* Completed paketler */}
       {completed.length > 0 && (
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[3px] text-[#7A7060] mb-3">
+          <p className="font-mono text-[10px] uppercase tracking-[3px] text-[var(--charcoal-soft)] mb-3">
             Completed ({completed.length})
           </p>
           <div className="space-y-2">
@@ -143,11 +143,11 @@ export default function CourierShipmentList() {
                 className="bg-gray-50 border border-gray-100 rounded-xl p-4 flex items-center justify-between"
               >
                 <div>
-                  <span className="font-mono text-xs font-bold text-[#7A7060]">
+                  <span className="font-mono text-xs font-bold text-[var(--charcoal-soft)]">
                     {shipment.trackingNumber}
                   </span>
                   {shipment.actualDeliveredAt && (
-                    <p className="text-xs text-[#7A7060] mt-0.5">
+                    <p className="text-xs text-[var(--charcoal-soft)] mt-0.5">
                       {formatDateTime(shipment.actualDeliveredAt)}
                     </p>
                   )}

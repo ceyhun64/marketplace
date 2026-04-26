@@ -21,8 +21,8 @@ export default function CartSummary({ readonly }: Props) {
     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
       {/* Header */}
       <div className="px-5 py-4 border-b border-gray-100">
-        <h3 className="font-semibold text-[#0D0D0D]">Order Summary</h3>
-        <p className="font-mono text-xs text-[#7A7060] mt-0.5">
+        <h3 className="font-semibold text-[var(--charcoal)]">Order Summary</h3>
+        <p className="font-mono text-xs text-[var(--charcoal-soft)] mt-0.5">
           {summary.itemCount} items
         </p>
       </div>
@@ -48,10 +48,10 @@ export default function CartSummary({ readonly }: Props) {
 
             {/* Bilgi */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[#0D0D0D] truncate">
+              <p className="text-sm font-medium text-[var(--charcoal)] truncate">
                 {item.productName}
               </p>
-              <p className="font-mono text-[10px] text-[#7A7060] truncate">
+              <p className="font-mono text-[10px] text-[var(--charcoal-soft)] truncate">
                 {item.merchantStoreName}
               </p>
 
@@ -79,11 +79,11 @@ export default function CartSummary({ readonly }: Props) {
                     </button>
                   </div>
                 ) : (
-                  <span className="text-xs text-[#7A7060]">
+                  <span className="text-xs text-[var(--charcoal-soft)]">
                     {item.quantity} adet
                   </span>
                 )}
-                <span className="font-serif font-semibold text-sm text-[#0D0D0D]">
+                <span className="font-heading font-semibold text-sm text-[var(--charcoal)]">
                   {formatPrice(item.price * item.quantity)}
                 </span>
               </div>
@@ -103,21 +103,21 @@ export default function CartSummary({ readonly }: Props) {
 
       {/* Fiyat Özeti */}
       <div className="px-5 py-4 border-t border-gray-100 space-y-2">
-        <div className="flex justify-between text-sm text-[#7A7060]">
+        <div className="flex justify-between text-sm text-[var(--charcoal-soft)]">
           <span>Ara toplam</span>
           <span>{formatPrice(summary.subtotal)}</span>
         </div>
-        <div className="flex justify-between text-sm text-[#7A7060]">
+        <div className="flex justify-between text-sm text-[var(--charcoal-soft)]">
           <span>KDV (%20)</span>
           <span>{formatPrice(vatAmount)}</span>
         </div>
-        <div className="flex justify-between text-sm text-[#7A7060]">
+        <div className="flex justify-between text-sm text-[var(--charcoal-soft)]">
           <span>Kargo ({SHIPPING_RATE_LABELS[summary.shippingRate]})</span>
           <span>{formatPrice(summary.shipping)}</span>
         </div>
-        <div className="flex justify-between text-base font-semibold text-[#0D0D0D] pt-2 border-t border-gray-100">
-          <span className="font-serif">Toplam</span>
-          <span className="font-serif text-[#C84B2F]">
+        <div className="flex justify-between text-base font-semibold text-[var(--charcoal)] pt-2 border-t border-gray-100">
+          <span className="font-heading">Toplam</span>
+          <span className="font-heading text-[var(--red)]">
             {formatPrice(summary.total + vatAmount)}
           </span>
         </div>

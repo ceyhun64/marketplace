@@ -14,11 +14,11 @@ type SalesData = { gun: string; marketplace: number; estore: number };
 const chartConfig = {
   marketplace: {
     label: "Marketplace",
-    color: "#3b82f6",
+    color: "var(--chart-2)",
   },
   estore: {
     label: "E-Store",
-    color: "#10b981",
+    color: "var(--chart-3)",
   },
 } satisfies ChartConfig;
 
@@ -28,12 +28,12 @@ export default function MerchantSalesChart({ data }: { data: SalesData[] }) {
       <AreaChart data={data}>
         <defs>
           <linearGradient id="mktGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15} />
-            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+            <stop offset="5%" stopColor="var(--chart-2)" stopOpacity={0.15} />
+            <stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0} />
           </linearGradient>
           <linearGradient id="storeGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#10b981" stopOpacity={0.15} />
-            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+            <stop offset="5%" stopColor="var(--chart-3)" stopOpacity={0.15} />
+            <stop offset="95%" stopColor="var(--chart-3)" stopOpacity={0} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -55,14 +55,14 @@ export default function MerchantSalesChart({ data }: { data: SalesData[] }) {
         <Area
           type="monotone"
           dataKey="marketplace"
-          stroke="#3b82f6"
+          stroke="var(--chart-2)"
           fill="url(#mktGrad)"
           strokeWidth={2}
         />
         <Area
           type="monotone"
           dataKey="estore"
-          stroke="#10b981"
+          stroke="var(--chart-3)"
           fill="url(#storeGrad)"
           strokeWidth={2}
         />

@@ -80,16 +80,16 @@ export default function ETADisplay({
 
   return (
     <div className="space-y-3">
-      <p className="text-xs font-mono uppercase tracking-[3px] text-[#7A7060]">
+      <p className="text-xs font-mono uppercase tracking-[3px] text-[var(--charcoal-soft)]">
         Shipping Option
       </p>
 
       {/* Distance info */}
-      <div className="flex items-center gap-2 text-xs text-[#7A7060]">
+      <div className="flex items-center gap-2 text-xs text-[var(--charcoal-soft)]">
         <span>🗺️</span>
         <span>
           Tahmini mesafe:{" "}
-          <strong className="text-[#0D0D0D]">
+          <strong className="text-[var(--charcoal)]">
             {serverEta?.distanceKm ?? expressEta.distanceKm} km
           </strong>
         </span>
@@ -114,7 +114,7 @@ export default function ETADisplay({
             onClick={() => onSelectRate(rate)}
             className={`w-full p-4 rounded-xl border text-left transition-all ${
               isSelected
-                ? "border-[#C84B2F] bg-[#C84B2F]/5 shadow-sm"
+                ? "border-[var(--red)] bg-[var(--red)]/5 shadow-sm"
                 : "border-gray-200 hover:border-gray-300 bg-white"
             }`}
           >
@@ -123,25 +123,25 @@ export default function ETADisplay({
                 {/* Radio */}
                 <div
                   className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                    isSelected ? "border-[#C84B2F]" : "border-gray-300"
+                    isSelected ? "border-[var(--red)]" : "border-gray-300"
                   }`}
                 >
                   {isSelected && (
-                    <div className="w-2 h-2 rounded-full bg-[#C84B2F]" />
+                    <div className="w-2 h-2 rounded-full bg-[var(--red)]" />
                   )}
                 </div>
 
                 <div>
                   <p
-                    className={`text-sm font-semibold ${isSelected ? "text-[#C84B2F]" : "text-[#0D0D0D]"}`}
+                    className={`text-sm font-semibold ${isSelected ? "text-[var(--red)]" : "text-[var(--charcoal)]"}`}
                   >
                     {label}
                   </p>
-                  <p className="text-xs text-[#7A7060] mt-0.5">{description}</p>
-                  <p className="text-xs font-mono text-[#2D7A4F] mt-1">
+                  <p className="text-xs text-[var(--charcoal-soft)] mt-0.5">{description}</p>
+                  <p className="text-xs font-mono text-[var(--chart-3)] mt-1">
                     📅 {getEtaLabel(rate, eta.totalHours)}
                   </p>
-                  <p className="text-[11px] text-[#7A7060] mt-0.5 font-mono">
+                  <p className="text-[11px] text-[var(--charcoal-soft)] mt-0.5 font-mono">
                     {deliveryWindow}
                   </p>
                 </div>
@@ -149,7 +149,7 @@ export default function ETADisplay({
 
               {/* Price */}
               <div className="text-right shrink-0">
-                <p className="font-semibold font-serif text-[#0D0D0D]">
+                <p className="font-semibold font-heading text-[var(--charcoal)]">
                   {formatPrice(SHIPPING_COSTS[rate])}
                 </p>
               </div>

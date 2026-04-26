@@ -78,28 +78,28 @@ export default function WishlistPage() {
         {/* Header */}
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-2">
-            <Heart className="w-7 h-7 text-[#C84B2F]" fill="currentColor" />
-            <h1 className="text-4xl font-serif font-bold text-[#0D0D0D]">
+            <Heart className="w-7 h-7 text-[var(--red)]" fill="currentColor" />
+            <h1 className="text-4xl font-heading font-bold text-[var(--charcoal)]">
               Wishlist
             </h1>
           </div>
-          <p className="text-[#7A7060]">
+          <p className="text-[var(--charcoal-soft)]">
             {wishlist.length} saved item{wishlist.length !== 1 ? "s" : ""}
           </p>
         </div>
 
         {wishlist.length === 0 ? (
           <div className="bg-white rounded-3xl p-16 text-center shadow-sm border border-black/5">
-            <Heart className="w-16 h-16 text-[#0D0D0D]/10 mx-auto mb-6" />
-            <h2 className="text-2xl font-serif font-bold text-[#0D0D0D] mb-3">
+            <Heart className="w-16 h-16 text-[var(--charcoal)]/10 mx-auto mb-6" />
+            <h2 className="text-2xl font-heading font-bold text-[var(--charcoal)] mb-3">
               Your wishlist is empty
             </h2>
-            <p className="text-[#7A7060] mb-8 max-w-sm mx-auto">
+            <p className="text-[var(--charcoal-soft)] mb-8 max-w-sm mx-auto">
               Save your favorite products here to easily find them later.
             </p>
             <Button
               asChild
-              className="rounded-full bg-[#0D0D0D] hover:bg-[#C84B2F] text-white font-bold px-8 h-12"
+              className="rounded-full bg-[var(--charcoal)] hover:bg-[var(--red)] text-white font-bold px-8 h-12"
             >
               <Link href="/products">Discover Products</Link>
             </Button>
@@ -120,11 +120,11 @@ export default function WishlistPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <ShoppingBag className="w-12 h-12 text-[#0D0D0D]/20" />
+                    <ShoppingBag className="w-12 h-12 text-[var(--charcoal)]/20" />
                   )}
                   <button
                     onClick={() => removeFromWishlist(item.id)}
-                    className="absolute top-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-[#C84B2F] shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:bg-[#C84B2F] hover:text-white"
+                    className="absolute top-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-[var(--red)] shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:bg-[var(--red)] hover:text-white"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -134,29 +134,29 @@ export default function WishlistPage() {
                 <div className="p-5">
                   <Link
                     href={`/store/${item.merchantSlug}`}
-                    className="text-xs font-mono text-[#1A4A6B] font-bold uppercase tracking-wider hover:underline"
+                    className="text-xs font-mono text-[var(--charcoal-mid)] font-bold uppercase tracking-wider hover:underline"
                   >
                     {item.merchantStoreName}
                   </Link>
-                  <h3 className="font-bold text-[#0D0D0D] mt-1 mb-3 leading-tight">
+                  <h3 className="font-bold text-[var(--charcoal)] mt-1 mb-3 leading-tight">
                     {item.productName}
                   </h3>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-xl font-bold font-serif text-[#0D0D0D]">
+                    <span className="text-xl font-bold font-heading text-[var(--charcoal)]">
                       ₺{item.price.toFixed(2)}
                     </span>
                     <Button
                       onClick={() => handleAddToCart(item)}
                       disabled={hasItem(item.offerId)}
-                      className="rounded-full bg-[#0D0D0D] hover:bg-[#C84B2F] text-white text-xs font-bold px-5 h-9 transition-all disabled:opacity-60"
+                      className="rounded-full bg-[var(--charcoal)] hover:bg-[var(--red)] text-white text-xs font-bold px-5 h-9 transition-all disabled:opacity-60"
                     >
                       {hasItem(item.offerId) ? "In Cart ✓" : "Add to Cart"}
                     </Button>
                   </div>
 
                   {item.stock <= 3 && (
-                    <p className="text-xs text-[#C84B2F] font-semibold mt-2">
+                    <p className="text-xs text-[var(--red)] font-semibold mt-2">
                       Only {item.stock} left!
                     </p>
                   )}
@@ -170,7 +170,7 @@ export default function WishlistPage() {
           <div className="mt-8 flex justify-end">
             <Link
               href="/cart"
-              className="inline-flex items-center gap-2 text-sm font-bold text-[#0D0D0D] hover:text-[#C84B2F] transition-colors"
+              className="inline-flex items-center gap-2 text-sm font-bold text-[var(--charcoal)] hover:text-[var(--red)] transition-colors"
             >
               View Cart
               <ArrowRight className="w-4 h-4" />

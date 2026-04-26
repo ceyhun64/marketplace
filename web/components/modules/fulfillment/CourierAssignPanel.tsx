@@ -57,8 +57,8 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div>
-            <h2 className="text-lg font-semibold text-[#0D0D0D]">Kurye Ata</h2>
-            <p className="font-mono text-xs text-[#7A7060] mt-0.5">
+            <h2 className="text-lg font-semibold text-[var(--charcoal)]">Kurye Ata</h2>
+            <p className="font-mono text-xs text-[var(--charcoal-soft)] mt-0.5">
               Tracking: {shipment.trackingNumber}
             </p>
           </div>
@@ -75,17 +75,17 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
           {!shipment.labelUrl && (
             <div className=" rounded-xl p-4 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-[#0D0D0D]">
+                <p className="text-sm font-medium text-[var(--charcoal)]">
                   Kargo Labeli
                 </p>
-                <p className="text-xs text-[#7A7060] mt-0.5">
+                <p className="text-xs text-[var(--charcoal-soft)] mt-0.5">
                   Generate QR-coded PDF label
                 </p>
               </div>
               <button
                 onClick={handleGenerateLabel}
                 disabled={labelMutation.isPending}
-                className="text-xs bg-[#0D0D0D] text-[#F5F2EB] px-4 py-2 rounded-lg hover:bg-[#1A4A6B] disabled:opacity-50 transition-colors font-medium"
+                className="text-xs bg-[var(--charcoal)] text-[var(--off-white)] px-4 py-2 rounded-lg hover:bg-[var(--charcoal-mid)] disabled:opacity-50 transition-colors font-medium"
               >
                 {labelMutation.isPending
                   ? "Generating..."
@@ -117,9 +117,9 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
 
           {/* Kurye Listesi */}
           <div>
-            <p className="text-sm font-medium text-[#0D0D0D] mb-3">
+            <p className="text-sm font-medium text-[var(--charcoal)] mb-3">
               Available Couriers
-              <span className="ml-2 font-mono text-[10px] text-[#7A7060]">
+              <span className="ml-2 font-mono text-[10px] text-[var(--charcoal-soft)]">
                 ({availableCouriers.length} available)
               </span>
             </p>
@@ -131,7 +131,7 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
                 ))}
               </div>
             ) : availableCouriers.length === 0 ? (
-              <div className="text-center py-6 text-sm text-[#7A7060]">
+              <div className="text-center py-6 text-sm text-[var(--charcoal-soft)]">
                 No couriers available right now.
               </div>
             ) : (
@@ -142,19 +142,19 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
                     onClick={() => setSelectedCourierId(courier.id)}
                     className={`w-full p-3 rounded-xl border text-left transition-all ${
                       selectedCourierId === courier.id
-                        ? "border-[#1A4A6B] bg-[#1A4A6B]/5"
+                        ? "border-[var(--charcoal-mid)] bg-[var(--charcoal-mid)]/5"
                         : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-[#1A4A6B]/10 flex items-center justify-center text-base">
+                      <div className="w-9 h-9 rounded-full bg-[var(--charcoal-mid)]/10 flex items-center justify-center text-base">
                         🚴
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-[#0D0D0D]">
+                        <p className="font-medium text-sm text-[var(--charcoal)]">
                           {courier.fullName}
                         </p>
-                        <p className="text-xs text-[#7A7060] font-mono">
+                        <p className="text-xs text-[var(--charcoal-soft)] font-mono">
                           {courier.vehicleType ?? "Araç belirtilmemiş"}
                           {courier.vehiclePlate
                             ? ` · ${courier.vehiclePlate}`
@@ -162,7 +162,7 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
                         </p>
                       </div>
                       {selectedCourierId === courier.id && (
-                        <span className="text-[#1A4A6B] text-sm">✓</span>
+                        <span className="text-[var(--charcoal-mid)] text-sm">✓</span>
                       )}
                     </div>
                   </button>
@@ -189,7 +189,7 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
           <button
             onClick={handleAssign}
             disabled={!selectedCourierId || assignMutation.isPending}
-            className="flex-1 bg-[#1A4A6B] text-white rounded-xl py-2.5 text-sm font-medium hover:bg-[#1A4A6B]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 bg-[var(--charcoal-mid)] text-white rounded-xl py-2.5 text-sm font-medium hover:bg-[var(--charcoal-mid)]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {assignMutation.isPending ? "Atanıyor..." : "Assign Courier"}
           </button>

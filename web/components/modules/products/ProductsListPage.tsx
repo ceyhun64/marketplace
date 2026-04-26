@@ -40,12 +40,12 @@ function ProductCard({ product }: { product: Product }) {
       {/* Red accent top */}
       <div
         className="h-[3px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
-        style={{ background: "#c8102e" }}
+        style={{ background: "var(--red)" }}
       />
       {/* Image */}
       <div
         className="aspect-square overflow-hidden"
-        style={{ background: "#f5f5f3" }}
+        style={{ background: "var(--off-white)" }}
       >
         {product.images?.[0] ? (
           <img
@@ -67,26 +67,26 @@ function ProductCard({ product }: { product: Product }) {
         {product.merchantStoreName && (
           <p
             className="font-mono text-[10px] uppercase tracking-[0.12em] mb-1 truncate"
-            style={{ color: "#c8102e" }}
+            style={{ color: "var(--red)" }}
           >
             {product.merchantStoreName}
           </p>
         )}
         <h3
-          className="font-bold text-[14px] leading-snug mb-2 line-clamp-2 text-[#333333] group-hover:text-[#c8102e] transition-colors"
-          style={{ fontFamily: "'Manrope', sans-serif" }}
+          className="font-bold text-[14px] leading-snug mb-2 line-clamp-2 text-[var(--charcoal)] group-hover:text-[var(--red)] transition-colors"
+          style={{ fontFamily: "var(--font-body)" }}
         >
           {product.name}
         </h3>
         {product.categoryName && (
-          <p className="font-mono text-[11px] text-[#6b6b6b] mb-3 uppercase tracking-[0.08em]">
+          <p className="font-mono text-[11px] text-[var(--charcoal-soft)] mb-3 uppercase tracking-[0.08em]">
             {product.categoryName}
           </p>
         )}
         <div className="flex items-center justify-between">
           <span
-            className="text-[18px] font-bold text-[#333333]"
-            style={{ fontFamily: "'Cormorant Garamond', serif" }}
+            className="text-[18px] font-bold text-[var(--charcoal)]"
+            style={{ fontFamily: "var(--font-display)" }}
           >
             ₺{product.price.toFixed(2)}
           </span>
@@ -94,7 +94,7 @@ function ProductCard({ product }: { product: Product }) {
             <span
               className="font-mono text-[10px] font-medium px-2 py-0.5 rounded-full"
               style={{
-                color: "#c8102e",
+                color: "var(--red)",
                 background: "rgba(200,16,46,0.08)",
                 letterSpacing: "0.05em",
               }}
@@ -143,7 +143,7 @@ function FilterSidebar({
       <div>
         <h3
           className="font-mono text-[11px] uppercase tracking-[0.15em] mb-3"
-          style={{ color: "#6b6b6b" }}
+          style={{ color: "var(--charcoal-soft)" }}
         >
           Category
         </h3>
@@ -153,9 +153,9 @@ function FilterSidebar({
               onClick={() => onFilterChange("category", undefined)}
               className="w-full text-left text-[13px] px-3 py-2 rounded-lg transition-colors"
               style={{
-                background: !filters.category ? "#333333" : "transparent",
-                color: !filters.category ? "#fff" : "#6b6b6b",
-                fontFamily: "'Manrope', sans-serif",
+                background: !filters.category ? "var(--charcoal)" : "transparent",
+                color: !filters.category ? "#fff" : "var(--charcoal-soft)",
+                fontFamily: "var(--font-body)",
                 fontWeight: !filters.category ? 600 : 400,
               }}
             >
@@ -169,9 +169,9 @@ function FilterSidebar({
                 className="w-full text-left text-[13px] px-3 py-2 rounded-lg transition-colors"
                 style={{
                   background:
-                    filters.category === cat.slug ? "#333333" : "transparent",
-                  color: filters.category === cat.slug ? "#fff" : "#6b6b6b",
-                  fontFamily: "'Manrope', sans-serif",
+                    filters.category === cat.slug ? "var(--charcoal)" : "transparent",
+                  color: filters.category === cat.slug ? "#fff" : "var(--charcoal-soft)",
+                  fontFamily: "var(--font-body)",
                   fontWeight: filters.category === cat.slug ? 600 : 400,
                 }}
               >
@@ -190,7 +190,7 @@ function FilterSidebar({
       <div>
         <h3
           className="font-mono text-[11px] uppercase tracking-[0.15em] mb-3"
-          style={{ color: "#6b6b6b" }}
+          style={{ color: "var(--charcoal-soft)" }}
         >
           Price Range
         </h3>
@@ -208,20 +208,20 @@ function FilterSidebar({
             className="h-9 w-full text-sm rounded-lg px-3 outline-none"
             style={{
               border: "1.5px solid rgba(51,51,51,0.15)",
-              background: "#f5f5f3",
-              color: "#333333",
-              fontFamily: "'Manrope', sans-serif",
+              background: "var(--off-white)",
+              color: "var(--charcoal)",
+              fontFamily: "var(--font-body)",
             }}
             onFocus={(e) => {
-              e.currentTarget.style.borderColor = "#c8102e";
+              e.currentTarget.style.borderColor = "var(--red)";
               e.currentTarget.style.background = "#fff";
             }}
             onBlur={(e) => {
               e.currentTarget.style.borderColor = "rgba(51,51,51,0.15)";
-              e.currentTarget.style.background = "#f5f5f3";
+              e.currentTarget.style.background = "var(--off-white)";
             }}
           />
-          <span className="text-[#6b6b6b] text-sm flex-shrink-0">–</span>
+          <span className="text-[var(--charcoal-soft)] text-sm flex-shrink-0">–</span>
           <input
             type="number"
             placeholder="Max"
@@ -235,17 +235,17 @@ function FilterSidebar({
             className="h-9 w-full text-sm rounded-lg px-3 outline-none"
             style={{
               border: "1.5px solid rgba(51,51,51,0.15)",
-              background: "#f5f5f3",
-              color: "#333333",
-              fontFamily: "'Manrope', sans-serif",
+              background: "var(--off-white)",
+              color: "var(--charcoal)",
+              fontFamily: "var(--font-body)",
             }}
             onFocus={(e) => {
-              e.currentTarget.style.borderColor = "#c8102e";
+              e.currentTarget.style.borderColor = "var(--red)";
               e.currentTarget.style.background = "#fff";
             }}
             onBlur={(e) => {
               e.currentTarget.style.borderColor = "rgba(51,51,51,0.15)";
-              e.currentTarget.style.background = "#f5f5f3";
+              e.currentTarget.style.background = "var(--off-white)";
             }}
           />
         </div>
@@ -256,20 +256,20 @@ function FilterSidebar({
         className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all"
         style={{
           border: "1.5px solid rgba(51,51,51,0.15)",
-          color: "#333333",
+          color: "var(--charcoal)",
           background: "transparent",
-          fontFamily: "'Manrope', sans-serif",
+          fontFamily: "var(--font-body)",
           letterSpacing: "0.02em",
         }}
         onMouseEnter={(e) => {
           const el = e.currentTarget as HTMLElement;
-          el.style.background = "#333333";
+          el.style.background = "var(--charcoal)";
           el.style.color = "#fff";
         }}
         onMouseLeave={(e) => {
           const el = e.currentTarget as HTMLElement;
           el.style.background = "transparent";
-          el.style.color = "#333333";
+          el.style.color = "var(--charcoal)";
         }}
       >
         Reset Filters
@@ -329,11 +329,11 @@ export default function ProductsListPage() {
   ].filter(Boolean).length;
 
   return (
-    <main className="min-h-screen" style={{ background: "#f5f5f3" }}>
+    <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
       {/* Header */}
       <div
         style={{
-          background: "#333333",
+          background: "var(--charcoal)",
           padding: "3rem 1rem",
           position: "relative",
           overflow: "hidden",
@@ -347,7 +347,7 @@ export default function ProductsListPage() {
           <div className="flex items-center gap-3 mb-4">
             <span
               className="inline-block w-6 h-px"
-              style={{ background: "#c8102e" }}
+              style={{ background: "var(--red)" }}
             />
             <span
               className="font-mono text-[11px] tracking-[0.18em] uppercase"
@@ -359,11 +359,11 @@ export default function ProductsListPage() {
           <h1
             className="font-normal leading-tight mb-6 text-white"
             style={{
-              fontFamily: "'Cormorant Garamond', serif",
+              fontFamily: "var(--font-display)",
               fontSize: "clamp(2rem, 4vw, 3rem)",
             }}
           >
-            All <em style={{ color: "#c8102e" }}>Products</em>
+            All <em style={{ color: "var(--red)" }}>Products</em>
           </h1>
           <form onSubmit={handleSearch} className="flex gap-2 max-w-lg">
             <div className="relative flex-1">
@@ -379,10 +379,10 @@ export default function ProductsListPage() {
                 style={{
                   background: "rgba(255,255,255,0.08)",
                   border: "1.5px solid rgba(255,255,255,0.12)",
-                  fontFamily: "'Manrope', sans-serif",
+                  fontFamily: "var(--font-body)",
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "#c8102e";
+                  e.currentTarget.style.borderColor = "var(--red)";
                   e.currentTarget.style.background = "rgba(255,255,255,0.12)";
                 }}
                 onBlur={(e) => {
@@ -408,15 +408,15 @@ export default function ProductsListPage() {
               type="submit"
               className="h-12 px-6 rounded-lg text-sm font-semibold text-white transition-colors"
               style={{
-                background: "#c8102e",
-                fontFamily: "'Manrope', sans-serif",
+                background: "var(--red)",
+                fontFamily: "var(--font-body)",
                 letterSpacing: "0.02em",
               }}
               onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "#a00d24")
+                (e.currentTarget.style.background = "var(--red-dark)")
               }
               onMouseLeave={(e) =>
-                (e.currentTarget.style.background = "#c8102e")
+                (e.currentTarget.style.background = "var(--red)")
               }
             >
               Search
@@ -435,12 +435,12 @@ export default function ProductsListPage() {
               style={{
                 background: "#fff",
                 border: "1.5px solid rgba(51,51,51,0.15)",
-                color: "#333333",
-                fontFamily: "'Manrope', sans-serif",
+                color: "var(--charcoal)",
+                fontFamily: "var(--font-body)",
               }}
               onMouseEnter={(e) => {
                 const el = e.currentTarget as HTMLElement;
-                el.style.borderColor = "#333333";
+                el.style.borderColor = "var(--charcoal)";
               }}
               onMouseLeave={(e) => {
                 const el = e.currentTarget as HTMLElement;
@@ -452,7 +452,7 @@ export default function ProductsListPage() {
               {activeFilterCount > 0 && (
                 <span
                   className="h-5 w-5 flex items-center justify-center text-[10px] font-mono text-white rounded-full"
-                  style={{ background: "#c8102e" }}
+                  style={{ background: "var(--red)" }}
                 >
                   {activeFilterCount}
                 </span>
@@ -463,7 +463,7 @@ export default function ProductsListPage() {
               <button
                 onClick={() => handleFilterChange("category", undefined)}
                 className="inline-flex items-center gap-1 h-9 px-3 rounded-lg text-[12px] font-semibold text-white"
-                style={{ background: "#333333" }}
+                style={{ background: "var(--charcoal)" }}
               >
                 {filters.category} <X className="w-3 h-3" />
               </button>
@@ -475,7 +475,7 @@ export default function ProductsListPage() {
                   handleFilterChange("search", undefined);
                 }}
                 className="inline-flex items-center gap-1 h-9 px-3 rounded-lg text-[12px] font-semibold text-white"
-                style={{ background: "#c8102e" }}
+                style={{ background: "var(--red)" }}
               >
                 "{filters.search}" <X className="w-3 h-3" />
               </button>
@@ -484,8 +484,8 @@ export default function ProductsListPage() {
 
           <div className="flex items-center gap-3 ml-auto">
             {data && (
-              <p className="font-mono text-[12px]" style={{ color: "#6b6b6b" }}>
-                <strong style={{ color: "#333333" }}>{data.totalCount}</strong>{" "}
+              <p className="font-mono text-[12px]" style={{ color: "var(--charcoal-soft)" }}>
+                <strong style={{ color: "var(--charcoal)" }}>{data.totalCount}</strong>{" "}
                 products
                 {isFetching && (
                   <Loader2 className="inline ml-2 w-3 h-3 animate-spin" />
@@ -500,8 +500,8 @@ export default function ProductsListPage() {
                 style={{
                   border: "1.5px solid rgba(51,51,51,0.15)",
                   background: "#fff",
-                  color: "#333333",
-                  fontFamily: "'Manrope', sans-serif",
+                  color: "var(--charcoal)",
+                  fontFamily: "var(--font-body)",
                 }}
               >
                 {SORT_OPTIONS.map((o) => (
@@ -512,7 +512,7 @@ export default function ProductsListPage() {
               </select>
               <ChevronDown
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none"
-                style={{ color: "#6b6b6b" }}
+                style={{ color: "var(--charcoal-soft)" }}
               />
             </div>
           </div>
@@ -533,7 +533,7 @@ export default function ProductsListPage() {
             {isError && (
               <div
                 className="text-center py-20 font-semibold"
-                style={{ color: "#c8102e" }}
+                style={{ color: "var(--red)" }}
               >
                 Failed to load products. Please try again.
               </div>
@@ -554,15 +554,15 @@ export default function ProductsListPage() {
                 <p
                   className="font-bold text-lg mb-2"
                   style={{
-                    color: "#333333",
-                    fontFamily: "'Manrope', sans-serif",
+                    color: "var(--charcoal)",
+                    fontFamily: "var(--font-body)",
                   }}
                 >
                   No products found
                 </p>
                 <p
                   className="text-[0.875rem] mb-6"
-                  style={{ color: "#6b6b6b" }}
+                  style={{ color: "var(--charcoal-soft)" }}
                 >
                   Try adjusting your filters or search term.
                 </p>
@@ -570,8 +570,8 @@ export default function ProductsListPage() {
                   onClick={handleReset}
                   className="px-6 py-3 rounded-lg text-sm font-semibold text-white"
                   style={{
-                    background: "#333333",
-                    fontFamily: "'Manrope', sans-serif",
+                    background: "var(--charcoal)",
+                    fontFamily: "var(--font-body)",
                   }}
                 >
                   Clear Filters
@@ -595,16 +595,16 @@ export default function ProductsListPage() {
                       className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-40"
                       style={{
                         border: "1.5px solid rgba(51,51,51,0.15)",
-                        color: "#333333",
+                        color: "var(--charcoal)",
                         background: "#fff",
-                        fontFamily: "'Manrope', sans-serif",
+                        fontFamily: "var(--font-body)",
                       }}
                     >
                       Previous
                     </button>
                     <span
                       className="font-mono text-[12px]"
-                      style={{ color: "#6b6b6b" }}
+                      style={{ color: "var(--charcoal-soft)" }}
                     >
                       Page {filters.page ?? 1} of {totalPages}
                     </span>
@@ -616,9 +616,9 @@ export default function ProductsListPage() {
                       className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-40"
                       style={{
                         border: "1.5px solid rgba(51,51,51,0.15)",
-                        color: "#333333",
+                        color: "var(--charcoal)",
                         background: "#fff",
-                        fontFamily: "'Manrope', sans-serif",
+                        fontFamily: "var(--font-body)",
                       }}
                     >
                       Next

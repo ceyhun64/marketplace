@@ -21,7 +21,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-[#F8F9FB]">
+    <div className="flex min-h-screen" style={{ background: "var(--off-white)" }}>
       <Sidebar links={adminLinks} role="Admin" />
       <main className="flex-1 ml-60 p-8">{children}</main>
     </div>

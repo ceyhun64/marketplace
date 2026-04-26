@@ -62,7 +62,7 @@ export function Sidebar({ links, role }: SidebarProps) {
     <aside
       className="fixed left-0 top-0 h-screen w-60 flex flex-col z-40"
       style={{
-        background: "var(--brand-charcoal)",
+        background: "var(--charcoal)",
         borderRight: "1px solid rgba(255,255,255,0.08)",
       }}
     >
@@ -74,7 +74,7 @@ export function Sidebar({ links, role }: SidebarProps) {
         <Link href="/" className="flex items-center gap-3 group">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105"
-            style={{ background: "var(--brand-red)" }}
+            style={{ background: "var(--red)" }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <rect x="2" y="2" width="5" height="5" fill="white" rx="1" />
@@ -101,7 +101,7 @@ export function Sidebar({ links, role }: SidebarProps) {
             <span
               className="text-white text-sm leading-none tracking-tight"
               style={{
-                fontFamily: "var(--font-dm-serif,'DM Serif Display',serif)",
+                fontFamily: "var(--font-display)",
               }}
             >
               MarketPlace
@@ -109,8 +109,8 @@ export function Sidebar({ links, role }: SidebarProps) {
             <span
               className="text-[9px] uppercase tracking-[0.18em] mt-1"
               style={{
-                color: "var(--brand-red)",
-                fontFamily: "var(--font-space-mono,'Space Mono',monospace)",
+                color: "var(--red)",
+                fontFamily: "var(--font-mono)",
               }}
             >
               {role} Panel
@@ -131,14 +131,14 @@ export function Sidebar({ links, role }: SidebarProps) {
               className="flex items-center gap-3 px-3 py-2.5 rounded-md text-[13px] font-medium transition-all duration-150"
               style={
                 active
-                  ? { background: "var(--brand-red)", color: "#fff" }
+                  ? { background: "var(--red)", color: "#fff" }
                   : { color: "rgba(244,244,242,0.55)" }
               }
               onMouseEnter={(e) => {
                 if (!active) {
                   (e.currentTarget as HTMLElement).style.background =
                     "rgba(255,255,255,0.08)";
-                  (e.currentTarget as HTMLElement).style.color = "#F4F4F2";
+                  (e.currentTarget as HTMLElement).style.color = "var(--off-white)";
                 }
               }}
               onMouseLeave={(e) => {
@@ -165,7 +165,7 @@ export function Sidebar({ links, role }: SidebarProps) {
         <div className="flex items-center gap-3 px-2 py-2.5 mb-1">
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-            style={{ background: "var(--brand-red)" }}
+            style={{ background: "var(--red)" }}
           >
             {user?.email?.charAt(0).toUpperCase() || "U"}
           </div>
@@ -185,7 +185,7 @@ export function Sidebar({ links, role }: SidebarProps) {
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLElement).style.background =
               "rgba(204,16,22,0.15)";
-            (e.currentTarget as HTMLElement).style.color = "#CC1016";
+            (e.currentTarget as HTMLElement).style.color = "var(--red)";
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLElement).style.background = "transparent";

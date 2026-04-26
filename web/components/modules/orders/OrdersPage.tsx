@@ -96,10 +96,10 @@ function normalizeOrder(raw: Order): Order {
 
 function statusColor(status: OrderStatus): { text: string; bg: string } {
   if (status === "Delivered")
-    return { text: "#c8102e", bg: "rgba(200,16,46,0.08)" };
+    return { text: "var(--red)", bg: "rgba(200,16,46,0.08)" };
   if (status === "Failed" || status === "Cancelled")
-    return { text: "#6b6b6b", bg: "rgba(51,51,51,0.08)" };
-  return { text: "#333333", bg: "rgba(51,51,51,0.06)" };
+    return { text: "var(--charcoal-soft)", bg: "rgba(51,51,51,0.08)" };
+  return { text: "var(--charcoal)", bg: "rgba(51,51,51,0.06)" };
 }
 
 export default function OrdersPage() {
@@ -119,7 +119,7 @@ export default function OrdersPage() {
   const filtered = orders.filter((o) => statusMatch(o.status, filter));
 
   return (
-    <div className="min-h-screen" style={{ background: "#f5f5f3" }}>
+    <div className="min-h-screen" style={{ background: "var(--off-white)" }}>
       {/* Header */}
       <div
         style={{
@@ -131,23 +131,23 @@ export default function OrdersPage() {
           <div className="flex items-center gap-3 mb-3">
             <span
               className="inline-block w-6 h-px"
-              style={{ background: "#c8102e" }}
+              style={{ background: "var(--red)" }}
             />
             <span
               className="font-mono text-[11px] tracking-[0.18em] uppercase"
-              style={{ color: "#6b6b6b" }}
+              style={{ color: "var(--charcoal-soft)" }}
             >
               My Account
             </span>
           </div>
           <h1
-            className="font-normal text-[#333333]"
+            className="font-normal text-[var(--charcoal)]"
             style={{
-              fontFamily: "'Cormorant Garamond', serif",
+              fontFamily: "var(--font-display)",
               fontSize: "2.2rem",
             }}
           >
-            My <em style={{ color: "#c8102e" }}>Orders</em>
+            My <em style={{ color: "var(--red)" }}>Orders</em>
           </h1>
         </div>
       </div>
@@ -161,13 +161,13 @@ export default function OrdersPage() {
               onClick={() => setFilter(tab.key)}
               className="px-4 py-2 rounded-lg text-[13px] font-semibold transition-all"
               style={{
-                background: filter === tab.key ? "#333333" : "#fff",
-                color: filter === tab.key ? "#fff" : "#6b6b6b",
+                background: filter === tab.key ? "var(--charcoal)" : "#fff",
+                color: filter === tab.key ? "#fff" : "var(--charcoal-soft)",
                 border:
                   filter === tab.key
-                    ? "1.5px solid #333333"
+                    ? "1.5px solid var(--charcoal)"
                     : "1.5px solid rgba(51,51,51,0.12)",
-                fontFamily: "'Manrope', sans-serif",
+                fontFamily: "var(--font-body)",
                 letterSpacing: "0.02em",
               }}
             >
@@ -194,14 +194,14 @@ export default function OrdersPage() {
           <div className="text-center py-20">
             <div className="text-4xl mb-4">📦</div>
             <p
-              style={{ color: "#6b6b6b", fontFamily: "'Manrope', sans-serif" }}
+              style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
             >
               No orders found in this category.
             </p>
             <Link
               href="/"
               className="inline-block mt-4 text-sm font-semibold"
-              style={{ color: "#c8102e", fontFamily: "'Manrope', sans-serif" }}
+              style={{ color: "var(--red)", fontFamily: "var(--font-body)" }}
             >
               Start shopping →
             </Link>
@@ -226,7 +226,7 @@ export default function OrdersPage() {
                   {order.status === "Delivered" && (
                     <div
                       className="h-[3px]"
-                      style={{ background: "#c8102e" }}
+                      style={{ background: "var(--red)" }}
                     />
                   )}
 
@@ -234,7 +234,7 @@ export default function OrdersPage() {
                     className="w-full text-left p-5 transition-colors"
                     onClick={() => setExpandedId(isExpanded ? null : order.id)}
                     onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "#f5f5f3")
+                      (e.currentTarget.style.background = "var(--off-white)")
                     }
                     onMouseLeave={(e) =>
                       (e.currentTarget.style.background = "transparent")
@@ -256,7 +256,7 @@ export default function OrdersPage() {
                           </span>
                           <span
                             className="font-mono text-[11px]"
-                            style={{ color: "#6b6b6b" }}
+                            style={{ color: "var(--charcoal-soft)" }}
                           >
                             {order.source === "Marketplace"
                               ? "Marketplace"
@@ -264,13 +264,13 @@ export default function OrdersPage() {
                           </span>
                           <span
                             className="font-mono text-[11px]"
-                            style={{ color: "#6b6b6b" }}
+                            style={{ color: "var(--charcoal-soft)" }}
                           >
                             ·
                           </span>
                           <span
                             className="font-mono text-[11px]"
-                            style={{ color: "#6b6b6b" }}
+                            style={{ color: "var(--charcoal-soft)" }}
                           >
                             {order.shippingRate === "Express"
                               ? "⚡ Express"
@@ -280,8 +280,8 @@ export default function OrdersPage() {
                         <p
                           className="text-[0.875rem] mb-1 truncate"
                           style={{
-                            color: "#333333",
-                            fontFamily: "'Manrope', sans-serif",
+                            color: "var(--charcoal)",
+                            fontFamily: "var(--font-body)",
                           }}
                         >
                           {order.items
@@ -293,7 +293,7 @@ export default function OrdersPage() {
                         </p>
                         <p
                           className="font-mono text-[11px]"
-                          style={{ color: "#6b6b6b" }}
+                          style={{ color: "var(--charcoal-soft)" }}
                         >
                           #{order.id.slice(0, 8).toUpperCase()} ·{" "}
                           {new Date(order.createdAt).toLocaleDateString(
@@ -304,9 +304,9 @@ export default function OrdersPage() {
                       </div>
                       <div className="text-right flex-shrink-0">
                         <p
-                          className="font-bold text-[#333333]"
+                          className="font-bold text-[var(--charcoal)]"
                           style={{
-                            fontFamily: "'Cormorant Garamond', serif",
+                            fontFamily: "var(--font-display)",
                             fontSize: "1.25rem",
                           }}
                         >
@@ -314,7 +314,7 @@ export default function OrdersPage() {
                         </p>
                         <p
                           className="font-mono text-[11px] mt-1"
-                          style={{ color: "#c8102e" }}
+                          style={{ color: "var(--red)" }}
                         >
                           {isExpanded ? "▲" : "▼"}
                         </p>
@@ -327,13 +327,13 @@ export default function OrdersPage() {
                       className="px-5 py-4 space-y-4"
                       style={{
                         borderTop: "1px solid rgba(51,51,51,0.06)",
-                        background: "#f5f5f3",
+                        background: "var(--off-white)",
                       }}
                     >
                       <div>
                         <p
                           className="font-mono text-[10px] uppercase tracking-[0.15em] mb-3"
-                          style={{ color: "#6b6b6b" }}
+                          style={{ color: "var(--charcoal-soft)" }}
                         >
                           Products
                         </p>
@@ -345,20 +345,20 @@ export default function OrdersPage() {
                             >
                               <span
                                 style={{
-                                  color: "#4a4a4a",
-                                  fontFamily: "'Manrope', sans-serif",
+                                  color: "var(--charcoal-mid)",
+                                  fontFamily: "var(--font-body)",
                                 }}
                               >
                                 {item.productName}{" "}
-                                <span style={{ color: "#6b6b6b" }}>
+                                <span style={{ color: "var(--charcoal-soft)" }}>
                                   ×{item.quantity}
                                 </span>
                               </span>
                               <span
                                 className="font-bold"
                                 style={{
-                                  color: "#333333",
-                                  fontFamily: "'Cormorant Garamond', serif",
+                                  color: "var(--charcoal)",
+                                  fontFamily: "var(--font-display)",
                                 }}
                               >
                                 ₺
@@ -376,14 +376,14 @@ export default function OrdersPage() {
                             href={`/orders/${order.id}/tracking`}
                             className="flex-1 text-center py-2.5 text-sm font-semibold text-white rounded-lg transition-colors"
                             style={{
-                              background: "#333333",
-                              fontFamily: "'Manrope', sans-serif",
+                              background: "var(--charcoal)",
+                              fontFamily: "var(--font-body)",
                             }}
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.background = "#c8102e")
+                              (e.currentTarget.style.background = "var(--red)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.background = "#333333")
+                              (e.currentTarget.style.background = "var(--charcoal)")
                             }
                           >
                             Track Order →
@@ -394,11 +394,11 @@ export default function OrdersPage() {
                           className="flex-1 text-center py-2.5 text-sm font-semibold rounded-lg transition-colors"
                           style={{
                             border: "1.5px solid rgba(51,51,51,0.15)",
-                            color: "#333333",
-                            fontFamily: "'Manrope', sans-serif",
+                            color: "var(--charcoal)",
+                            fontFamily: "var(--font-body)",
                           }}
                           onMouseEnter={(e) =>
-                            (e.currentTarget.style.borderColor = "#c8102e")
+                            (e.currentTarget.style.borderColor = "var(--red)")
                           }
                           onMouseLeave={(e) =>
                             (e.currentTarget.style.borderColor =

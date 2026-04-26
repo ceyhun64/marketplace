@@ -20,12 +20,12 @@ const inputStyle = {
   flex: 1,
   height: "2.5rem",
   padding: "0 1rem",
-  background: "#f5f5f3",
+  background: "var(--off-white)",
   border: "1.5px solid rgba(51,51,51,0.15)",
   borderRadius: "8px",
-  fontFamily: "'JetBrains Mono', monospace",
+  fontFamily: "var(--font-mono)",
   fontSize: "0.8125rem",
-  color: "#333333",
+  color: "var(--charcoal)",
   outline: "none",
 };
 
@@ -40,7 +40,7 @@ export default function CartPage() {
     return (
       <main
         className="min-h-screen flex items-center justify-center px-4"
-        style={{ background: "#f5f5f3" }}
+        style={{ background: "var(--off-white)" }}
       >
         <div className="text-center max-w-md">
           <div
@@ -56,17 +56,17 @@ export default function CartPage() {
             />
           </div>
           <h1
-            className="font-normal mb-3 text-[#333333]"
+            className="font-normal mb-3 text-[var(--charcoal)]"
             style={{
-              fontFamily: "'Cormorant Garamond', serif",
+              fontFamily: "var(--font-display)",
               fontSize: "2.5rem",
             }}
           >
-            Your cart is <em style={{ color: "#c8102e" }}>empty</em>
+            Your cart is <em style={{ color: "var(--red)" }}>empty</em>
           </h1>
           <p
             className="mb-8 text-[0.9375rem]"
-            style={{ color: "#6b6b6b", fontFamily: "'Manrope', sans-serif" }}
+            style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
           >
             Discover thousands of products from our sellers and add them to your
             cart.
@@ -75,11 +75,11 @@ export default function CartPage() {
             href="/products"
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg text-sm font-semibold text-white transition-colors"
             style={{
-              background: "#333333",
-              fontFamily: "'Manrope', sans-serif",
+              background: "var(--charcoal)",
+              fontFamily: "var(--font-body)",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#c8102e")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "#333333")}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--red)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "var(--charcoal)")}
           >
             Browse Products
             <ArrowRight className="w-4 h-4" />
@@ -90,7 +90,7 @@ export default function CartPage() {
   }
 
   return (
-    <main className="min-h-screen py-12 px-4" style={{ background: "#f5f5f3" }}>
+    <main className="min-h-screen py-12 px-4" style={{ background: "var(--off-white)" }}>
       <div className="max-w-[1300px] mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
@@ -98,27 +98,27 @@ export default function CartPage() {
             <div className="flex items-center gap-3 mb-3">
               <span
                 className="inline-block w-6 h-px"
-                style={{ background: "#c8102e" }}
+                style={{ background: "var(--red)" }}
               />
               <span
                 className="font-mono text-[11px] tracking-[0.18em] uppercase"
-                style={{ color: "#6b6b6b" }}
+                style={{ color: "var(--charcoal-soft)" }}
               >
                 Shopping
               </span>
             </div>
             <h1
-              className="font-normal text-[#333333]"
+              className="font-normal text-[var(--charcoal)]"
               style={{
-                fontFamily: "'Cormorant Garamond', serif",
+                fontFamily: "var(--font-display)",
                 fontSize: "clamp(2rem, 4vw, 3rem)",
               }}
             >
-              Shopping <em style={{ color: "#c8102e" }}>Cart</em>
+              Shopping <em style={{ color: "var(--red)" }}>Cart</em>
             </h1>
             <p
               className="font-mono text-[12px] mt-1"
-              style={{ color: "#6b6b6b" }}
+              style={{ color: "var(--charcoal-soft)" }}
             >
               {summary.itemCount} item{summary.itemCount !== 1 ? "s" : ""}
             </p>
@@ -127,14 +127,14 @@ export default function CartPage() {
             onClick={clearCart}
             className="text-sm font-semibold transition-colors"
             style={{
-              color: "#6b6b6b",
-              fontFamily: "'Manrope', sans-serif",
+              color: "var(--charcoal-soft)",
+              fontFamily: "var(--font-body)",
               background: "none",
               border: "none",
               cursor: "pointer",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#c8102e")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#6b6b6b")}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--red)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--charcoal-soft)")}
           >
             Clear Cart
           </button>
@@ -155,7 +155,7 @@ export default function CartPage() {
                 {/* Product Image */}
                 <div
                   className="w-24 h-24 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
-                  style={{ background: "#f5f5f3" }}
+                  style={{ background: "var(--off-white)" }}
                 >
                   {item.productImage ? (
                     <img
@@ -176,8 +176,8 @@ export default function CartPage() {
                   <div className="flex justify-between items-start gap-4">
                     <div>
                       <h3
-                        className="font-bold text-[15px] leading-tight text-[#333333] truncate"
-                        style={{ fontFamily: "'Manrope', sans-serif" }}
+                        className="font-bold text-[15px] leading-tight text-[var(--charcoal)] truncate"
+                        style={{ fontFamily: "var(--font-body)" }}
                       >
                         {item.productName}
                       </h3>
@@ -185,7 +185,7 @@ export default function CartPage() {
                         <Link
                           href={`/store/${item.merchantSlug ?? item.merchantId}`}
                           className="font-mono text-[11px] mt-1 inline-block transition-colors"
-                          style={{ color: "#c8102e" }}
+                          style={{ color: "var(--red)" }}
                           onMouseEnter={(e) =>
                             (e.currentTarget.style.opacity = "0.7")
                           }
@@ -200,15 +200,15 @@ export default function CartPage() {
                     <button
                       onClick={() => removeItem(item.offerId)}
                       className="p-2 rounded-full transition-all flex-shrink-0"
-                      style={{ color: "#6b6b6b" }}
+                      style={{ color: "var(--charcoal-soft)" }}
                       onMouseEnter={(e) => {
                         const el = e.currentTarget as HTMLElement;
-                        el.style.color = "#c8102e";
+                        el.style.color = "var(--red)";
                         el.style.background = "rgba(200,16,46,0.08)";
                       }}
                       onMouseLeave={(e) => {
                         const el = e.currentTarget as HTMLElement;
-                        el.style.color = "#6b6b6b";
+                        el.style.color = "var(--charcoal-soft)";
                         el.style.background = "transparent";
                       }}
                     >
@@ -220,14 +220,14 @@ export default function CartPage() {
                     {/* Quantity */}
                     <div
                       className="flex items-center gap-1 rounded-lg p-1"
-                      style={{ background: "#f5f5f3" }}
+                      style={{ background: "var(--off-white)" }}
                     >
                       <button
                         onClick={() =>
                           updateQuantity(item.offerId, item.quantity - 1)
                         }
                         className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
-                        style={{ color: "#333333" }}
+                        style={{ color: "var(--charcoal)" }}
                         onMouseEnter={(e) =>
                           (e.currentTarget.style.background = "#fff")
                         }
@@ -239,7 +239,7 @@ export default function CartPage() {
                       </button>
                       <span
                         className="w-8 text-center text-sm font-bold font-mono"
-                        style={{ color: "#333333" }}
+                        style={{ color: "var(--charcoal)" }}
                       >
                         {item.quantity}
                       </span>
@@ -252,7 +252,7 @@ export default function CartPage() {
                           item.quantity >= item.stock
                         }
                         className="w-7 h-7 flex items-center justify-center rounded-lg transition-all disabled:opacity-40"
-                        style={{ color: "#333333" }}
+                        style={{ color: "var(--charcoal)" }}
                         onMouseEnter={(e) =>
                           (e.currentTarget.style.background = "#fff")
                         }
@@ -267,15 +267,15 @@ export default function CartPage() {
                     {/* Price */}
                     <div className="text-right">
                       <div
-                        className="text-[18px] font-bold text-[#333333]"
-                        style={{ fontFamily: "'Cormorant Garamond', serif" }}
+                        className="text-[18px] font-bold text-[var(--charcoal)]"
+                        style={{ fontFamily: "var(--font-display)" }}
                       >
                         ₺{(item.price * item.quantity).toFixed(2)}
                       </div>
                       {item.quantity > 1 && (
                         <div
                           className="font-mono text-[11px]"
-                          style={{ color: "#6b6b6b" }}
+                          style={{ color: "var(--charcoal-soft)" }}
                         >
                           ₺{item.price.toFixed(2)} each
                         </div>
@@ -298,10 +298,10 @@ export default function CartPage() {
               }}
             >
               <h3
-                className="font-bold text-[#333333] mb-4 flex items-center gap-2"
-                style={{ fontFamily: "'Manrope', sans-serif" }}
+                className="font-bold text-[var(--charcoal)] mb-4 flex items-center gap-2"
+                style={{ fontFamily: "var(--font-body)" }}
               >
-                <Truck className="w-4 h-4" style={{ color: "#c8102e" }} />
+                <Truck className="w-4 h-4" style={{ color: "var(--red)" }} />
                 Shipping Speed
               </h3>
               <div className="space-y-2">
@@ -313,7 +313,7 @@ export default function CartPage() {
                     style={{
                       borderColor:
                         summary.shippingRate === rate
-                          ? "#333333"
+                          ? "var(--charcoal)"
                           : "rgba(51,51,51,0.08)",
                       background:
                         summary.shippingRate === rate
@@ -323,32 +323,32 @@ export default function CartPage() {
                   >
                     <div className="flex items-center gap-3">
                       {rate === "EXPRESS" ? (
-                        <Zap className="w-4 h-4" style={{ color: "#c8102e" }} />
+                        <Zap className="w-4 h-4" style={{ color: "var(--red)" }} />
                       ) : (
                         <Truck
                           className="w-4 h-4"
-                          style={{ color: "#6b6b6b" }}
+                          style={{ color: "var(--charcoal-soft)" }}
                         />
                       )}
                       <div className="text-left">
                         <div
-                          className="text-sm font-bold text-[#333333]"
-                          style={{ fontFamily: "'Manrope', sans-serif" }}
+                          className="text-sm font-bold text-[var(--charcoal)]"
+                          style={{ fontFamily: "var(--font-body)" }}
                         >
                           {rate === "EXPRESS" ? "Express" : "Regular"}
                         </div>
                         <div
                           className="font-mono text-[11px]"
-                          style={{ color: "#6b6b6b" }}
+                          style={{ color: "var(--charcoal-soft)" }}
                         >
                           {rate === "EXPRESS" ? "1-2 days" : "3-5 days"}
                         </div>
                       </div>
                     </div>
                     <span
-                      className="font-bold text-sm text-[#333333]"
+                      className="font-bold text-sm text-[var(--charcoal)]"
                       style={{
-                        fontFamily: "'Cormorant Garamond', serif",
+                        fontFamily: "var(--font-display)",
                         fontSize: "1rem",
                       }}
                     >
@@ -368,10 +368,10 @@ export default function CartPage() {
               }}
             >
               <h3
-                className="font-bold text-[#333333] mb-4 flex items-center gap-2"
-                style={{ fontFamily: "'Manrope', sans-serif" }}
+                className="font-bold text-[var(--charcoal)] mb-4 flex items-center gap-2"
+                style={{ fontFamily: "var(--font-body)" }}
               >
-                <Tag className="w-4 h-4" style={{ color: "#c8102e" }} />
+                <Tag className="w-4 h-4" style={{ color: "var(--red)" }} />
                 Coupon Code
               </h3>
               <div className="flex gap-2">
@@ -382,32 +382,32 @@ export default function CartPage() {
                   placeholder="ENTER CODE"
                   style={inputStyle}
                   onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "#c8102e";
+                    e.currentTarget.style.borderColor = "var(--red)";
                     e.currentTarget.style.background = "#fff";
                   }}
                   onBlur={(e) => {
                     e.currentTarget.style.borderColor = "rgba(51,51,51,0.15)";
-                    e.currentTarget.style.background = "#f5f5f3";
+                    e.currentTarget.style.background = "var(--off-white)";
                   }}
                 />
                 <button
                   className="px-5 py-2 rounded-lg text-sm font-semibold transition-all"
                   style={{
                     border: "1.5px solid rgba(51,51,51,0.15)",
-                    color: "#333333",
+                    color: "var(--charcoal)",
                     background: "transparent",
-                    fontFamily: "'Manrope', sans-serif",
+                    fontFamily: "var(--font-body)",
                   }}
                   onMouseEnter={(e) => {
                     const el = e.currentTarget as HTMLElement;
-                    el.style.background = "#333333";
+                    el.style.background = "var(--charcoal)";
                     el.style.color = "#fff";
-                    el.style.borderColor = "#333333";
+                    el.style.borderColor = "var(--charcoal)";
                   }}
                   onMouseLeave={(e) => {
                     const el = e.currentTarget as HTMLElement;
                     el.style.background = "transparent";
-                    el.style.color = "#333333";
+                    el.style.color = "var(--charcoal)";
                     el.style.borderColor = "rgba(51,51,51,0.15)";
                   }}
                 >
@@ -425,8 +425,8 @@ export default function CartPage() {
               }}
             >
               <h3
-                className="font-bold text-[#333333] mb-5"
-                style={{ fontFamily: "'Manrope', sans-serif" }}
+                className="font-bold text-[var(--charcoal)] mb-5"
+                style={{ fontFamily: "var(--font-body)" }}
               >
                 Order Summary
               </h3>
@@ -434,26 +434,26 @@ export default function CartPage() {
                 <div className="flex justify-between text-[0.875rem]">
                   <span
                     style={{
-                      color: "#6b6b6b",
-                      fontFamily: "'Manrope', sans-serif",
+                      color: "var(--charcoal-soft)",
+                      fontFamily: "var(--font-body)",
                     }}
                   >
                     Subtotal ({summary.itemCount} items)
                   </span>
-                  <span className="font-semibold text-[#333333]">
+                  <span className="font-semibold text-[var(--charcoal)]">
                     ₺{summary.subtotal.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between text-[0.875rem]">
                   <span
                     style={{
-                      color: "#6b6b6b",
-                      fontFamily: "'Manrope', sans-serif",
+                      color: "var(--charcoal-soft)",
+                      fontFamily: "var(--font-body)",
                     }}
                   >
                     Shipping
                   </span>
-                  <span className="font-semibold text-[#333333]">
+                  <span className="font-semibold text-[var(--charcoal)]">
                     ₺{summary.shipping.toFixed(2)}
                   </span>
                 </div>
@@ -462,15 +462,15 @@ export default function CartPage() {
                   style={{ borderTop: "1px solid rgba(51,51,51,0.08)" }}
                 >
                   <span
-                    className="font-bold text-[#333333]"
-                    style={{ fontFamily: "'Manrope', sans-serif" }}
+                    className="font-bold text-[var(--charcoal)]"
+                    style={{ fontFamily: "var(--font-body)" }}
                   >
                     Total
                   </span>
                   <span
-                    className="font-bold text-[#333333]"
+                    className="font-bold text-[var(--charcoal)]"
                     style={{
-                      fontFamily: "'Cormorant Garamond', serif",
+                      fontFamily: "var(--font-display)",
                       fontSize: "1.5rem",
                     }}
                   >
@@ -479,7 +479,7 @@ export default function CartPage() {
                 </div>
                 <p
                   className="font-mono text-[10px]"
-                  style={{ color: "#6b6b6b" }}
+                  style={{ color: "var(--charcoal-soft)" }}
                 >
                   VAT included where applicable
                 </p>
@@ -489,15 +489,15 @@ export default function CartPage() {
                 onClick={() => router.push("/checkout")}
                 className="w-full mt-5 h-12 rounded-lg flex items-center justify-center gap-2 text-sm font-semibold text-white transition-all"
                 style={{
-                  background: "#333333",
-                  fontFamily: "'Manrope', sans-serif",
+                  background: "var(--charcoal)",
+                  fontFamily: "var(--font-body)",
                   boxShadow: "0 4px 16px rgba(51,51,51,0.12)",
                 }}
                 onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "#c8102e")
+                  (e.currentTarget.style.background = "var(--red)")
                 }
                 onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "#333333")
+                  (e.currentTarget.style.background = "var(--charcoal)")
                 }
               >
                 Proceed to Checkout
@@ -507,9 +507,9 @@ export default function CartPage() {
               <Link
                 href="/products"
                 className="block text-center font-mono text-[11px] mt-4 transition-colors"
-                style={{ color: "#6b6b6b" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#333333")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#6b6b6b")}
+                style={{ color: "var(--charcoal-soft)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--charcoal)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--charcoal-soft)")}
               >
                 Continue Shopping
               </Link>

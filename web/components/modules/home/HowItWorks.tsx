@@ -38,7 +38,7 @@ export default function HowItWorksSection() {
     <section
       className="py-24"
       style={{
-        background: "#333333",
+        background: "var(--charcoal)",
         position: "relative",
         overflow: "hidden",
       }}
@@ -56,7 +56,7 @@ export default function HowItWorksSection() {
             <div className="flex items-center gap-3">
               <span
                 className="inline-block w-6 h-px"
-                style={{ background: "#c8102e" }}
+                style={{ background: "var(--red)" }}
               />
               <span
                 className="font-mono text-[11px] tracking-[0.18em] uppercase"
@@ -68,11 +68,11 @@ export default function HowItWorksSection() {
             <h2
               className="font-normal leading-[1.1] tracking-[-0.01em] text-white"
               style={{
-                fontFamily: "'Cormorant Garamond', serif",
+                fontFamily: "var(--font-display)",
                 fontSize: "clamp(2rem, 4vw, 2.75rem)",
               }}
             >
-              Shopping is <em style={{ color: "#c8102e" }}>this simple.</em>
+              Shopping is <em style={{ color: "var(--red)" }}>this simple.</em>
             </h2>
           </div>
         </div>
@@ -101,7 +101,7 @@ export default function HowItWorksSection() {
               {/* Red accent bottom bar */}
               <div
                 className="absolute bottom-0 left-7 right-7 h-[2px] rounded-full origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"
-                style={{ background: "#c8102e" }}
+                style={{ background: "var(--red)" }}
               />
 
               <div className="flex justify-between items-start mb-7">
@@ -109,7 +109,7 @@ export default function HowItWorksSection() {
                   className="w-11 h-11 rounded-[10px] flex items-center justify-center"
                   style={{
                     background: "rgba(200,16,46,0.15)",
-                    color: "#c8102e",
+                    color: "var(--red)",
                   }}
                 >
                   {step.icon}
@@ -117,7 +117,7 @@ export default function HowItWorksSection() {
                 <span
                   className="font-light leading-none"
                   style={{
-                    fontFamily: "'Cormorant Garamond', serif",
+                    fontFamily: "var(--font-display)",
                     fontSize: "2.5rem",
                     color: "rgba(255,255,255,0.06)",
                   }}
@@ -129,7 +129,7 @@ export default function HowItWorksSection() {
               <h3
                 className="font-bold mb-3 text-white"
                 style={{
-                  fontFamily: "'Manrope', sans-serif",
+                  fontFamily: "var(--font-body)",
                   fontSize: "1.0625rem",
                 }}
               >
@@ -138,7 +138,7 @@ export default function HowItWorksSection() {
               <p
                 className="text-[0.8125rem] leading-relaxed"
                 style={{
-                  fontFamily: "'Manrope', sans-serif",
+                  fontFamily: "var(--font-body)",
                   color: "rgba(255,255,255,0.5)",
                 }}
               >
