@@ -316,6 +316,41 @@ public class AdminController : ControllerBase
         return Ok(new { message = "Ürün onaylandı.", product.Id });
     }
 
+    // ── STORE SETUP ───────────────────────────────────────────────────────────
+
+    [HttpPost("store/{merchantId:guid}/setup")]
+    public async Task<IActionResult> SetupMerchantStore(
+        Guid merchantId,
+        [FromBody] AdminStoreSetupDto dto
+    )
+    {
+        var merchant = await _db.MerchantProfiles.FindAsync(merchantId);
+        if (merchant == null)
+            return NotFound(new { message = "Merchant bulunamadı." });
+
+        if (dto.StoreName is not null)
+            merchant.StoreName = dto.StoreName;
+        if (dto.Slug is not null)
+            merchant.Slug = dto.Slug;
+        if (dto.Description is not null)
+            merchant.Description = dto.Description;
+        if (dto.LogoUrl is not null)
+            merchant.LogoUrl = dto.LogoUrl;
+        if (dto.BannerUrl is not null)
+            merchant.BannerUrl = dto.BannerUrl;
+        if (dto.HandlingHours.HasValue)
+            merchant.HandlingHours = dto.HandlingHours.Value;
+        if (dto.Latitude.HasValue)
+            merchant.Latitude = dto.Latitude.Value;
+        if (dto.Longitude.HasValue)
+            merchant.Longitude = dto.Longitude.Value;
+
+        merchant.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Mağaza kurulumu tamamlandı.", merchantId });
+    }
+
     // ── ANALYTICS ────────────────────────────────────────────────────────────
 
     [HttpGet("analytics")]
@@ -382,3 +417,14 @@ public record UpdateMerchantDto(
 );
 
 public record UpdateStatusDto(string Status);
+
+public record AdminStoreSetupDto(
+    string? StoreName,
+    string? Slug,
+    string? Description,
+    string? LogoUrl,
+    string? BannerUrl,
+    int? HandlingHours,
+    double? Latitude,
+    double? Longitude
+);

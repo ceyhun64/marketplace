@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using api.Common.DTOs;
 using api.Domain.Entities;
 using AutoMapper;
@@ -6,6 +7,10 @@ namespace api.Common.Mappings;
 
 public class MappingProfile : Profile
 {
+    // PascalCase → UPPER_SNAKE_CASE: "LabelGenerated" → "LABEL_GENERATED"
+    private static string ToUpperSnakeCase(string value) =>
+        Regex.Replace(value, "(?<=[a-z0-9])([A-Z])", "_$1").ToUpperInvariant();
+
     public MappingProfile()
     {
         CreateMap<User, UserDto>();
@@ -25,12 +30,18 @@ public class MappingProfile : Profile
 
         CreateMap<Category, CategoryDto>();
 
-        CreateMap<Order, OrderDto>();
+        CreateMap<Order, OrderDto>()
+            .ForMember(d => d.Status, o => o.MapFrom(s => ToUpperSnakeCase(s.Status.ToString())))
+            .ForMember(d => d.ShippingRate, o => o.MapFrom(s => ToUpperSnakeCase(s.ShippingRate.ToString())));
 
         CreateMap<OrderItem, OrderItemDto>()
             .ForMember(d => d.ProductName, o => o.MapFrom(s => s.ProductName));
 
         CreateMap<Shipment, ShipmentDto>()
+            .ForMember(
+                d => d.Status,
+                o => o.MapFrom(s => ToUpperSnakeCase(s.Status.ToString()))
+            )
             .ForMember(
                 d => d.CourierName,
                 o =>
@@ -46,7 +57,7 @@ public class MappingProfile : Profile
             );
 
         CreateMap<ShipmentStatusHistory, ShipmentStatusHistoryDto>()
-            .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()))
+            .ForMember(d => d.Status, o => o.MapFrom(s => ToUpperSnakeCase(s.Status.ToString())))
             .ForMember(d => d.ChangedAt, o => o.MapFrom(s => s.ChangedAt));
 
         CreateMap<Courier, CourierDto>()

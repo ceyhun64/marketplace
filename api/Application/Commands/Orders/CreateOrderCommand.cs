@@ -5,6 +5,7 @@ using api.Infrastructure.Persistence;
 using api.Infrastructure.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace api.Application.Commands.Orders;
 
@@ -36,6 +37,13 @@ public class CreateOrderCommandHandler
         var dto = request.Request;
         var productIds = dto.Items.Select(i => i.ProductId).ToList();
 
+        Order order = null!;
+        List<OrderItem> orderItems = new();
+
+        await using var transaction = await _context.Database.BeginTransactionAsync(
+            IsolationLevel.Serializable, cancellationToken);
+        try
+        {
         var products = await _context
             .Products.Include(p => p.Merchant)
             .Where(p => productIds.Contains(p.Id) && !p.IsDeleted)
@@ -53,7 +61,7 @@ public class CreateOrderCommandHandler
         var shippingRate = Enum.Parse<ShippingRate>(dto.ShippingRate, ignoreCase: true);
         var source = Enum.Parse<OrderSource>(dto.Source, ignoreCase: true);
 
-        var orderItems = dto
+        orderItems = dto
             .Items.Select(i =>
             {
                 var product = products.First(p => p.Id == i.ProductId);
@@ -70,7 +78,7 @@ public class CreateOrderCommandHandler
             })
             .ToList();
 
-        var order = new Order
+        order = new Order
         {
             Id = Guid.NewGuid(),
             CustomerId = _currentUser.UserId,
@@ -100,6 +108,14 @@ public class CreateOrderCommandHandler
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+
         await _fulfillmentService.CreateShipmentForOrderAsync(order);
 
         return ServiceResult<OrderDto>.Ok(
