@@ -23,6 +23,8 @@ public class ProductsController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int limit = 20,
         [FromQuery] string? category = null,
+        [FromQuery] string? subcategory = null,
+        [FromQuery] List<string>? tags = null,
         [FromQuery] string? search = null,
         [FromQuery] decimal? minPrice = null,
         [FromQuery] decimal? maxPrice = null,
@@ -31,12 +33,28 @@ public class ProductsController : ControllerBase
     {
         var query = _db
             .Products.Include(p => p.Category)
+                .ThenInclude(c => c != null ? c.Parent : null)
             .Include(p => p.Merchant)
             .Where(p => p.PublishToMarket && p.IsApproved && p.Stock > 0)
             .AsQueryable();
 
+        // Kategori filtresi: ana kategori slug'ına göre (hem ana hem alt kategoriler dahil)
         if (!string.IsNullOrEmpty(category))
-            query = query.Where(p => p.Category != null && p.Category.Slug == category);
+            query = query.Where(p =>
+                p.Category != null
+                && (
+                    p.Category.Slug == category
+                    || (p.Category.Parent != null && p.Category.Parent.Slug == category)
+                )
+            );
+
+        // Alt kategori filtresi: sadece belirtilen alt kategoriye göre
+        if (!string.IsNullOrEmpty(subcategory))
+            query = query.Where(p => p.Category != null && p.Category.Slug == subcategory);
+
+        // Tag filtresi
+        if (tags != null && tags.Count > 0)
+            query = query.Where(p => p.Tags.Any(t => tags.Contains(t)));
 
         if (!string.IsNullOrEmpty(search))
             query = query.Where(p =>
@@ -144,39 +162,106 @@ public class ProductsController : ControllerBase
         return Ok(product);
     }
 
-    /// <summary>Full-text arama</summary>
+    /// <summary>Full-text arama — kategori, alt kategori, tag, fiyat filtreli</summary>
     [HttpGet("search")]
     public async Task<IActionResult> Search(
         [FromQuery] string q = "",
         [FromQuery] string? category = null,
+        [FromQuery] string? subcategory = null,
         [FromQuery] List<string>? tags = null,
+        [FromQuery] decimal? minPrice = null,
+        [FromQuery] decimal? maxPrice = null,
+        [FromQuery] string sort = "newest",
+        [FromQuery] int page = 1,
         [FromQuery] int limit = 20
     )
     {
         var query = _db
             .Products.Include(p => p.Category)
-            .Where(p => p.PublishToMarket && p.IsApproved && EF.Functions.ILike(p.Name, $"%{q}%"))
+                .ThenInclude(c => c != null ? c.Parent : null)
+            .Include(p => p.Merchant)
+            .Where(p => p.PublishToMarket && p.IsApproved && p.Stock > 0)
             .AsQueryable();
 
-        if (!string.IsNullOrEmpty(category))
-            query = query.Where(p => p.Category != null && p.Category.Slug == category);
+        // Full-text arama
+        if (!string.IsNullOrEmpty(q))
+            query = query.Where(p =>
+                EF.Functions.ILike(p.Name, $"%{q}%")
+                || EF.Functions.ILike(p.Description, $"%{q}%")
+                || p.Tags.Any(t => EF.Functions.ILike(t, $"%{q}%"))
+            );
 
+        // Kategori filtresi (ana kategori slug'ı — hem ana hem alt dahil)
+        if (!string.IsNullOrEmpty(category))
+            query = query.Where(p =>
+                p.Category != null
+                && (
+                    p.Category.Slug == category
+                    || (p.Category.Parent != null && p.Category.Parent.Slug == category)
+                )
+            );
+
+        // Alt kategori filtresi
+        if (!string.IsNullOrEmpty(subcategory))
+            query = query.Where(p => p.Category != null && p.Category.Slug == subcategory);
+
+        // Tag filtresi
         if (tags != null && tags.Count > 0)
             query = query.Where(p => p.Tags.Any(t => tags.Contains(t)));
 
+        // Fiyat aralığı
+        if (minPrice.HasValue)
+            query = query.Where(p => p.Price >= minPrice.Value);
+        if (maxPrice.HasValue)
+            query = query.Where(p => p.Price <= maxPrice.Value);
+
+        // Sıralama
+        query = sort switch
+        {
+            "price_asc" => query.OrderBy(p => p.Price),
+            "price_desc" => query.OrderByDescending(p => p.Price),
+            _ => query.OrderByDescending(p => p.CreatedAt),
+        };
+
+        var total = await query.CountAsync();
         var results = await query
+            .Skip((page - 1) * limit)
             .Take(limit)
             .Select(p => new
             {
                 p.Id,
                 p.Name,
+                p.Description,
                 p.Images,
+                p.Tags,
                 p.Price,
-                Category = p.Category == null ? null : p.Category.Name,
+                p.Stock,
+                Category = p.Category == null
+                    ? null
+                    : new
+                    {
+                        p.Category.Id,
+                        p.Category.Name,
+                        p.Category.Slug,
+                    },
+                Merchant = new
+                {
+                    p.Merchant.Id,
+                    p.Merchant.StoreName,
+                    p.Merchant.Slug,
+                },
             })
             .ToListAsync();
 
-        return Ok(results);
+        return Ok(
+            new
+            {
+                total,
+                page,
+                limit,
+                items = results,
+            }
+        );
     }
 
     /// <summary>Öne çıkan ürünler</summary>
