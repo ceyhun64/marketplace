@@ -1,11 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { loadStripe, type Stripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+import { Loader2, ShieldCheck, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useCheckout } from "@/queries/usePayment";
+import { useInitiateCheckout, useConfirmPayment } from "@/queries/usePayment";
 import { useCart } from "@/hooks/use-cart";
 import type { ShippingRate, OrderSource } from "@/types/enums";
 import type { ShippingAddress } from "@/types/entities";
@@ -13,139 +20,185 @@ import type { ShippingAddress } from "@/types/entities";
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface PaymentFormProps {
-  merchantId: string;
-  shippingAddress: ShippingAddress;
-  shippingRate: ShippingRate;
-  source: OrderSource;
+  orderId: string;
   onSuccess?: (orderId: string) => void;
   className?: string;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// ── Inner Stripe form (Elements context içinde) ───────────────────────────────
 
-export function PaymentForm({
-  merchantId,
-  shippingAddress,
-  shippingRate,
-  source,
+function StripeCheckoutForm({
+  orderId,
   onSuccess,
-  className,
-}: PaymentFormProps) {
+}: {
+  orderId: string;
+  onSuccess?: (orderId: string) => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
   const router = useRouter();
-  const { items, clearCart } = useCart();
-  const { mutate: checkout, isPending, isError, error } = useCheckout();
+  const { clearCart } = useCart();
+  const { mutateAsync: confirmPayment } = useConfirmPayment();
 
-  const iyzFormRef = useRef<HTMLDivElement>(null);
-  const [formInjected, setFormInjected] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  /**
-   * iyzico checkout form script'ini DOM'a inject eder.
-   * checkoutFormContent bir <script> tag'i içerir;
-   * innerHTML ile inject ettikten sonra script'lerin çalışması için
-   * cloneNode trick'i kullanılır.
-   */
-  function injectIyzicoForm(htmlContent: string) {
-    if (!iyzFormRef.current) return;
-    iyzFormRef.current.innerHTML = htmlContent;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
 
-    // Script tag'leri innerHTML ile inject edilince çalışmaz —
-    // her birini yeniden oluşturup DOM'a eklemek gerekir.
-    const scripts = iyzFormRef.current.querySelectorAll("script");
-    scripts.forEach((oldScript) => {
-      const newScript = document.createElement("script");
-      Array.from(oldScript.attributes).forEach((attr) =>
-        newScript.setAttribute(attr.name, attr.value),
-      );
-      newScript.textContent = oldScript.textContent;
-      oldScript.parentNode?.replaceChild(newScript, oldScript);
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    // 1. Stripe Elements ile ödemeyi tamamla
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      redirect: "if_required",
     });
 
-    setFormInjected(true);
-  }
+    if (error) {
+      setErrorMessage(error.message ?? "Ödeme başarısız oldu.");
+      setIsSubmitting(false);
+      return;
+    }
 
-  function handleCheckout() {
-    checkout(
-      {
-        items: items.map((i) => ({
-          productId: i.productId,
-          quantity: i.quantity,
-        })),
-        shippingAddress,
-        shippingRate,
-        source,
-      },
-      {
-        onSuccess: (data) => {
-          if (data.checkoutFormContent) {
-            // iyzico popup / inline form
-            injectIyzicoForm(data.checkoutFormContent);
-          } else if (data.paymentPageUrl) {
-            // Redirect to iyzico hosted page
-            window.location.href = data.paymentPageUrl;
-          }
-        },
-      },
-    );
-  }
+    if (paymentIntent?.status === "succeeded") {
+      // 2. Backend'e onay gönder
+      try {
+        const result = await confirmPayment({
+          orderId,
+          paymentIntentId: paymentIntent.id,
+        });
 
-  // İyzico 3DS callback'i window message ile dinle (popup mod)
-  useEffect(() => {
-    function handleMessage(event: MessageEvent) {
-      if (
-        typeof event.data === "object" &&
-        event.data?.status === "success" &&
-        event.data?.orderId
-      ) {
         clearCart();
-        onSuccess?.(event.data.orderId);
-        router.push(`/orders/${event.data.orderId}`);
+        onSuccess?.(result.orderId);
+        router.push(`/orders/${result.orderId}`);
+      } catch {
+        setErrorMessage(
+          "Sipariş onaylanamadı. Lütfen destek ile iletişime geçin.",
+        );
       }
     }
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [clearCart, onSuccess, router]);
+
+    setIsSubmitting(false);
+  };
 
   return (
-    <div className={cn("space-y-4", className)}>
-      {/* İyzico form container — script inject edilince burada görünür */}
-      <div ref={iyzFormRef} id="iyzipay-checkout-form" />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <PaymentElement
+        options={{
+          layout: "tabs",
+        }}
+      />
 
-      {/* Ödeme başlat butonu — form inject edilmeden önce göster */}
-      {!formInjected && (
-        <Button
-          type="button"
-          size="lg"
-          className="w-full"
-          disabled={isPending || items.length === 0}
-          onClick={handleCheckout}
-        >
-          {isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Preparing payment page…
-            </>
-          ) : (
-            <>
-              <ShieldCheck className="mr-2 h-4 w-4" />
-              Pay Securely
-            </>
-          )}
-        </Button>
+      {errorMessage && (
+        <p className="text-sm text-destructive text-center">{errorMessage}</p>
       )}
 
-      {isError && (
-        <p className="text-sm text-destructive text-center">
-          Ödeme başlatılamadı. Lütfen tekrar deneyin.
-          {error instanceof Error && (
-            <span className="block text-xs opacity-70">{error.message}</span>
-          )}
-        </p>
-      )}
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full"
+        disabled={!stripe || !elements || isSubmitting}
+      >
+        {isSubmitting ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            İşleniyor...
+          </>
+        ) : (
+          <>
+            <CreditCard className="mr-2 h-4 w-4" />
+            Güvenli Öde
+          </>
+        )}
+      </Button>
 
       <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
         <ShieldCheck className="h-3.5 w-3.5" />
-        <span>256-bit SSL ile korunan güvenli ödeme (iyzico 3DS)</span>
+        <span>256-bit SSL ile korunan güvenli ödeme (Stripe)</span>
       </div>
+    </form>
+  );
+}
+
+// ── Ana bileşen — Stripe Elements sağlayıcısını kurar ────────────────────────
+
+export function PaymentForm({
+  orderId,
+  onSuccess,
+  className,
+}: PaymentFormProps) {
+  const [stripePromise, setStripePromise] =
+    useState<Promise<Stripe | null> | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const { mutateAsync: initiateCheckout } = useInitiateCheckout();
+
+  const initPayment = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const result = await initiateCheckout({ orderId });
+
+      // Stripe publishable key ile yükle
+      setStripePromise(loadStripe(result.publishableKey));
+      setClientSecret(result.clientSecret);
+    } catch (err) {
+      setError("Ödeme başlatılamadı. Lütfen tekrar deneyin.");
+    } finally {
+      setLoading(false);
+    }
+  }, [orderId, initiateCheckout]);
+
+  useEffect(() => {
+    initPayment();
+  }, [initPayment]);
+
+  if (loading) {
+    return (
+      <div className={cn("flex items-center justify-center py-8", className)}>
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error || !clientSecret || !stripePromise) {
+    return (
+      <div className={cn("space-y-3", className)}>
+        <p className="text-sm text-destructive text-center">{error}</p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          onClick={initPayment}
+        >
+          Tekrar Dene
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("space-y-4", className)}>
+      <Elements
+        stripe={stripePromise}
+        options={{
+          clientSecret,
+          appearance: {
+            theme: "stripe",
+            variables: {
+              colorPrimary: "#0f172a",
+              borderRadius: "8px",
+            },
+          },
+        }}
+      >
+        <StripeCheckoutForm orderId={orderId} onSuccess={onSuccess} />
+      </Elements>
     </div>
   );
 }

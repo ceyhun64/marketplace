@@ -1,8 +1,8 @@
 namespace api.Infrastructure.Webhooks;
 
 /// <summary>
-/// Platform içi ve dışı (iyzico, özel entegrasyonlar) webhook gönderme servisi.
-/// Ödeme onayı, sipariş durumu değişikliği, fulfillment olayları için kullanılır.
+/// Platform içi ve dışı (Stripe, iyzico vb.) webhook gönderme servisi.
+/// Ödeme onayı, sipariş durumu değişikliği ve fulfillment olayları için kullanılır.
 /// </summary>
 public interface IWebhookService
 {
@@ -12,6 +12,8 @@ public interface IWebhookService
     /// </summary>
     Task DispatchAsync(string eventType, object payload);
 
-    /// <summary>iyzico'dan gelen webhook imzasını doğrular.</summary>
-    bool VerifyIyzicoSignature(string rawBody, string signature, string secretKey);
+    /// <summary>
+    /// Stripe'tan gelen webhook imzasını doğrular.
+    /// </summary>
+    bool VerifyStripeSignature(string rawBody, string signature, string webhookSecret);
 }

@@ -25,6 +25,7 @@
     <PackageReference Include="QuestPDF" Version="2026.2.4" />
     <!-- Milestone 2: Bildirim entegrasyonları -->
     <PackageReference Include="SendGrid" Version="9.29.3" />
+    <PackageReference Include="Stripe.net" Version="47.3.0" />
     <PackageReference Include="Twilio" Version="7.6.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />

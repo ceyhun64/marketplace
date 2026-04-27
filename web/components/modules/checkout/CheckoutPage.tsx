@@ -9,19 +9,25 @@ import CartSummary from "./CartSummary";
 import { PaymentForm } from "./PaymentForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, ArrowRight, MapPin, Truck, CreditCard } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  MapPin,
+  Truck,
+  CreditCard,
+  Loader2,
+} from "lucide-react";
+import api from "@/lib/api";
 import type { ShippingRate } from "@/types/enums";
 import type { ShippingAddress } from "@/types/entities";
-
-// ── Step definitions ──────────────────────────────────────────────────────────
 
 type Step = "address" | "shipping" | "payment";
 const STEPS: Step[] = ["address", "shipping", "payment"];
 
 const STEP_LABEL: Record<Step, string> = {
-  address: "Delivery Address",
-  shipping: "Shipping",
-  payment: "Payment",
+  address: "Teslimat Adresi",
+  shipping: "Kargo",
+  payment: "Ödeme",
 };
 
 const STEP_ICON: Record<Step, React.ReactNode> = {
@@ -30,26 +36,16 @@ const STEP_ICON: Record<Step, React.ReactNode> = {
   payment: <CreditCard className="w-4 h-4" />,
 };
 
-// ── Address form validation ───────────────────────────────────────────────────
-
 function validateAddress(form: Partial<ShippingAddress>): string | null {
-  if (!form.fullName?.trim()) return "Full name is required.";
-  if (!form.phone?.trim()) return "Phone number is required.";
-  if (!form.addressLine?.trim()) return "Address is required.";
-  if (!form.city?.trim()) return "City is required.";
-  if (!form.postalCode?.trim()) return "Postal code is required.";
+  if (!form.fullName?.trim()) return "Ad soyad zorunludur.";
+  if (!form.phone?.trim()) return "Telefon numarası zorunludur.";
+  if (!form.addressLine?.trim()) return "Adres zorunludur.";
+  if (!form.city?.trim()) return "Şehir zorunludur.";
+  if (!form.postalCode?.trim()) return "Posta kodu zorunludur.";
   return null;
 }
 
-// ── Step Indicator ────────────────────────────────────────────────────────────
-
-function StepIndicator({
-  current,
-  steps,
-}: {
-  current: Step;
-  steps: Step[];
-}) {
+function StepIndicator({ current, steps }: { current: Step; steps: Step[] }) {
   const currentIdx = steps.indexOf(current);
   return (
     <div className="flex items-center gap-2 mb-8">
@@ -83,8 +79,6 @@ function StepIndicator({
   );
 }
 
-// ── Address Step ──────────────────────────────────────────────────────────────
-
 function AddressStep({
   value,
   onChange,
@@ -103,7 +97,11 @@ function AddressStep({
     onNext();
   };
 
-  const field = (label: string, key: keyof ShippingAddress, placeholder?: string) => (
+  const field = (
+    label: string,
+    key: keyof ShippingAddress,
+    placeholder?: string,
+  ) => (
     <div>
       <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">
         {label}
@@ -119,16 +117,16 @@ function AddressStep({
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-gray-900">Delivery Address</h2>
+      <h2 className="text-lg font-bold text-gray-900">Teslimat Adresi</h2>
       <div className="grid sm:grid-cols-2 gap-4">
-        {field("Full Name", "fullName", "Jane Doe")}
-        {field("Phone", "phone", "+90 5xx xxx xx xx")}
+        {field("Ad Soyad", "fullName", "Ayşe Yılmaz")}
+        {field("Telefon", "phone", "+90 5xx xxx xx xx")}
       </div>
-      {field("Address", "addressLine", "Street, apartment, floor...")}
+      {field("Adres", "addressLine", "Sokak, daire, kat...")}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {field("City", "city", "Istanbul")}
-        {field("District", "district", "Kadıköy")}
-        {field("Postal Code", "postalCode", "34700")}
+        {field("Şehir", "city", "İstanbul")}
+        {field("İlçe", "district", "Kadıköy")}
+        {field("Posta Kodu", "postalCode", "34700")}
       </div>
       {error && (
         <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">
@@ -136,14 +134,12 @@ function AddressStep({
         </p>
       )}
       <Button className="w-full gap-2" onClick={handleNext}>
-        Continue to Shipping
+        Kargoya Geç
         <ArrowRight className="w-4 h-4" />
       </Button>
     </div>
   );
 }
-
-// ── Shipping Step — integrates ShippingRateSelect (Milestone 2) ────────────────
 
 function ShippingStep({
   address,
@@ -162,9 +158,7 @@ function ShippingStep({
 }) {
   return (
     <div className="space-y-5">
-      <h2 className="text-lg font-bold text-gray-900">Shipping Option</h2>
-
-      {/* Destination summary */}
+      <h2 className="text-lg font-bold text-gray-900">Kargo Seçeneği</h2>
       {address.city && (
         <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
           <MapPin className="w-4 h-4 text-gray-400 shrink-0" />
@@ -175,25 +169,18 @@ function ShippingStep({
           </span>
         </div>
       )}
-
-      {/* ShippingRateSelect — fetches real ETA from backend via Haversine calc */}
       <ShippingRateSelect
         merchantId={merchantId ?? ""}
         value={value}
         onChange={onChange}
       />
-
       <div className="flex gap-3">
         <Button variant="outline" onClick={onBack} className="gap-2">
           <ArrowLeft className="w-4 h-4" />
-          Back
+          Geri
         </Button>
-        <Button
-          className="flex-1 gap-2"
-          disabled={!value}
-          onClick={onNext}
-        >
-          Continue to Payment
+        <Button className="flex-1 gap-2" disabled={!value} onClick={onNext}>
+          Ödemeye Geç
           <ArrowRight className="w-4 h-4" />
         </Button>
       </div>
@@ -201,7 +188,7 @@ function ShippingStep({
   );
 }
 
-// ── Main CheckoutPage ─────────────────────────────────────────────────────────
+// ── Ana sayfa ─────────────────────────────────────────────────────────────────
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -210,20 +197,25 @@ export default function CheckoutPage() {
 
   const [step, setStep] = useState<Step>("address");
   const [address, setAddress] = useState<Partial<ShippingAddress>>({
-    fullName: user ? `${(user as any).firstName ?? ""} ${(user as any).lastName ?? ""}`.trim() : "",
+    fullName: user
+      ? `${(user as any).firstName ?? ""} ${(user as any).lastName ?? ""}`.trim()
+      : "",
     phone: (user as any)?.phone ?? "",
   });
-  const [shippingRate, setShippingRate] = useState<ShippingRate | null>("REGULAR");
+  const [shippingRate, setShippingRate] = useState<ShippingRate | null>(
+    "REGULAR",
+  );
 
-  // Redirect if cart is empty
-  useEffect(() => {
-    if (items.length === 0) {
-      router.replace("/cart");
-    }
-  }, [items.length, router]);
+  // Ödeme adımına geçerken önce sipariş oluştur
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [creatingOrder, setCreatingOrder] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
 
-  // Merchant from first cart item — used for ETA calculation
   const merchantId = items[0]?.merchantId;
+
+  useEffect(() => {
+    if (items.length === 0) router.replace("/cart");
+  }, [items.length, router]);
 
   const goNext = () => {
     const currentIdx = STEPS.indexOf(step);
@@ -235,27 +227,60 @@ export default function CheckoutPage() {
     if (currentIdx > 0) setStep(STEPS[currentIdx - 1]);
   };
 
+  /**
+   * Kargo adımından ödemeye geçerken sipariş oluştur.
+   * Sipariş oluşturulduktan sonra PaymentForm'a orderId ver.
+   */
+  const handleGoToPayment = async () => {
+    if (!shippingRate || !address) return;
+    setCreatingOrder(true);
+    setOrderError(null);
+    try {
+      const { data } = await api.post<{ orderId: string }>("/api/orders", {
+        items: items.map((i) => ({
+          productId: i.productId,
+          quantity: i.quantity,
+        })),
+        shippingAddress: address,
+        shippingRate,
+        source: "MARKETPLACE",
+      });
+      setOrderId(data.orderId);
+      goNext();
+    } catch (err: any) {
+      setOrderError(
+        err?.response?.data?.message ??
+          "Sipariş oluşturulamadı. Lütfen tekrar deneyin.",
+      );
+    } finally {
+      setCreatingOrder(false);
+    }
+  };
+
   if (items.length === 0) return null;
 
   return (
     <div className="min-h-screen" style={{ background: "var(--off-white)" }}>
-      {/* Header */}
-      <div style={{ borderBottom: "1px solid rgba(51,51,51,0.08)", background: "#fff" }}>
+      <div
+        style={{
+          borderBottom: "1px solid rgba(51,51,51,0.08)",
+          background: "#fff",
+        }}
+      >
         <div className="max-w-4xl mx-auto px-4 py-5">
           <button
             onClick={() => router.push("/cart")}
             className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-700 transition-colors mb-3"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Cart
+            Sepete Dön
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">Checkout</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Ödeme</h1>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-[1fr_360px] gap-8">
-          {/* Left — steps */}
           <div>
             <StepIndicator current={step} steps={STEPS} />
 
@@ -272,35 +297,45 @@ export default function CheckoutPage() {
               )}
 
               {step === "shipping" && (
-                <ShippingStep
-                  address={address}
-                  merchantId={merchantId}
-                  value={shippingRate}
-                  onChange={setShippingRate}
-                  onNext={goNext}
-                  onBack={goBack}
-                />
+                <div className="space-y-5">
+                  <ShippingStep
+                    address={address}
+                    merchantId={merchantId}
+                    value={shippingRate}
+                    onChange={setShippingRate}
+                    onNext={handleGoToPayment}
+                    onBack={goBack}
+                  />
+                  {orderError && (
+                    <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">
+                      {orderError}
+                    </p>
+                  )}
+                  {creatingOrder && (
+                    <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Sipariş oluşturuluyor...
+                    </div>
+                  )}
+                </div>
               )}
 
-              {step === "payment" && shippingRate && (
+              {step === "payment" && orderId && (
                 <div className="space-y-5">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-gray-900">Payment</h2>
+                    <h2 className="text-lg font-bold text-gray-900">Ödeme</h2>
                     <button
                       onClick={goBack}
                       className="text-sm text-gray-400 hover:text-gray-700 flex items-center gap-1"
                     >
                       <ArrowLeft className="w-3 h-3" />
-                      Back
+                      Geri
                     </button>
                   </div>
                   <PaymentForm
-                    merchantId={merchantId ?? ""}
-                    shippingAddress={address as ShippingAddress}
-                    shippingRate={shippingRate}
-                    source="MARKETPLACE"
-                    onSuccess={(orderId) => {
-                      router.push(`/orders/${orderId}/tracking`);
+                    orderId={orderId}
+                    onSuccess={(oid) => {
+                      router.push(`/orders/${oid}/tracking`);
                     }}
                   />
                 </div>
@@ -308,7 +343,6 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* Right — cart summary */}
           <div className="space-y-4">
             <CartSummary readonly={step !== "address"} />
           </div>

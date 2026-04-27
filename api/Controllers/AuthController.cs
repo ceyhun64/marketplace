@@ -1,6 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// api/Controllers/AuthController.cs
-// ─────────────────────────────────────────────────────────────────────────────
 using api.Common.DTOs.Auth;
 using api.Domain.Entities;
 using api.Domain.Enums;
@@ -20,6 +17,7 @@ public class AuthController : ControllerBase
     private readonly AppDbContext _db;
     private readonly ITokenService _tokenService;
     private readonly ICurrentUserService _currentUser;
+    private readonly INotificationService _notification;
     private readonly IConfiguration _config;
     private readonly ILogger<AuthController> _logger;
 
@@ -27,6 +25,7 @@ public class AuthController : ControllerBase
         AppDbContext db,
         ITokenService tokenService,
         ICurrentUserService currentUser,
+        INotificationService notification,
         IConfiguration config,
         ILogger<AuthController> logger
     )
@@ -34,18 +33,18 @@ public class AuthController : ControllerBase
         _db = db;
         _tokenService = tokenService;
         _currentUser = currentUser;
+        _notification = notification;
         _config = config;
         _logger = logger;
     }
 
     // ── POST /api/auth/register ───────────────────────────────────────────────
-    /// <summary>Yeni müşteri hesabı oluşturur.</summary>
+    /// <summary>Yeni müşteri hesabı oluşturur ve doğrulama e-postası gönderir.</summary>
     [HttpPost("register")]
     [ProducesResponseType(typeof(AuthResponse), 201)]
     [ProducesResponseType(typeof(MessageResponse), 409)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest req)
     {
-        // Email benzersizlik kontrolü
         if (await _db.Users.AnyAsync(u => u.Email == req.Email.ToLower()))
             return Conflict(new MessageResponse("Bu e-posta adresi zaten kullanılıyor.", false));
 
@@ -58,14 +57,42 @@ public class AuthController : ControllerBase
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
             Role = UserRole.Customer,
             IsVerified = false,
-            VerificationToken = Guid.NewGuid().ToString(),
+            VerificationToken = Guid.NewGuid().ToString("N"),
         };
 
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
-        // TODO: Verification email gönder (NotificationService entegre edilince)
         _logger.LogInformation("Yeni kullanıcı kaydoldu: {Email}", user.Email);
+
+        // E-posta doğrulama linki gönder
+        var frontendUrl = _config["FRONTEND_URL"] ?? "http://localhost:3000";
+        var verifyUrl = $"{frontendUrl}/auth/verify-email?token={user.VerificationToken}";
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _notification.SendEmailAsync(
+                    user.Email,
+                    "E-posta adresinizi doğrulayın",
+                    $"""
+                    Merhaba {user.FirstName},
+
+                    Hesabınızı doğrulamak için aşağıdaki bağlantıya tıklayın:
+                    {verifyUrl}
+
+                    Bu bağlantı 24 saat geçerlidir.
+
+                    Eğer bu hesabı siz oluşturmadıysanız bu e-postayı yoksayabilirsiniz.
+                    """
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Doğrulama e-postası gönderilemedi: {Email}", user.Email);
+            }
+        });
 
         var (accessToken, refreshToken, expiresAt) = await IssueTokens(user);
 
@@ -146,15 +173,11 @@ public class AuthController : ControllerBase
     }
 
     // ── GET /api/auth/me ──────────────────────────────────────────────────────
-    /// <summary>JWT token'dan mevcut kullanıcı bilgisini döner.</summary>
-    // ── GET /api/auth/me ──────────────────────────────────────────────────────
     [HttpGet("me")]
     [Authorize]
     [ProducesResponseType(typeof(UserInfoResponse), 200)]
     public async Task<IActionResult> Me()
     {
-        // ESKİ HALİ: Guid.TryParse kontrolünü siliyoruz.
-        // YENİ HALİ: Doğrudan _currentUser.UserId kullanarak sorgu atıyoruz.
         var user = await _db
             .Users.Include(u => u.MerchantProfile)
             .FirstOrDefaultAsync(u => u.Id == _currentUser.UserId && !u.IsDeleted);
@@ -183,8 +206,42 @@ public class AuthController : ControllerBase
             user.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
 
-            // TODO: NotificationService ile şifre sıfırlama e-postası gönder
             _logger.LogInformation("Şifre sıfırlama isteği: {Email}", user.Email);
+
+            // Şifre sıfırlama e-postası gönder
+            var frontendUrl = _config["FRONTEND_URL"] ?? "http://localhost:3000";
+            var resetUrl = $"{frontendUrl}/auth/reset-password?token={user.PasswordResetToken}";
+            var token = user.PasswordResetToken;
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _notification.SendEmailAsync(
+                        user.Email,
+                        "Şifre Sıfırlama Talebi",
+                        $"""
+                        Merhaba {user.FirstName},
+
+                        Şifrenizi sıfırlamak için aşağıdaki bağlantıya tıklayın:
+                        {resetUrl}
+
+                        Bu bağlantı 2 saat geçerlidir.
+
+                        Eğer bu talebi siz yapmadıysanız bu e-postayı yoksayabilirsiniz.
+                        Hesabınız güvende.
+                        """
+                    );
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(
+                        ex,
+                        "Şifre sıfırlama e-postası gönderilemedi: {Email}",
+                        user.Email
+                    );
+                }
+            });
         }
 
         return Ok(
@@ -200,7 +257,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest req)
     {
         var user = await _db.Users.FirstOrDefaultAsync(u =>
-            u.PasswordResetToken == req.Token // İkisi de string olmalı
+            u.PasswordResetToken == req.Token
             && u.PasswordResetExpiry > DateTime.UtcNow
             && !u.IsDeleted
         );
@@ -211,12 +268,38 @@ public class AuthController : ControllerBase
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
         user.PasswordResetToken = null;
         user.PasswordResetExpiry = null;
-        // Mevcut tüm sessionları geçersiz kıl
         user.RefreshToken = null;
         user.RefreshTokenExpiry = null;
         user.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
+
+        // Şifre değişti bildirim e-postası
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _notification.SendEmailAsync(
+                    user.Email,
+                    "Şifreniz Başarıyla Değiştirildi",
+                    $"""
+                    Merhaba {user.FirstName},
+
+                    Şifreniz başarıyla güncellendi.
+
+                    Eğer bu değişikliği siz yapmadıysanız lütfen hemen destek ile iletişime geçin.
+                    """
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Şifre değişiklik bildirimi gönderilemedi: {Email}",
+                    user.Email
+                );
+            }
+        });
 
         return Ok(new MessageResponse("Şifreniz başarıyla güncellendi."));
     }
@@ -244,12 +327,13 @@ public class AuthController : ControllerBase
 
         await _db.SaveChangesAsync();
 
+        _logger.LogInformation("E-posta doğrulandı: {Email}", user.Email);
+
         return Ok(new MessageResponse("E-posta adresiniz başarıyla doğrulandı."));
     }
 
     // ── PRIVATE HELPERS ───────────────────────────────────────────────────────
 
-    /// <summary>Yeni token çifti üretir ve DB'ye kaydeder.</summary>
     private async Task<(string AccessToken, string RefreshToken, DateTime ExpiresAt)> IssueTokens(
         User user
     )

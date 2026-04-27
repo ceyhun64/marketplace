@@ -1,6 +1,6 @@
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Stripe;
 
 namespace api.Infrastructure.Webhooks;
 
@@ -23,7 +23,6 @@ public class WebhookService : IWebhookService
 
     public async Task DispatchAsync(string eventType, object payload)
     {
-        // Ortam değişkeninden webhook URL'lerini al (virgülle ayrılmış liste)
         var webhookUrls = _config["WEBHOOK_URLS"]?.Split(',') ?? [];
         if (webhookUrls.Length == 0)
         {
@@ -31,12 +30,14 @@ public class WebhookService : IWebhookService
             return;
         }
 
-        var json = JsonSerializer.Serialize(new
-        {
-            @event = eventType,
-            timestamp = DateTime.UtcNow,
-            data = payload,
-        });
+        var json = JsonSerializer.Serialize(
+            new
+            {
+                @event = eventType,
+                timestamp = DateTime.UtcNow,
+                data = payload,
+            }
+        );
 
         var client = _httpClientFactory.CreateClient("webhook");
 
@@ -63,29 +64,28 @@ public class WebhookService : IWebhookService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Webhook gönderilemedi: event={Event} url={Url}", eventType, url);
+                _logger.LogError(
+                    ex,
+                    "Webhook gönderilemedi: event={Event} url={Url}",
+                    eventType,
+                    url
+                );
             }
         }
     }
 
     /// <summary>
-    /// iyzico HMAC-SHA256 imza doğrulaması.
-    /// İmza = HMAC-SHA256(secretKey, rawBody) hex string.
+    /// Stripe webhook imza doğrulaması.
+    /// Stripe-Signature header'ındaki imzayı, raw body ve webhook secret ile doğrular.
     /// </summary>
-    public bool VerifyIyzicoSignature(string rawBody, string signature, string secretKey)
+    public bool VerifyStripeSignature(string rawBody, string signature, string webhookSecret)
     {
         try
         {
-            var keyBytes = Encoding.UTF8.GetBytes(secretKey);
-            var bodyBytes = Encoding.UTF8.GetBytes(rawBody);
-
-            using var hmac = new HMACSHA256(keyBytes);
-            var computed = hmac.ComputeHash(bodyBytes);
-            var computedHex = Convert.ToHexString(computed).ToLowerInvariant();
-
-            return computedHex.Equals(signature.ToLowerInvariant(), StringComparison.Ordinal);
+            EventUtility.ConstructEvent(rawBody, signature, webhookSecret);
+            return true;
         }
-        catch
+        catch (StripeException)
         {
             return false;
         }
