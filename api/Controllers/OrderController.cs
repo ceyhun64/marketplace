@@ -334,7 +334,7 @@ public class OrdersController(
         if (userId == null)
             return Forbid();
 
-        var merchant = await db.MerchantProfiles.FirstOrDefaultAsync(m => m.UserId == userId.Value);
+        var merchant = await db.MerchantProfiles.FirstOrDefaultAsync(m => m.UserId == userId);
         if (merchant == null)
             return Forbid();
 
