@@ -53,7 +53,7 @@ describe("ShipmentStatus — UPPER_SNAKE_CASE uyumluluğu", () => {
       expect(SHIPMENT_STATUS_LABELS[status]).toBeDefined();
       expect(typeof SHIPMENT_STATUS_LABELS[status]).toBe("string");
       expect(SHIPMENT_STATUS_LABELS[status].length).toBeGreaterThan(0);
-    }
+    },
   );
 
   test.each(BACKEND_SHIPMENT_STATUSES)(
@@ -61,13 +61,11 @@ describe("ShipmentStatus — UPPER_SNAKE_CASE uyumluluğu", () => {
     (status) => {
       expect(SHIPMENT_STATUS_COLORS[status]).toBeDefined();
       expect(SHIPMENT_STATUS_COLORS[status]).toMatch(/bg-\w+/);
-    }
+    },
   );
 
   it("SHIPMENT_STATUS_ORDER tüm non-failed statüleri içermeli", () => {
-    const nonFailed = BACKEND_SHIPMENT_STATUSES.filter(
-      (s) => s !== "FAILED"
-    );
+    const nonFailed = BACKEND_SHIPMENT_STATUSES.filter((s) => s !== "FAILED");
     nonFailed.forEach((status) => {
       expect(SHIPMENT_STATUS_ORDER).toContain(status);
     });
@@ -77,8 +75,13 @@ describe("ShipmentStatus — UPPER_SNAKE_CASE uyumluluğu", () => {
     // Eğer backend fix'i olmadan eski PascalCase gelseyde, bu testler başarısız olurdu.
     // Şimdi backend UPPER_SNAKE_CASE gönderiyor ve frontend map'i de UPPER_SNAKE_CASE bekliyor.
     const pascalCaseValues = [
-      "Pending", "LabelGenerated", "CourierAssigned",
-      "InTransit", "OutForDelivery", "Delivered", "Failed",
+      "Pending",
+      "LabelGenerated",
+      "CourierAssigned",
+      "InTransit",
+      "OutForDelivery",
+      "Delivered",
+      "Failed",
     ];
     pascalCaseValues.forEach((val) => {
       // @ts-expect-error intentionally testing invalid keys
@@ -94,20 +97,23 @@ describe("OrderStatus — UPPER_SNAKE_CASE uyumluluğu", () => {
     "ORDER_STATUS_LABELS['%s'] tanımlı olmalı",
     (status) => {
       expect(ORDER_STATUS_LABELS[status]).toBeDefined();
-    }
+    },
   );
 
   test.each(BACKEND_ORDER_STATUSES)(
     "ORDER_STATUS_COLORS['%s'] Tailwind class içermeli",
     (status) => {
       expect(ORDER_STATUS_COLORS[status]).toMatch(/bg-\w+/);
-    }
+    },
   );
 
   it("NON_CANCELLABLE_STATUSES mantıklı statüler içermeli", () => {
     // Sipariş kargoya verildikten sonra iptal edilemez
     const mustBeNonCancellable: OrderStatus[] = [
-      "PICKED_UP", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED",
+      "PICKED_UP",
+      "IN_TRANSIT",
+      "OUT_FOR_DELIVERY",
+      "DELIVERED",
     ];
     mustBeNonCancellable.forEach((status) => {
       expect(NON_CANCELLABLE_STATUSES).toContain(status);

@@ -49,14 +49,14 @@ public class AdminStoreSetupTests : IDisposable
         var merchantId = await SeedMerchantAsync("Eski Ad", "eski-slug");
 
         var dto = new AdminStoreSetupDto(
-            StoreName:    "Yeni Mağaza Adı",
-            Slug:         "yeni-magaza-adi",
-            Description:  "Harika bir mağaza açıklaması",
-            LogoUrl:      "https://cdn.example.com/logo.png",
-            BannerUrl:    "https://cdn.example.com/banner.jpg",
+            StoreName: "Yeni Mağaza Adı",
+            Slug: "yeni-magaza-adi",
+            Description: "Harika bir mağaza açıklaması",
+            LogoUrl: "https://cdn.example.com/logo.png",
+            BannerUrl: "https://cdn.example.com/banner.jpg",
             HandlingHours: 48,
-            Latitude:     41.0082,
-            Longitude:    28.9784
+            Latitude: 41.0082,
+            Longitude: 28.9784
         );
 
         // Act
@@ -90,14 +90,14 @@ public class AdminStoreSetupTests : IDisposable
 
         // Sadece Description güncelleniyor; diğer alanlar null → dokunulmamalı
         var dto = new AdminStoreSetupDto(
-            StoreName:    null,
-            Slug:         null,
-            Description:  "Yeni açıklama",
-            LogoUrl:      null,
-            BannerUrl:    null,
+            StoreName: null,
+            Slug: null,
+            Description: "Yeni açıklama",
+            LogoUrl: null,
+            BannerUrl: null,
             HandlingHours: null,
-            Latitude:     null,
-            Longitude:    null
+            Latitude: null,
+            Longitude: null
         );
 
         // Act
@@ -105,12 +105,13 @@ public class AdminStoreSetupTests : IDisposable
 
         // Assert — null gönderilen alanlar eski değerlerini korumalı
         var merchant = await _db.MerchantProfiles.FindAsync(merchantId);
-        merchant!.StoreName.Should().Be("Korunacak Ad",          "null StoreName mevcut değeri ezmemeli");
-        merchant.Slug.Should().Be("korunacak-slug",               "null Slug mevcut değeri ezmemeli");
-        merchant.HandlingHours.Should().Be(72,                     "null HandlingHours mevcut değeri ezmemeli");
-        merchant.LogoUrl.Should().Be("https://cdn.example.com/mevcut-logo.png",
-                                                                   "null LogoUrl mevcut değeri ezmemeli");
-        merchant.Description.Should().Be("Yeni açıklama",         "Description güncellenmeli");
+        merchant!.StoreName.Should().Be("Korunacak Ad", "null StoreName mevcut değeri ezmemeli");
+        merchant.Slug.Should().Be("korunacak-slug", "null Slug mevcut değeri ezmemeli");
+        merchant.HandlingHours.Should().Be(72, "null HandlingHours mevcut değeri ezmemeli");
+        merchant
+            .LogoUrl.Should()
+            .Be("https://cdn.example.com/mevcut-logo.png", "null LogoUrl mevcut değeri ezmemeli");
+        merchant.Description.Should().Be("Yeni açıklama", "Description güncellenmeli");
     }
 
     [Fact]
@@ -127,8 +128,12 @@ public class AdminStoreSetupTests : IDisposable
 
         // Assert — UpdatedAt güncellenmiş olmalı
         var merchant = await _db.MerchantProfiles.FindAsync(merchantId);
-        merchant!.UpdatedAt.Should().BeAfter(before,
-            because: "Store setup her zaman UpdatedAt'i şimdiki zamana çekmelidir");
+        merchant!
+            .UpdatedAt.Should()
+            .BeAfter(
+                before,
+                because: "Store setup her zaman UpdatedAt'i şimdiki zamana çekmelidir"
+            );
     }
 
     [Fact]
@@ -144,8 +149,12 @@ public class AdminStoreSetupTests : IDisposable
         // Assert — Response body merchantId içermeli
         result.Should().NotBeNull();
         var body = result!.Value!;
-        body.ToString().Should().Contain(merchantId.ToString(),
-            because: "Response body'de hangi merchant güncellendiği belirtilmeli");
+        body.ToString()
+            .Should()
+            .Contain(
+                merchantId.ToString(),
+                because: "Response body'de hangi merchant güncellendiği belirtilmeli"
+            );
     }
 
     [Fact]
@@ -187,26 +196,39 @@ public class AdminStoreSetupTests : IDisposable
         var result = await _controller.SetupMerchantStore(nonExistentId, dto);
 
         // Assert
-        result.Should().BeOfType<NotFoundObjectResult>(
-            because: "Olmayan bir merchant için 404 dönmesi beklenir");
+        result
+            .Should()
+            .BeOfType<NotFoundObjectResult>(
+                because: "Olmayan bir merchant için 404 dönmesi beklenir"
+            );
     }
 
     [Fact]
     public async Task SetupMerchantStore_DoesNotAffectOtherMerchants()
     {
         // Arrange — iki farklı merchant
-        var targetId  = await SeedMerchantAsync("Hedef Mağaza",   "hedef");
-        var otherId   = await SeedMerchantAsync("Diğer Mağaza",   "diger");
+        var targetId = await SeedMerchantAsync("Hedef Mağaza", "hedef");
+        var otherId = await SeedMerchantAsync("Diğer Mağaza", "diger");
 
-        var dto = new AdminStoreSetupDto("Güncellenmiş Hedef", null, null, null, null, null, null, null);
+        var dto = new AdminStoreSetupDto(
+            "Güncellenmiş Hedef",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+        );
 
         // Act
         await _controller.SetupMerchantStore(targetId, dto);
 
         // Assert — diğer merchant etkilenmemeli
         var other = await _db.MerchantProfiles.FindAsync(otherId);
-        other!.StoreName.Should().Be("Diğer Mağaza",
-            because: "Başka bir merchant'ın verisi değiştirilmiş olmamalı");
+        other!
+            .StoreName.Should()
+            .Be("Diğer Mağaza", because: "Başka bir merchant'ın verisi değiştirilmiş olmamalı");
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -218,17 +240,18 @@ public class AdminStoreSetupTests : IDisposable
         string slug = "test-magaza",
         int handlingHours = 24,
         string? logoUrl = null,
-        DateTime? updatedAt = null)
+        DateTime? updatedAt = null
+    )
     {
         var merchant = new MerchantProfile
         {
-            Id           = Guid.NewGuid(),
-            UserId       = Guid.NewGuid(),
-            StoreName    = storeName,
-            Slug         = slug,
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            StoreName = storeName,
+            Slug = slug,
             HandlingHours = handlingHours,
-            LogoUrl      = logoUrl,
-            UpdatedAt    = updatedAt ?? DateTime.UtcNow.AddDays(-1),
+            LogoUrl = logoUrl,
+            UpdatedAt = updatedAt ?? DateTime.UtcNow.AddDays(-1),
         };
 
         _db.MerchantProfiles.Add(merchant);

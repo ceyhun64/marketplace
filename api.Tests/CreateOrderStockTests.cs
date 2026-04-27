@@ -156,7 +156,8 @@ public class CreateOrderStockTests : IDisposable
         _fulfillment.Verify(
             x => x.CreateShipmentForOrderAsync(It.IsAny<Order>()),
             Times.Once,
-            because: "Her başarılı sipariş için shipment oluşturulmalı");
+            because: "Her başarılı sipariş için shipment oluşturulmalı"
+        );
     }
 
     [Fact]
@@ -166,10 +167,7 @@ public class CreateOrderStockTests : IDisposable
         var productA = await SeedProductAsync(stock: 10, price: 100m);
         var productB = await SeedProductAsync(stock: 20, price: 50m);
 
-        var command = BuildCommandMulti(
-            (productA, 2),
-            (productB, 5)
-        );
+        var command = BuildCommandMulti((productA, 2), (productB, 5));
 
         // Act
         var result = await Handle(command);
@@ -179,7 +177,7 @@ public class CreateOrderStockTests : IDisposable
 
         var pA = await _db.Products.FindAsync(productA);
         var pB = await _db.Products.FindAsync(productB);
-        pA!.Stock.Should().Be(8,  "productA: 10 - 2 = 8");
+        pA!.Stock.Should().Be(8, "productA: 10 - 2 = 8");
         pB!.Stock.Should().Be(15, "productB: 20 - 5 = 15");
 
         // Toplam: 2×100 + 5×50 = 450
@@ -265,7 +263,8 @@ public class CreateOrderStockTests : IDisposable
         _fulfillment.Verify(
             x => x.CreateShipmentForOrderAsync(It.IsAny<Order>()),
             Times.Never,
-            because: "Yetersiz stokta shipment oluşturulmamalı");
+            because: "Yetersiz stokta shipment oluşturulmamalı"
+        );
     }
 
     [Fact]
@@ -294,21 +293,22 @@ public class CreateOrderStockTests : IDisposable
 
         // Assert — silinmiş ürün siparişe eklenmemeli
         result.Success.Should().BeFalse();
-        result.Message.Should().Contain("Ürün bulunamadı",
-            because: "IsDeleted=true ürünler filtrelendiğinden bulunamadı hatası beklenir");
+        result
+            .Message.Should()
+            .Contain(
+                "Ürün bulunamadı",
+                because: "IsDeleted=true ürünler filtrelendiğinden bulunamadı hatası beklenir"
+            );
     }
 
     [Fact]
     public async Task CreateOrder_WithOneInvalidItem_InMultiCart_Fails()
     {
         // Arrange — bir geçerli, bir geçersiz ürün
-        var validProductId   = await SeedProductAsync(stock: 10);
+        var validProductId = await SeedProductAsync(stock: 10);
         var invalidProductId = Guid.NewGuid(); // mevcut değil
 
-        var command = BuildCommandMulti(
-            (validProductId,   2),
-            (invalidProductId, 1)
-        );
+        var command = BuildCommandMulti((validProductId, 2), (invalidProductId, 1));
 
         // Act
         var result = await Handle(command);
@@ -334,27 +334,28 @@ public class CreateOrderStockTests : IDisposable
     private async Task<Guid> SeedProductAsync(
         int stock,
         decimal price = 100m,
-        bool isDeleted = false)
+        bool isDeleted = false
+    )
     {
         var merchant = new MerchantProfile
         {
-            Id        = Guid.NewGuid(),
-            UserId    = Guid.NewGuid(),
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
             StoreName = "Test Mağazası",
-            Slug      = $"test-{Guid.NewGuid():N}",
+            Slug = $"test-{Guid.NewGuid():N}",
         };
 
         var product = new Product
         {
-            Id         = Guid.NewGuid(),
+            Id = Guid.NewGuid(),
             MerchantId = merchant.Id,
-            Merchant   = merchant,
-            Name       = "Test Ürünü",
-            Price      = price,
-            Stock      = stock,
+            Merchant = merchant,
+            Name = "Test Ürünü",
+            Price = price,
+            Stock = stock,
             IsApproved = true,
-            IsDeleted  = isDeleted,
-            Images     = new List<string>(),
+            IsDeleted = isDeleted,
+            Images = new List<string>(),
             CategoryId = Guid.NewGuid(),
         };
 
@@ -368,39 +369,50 @@ public class CreateOrderStockTests : IDisposable
         Guid productId,
         int quantity,
         string shippingRate = "Regular",
-        string source = "Marketplace") =>
-        new(new CreateOrderDto
-        {
-            Items = new List<CreateOrderItemDto>
+        string source = "Marketplace"
+    ) =>
+        new(
+            new CreateOrderDto
             {
-                new() { ProductId = productId, Quantity = quantity }
-            },
-            ShippingRate    = shippingRate,
-            Source          = source,
-            ShippingAddress = SampleAddress(),
-        });
+                Items = new List<CreateOrderItemDto>
+                {
+                    new() { ProductId = productId, Quantity = quantity },
+                },
+                ShippingRate = shippingRate,
+                Source = source,
+                ShippingAddress = SampleAddress(),
+            }
+        );
 
     private static CreateOrderCommand BuildCommandMulti(
-        params (Guid productId, int quantity)[] items) =>
-        new(new CreateOrderDto
-        {
-            Items = items
-                .Select(i => new CreateOrderItemDto { ProductId = i.productId, Quantity = i.quantity })
-                .ToList(),
-            ShippingRate    = "Regular",
-            Source          = "Marketplace",
-            ShippingAddress = SampleAddress(),
-        });
+        params (Guid productId, int quantity)[] items
+    ) =>
+        new(
+            new CreateOrderDto
+            {
+                Items = items
+                    .Select(i => new CreateOrderItemDto
+                    {
+                        ProductId = i.productId,
+                        Quantity = i.quantity,
+                    })
+                    .ToList(),
+                ShippingRate = "Regular",
+                Source = "Marketplace",
+                ShippingAddress = SampleAddress(),
+            }
+        );
 
-    private static ShippingAddressDto SampleAddress() => new()
-    {
-        FullName    = "Ali Veli",
-        Phone       = "555-123-4567",
-        AddressLine = "Atatürk Cad. No: 42",
-        City        = "Istanbul",
-        District    = "Kadıköy",
-        PostalCode  = "34710",
-    };
+    private static ShippingAddressDto SampleAddress() =>
+        new()
+        {
+            FullName = "Ali Veli",
+            Phone = "555-123-4567",
+            AddressLine = "Atatürk Cad. No: 42",
+            City = "Istanbul",
+            District = "Kadıköy",
+            PostalCode = "34710",
+        };
 
     public void Dispose() => _db.Dispose();
 }

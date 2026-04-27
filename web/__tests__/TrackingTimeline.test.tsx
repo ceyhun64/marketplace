@@ -9,6 +9,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import TrackingTimeline from "@/components/modules/fulfillment/TrackingTimeline";
 import { SHIPMENT_STATUS_ORDER, type ShipmentStatus } from "@/types/enums";
+import type { ShipmentStatusEvent } from "@/types/entities";
 
 // Next.js formatDateTime mock
 jest.mock("@/lib/format", () => ({
@@ -17,37 +18,44 @@ jest.mock("@/lib/format", () => ({
 
 const baseProps = {
   trackingNumber: "TRK-12345",
-  events: [],
+  events: [] as ShipmentStatusEvent[],
 };
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+let _evtCounter = 0;
+function makeEvent(
+  status: ShipmentStatus,
+  createdAt: string,
+): ShipmentStatusEvent {
+  return {
+    id: `evt-${++_evtCounter}`,
+    shipmentId: "shp-test",
+    status,
+    createdAt,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 describe("TrackingTimeline — status rendering", () => {
   it("PENDING statüsünde render edilmeli", () => {
-    render(
-      <TrackingTimeline {...baseProps} currentStatus="PENDING" />
-    );
-    // Takip numarası görünmeli
+    render(<TrackingTimeline {...baseProps} currentStatus="PENDING" />);
     expect(screen.getByText("TRK-12345")).toBeInTheDocument();
   });
 
   it("IN_TRANSIT statüsünde doğru label göstermeli", () => {
-    render(
-      <TrackingTimeline {...baseProps} currentStatus="IN_TRANSIT" />
-    );
+    render(<TrackingTimeline {...baseProps} currentStatus="IN_TRANSIT" />);
     expect(screen.getByText(/In Transit/i)).toBeInTheDocument();
   });
 
   it("DELIVERED statüsünde başarı göstergesi render edilmeli", () => {
-    render(
-      <TrackingTimeline {...baseProps} currentStatus="DELIVERED" />
-    );
+    render(<TrackingTimeline {...baseProps} currentStatus="DELIVERED" />);
     expect(screen.getByText("DELIVERED")).toBeInTheDocument();
   });
 
   it("isFailed=true iken FAILED durumu render edilmeli", () => {
-    render(
-      <TrackingTimeline {...baseProps} currentStatus="FAILED" isFailed />
-    );
-    // Hata göstergesi
+    render(<TrackingTimeline {...baseProps} currentStatus="FAILED" isFailed />);
     expect(screen.queryByText("TRK-12345")).toBeInTheDocument();
   });
 
@@ -57,7 +65,7 @@ describe("TrackingTimeline — status rendering", () => {
         {...baseProps}
         currentStatus="COURIER_ASSIGNED"
         courierName="Ahmet Yılmaz"
-      />
+      />,
     );
     expect(screen.getByText("Ahmet Yılmaz")).toBeInTheDocument();
   });
@@ -69,7 +77,7 @@ describe("TrackingTimeline — status rendering", () => {
         currentStatus="IN_TRANSIT"
         estimatedDeliveryStart="2025-12-01"
         estimatedDeliveryEnd="2025-12-03"
-      />
+      />,
     );
     expect(screen.getByText("2025-12-01")).toBeInTheDocument();
   });
@@ -90,31 +98,31 @@ describe("TrackingTimeline — step index logic", () => {
   });
 
   it("FAILED statüsü order listesinde olmamalı (ayrı durum)", () => {
-    const index = SHIPMENT_STATUS_ORDER.indexOf("FAILED");
-    expect(index).toBe(-1);
+    expect(SHIPMENT_STATUS_ORDER.indexOf("FAILED")).toBe(-1);
   });
 });
 
 describe("TrackingTimeline — events rendering", () => {
   it("Boş events ile render crash etmemeli", () => {
     expect(() =>
-      render(<TrackingTimeline {...baseProps} currentStatus="PENDING" events={[]} />)
+      render(
+        <TrackingTimeline {...baseProps} currentStatus="PENDING" events={[]} />,
+      ),
     ).not.toThrow();
   });
 
-  it("Events listesi varken her event render edilmeli", () => {
-    const events = [
-      { status: "PENDING" as ShipmentStatus, changedAt: "2025-11-01T10:00:00Z" },
-      { status: "LABEL_GENERATED" as ShipmentStatus, changedAt: "2025-11-01T11:00:00Z" },
+  it("Events listesi varken her event'in createdAt'i render edilmeli", () => {
+    const events: ShipmentStatusEvent[] = [
+      makeEvent("PENDING", "2025-11-01T10:00:00Z"),
+      makeEvent("LABEL_GENERATED", "2025-11-01T11:00:00Z"),
     ];
     render(
       <TrackingTimeline
         {...baseProps}
         currentStatus="LABEL_GENERATED"
         events={events}
-      />
+      />,
     );
-    // Her event'in changedAt'i gösterilmeli
     expect(screen.getByText("2025-11-01T10:00:00Z")).toBeInTheDocument();
     expect(screen.getByText("2025-11-01T11:00:00Z")).toBeInTheDocument();
   });

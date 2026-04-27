@@ -8,9 +8,15 @@ const createJestConfig = nextJest({
 const config: Config = {
   coverageProvider: "v8",
   testEnvironment: "jsdom",
-  setupFilesAfterFramework: ["<rootDir>/jest.setup.ts"],
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
+  },
+  // @types/jest'i TypeScript'e açıkça tanıt
+  globals: {
+    "ts-jest": {
+      tsconfig: "<rootDir>/tsconfig.jest.json",
+    },
   },
 };
 
