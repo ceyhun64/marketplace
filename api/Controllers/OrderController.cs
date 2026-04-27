@@ -277,6 +277,96 @@ public class OrdersController(
         );
     }
 
+    // ─── MERCHANT ──────────────────────────────────────────────
+
+    /// <summary>GET /api/orders/merchant/incoming — Merchant'a gelen siparişler</summary>
+    [HttpGet("merchant/incoming")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<IActionResult> GetMerchantIncoming(
+        [FromQuery] string? status,
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20
+    )
+    {
+        var merchantId = currentUser.MerchantId;
+        if (merchantId == null)
+            return Forbid();
+
+        var query = db
+            .Orders.Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+            .Include(o => o.Customer)
+            .Include(o => o.Shipment)
+            .Where(o => o.Items.Any(i => i.MerchantId == merchantId.Value))
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, out var ps))
+            query = query.Where(o => o.Status == ps);
+
+        var total = await query.CountAsync();
+        var orders = await query
+            .OrderByDescending(o => o.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .ToListAsync();
+
+        return Ok(
+            new
+            {
+                data = orders.Select(MapOrderToDto),
+                pagination = new
+                {
+                    page,
+                    limit,
+                    total,
+                    pages = (int)Math.Ceiling((double)total / limit),
+                },
+            }
+        );
+    }
+
+    /// <summary>PATCH /api/orders/{id}/pack — Merchant: sipariş hazırlandı (LabelGenerated durumuna geç)</summary>
+    [HttpPatch("{id:guid}/pack")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<IActionResult> PackOrder(Guid id)
+    {
+        var userId = currentUser.UserId;
+        if (userId == null)
+            return Forbid();
+
+        var merchant = await db.MerchantProfiles.FirstOrDefaultAsync(m => m.UserId == userId.Value);
+        if (merchant == null)
+            return Forbid();
+
+        var order = await db
+            .Orders.Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+            .Include(o => o.Customer)
+            .Include(o => o.Shipment)
+            .FirstOrDefaultAsync(o => o.Id == id && o.Items.Any(i => i.MerchantId == merchant.Id));
+
+        if (order == null)
+            return NotFound(new { message = "Sipariş bulunamadı veya yetkiniz yok." });
+
+        if (order.Status != OrderStatus.PaymentConfirmed && order.Status != OrderStatus.Pending)
+            return BadRequest(
+                new { message = $"Bu sipariş hazırlanamaz. Mevcut durum: {order.Status}" }
+            );
+
+        order.Status = OrderStatus.LabelGenerated;
+        order.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        return Ok(
+            new
+            {
+                message = "Sipariş hazırlandı. Kargo etiketi oluşturulabilir.",
+                status = order.Status.ToString(),
+                orderId = order.Id,
+            }
+        );
+    }
+
     [HttpPatch("{id:guid}/status")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateOrderStatusDto dto)
