@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowRight, Loader2, UserPlus } from "lucide-react";
-import Footer from "@/components/layout/Footer";
-import Navbar from "@/components/layout/Navbar";
+
 
 export default function RegisterPage() {
   const router = useRouter();

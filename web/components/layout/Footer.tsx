@@ -41,6 +41,7 @@ export default function Footer() {
 
   return (
     <footer
+    className="border-b-4 border-[var(--charcoal)]"
       style={{
         width: "100%",
         display: "flex",
@@ -48,6 +49,7 @@ export default function Footer() {
         alignItems: "center",
         padding: "0 1.5rem 4rem",
         marginTop: "6rem",
+      
       }}
     >
       {/* Main Footer Container */}

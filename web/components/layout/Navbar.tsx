@@ -15,7 +15,6 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -74,7 +73,6 @@ function LogoMark() {
       className="flex items-center gap-2.5 group"
       style={{ textDecoration: "none" }}
     >
-      {/* Red accent square */}
       <div
         style={{
           width: 28,
@@ -127,7 +125,6 @@ function LogoMark() {
   );
 }
 
-
 function AvatarCircle({ user }: { user: CurrentUser }) {
   if (user.avatarUrl) {
     return (
@@ -139,19 +136,12 @@ function AvatarCircle({ user }: { user: CurrentUser }) {
       />
     );
   }
-
   return (
     <div
       className="w-8 h-8 rounded-full flex items-center justify-center"
-      style={{
-        background: "var(--charcoal)",
-        color: "var(--off-white)",
-      }}
+      style={{ background: "var(--charcoal)", color: "var(--off-white)" }}
     >
-      {/* Lucide-react ikonu örneği */}
       <User size={16} strokeWidth={2.5} />
-
-      {/* Eğer kütüphane kullanmıyorsan buraya direkt SVG de koyabilirsin */}
     </div>
   );
 }
@@ -192,7 +182,14 @@ export default function Navbar() {
 
   return (
     <>
+      {/*
+        data-fixed-header attribute'ü globals.css'deki scrollbar shift fix
+        kuralını bu elemente hedeflemek için kullanılıyor.
+        Radix dropdown açıldığında body'e overflow:hidden + --removed-body-scroll-bar-size
+        ekler; globals.css bu değeri header'ın padding-right'ına uygular.
+      */}
       <header
+        data-fixed-header
         className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none"
         style={{ padding: "1rem 1.25rem" }}
       >
