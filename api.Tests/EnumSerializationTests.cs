@@ -1,9 +1,9 @@
 using System.Text.RegularExpressions;
+using api.Common.DTOs;
+using api.Common.Mappings;
+using api.Domain.Entities;
 using api.Domain.Enums;
 using AutoMapper;
-using api.Common.Mappings;
-using api.Common.DTOs;
-using api.Domain.Entities;
 using FluentAssertions;
 using Xunit;
 
@@ -11,8 +11,12 @@ namespace api.Tests;
 
 /// <summary>
 /// BUG FIX #1 — Enum Serialization Mismatch
-/// Backend'in gönderdiği status değerleri frontend'in beklediği
-/// UPPER_SNAKE_CASE formatında olmalı. Örn: "LabelGenerated" → "LABEL_GENERATED"
+/// ─────────────────────────────────────────
+/// C# enum.ToString() → "LabelGenerated" (PascalCase)
+/// TypeScript frontend beklentisi → "LABEL_GENERATED" (UPPER_SNAKE_CASE)
+///
+/// MappingProfile.ToUpperSnakeCase() regex dönüşümünü ve AutoMapper
+/// ForMember konfigürasyonlarını kapsamlı olarak doğrular.
 /// </summary>
 public class EnumSerializationTests
 {
@@ -21,49 +25,95 @@ public class EnumSerializationTests
     public EnumSerializationTests()
     {
         var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+
+        // AutoMapper konfigürasyonunun kendisinin geçerli olduğunu doğrula.
+        // Eksik ForMember veya belirsiz eşlemeler burada patlar.
+        config.AssertConfigurationIsValid();
+
         _mapper = config.CreateMapper();
     }
 
-    // ── ShipmentStatus enum dönüşümleri ──────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // ToUpperSnakeCase yardımcı fonksiyonu — regex doğruluğu
+    // ─────────────────────────────────────────────────────────────────────────
 
     [Theory]
-    [InlineData(ShipmentStatus.Pending,          "PENDING")]
-    [InlineData(ShipmentStatus.LabelGenerated,   "LABEL_GENERATED")]
-    [InlineData(ShipmentStatus.CourierAssigned,  "COURIER_ASSIGNED")]
-    [InlineData(ShipmentStatus.PickedUp,         "PICKED_UP")]
-    [InlineData(ShipmentStatus.InTransit,        "IN_TRANSIT")]
-    [InlineData(ShipmentStatus.OutForDelivery,   "OUT_FOR_DELIVERY")]
-    [InlineData(ShipmentStatus.Delivered,        "DELIVERED")]
-    [InlineData(ShipmentStatus.Failed,           "FAILED")]
-    public void ShipmentDto_Status_ShouldBeUpperSnakeCase(ShipmentStatus input, string expected)
+    [InlineData("Pending",          "PENDING")]
+    [InlineData("LabelGenerated",   "LABEL_GENERATED")]
+    [InlineData("CourierAssigned",  "COURIER_ASSIGNED")]
+    [InlineData("PickedUp",         "PICKED_UP")]
+    [InlineData("InTransit",        "IN_TRANSIT")]
+    [InlineData("OutForDelivery",   "OUT_FOR_DELIVERY")]
+    [InlineData("Delivered",        "DELIVERED")]
+    [InlineData("Failed",           "FAILED")]
+    [InlineData("PaymentConfirmed", "PAYMENT_CONFIRMED")]
+    [InlineData("Cancelled",        "CANCELLED")]
+    [InlineData("Regular",          "REGULAR")]
+    [InlineData("Express",          "EXPRESS")]
+    public void ToUpperSnakeCase_ConvertsAllKnownValues(string input, string expected)
     {
-        var shipment = new Shipment
-        {
-            Id = Guid.NewGuid(),
-            OrderId = Guid.NewGuid(),
-            Status = input,
-            StatusHistory = new List<ShipmentStatusHistory>(),
-        };
+        var result = Regex.Replace(input, "(?<=[a-z0-9])([A-Z])", "_$1").ToUpperInvariant();
+        result.Should().Be(expected, because: $"'{input}' → '{expected}' dönüşümü gereklidir");
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ShipmentDto.Status — tüm ShipmentStatus değerleri
+    // ─────────────────────────────────────────────────────────────────────────
+
+    [Theory]
+    [InlineData(ShipmentStatus.Pending,         "PENDING")]
+    [InlineData(ShipmentStatus.LabelGenerated,  "LABEL_GENERATED")]
+    [InlineData(ShipmentStatus.CourierAssigned, "COURIER_ASSIGNED")]
+    [InlineData(ShipmentStatus.PickedUp,        "PICKED_UP")]
+    [InlineData(ShipmentStatus.InTransit,       "IN_TRANSIT")]
+    [InlineData(ShipmentStatus.OutForDelivery,  "OUT_FOR_DELIVERY")]
+    [InlineData(ShipmentStatus.Delivered,       "DELIVERED")]
+    [InlineData(ShipmentStatus.Failed,          "FAILED")]
+    public void ShipmentDto_Status_IsUpperSnakeCase(ShipmentStatus status, string expected)
+    {
+        var shipment = BuildShipment(status);
 
         var dto = _mapper.Map<ShipmentDto>(shipment);
 
         dto.Status.Should().Be(expected,
-            because: $"frontend TypeScript expects UPPER_SNAKE_CASE but received \"{dto.Status}\"");
+            because: $"TypeScript karşılaştırması shipment.status === \"{expected}\" şeklinde " +
+                     $"çalışır; PascalCase \"{status}\" gelirse eşleşme sessizce başarısız olur");
     }
 
-    // ── ShipmentStatusHistory dönüşümleri ────────────────────────────────────
+    [Fact]
+    public void ShipmentDto_Status_IsNeverPascalCase_ForAnyEnumValue()
+    {
+        // Enum'a ileride eklenen her yeni değerin de dönüştürüldüğünü garanti eder.
+        foreach (ShipmentStatus status in Enum.GetValues<ShipmentStatus>())
+        {
+            var dto = _mapper.Map<ShipmentDto>(BuildShipment(status));
+            dto.Status.Should().NotMatchRegex("[a-z]",
+                because: $"Küçük harf içeren '{dto.Status}' frontend'de sessiz hata üretir");
+            dto.Status.Should().NotBeEmpty();
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ShipmentStatusHistoryDto.Status — tüm değerler + history koleksiyonu
+    // ─────────────────────────────────────────────────────────────────────────
 
     [Theory]
+    [InlineData(ShipmentStatus.Pending,         "PENDING")]
+    [InlineData(ShipmentStatus.LabelGenerated,  "LABEL_GENERATED")]
+    [InlineData(ShipmentStatus.CourierAssigned, "COURIER_ASSIGNED")]
+    [InlineData(ShipmentStatus.PickedUp,        "PICKED_UP")]
     [InlineData(ShipmentStatus.InTransit,       "IN_TRANSIT")]
     [InlineData(ShipmentStatus.OutForDelivery,  "OUT_FOR_DELIVERY")]
-    public void ShipmentStatusHistoryDto_Status_ShouldBeUpperSnakeCase(
-        ShipmentStatus input, string expected)
+    [InlineData(ShipmentStatus.Delivered,       "DELIVERED")]
+    [InlineData(ShipmentStatus.Failed,          "FAILED")]
+    public void ShipmentStatusHistoryDto_Status_IsUpperSnakeCase(
+        ShipmentStatus status, string expected)
     {
         var history = new ShipmentStatusHistory
         {
             Id = Guid.NewGuid(),
             ShipmentId = Guid.NewGuid(),
-            Status = input,
+            Status = status,
             ChangedAt = DateTime.UtcNow,
         };
 
@@ -72,42 +122,96 @@ public class EnumSerializationTests
         dto.Status.Should().Be(expected);
     }
 
-    // ── OrderStatus enum dönüşümleri ─────────────────────────────────────────
-
-    [Theory]
-    [InlineData(OrderStatus.Pending,           "PENDING")]
-    [InlineData(OrderStatus.PaymentConfirmed,  "PAYMENT_CONFIRMED")]
-    [InlineData(OrderStatus.LabelGenerated,    "LABEL_GENERATED")]
-    [InlineData(OrderStatus.CourierAssigned,   "COURIER_ASSIGNED")]
-    [InlineData(OrderStatus.Delivered,         "DELIVERED")]
-    [InlineData(OrderStatus.Cancelled,         "CANCELLED")]
-    public void OrderDto_Status_ShouldBeUpperSnakeCase(OrderStatus input, string expected)
+    [Fact]
+    public void ShipmentDto_HistoryStatuses_AreAllUpperSnakeCase_WhenMappedFromShipment()
     {
-        var order = new Order
+        // Shipment → ShipmentDto eşlemesi history koleksiyonunu da dönüştürmeli
+        // ve OrderByDescending(ChangedAt) sırasını korumalı.
+        var now = DateTime.UtcNow;
+        var shipment = BuildShipment(ShipmentStatus.InTransit);
+        shipment.StatusHistory = new List<ShipmentStatusHistory>
         {
-            Id = Guid.NewGuid(),
-            Status = input,
-            ShippingRate = ShippingRate.Regular,
-            Items = new List<OrderItem>(),
+            new() { Status = ShipmentStatus.Pending,        ChangedAt = now.AddHours(-3) },
+            new() { Status = ShipmentStatus.LabelGenerated, ChangedAt = now.AddHours(-2) },
+            new() { Status = ShipmentStatus.InTransit,      ChangedAt = now.AddHours(-1) },
         };
 
-        var dto = _mapper.Map<OrderDto>(order);
+        var dto = _mapper.Map<ShipmentDto>(shipment);
 
-        dto.Status.Should().Be(expected,
-            because: $"OrderStatus comparisons in frontend will silently fail if not UPPER_SNAKE_CASE");
+        dto.History.Should().HaveCount(3);
+        dto.History.Select(h => h.Status).Should().ContainInOrder(
+            "IN_TRANSIT", "LABEL_GENERATED", "PENDING",
+            because: "History OrderByDescending(ChangedAt) ile sıralanmalı");
     }
 
-    // ── Yardımcı: regex'in doğru çalıştığını doğrudan test et ───────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // OrderDto.Status — tüm OrderStatus değerleri
+    // ─────────────────────────────────────────────────────────────────────────
 
     [Theory]
-    [InlineData("Pending",         "PENDING")]
-    [InlineData("LabelGenerated",  "LABEL_GENERATED")]
-    [InlineData("CourierAssigned", "COURIER_ASSIGNED")]
-    [InlineData("InTransit",       "IN_TRANSIT")]
-    [InlineData("OutForDelivery",  "OUT_FOR_DELIVERY")]
-    public void ToUpperSnakeCase_Helper_ShouldConvertCorrectly(string input, string expected)
+    [InlineData(OrderStatus.Pending,          "PENDING")]
+    [InlineData(OrderStatus.PaymentConfirmed, "PAYMENT_CONFIRMED")]
+    [InlineData(OrderStatus.LabelGenerated,   "LABEL_GENERATED")]
+    [InlineData(OrderStatus.CourierAssigned,  "COURIER_ASSIGNED")]
+    [InlineData(OrderStatus.PickedUp,         "PICKED_UP")]
+    [InlineData(OrderStatus.InTransit,        "IN_TRANSIT")]
+    [InlineData(OrderStatus.OutForDelivery,   "OUT_FOR_DELIVERY")]
+    [InlineData(OrderStatus.Delivered,        "DELIVERED")]
+    [InlineData(OrderStatus.Failed,           "FAILED")]
+    [InlineData(OrderStatus.Cancelled,        "CANCELLED")]
+    public void OrderDto_Status_IsUpperSnakeCase(OrderStatus status, string expected)
     {
-        var result = Regex.Replace(input, "(?<=[a-z0-9])([A-Z])", "_$1").ToUpperInvariant();
-        result.Should().Be(expected);
+        var dto = _mapper.Map<OrderDto>(BuildOrder(status));
+
+        dto.Status.Should().Be(expected);
     }
+
+    [Fact]
+    public void OrderDto_Status_IsNeverPascalCase_ForAnyEnumValue()
+    {
+        foreach (OrderStatus status in Enum.GetValues<OrderStatus>())
+        {
+            var dto = _mapper.Map<OrderDto>(BuildOrder(status));
+            dto.Status.Should().NotMatchRegex("[a-z]",
+                because: $"Küçük harf içeren '{dto.Status}' frontend'de sessiz hata üretir");
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // OrderDto.ShippingRate — enum dönüşümü
+    // ─────────────────────────────────────────────────────────────────────────
+
+    [Theory]
+    [InlineData(ShippingRate.Regular, "REGULAR")]
+    [InlineData(ShippingRate.Express, "EXPRESS")]
+    public void OrderDto_ShippingRate_IsUpperSnakeCase(ShippingRate rate, string expected)
+    {
+        var dto = _mapper.Map<OrderDto>(BuildOrder(OrderStatus.Pending, rate));
+
+        dto.ShippingRate.Should().Be(expected,
+            because: "Frontend SHIPPING_RATE_LABELS map'i UPPER_SNAKE_CASE anahtarı bekler");
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Helpers
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private static Shipment BuildShipment(ShipmentStatus status) => new()
+    {
+        Id = Guid.NewGuid(),
+        OrderId = Guid.NewGuid(),
+        Status = status,
+        TrackingNumber = "TRK-TEST",
+        StatusHistory = new List<ShipmentStatusHistory>(),
+    };
+
+    private static Order BuildOrder(
+        OrderStatus status,
+        ShippingRate rate = ShippingRate.Regular) => new()
+    {
+        Id = Guid.NewGuid(),
+        Status = status,
+        ShippingRate = rate,
+        Items = new List<OrderItem>(),
+    };
 }
