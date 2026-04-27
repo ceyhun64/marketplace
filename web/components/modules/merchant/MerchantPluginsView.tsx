@@ -5,24 +5,20 @@ import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import {
-  Puzzle,
-  Check,
-  DollarSign,
-  Zap,
-  Package,
-  Lock,
-} from "lucide-react";
+import { Puzzle, Check, DollarSign, Zap, Package, Lock } from "lucide-react";
 
 interface Plugin {
   id: string;
   name: string;
+  slug: string;
   description: string;
-  version: string;
   monthlyPrice: number;
   category: string;
   isSubscribed: boolean;
-  subscribedAt: string | null;
+  isActive: boolean;
+  isFeatured: boolean;
+  minimumPlan: string;
+  createdAt: string;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -40,14 +36,16 @@ export default function MerchantPluginsView() {
   const { data: plugins, isLoading } = useQuery<Plugin[]>({
     queryKey: ["merchant-plugins"],
     queryFn: async () => {
-      const res = await api.get("/plugins/available");
-      return res.data;
+      const res = await api.get("/api/plugins/available");
+      // Backend ApiResponse<List<PluginDto>> döndürür
+      const body = res.data;
+      return Array.isArray(body) ? body : (body?.data ?? []);
     },
   });
 
   const subscribeMutation = useMutation({
     mutationFn: (pluginId: string) =>
-      api.post(`/plugins/${pluginId}/subscribe`),
+      api.post(`/api/plugins/${pluginId}/subscribe`),
     onSuccess: () => {
       toast.success("Plugin activated successfully");
       qc.invalidateQueries({ queryKey: ["merchant-plugins"] });
@@ -57,7 +55,7 @@ export default function MerchantPluginsView() {
 
   const unsubscribeMutation = useMutation({
     mutationFn: (pluginId: string) =>
-      api.delete(`/plugins/${pluginId}/subscribe`),
+      api.delete(`/api/plugins/${pluginId}/subscribe`),
     onSuccess: () => {
       toast.success("Plugin deactivated");
       qc.invalidateQueries({ queryKey: ["merchant-plugins"] });
@@ -111,10 +109,10 @@ export default function MerchantPluginsView() {
                       <p className="text-xs text-gray-500 mt-1 line-clamp-2">
                         {p.description}
                       </p>
-                      {p.subscribedAt && (
+                      {p.createdAt && (
                         <p className="text-xs text-green-600 mt-1">
                           Active since{" "}
-                          {new Date(p.subscribedAt).toLocaleDateString()}
+                          {new Date(p.createdAt).toLocaleDateString()}
                         </p>
                       )}
                     </div>
@@ -131,9 +129,7 @@ export default function MerchantPluginsView() {
                       variant="outline"
                       className="text-xs h-7 rounded-lg border-red-200 text-red-500 hover:bg-red-50"
                       onClick={() => {
-                        if (
-                          confirm(`Deactivate "${p.name}"?`)
-                        ) {
+                        if (confirm(`Deactivate "${p.name}"?`)) {
                           unsubscribeMutation.mutate(p.id);
                         }
                       }}
@@ -233,9 +229,7 @@ export default function MerchantPluginsView() {
       <div className="bg-gray-900 text-white rounded-2xl p-5 flex items-center gap-4">
         <Lock className="w-8 h-8 text-gray-400 flex-shrink-0" />
         <div className="flex-1">
-          <p className="text-sm font-semibold">
-            Need access to more plugins?
-          </p>
+          <p className="text-sm font-semibold">Need access to more plugins?</p>
           <p className="text-xs text-gray-400 mt-0.5">
             Upgrade to Pro or Enterprise to unlock the full Plugin Marketplace.
           </p>

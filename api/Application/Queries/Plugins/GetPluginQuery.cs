@@ -12,7 +12,8 @@ public record GetPluginsQuery(
     bool? IsActive = null,
     bool? IsFeatured = null,
     int Page = 1,
-    int Limit = 20
+    int Limit = 20,
+    string? Search = null
 ) : IRequest<GetPluginsResult>;
 
 public record GetPluginsResult(List<PluginDto> Items, int Total, int Page, int TotalPages);
@@ -54,6 +55,13 @@ public class GetPluginsQueryHandler : IRequestHandler<GetPluginsQuery, GetPlugin
 
         if (request.IsFeatured.HasValue)
             query = query.Where(p => p.IsFeatured == request.IsFeatured.Value);
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+            query = query.Where(p =>
+                p.Name.Contains(request.Search)
+                || p.Description.Contains(request.Search)
+                || p.Category.Contains(request.Search)
+            );
 
         var total = await query.CountAsync(cancellationToken);
         var totalPages = (int)Math.Ceiling((double)total / request.Limit);

@@ -39,7 +39,7 @@ public class PluginsController : ControllerBase
     )
     {
         var result = await _mediator.Send(
-            new GetPluginsQuery(category, isActive, isFeatured, page, limit)
+            new GetPluginsQuery(category, isActive, isFeatured, page, limit, search)
         );
         return Ok(new ApiResponse<GetPluginsResult>(result));
     }

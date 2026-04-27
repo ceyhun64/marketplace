@@ -39,29 +39,37 @@ import {
 interface Plugin {
   id: string;
   name: string;
+  slug: string;
   description: string;
-  version: string;
   monthlyPrice: number;
   isActive: boolean;
+  isFeatured: boolean;
   category: string;
-  subscriberCount: number;
+  minimumPlan: string;
+  developerName?: string;
+  documentationUrl?: string;
+  isSubscribed: boolean;
   createdAt: string;
 }
 
 interface PluginFormData {
   name: string;
+  slug: string;
   description: string;
-  version: string;
   monthlyPrice: number;
   category: string;
+  minimumPlan: string;
+  isFeatured: boolean;
 }
 
 const EMPTY_FORM: PluginFormData = {
   name: "",
+  slug: "",
   description: "",
-  version: "1.0.0",
   monthlyPrice: 0,
   category: "analytics",
+  minimumPlan: "Pro",
+  isFeatured: false,
 };
 
 export default function AdminPluginsPage() {
@@ -74,13 +82,17 @@ export default function AdminPluginsPage() {
   const { data: plugins, isLoading } = useQuery<Plugin[]>({
     queryKey: ["admin-plugins", search],
     queryFn: async () => {
-      const res = await api.get(`/plugins?search=${search}`);
-      return res.data;
+      const res = await api.get(`/api/plugins?search=${search}`);
+      // Backend ApiResponse<GetPluginsResult> döndürür: { data: { items: [...] } }
+      const body = res.data;
+      return Array.isArray(body)
+        ? body
+        : (body?.items ?? body?.data?.items ?? []);
     },
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: PluginFormData) => api.post("/plugins", data),
+    mutationFn: (data: PluginFormData) => api.post("/api/plugins", data),
     onSuccess: () => {
       toast.success("Plugin created");
       qc.invalidateQueries({ queryKey: ["admin-plugins"] });
@@ -92,7 +104,7 @@ export default function AdminPluginsPage() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: PluginFormData }) =>
-      api.put(`/plugins/${id}`, data),
+      api.put(`/api/plugins/${id}`, data),
     onSuccess: () => {
       toast.success("Plugin updated");
       qc.invalidateQueries({ queryKey: ["admin-plugins"] });
@@ -104,7 +116,7 @@ export default function AdminPluginsPage() {
 
   const toggleMutation = useMutation({
     mutationFn: ({ id, active }: { id: string; active: boolean }) =>
-      api.patch(`/plugins/${id}/toggle`, { isActive: active }),
+      api.patch(`/api/plugins/${id}/toggle`, { isActive: active }),
     onSuccess: () => {
       toast.success("Plugin status updated");
       qc.invalidateQueries({ queryKey: ["admin-plugins"] });
@@ -113,7 +125,7 @@ export default function AdminPluginsPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/plugins/${id}`),
+    mutationFn: (id: string) => api.delete(`/api/plugins/${id}`),
     onSuccess: () => {
       toast.success("Plugin deleted");
       qc.invalidateQueries({ queryKey: ["admin-plugins"] });
@@ -131,10 +143,12 @@ export default function AdminPluginsPage() {
     setEditPlugin(p);
     setForm({
       name: p.name,
+      slug: p.slug,
       description: p.description,
-      version: p.version,
       monthlyPrice: p.monthlyPrice,
       category: p.category,
+      minimumPlan: p.minimumPlan,
+      isFeatured: p.isFeatured,
     });
     setOpen(true);
   };
@@ -201,19 +215,33 @@ export default function AdminPluginsPage() {
                   }
                 />
               </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-gray-600">
+                  Slug (URL-safe)
+                </Label>
+                <Input
+                  placeholder="e.g. advanced-analytics"
+                  className="rounded-xl border-gray-200"
+                  value={form.slug}
+                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-gray-600">
-                    Version
+                    Minimum Plan
                   </Label>
-                  <Input
-                    placeholder="1.0.0"
-                    className="rounded-xl border-gray-200"
-                    value={form.version}
+                  <select
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    value={form.minimumPlan}
                     onChange={(e) =>
-                      setForm({ ...form, version: e.target.value })
+                      setForm({ ...form, minimumPlan: e.target.value })
                     }
-                  />
+                  >
+                    <option value="Basic">Basic</option>
+                    <option value="Pro">Pro</option>
+                    <option value="Enterprise">Enterprise</option>
+                  </select>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-gray-600">
@@ -256,9 +284,7 @@ export default function AdminPluginsPage() {
               <Button
                 className="w-full rounded-xl bg-gray-900 hover:bg-gray-800"
                 onClick={handleSubmit}
-                disabled={
-                  createMutation.isPending || updateMutation.isPending
-                }
+                disabled={createMutation.isPending || updateMutation.isPending}
               >
                 {editPlugin ? "Save Changes" : "Create Plugin"}
               </Button>
@@ -291,13 +317,13 @@ export default function AdminPluginsPage() {
                 Category
               </TableHead>
               <TableHead className="font-semibold text-gray-600 text-xs uppercase">
-                Version
+                Min Plan
               </TableHead>
               <TableHead className="font-semibold text-gray-600 text-xs uppercase">
                 Price/mo
               </TableHead>
               <TableHead className="font-semibold text-gray-600 text-xs uppercase">
-                Subscribers
+                Featured
               </TableHead>
               <TableHead className="font-semibold text-gray-600 text-xs uppercase">
                 Status
@@ -343,8 +369,8 @@ export default function AdminPluginsPage() {
                         {p.category}
                       </span>
                     </TableCell>
-                    <TableCell className="text-sm font-mono text-gray-600">
-                      v{p.version}
+                    <TableCell className="text-sm text-gray-600">
+                      {p.minimumPlan}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
@@ -357,12 +383,13 @@ export default function AdminPluginsPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Package className="w-3.5 h-3.5 text-blue-400" />
-                        <span className="text-sm text-gray-700">
-                          {p.subscriberCount}
+                      {p.isFeatured ? (
+                        <span className="text-xs bg-yellow-50 text-yellow-600 px-2 py-1 rounded-full">
+                          Featured
                         </span>
-                      </div>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <button
@@ -408,7 +435,7 @@ export default function AdminPluginsPage() {
                           onClick={() => {
                             if (
                               confirm(
-                                `Delete plugin "${p.name}"? This cannot be undone.`
+                                `Delete plugin "${p.name}"? This cannot be undone.`,
                               )
                             ) {
                               deleteMutation.mutate(p.id);

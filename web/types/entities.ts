@@ -208,18 +208,33 @@ export interface Subscription {
 export interface Plugin {
   id: string;
   name: string;
+  slug: string;
   description: string;
   iconUrl?: string;
-  price: number;
+  /** Aylık fiyat — backend PluginDto.MonthlyPrice */
+  monthlyPrice: number;
+  /** Geriye dönük uyumluluk için alias */
+  price?: number;
   category: string;
   isActive: boolean;
+  isFeatured: boolean;
+  minimumPlan: string;
+  developerName?: string;
+  documentationUrl?: string;
+  /** Mevcut merchant bu plugin'e abone mi? */
+  isSubscribed: boolean;
+  createdAt: string;
 }
 
 export interface MerchantPlugin {
   id: string;
-  merchantId: string;
   pluginId: string;
-  plugin: Plugin;
-  activatedAt: string;
+  pluginName: string;
+  pluginSlug: string;
+  pluginIconUrl?: string;
+  isActive: boolean;
+  config?: string;
+  subscribedAt: string;
   expiresAt?: string;
+  autoRenew: boolean;
 }
