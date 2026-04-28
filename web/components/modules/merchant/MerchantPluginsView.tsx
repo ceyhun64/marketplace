@@ -129,7 +129,10 @@ export default function MerchantPluginsView() {
                       variant="outline"
                       className="text-xs h-7 rounded-lg border-red-200 text-red-500 hover:bg-red-50"
                       onClick={() => {
-                        if (confirm(`Deactivate "${p.name}"?`)) {
+                        if (
+                          typeof window !== "undefined" &&
+                          window.confirm(`Deactivate "${p.name}"?`)
+                        ) {
                           unsubscribeMutation.mutate(p.id);
                         }
                       }}

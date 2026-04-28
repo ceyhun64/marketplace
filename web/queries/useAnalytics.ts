@@ -61,10 +61,12 @@ export function useMerchantSalesChart(period: AnalyticsPeriod = "weekly") {
   return useQuery({
     queryKey: analyticsKeys.merchantSales(period),
     queryFn: async () => {
-      const { data } = await api.get<SalesDataPoint[]>(
+      const { data } = await api.get<any>(
         `/api/analytics/merchant/sales?period=${period}`,
       );
-      return data;
+      // API dizi veya obje dönebilir
+      const raw = data?.data ?? data?.items ?? data?.salesChart ?? data;
+      return (Array.isArray(raw) ? raw : []) as SalesDataPoint[];
     },
     staleTime: STALE_TIME.MEDIUM,
   });
@@ -77,10 +79,14 @@ export function useMerchantComparison() {
   return useQuery({
     queryKey: analyticsKeys.merchantComparison(),
     queryFn: async () => {
-      const { data } = await api.get<ComparisonData>(
-        "/api/analytics/merchant/comparison",
-      );
-      return data;
+      const { data } = await api.get<any>("/api/analytics/merchant/comparison");
+      // API yanıtını normalize et — nested veya flat gelebilir
+      const raw = data?.data ?? data ?? {};
+      const empty = { revenue: 0, orders: 0, conversionRate: 0 };
+      return {
+        marketplace: raw.marketplace ?? empty,
+        estore: raw.estore ?? raw.eStore ?? raw.e_store ?? empty,
+      } as ComparisonData;
     },
     staleTime: STALE_TIME.MEDIUM,
   });

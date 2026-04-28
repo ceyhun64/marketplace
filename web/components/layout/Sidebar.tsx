@@ -56,8 +56,13 @@ export function Sidebar({ links, role }: SidebarProps) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     // skipHydration kullandığımız için store'u manuel rehydrate et
-    useAuth.persist.rehydrate();
-    setMounted(true);
+    // rehydrate tamamlandıktan sonra mounted=true yapıyoruz;
+    // böylece SSR/client HTML farkı (hydration mismatch) oluşmuyor.
+    const init = async () => {
+      await useAuth.persist.rehydrate();
+      setMounted(true);
+    };
+    init();
   }, []);
 
   const handleLogout = async () => {
