@@ -14,6 +14,7 @@ import {
   Truck,
   DollarSign,
   AlertCircle,
+  Store,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -25,6 +26,7 @@ interface DashboardStats {
   totalRevenue: number;
   totalProducts: number;
   pendingProducts: number;
+  pendingMerchants: number;
   fulfillmentSuccessRate: number;
   recentOrders?: any[];
 }
@@ -34,7 +36,19 @@ export default function AdminDashboardPage() {
     queryKey: ["admin-dashboard"],
     queryFn: async () => {
       const res = await api.get("/api/admin/dashboard");
-      return res.data as DashboardStats;
+      const d = res.data;
+      return {
+        totalOrders: d.orders?.totalOrders ?? d.totalOrders ?? 0,
+        pendingOrders: d.orders?.pendingOrders ?? d.pendingOrders ?? 0,
+        totalMerchants: d.merchants?.totalMerchants ?? d.totalMerchants ?? 0,
+        activeMerchants: d.merchants?.activeMerchants ?? d.activeMerchants ?? 0,
+        totalRevenue: d.revenue?.revenueThisMonth ?? d.totalRevenue ?? 0,
+        totalProducts: d.totalProducts ?? 0,
+        pendingProducts: d.pendingProducts ?? 0,
+        pendingMerchants: d.pendingMerchants ?? 0,
+        fulfillmentSuccessRate: d.fulfillmentSuccessRate ?? 0,
+        recentOrders: d.recentOrders,
+      } as DashboardStats;
     },
   });
 
@@ -96,6 +110,14 @@ export default function AdminDashboardPage() {
       color: "text-teal-600",
       bg: "bg-teal-50",
       href: "/admin/analytics",
+    },
+    {
+      label: "Pending Merchants",
+      value: stats.pendingMerchants ?? 0,
+      icon: Store,
+      color: "text-orange-600",
+      bg: "bg-orange-50",
+      href: "/admin/merchants?tab=pending",
     },
     {
       label: "Active Deliveries",
@@ -182,7 +204,31 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Alert */}
+      {/* Pending Merchants Alert */}
+      {(stats.pendingMerchants ?? 0) > 0 && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Store className="w-5 h-5 text-orange-500 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-orange-900 text-sm">
+                {stats.pendingMerchants} merchant application
+                {stats.pendingMerchants > 1 ? "s" : ""} awaiting review
+              </p>
+              <p className="text-xs text-orange-700 mt-0.5">
+                New merchant applicants are waiting for approval before they can
+                list products.
+              </p>
+            </div>
+          </div>
+          <Link href="/admin/merchants?tab=pending">
+            <span className="text-xs font-semibold text-orange-700 bg-orange-100 hover:bg-orange-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap">
+              Review →
+            </span>
+          </Link>
+        </div>
+      )}
+
+      {/* Pending Products Alert */}
       {(stats.pendingProducts ?? 0) > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
