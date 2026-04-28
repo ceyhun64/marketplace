@@ -33,7 +33,7 @@ const MOCK_STORES: Store[] = [
     id: "2",
     name: "Nature Beauty",
     slug: "nature-beauty",
-    description: "100% natural, cruelty-free skin and hair care products.",
+    description: "100% natural, cruelty-free skin and hair care.",
     categoryFocus: "Cosmetics",
     productCount: 340,
     rating: 4.9,
@@ -70,205 +70,439 @@ const MOCK_STORES: Store[] = [
 export default function FeaturedStores() {
   return (
     <section
-      className="py-20 lg:py-24"
-      style={{ borderTop: "1px solid rgba(51,51,51,0.06)" }}
+      style={{
+        padding: "5rem 0 6rem",
+        borderTop: "1px solid var(--border-subtle)",
+      }}
     >
-      <div className="max-w-[1300px] mx-auto px-6 lg:px-8">
-        {/* Section header */}
-        <div className="flex items-end justify-between mb-12">
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
+      <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 2rem" }}>
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
+            marginBottom: "3.5rem",
+            flexWrap: "wrap" as const,
+            gap: "1.5rem",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                marginBottom: "1rem",
+              }}
+            >
               <span
-                className="inline-block w-6 h-px"
-                style={{ background: "var(--red)" }}
+                style={{
+                  display: "inline-block",
+                  width: 24,
+                  height: 1,
+                  background: "var(--red)",
+                }}
               />
-              <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-[var(--charcoal-soft)]">
+              <span
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "var(--text-xs)",
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase" as const,
+                  color: "var(--charcoal-soft)",
+                }}
+              >
                 Elite Partners
               </span>
             </div>
             <h2
-              className="text-[2.2rem] lg:text-[2.75rem] font-normal leading-[1.1] tracking-[-0.01em] text-[var(--charcoal)]"
-              style={{ fontFamily: "var(--font-display)" }}
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(2rem, 3.5vw, 2.75rem)",
+                fontWeight: 400,
+                lineHeight: 1.1,
+                letterSpacing: "-0.02em",
+                color: "var(--charcoal)",
+              }}
             >
               Trusted sellers,{" "}
-              <em style={{ color: "var(--red)" }}>verified quality.</em>
+              <em style={{ color: "var(--red)", fontStyle: "italic" }}>
+                verified quality.
+              </em>
             </h2>
           </div>
           <Link
             href="/stores"
-            className="hidden sm:flex items-center gap-2 text-sm font-semibold text-[var(--charcoal)] hover:text-[var(--red)] transition-colors group"
-            style={{ fontFamily: "var(--font-body)" }}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              fontFamily: "var(--font-body)",
+              fontSize: "var(--text-sm)",
+              fontWeight: 600,
+              color: "var(--charcoal-mid)",
+              textDecoration: "none",
+              transition: "color var(--dur-fast)",
+            }}
+            className="hover:text-[var(--red)]"
           >
             All Stores
-            <ArrowUpRight className="w-4 h-4" />
+            <ArrowUpRight size={15} strokeWidth={2.5} />
           </Link>
         </div>
 
-        {/* Stores Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* Grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: "1.25rem",
+            marginBottom: "2.5rem",
+          }}
+          className="lg:grid-cols-4 md:grid-cols-2 grid-cols-1"
+        >
           {MOCK_STORES.map((store) => (
             <Link
               key={store.id}
               href={`/store/${store.slug}`}
-              className="group relative bg-white rounded-2xl p-7 block transition-all duration-300 hover:-translate-y-1 overflow-hidden"
               style={{
-                border: "1px solid rgba(51,51,51,0.08)",
-                boxShadow: "0 1px 3px rgba(51,51,51,0.06)",
+                position: "relative",
+                display: "block",
+                background: "var(--white)",
+                borderRadius: "var(--radius-lg)",
+                padding: "1.75rem",
                 textDecoration: "none",
+                border: "1px solid var(--border-subtle)",
+                boxShadow: "var(--shadow-xs)",
+                overflow: "hidden",
+                transition:
+                  "transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out)",
               }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.boxShadow = "0 4px 16px rgba(51,51,51,0.08)";
-                el.style.borderColor = "rgba(200,16,46,0.2)";
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.boxShadow = "0 1px 3px rgba(51,51,51,0.06)";
-                el.style.borderColor = "rgba(51,51,51,0.08)";
-              }}
+              className="group hover:-translate-y-1 hover:shadow-md hover:!border-[rgba(200,16,46,0.2)]"
             >
               {/* Top accent */}
               <div
-                className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
-                style={{ background: "var(--red)" }}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 2,
+                  background: "var(--red)",
+                  transformOrigin: "left",
+                  transform: "scaleX(0)",
+                  transition: "transform var(--dur-base) var(--ease-out)",
+                }}
+                className="group-hover:!scale-x-100"
               />
 
-              <div className="flex justify-between items-start mb-7">
+              {/* Store header */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  marginBottom: "1.5rem",
+                }}
+              >
                 <div
-                  className="w-14 h-14 rounded-[14px] flex items-center justify-center text-2xl"
-                  style={{ background: "rgba(200,16,46,0.06)" }}
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: "var(--radius-md)",
+                    background: "var(--red-muted)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 24,
+                    transition:
+                      "background var(--dur-base), transform var(--dur-base) var(--ease-spring)",
+                  }}
+                  className="group-hover:bg-[var(--red-subtle)] group-hover:scale-105"
                 >
                   {store.emoji}
                 </div>
                 <div
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-full"
-                  style={{ background: "var(--off-white)" }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    background: "var(--off-white)",
+                    borderRadius: "var(--radius-md)",
+                    padding: "4px 10px",
+                  }}
                 >
-                  <Star className="w-3 h-3 fill-[var(--red)] text-[var(--red)]" />
-                  <span className="font-mono text-[11px] font-medium text-[var(--charcoal)]">
+                  <Star
+                    size={11}
+                    style={{ fill: "var(--red)", color: "var(--red)" }}
+                  />
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "var(--text-xs)",
+                      fontWeight: 600,
+                      color: "var(--charcoal)",
+                    }}
+                  >
                     {store.rating}
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center gap-1.5">
+              {/* Name + desc */}
+              <div style={{ marginBottom: "1.25rem" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    marginBottom: "0.5rem",
+                  }}
+                >
                   <h3
-                    className="text-[1rem] font-bold text-[var(--charcoal)] group-hover:text-[var(--red)] transition-colors"
-                    style={{ fontFamily: "var(--font-body)" }}
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: "var(--text-base)",
+                      fontWeight: 700,
+                      color: "var(--charcoal)",
+                      letterSpacing: "-0.01em",
+                      transition: "color var(--dur-fast)",
+                    }}
+                    className="group-hover:text-[var(--red)]"
                   >
                     {store.name}
                   </h3>
                   {store.featured && (
                     <CheckCircle2
-                      className="w-3.5 h-3.5 flex-shrink-0"
-                      style={{ color: "var(--red)" }}
+                      size={14}
+                      style={{ color: "var(--red)", flexShrink: 0 }}
                     />
                   )}
                 </div>
-
                 <p
-                  className="text-[var(--charcoal-soft)] text-[0.8125rem] leading-relaxed line-clamp-2"
-                  style={{ fontFamily: "var(--font-body)" }}
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: "var(--text-sm)",
+                    color: "var(--charcoal-soft)",
+                    lineHeight: 1.6,
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical" as const,
+                    overflow: "hidden",
+                  }}
                 >
                   {store.description}
                 </p>
-
-                <div className="flex items-center gap-3 pt-3">
-                  <div
-                    className="text-center px-3 py-1.5 rounded-lg"
-                    style={{ background: "var(--off-white)" }}
-                  >
-                    <div className="font-mono text-[10px] text-[var(--charcoal-soft)] uppercase tracking-[0.08em]">
-                      Products
-                    </div>
-                    <div className="font-bold text-[0.8125rem] text-[var(--charcoal)]">
-                      {store.productCount}+
-                    </div>
-                  </div>
-                  <div
-                    className="text-center px-3 py-1.5 rounded-lg"
-                    style={{ background: "var(--off-white)" }}
-                  >
-                    <div className="font-mono text-[10px] text-[var(--charcoal-soft)] uppercase tracking-[0.08em]">
-                      Reviews
-                    </div>
-                    <div className="font-bold text-[0.8125rem] text-[var(--charcoal)]">
-                      {store.reviewCount.toLocaleString()}
-                    </div>
-                  </div>
-                </div>
               </div>
 
+              {/* Stats */}
               <div
-                className="mt-6 pt-5 flex items-center justify-between"
-                style={{ borderTop: "1px solid rgba(51,51,51,0.06)" }}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "0.75rem",
+                  marginBottom: "1.25rem",
+                }}
               >
-                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--charcoal)]">
+                {[
+                  { label: "Products", value: `${store.productCount}+` },
+                  {
+                    label: "Reviews",
+                    value: store.reviewCount.toLocaleString(),
+                  },
+                ].map((stat) => (
+                  <div
+                    key={stat.label}
+                    style={{
+                      background: "var(--off-white)",
+                      borderRadius: "var(--radius-md)",
+                      padding: "0.625rem 0.875rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "var(--text-2xs)",
+                        color: "var(--charcoal-mist)",
+                        textTransform: "uppercase" as const,
+                        letterSpacing: "0.1em",
+                        marginBottom: 2,
+                      }}
+                    >
+                      {stat.label}
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        fontSize: "var(--text-sm)",
+                        fontWeight: 700,
+                        color: "var(--charcoal)",
+                      }}
+                    >
+                      {stat.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Footer */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingTop: "1.125rem",
+                  borderTop: "1px solid var(--border-subtle)",
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "var(--text-xs)",
+                    color: "var(--charcoal-mid)",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase" as const,
+                  }}
+                >
                   Visit Store
                 </span>
                 <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center transition-all"
-                  style={{ background: "rgba(51,51,51,0.06)" }}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    background: "var(--off-white-2)",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition:
+                      "background var(--dur-fast), transform var(--dur-fast) var(--ease-spring)",
+                  }}
+                  className="group-hover:!bg-[var(--red-muted)] group-hover:scale-110"
                 >
-                  <ArrowUpRight className="w-3.5 h-3.5 text-[var(--charcoal)]" />
+                  <ArrowUpRight
+                    size={13}
+                    style={{ color: "var(--charcoal-mid)" }}
+                    className="group-hover:text-[var(--red)]"
+                  />
                 </div>
               </div>
             </Link>
           ))}
         </div>
 
-        {/* Seller CTA */}
+        {/* Merchant CTA banner */}
         <div
-          className="mt-10 rounded-2xl p-8 lg:p-12 relative overflow-hidden"
-          style={{ background: "var(--charcoal)" }}
+          style={{
+            borderRadius: "var(--radius-xl)",
+            padding: "3rem 3.5rem",
+            background: "var(--charcoal)",
+            position: "relative",
+            overflow: "hidden",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "2rem",
+            flexWrap: "wrap" as const,
+          }}
         >
-          {/* Decorative circle */}
+          {/* Decorative circles */}
           <div
-            className="absolute top-[-80px] right-[-80px] w-[280px] h-[280px] rounded-full pointer-events-none"
-            style={{ border: "50px solid rgba(200,16,46,0.1)" }}
+            style={{
+              position: "absolute",
+              top: -80,
+              right: -80,
+              width: 320,
+              height: 320,
+              borderRadius: "50%",
+              border: "60px solid rgba(200,16,46,0.08)",
+              pointerEvents: "none",
+            }}
           />
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="text-center md:text-left">
-              <span
-                className="font-mono text-[10px] uppercase tracking-[0.18em] mb-3 block"
-                style={{ color: "rgba(200,16,46,0.8)" }}
-              >
-                Merchant Program
-              </span>
-              <h3
-                className="text-white text-2xl lg:text-3xl font-normal max-w-md leading-[1.2] tracking-[-0.01em]"
-                style={{ fontFamily: "var(--font-display)" }}
-              >
-                Open your own e-store and reach{" "}
-                <em style={{ color: "var(--red)" }}>millions of customers.</em>
-              </h3>
-            </div>
-            <Link
-              href="/auth/register?role=merchant"
-              className="flex-shrink-0 inline-flex items-center gap-2 px-8 py-4 rounded-lg font-semibold text-sm transition-all"
+          <div
+            style={{
+              position: "absolute",
+              bottom: -50,
+              left: 200,
+              width: 180,
+              height: 180,
+              borderRadius: "50%",
+              border: "30px solid rgba(200,16,46,0.05)",
+              pointerEvents: "none",
+            }}
+          />
+
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <span
               style={{
-                background: "var(--white)",
-                color: "var(--charcoal)",
-                fontFamily: "var(--font-body)",
-                letterSpacing: "0.02em",
-                boxShadow: "0 8px 32px rgba(200,16,46,0.2)",
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.background = "var(--red)";
-                el.style.color = "#fff";
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.background = "var(--white)";
-                el.style.color = "var(--charcoal)";
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--text-xs)",
+                textTransform: "uppercase" as const,
+                letterSpacing: "0.16em",
+                color: "rgba(200,16,46,0.7)",
+                display: "block",
+                marginBottom: "0.875rem",
               }}
             >
-              Start Selling Now
-              <ArrowUpRight className="w-4 h-4" />
-            </Link>
+              Merchant Program
+            </span>
+            <h3
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(1.5rem, 3vw, 2.25rem)",
+                fontWeight: 400,
+                color: "var(--white)",
+                lineHeight: 1.2,
+                letterSpacing: "-0.02em",
+                maxWidth: 480,
+              }}
+            >
+              Open your store and reach{" "}
+              <em style={{ color: "var(--red)", fontStyle: "italic" }}>
+                millions of customers.
+              </em>
+            </h3>
           </div>
+          <Link
+            href="/auth/register?role=merchant"
+            style={{
+              position: "relative",
+              zIndex: 1,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.625rem",
+              padding: "1rem 2rem",
+              borderRadius: "var(--radius-lg)",
+              fontFamily: "var(--font-body)",
+              fontSize: "var(--text-sm)",
+              fontWeight: 700,
+              letterSpacing: "0.02em",
+              textDecoration: "none",
+              background: "var(--white)",
+              color: "var(--charcoal)",
+              flexShrink: 0,
+              boxShadow: "0 8px 32px rgba(200,16,46,0.2)",
+              transition:
+                "background var(--dur-fast), color var(--dur-fast), transform var(--dur-fast)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "var(--red)";
+              (e.currentTarget as HTMLElement).style.color = "#fff";
+              (e.currentTarget as HTMLElement).style.transform =
+                "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background =
+                "var(--white)";
+              (e.currentTarget as HTMLElement).style.color = "var(--charcoal)";
+              (e.currentTarget as HTMLElement).style.transform =
+                "translateY(0)";
+            }}
+          >
+            Start Selling Now
+            <ArrowUpRight size={15} strokeWidth={2.5} />
+          </Link>
         </div>
       </div>
     </section>
