@@ -244,6 +244,7 @@ public class AdminController : ControllerBase
         var query = _db
             .MerchantProfiles.Include(m => m.User)
             .Include(m => m.Subscription)
+            .Where(m => m.User.AccountStatus == AccountStatus.Active)
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(search))
@@ -266,8 +267,10 @@ public class AdminController : ControllerBase
                 m.StoreName,
                 m.Slug,
                 m.IsActive,
+                m.CustomDomain,
+                m.DomainVerified,
                 m.CreatedAt,
-                User = new { m.User.Id, m.User.Email },
+                Email = m.User.Email,
                 Plan = m.Subscription == null ? "none" : m.Subscription.Plan.ToString(),
                 ProductCount = m.Products.Count(p => !p.IsDeleted),
             })

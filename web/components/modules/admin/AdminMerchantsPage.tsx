@@ -51,8 +51,8 @@ interface Merchant {
   email: string;
   customDomain?: string;
   domainVerified: boolean;
-  isSuspended: boolean;
-  subscriptionPlan?: string;
+  isActive: boolean;
+  plan?: string;
   productCount?: number;
   totalSales?: number;
   createdAt: string;
@@ -60,15 +60,17 @@ interface Merchant {
 
 interface PendingMerchant {
   id: string;
-  userId: string;
-  storeName: string;
-  slug: string;
   email: string;
   firstName: string;
   lastName: string;
   phone?: string;
-  description?: string;
   createdAt: string;
+  store?: {
+    id: string;
+    storeName: string;
+    slug: string;
+    description?: string;
+  };
 }
 
 interface CreateMerchantForm {
@@ -216,8 +218,8 @@ export default function AdminMerchantsPage() {
 
   const stats = {
     total: merchants.length,
-    active: merchants.filter((m) => !m.isSuspended).length,
-    suspended: merchants.filter((m) => m.isSuspended).length,
+    active: merchants.filter((m) => m.isActive).length,
+    suspended: merchants.filter((m) => !m.isActive).length,
     withDomain: merchants.filter((m) => m.customDomain).length,
   };
 
@@ -398,14 +400,14 @@ export default function AdminMerchantsPage() {
                       <TableCell>
                         <span
                           className={`text-xs px-2 py-0.5 rounded-md font-medium ${
-                            merchant.subscriptionPlan === "Enterprise"
+                            merchant.plan === "Enterprise"
                               ? "bg-violet-100 text-violet-700"
-                              : merchant.subscriptionPlan === "Pro"
+                              : merchant.plan === "Pro"
                                 ? "bg-blue-100 text-blue-700"
                                 : "bg-gray-100 text-gray-600"
                           }`}
                         >
-                          {merchant.subscriptionPlan || "Basic"}
+                          {merchant.plan || "Basic"}
                         </span>
                       </TableCell>
                       <TableCell className="text-sm">
@@ -435,12 +437,12 @@ export default function AdminMerchantsPage() {
                       <TableCell>
                         <span
                           className={`text-xs px-2 py-0.5 rounded-md font-medium ${
-                            merchant.isSuspended
+                            !merchant.isActive
                               ? "bg-rose-50 text-rose-600"
                               : "bg-emerald-50 text-emerald-700"
                           }`}
                         >
-                          {merchant.isSuspended ? "Suspended" : "Active"}
+                          {!merchant.isActive ? "Suspended" : "Active"}
                         </span>
                       </TableCell>
                       <TableCell className="text-xs text-gray-400">
@@ -475,7 +477,7 @@ export default function AdminMerchantsPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className={
-                                merchant.isSuspended
+                                !merchant.isActive
                                   ? "text-emerald-600"
                                   : "text-rose-600"
                               }
@@ -483,7 +485,7 @@ export default function AdminMerchantsPage() {
                                 suspendMutation.mutate(merchant.id)
                               }
                             >
-                              {merchant.isSuspended ? (
+                              {!merchant.isActive ? (
                                 <>
                                   <CheckCircle className="w-4 h-4 mr-2" />{" "}
                                   Activate
@@ -579,10 +581,10 @@ export default function AdminMerchantsPage() {
                     <TableCell>
                       <div>
                         <p className="font-medium text-sm text-gray-900">
-                          {p.storeName}
+                          {p.store?.storeName || <span className="text-gray-300">—</span>}
                         </p>
                         <p className="text-xs text-gray-400 font-mono">
-                          /store/{p.slug}
+                          /store/{p.store?.slug}
                         </p>
                       </div>
                     </TableCell>
@@ -590,7 +592,7 @@ export default function AdminMerchantsPage() {
                       {p.phone || <span className="text-gray-300">—</span>}
                     </TableCell>
                     <TableCell className="text-sm text-gray-500 max-w-[200px] truncate">
-                      {p.description || (
+                      {p.store?.description || (
                         <span className="text-gray-300">—</span>
                       )}
                     </TableCell>
@@ -602,7 +604,7 @@ export default function AdminMerchantsPage() {
                         <Button
                           size="sm"
                           className="h-8 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
-                          onClick={() => approveMutation.mutate(p.userId)}
+                          onClick={() => approveMutation.mutate(p.id)}
                           disabled={approveMutation.isPending}
                         >
                           <CheckCircle className="w-3 h-3" />
@@ -799,7 +801,7 @@ export default function AdminMerchantsPage() {
               </span>{" "}
               for store{" "}
               <span className="font-semibold text-gray-900">
-                {selectedPending?.storeName}
+                {selectedPending?.store?.storeName}
               </span>
               .
             </p>
@@ -831,7 +833,7 @@ export default function AdminMerchantsPage() {
               onClick={() =>
                 selectedPending &&
                 rejectMutation.mutate({
-                  userId: selectedPending.userId,
+                  userId: selectedPending.id,
                   reason: rejectReason || undefined,
                 })
               }

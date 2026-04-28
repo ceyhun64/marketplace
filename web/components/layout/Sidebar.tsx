@@ -121,7 +121,7 @@ export function Sidebar({ links, role }: SidebarProps) {
               className="text-[9px] uppercase tracking-[0.18em] mt-1"
               style={{
                 color: "var(--red)",
-                fontFamily: "var(--font-mono)",
+                fontFamily: "var(--font-sans)",
               }}
             >
               {role} Panel
