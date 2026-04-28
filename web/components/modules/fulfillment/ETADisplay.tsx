@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { calculateEta, getEtaLabel, type EtaParams } from "@/lib/shipping";
 import { formatEtaWindow, formatPrice } from "@/lib/format";
-import { SHIPPING_COSTS } from "@/types/enums";
+import { SHIPPING_COSTS } from "@/lib/constants";
 import type { ShippingRate } from "@/types/enums";
 
 interface Props {
@@ -137,7 +137,9 @@ export default function ETADisplay({
                   >
                     {label}
                   </p>
-                  <p className="text-xs text-[var(--charcoal-soft)] mt-0.5">{description}</p>
+                  <p className="text-xs text-[var(--charcoal-soft)] mt-0.5">
+                    {description}
+                  </p>
                   <p className="text-xs font-mono text-[var(--chart-3)] mt-1">
                     📅 {getEtaLabel(rate, eta.totalHours)}
                   </p>

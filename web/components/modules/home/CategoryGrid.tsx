@@ -93,13 +93,19 @@ export default function CategoryGrid({ categories = MOCK_CATEGORIES }) {
                 className="inline-block w-6 h-px bg-red-600"
                 style={{ background: "var(--red)" }}
               />
-              <span className="font-mono text-[11px] tracking-[0.18em] uppercase" style={{ color: "var(--charcoal-soft)" }}>
+              <span
+                className="font-mono text-[11px] tracking-[0.18em] uppercase"
+                style={{ color: "var(--charcoal-soft)" }}
+              >
                 Categories
               </span>
             </div>
             <h2
-              className="font-heading text-[2.2rem] lg:text-[2.75rem] font-normal leading-[1.1] tracking-[-0.01em]" style={{ fontFamily: "var(--font-display)", color: "var(--charcoal)" }}
-              style={{ fontFamily: "var(--font-display)" }}
+              className="font-heading text-[2.2rem] lg:text-[2.75rem] font-normal leading-[1.1] tracking-[-0.01em]"
+              style={{
+                fontFamily: "var(--font-display)",
+                color: "var(--charcoal)",
+              }}
             >
               Explore our <em style={{ color: "var(--red)" }}>ecosystem.</em>
             </h2>

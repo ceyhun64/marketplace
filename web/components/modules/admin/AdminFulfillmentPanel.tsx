@@ -8,7 +8,10 @@ import CourierAssignPanel from "@/components/modules/fulfillment/CourierAssignPa
 import { SHIPMENT_STATUS_LABELS, SHIPMENT_STATUS_COLORS } from "@/types/enums";
 import { formatDateTime } from "@/lib/format";
 import type { Shipment } from "@/types/entities";
-import { useSignalRTracking } from "@/hooks/use-signalr-tracking";
+import {
+  useSignalRTracking,
+  type TrackingUpdate,
+} from "@/hooks/use-signalr-tracking";
 import { Wifi, WifiOff, Radio } from "lucide-react";
 
 const STATUS_FILTERS = [
@@ -41,7 +44,7 @@ export default function AdminFulfillmentPanel() {
     shipmentIds,
     enabled: shipmentIds.length > 0,
     onUpdate: useCallback(
-      (update) => {
+      (update: TrackingUpdate) => {
         // Canlı güncellemeyi state'e kaydet
         setLiveUpdates((prev) => ({
           ...prev,

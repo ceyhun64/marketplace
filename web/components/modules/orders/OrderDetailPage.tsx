@@ -270,24 +270,32 @@ export default function OrderDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-gray-600 space-y-0.5">
-              <p className="font-medium text-gray-900">
-                {order.shippingAddress.fullName}
-              </p>
-              <p>{order.shippingAddress.addressLine}</p>
-              <p>
-                {order.shippingAddress.district
-                  ? `${order.shippingAddress.district}, `
-                  : ""}
-                {order.shippingAddress.city}
-              </p>
-              {order.shippingAddress.phone && (
-                <a
-                  href={`tel:${order.shippingAddress.phone}`}
-                  className="text-blue-600 hover:underline text-xs"
-                >
-                  {order.shippingAddress.phone}
-                </a>
-              )}
+              {(() => {
+                const addr =
+                  typeof order.shippingAddress === "string"
+                    ? (JSON.parse(
+                        order.shippingAddress,
+                      ) as import("@/types/entities").ShippingAddress)
+                    : order.shippingAddress;
+                return (
+                  <>
+                    <p className="font-medium text-gray-900">{addr.fullName}</p>
+                    <p>{addr.addressLine}</p>
+                    <p>
+                      {addr.district ? `${addr.district}, ` : ""}
+                      {addr.city}
+                    </p>
+                    {addr.phone && (
+                      <a
+                        href={`tel:${addr.phone}`}
+                        className="text-blue-600 hover:underline text-xs"
+                      >
+                        {addr.phone}
+                      </a>
+                    )}
+                  </>
+                );
+              })()}
             </CardContent>
           </Card>
         )}

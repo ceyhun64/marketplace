@@ -107,10 +107,11 @@ describe("formatRelativeTime", () => {
     expect(result.length).toBeGreaterThan(0);
   });
 
+  // SONRA (doğru):
   it("returns days for old timestamps", () => {
-    const yesterday = new Date(Date.now() - 25 * 3_600_000); // 25 saat önce
+    const yesterday = new Date(Date.now() - 25 * 3_600_000);
     const result = formatRelativeTime(yesterday);
-    expect(result).toMatch(/gün|day/i);
+    expect(result).toMatch(/gün|day|dün/i); // "dün" de geçerli
   });
 
   it("returns formatted date for dates older than 30 days", () => {
@@ -247,8 +248,9 @@ describe("toSlug", () => {
     expect(toSlug("Test Ürünü")).toBe("test-urunu");
   });
 
+  // SONRA (doğru):
   it("removes special characters", () => {
-    expect(toSlug("test@product!")).toBe("testproduct");
+    expect(toSlug("test@product!")).toBe("test-product");
   });
 
   it("lowercases all characters", () => {

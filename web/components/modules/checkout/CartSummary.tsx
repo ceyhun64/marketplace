@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { useCart, useCartSummary } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/format";
-import { SHIPPING_RATE_LABELS, SHIPPING_COSTS } from "@/types/enums";
+import { SHIPPING_RATE_LABELS } from "@/types/enums";
+import { SHIPPING_COSTS } from "@/lib/constants";
 import { DEFAULT_VAT_RATE } from "@/lib/constants";
 
 interface Props {
