@@ -28,13 +28,24 @@ export default function MerchantAnalyticsDashboard() {
   const { data: salesChart, isLoading: chartLoading } =
     useMerchantSalesChart(period);
 
+  // API yanıtını güvenli şekilde diziye çevir (obje veya dizi gelebilir)
+  function toArray(data: unknown): any[] {
+    if (Array.isArray(data)) return data;
+    if (data && typeof data === "object") {
+      const obj = data as Record<string, unknown>;
+      if (Array.isArray(obj.items)) return obj.items;
+      if (Array.isArray(obj.data)) return obj.data;
+      if (Array.isArray(obj.salesChart)) return obj.salesChart;
+    }
+    return [];
+  }
+
   // Grafik için API verisini MerchantSalesChart formatına çevir
-  const chartData =
-    salesChart?.map((d) => ({
-      gun: new Date(d.date).toLocaleDateString("tr-TR", { weekday: "short" }),
-      marketplace: d.source === "MARKETPLACE" || !d.source ? d.revenue : 0,
-      estore: d.source === "ESTORE" ? d.revenue : 0,
-    })) ?? [];
+  const chartData = toArray(salesChart).map((d) => ({
+    gun: new Date(d.date).toLocaleDateString("tr-TR", { weekday: "short" }),
+    marketplace: d.source === "MARKETPLACE" || !d.source ? d.revenue : 0,
+    estore: d.source === "ESTORE" ? d.revenue : 0,
+  }));
 
   const kpis = [
     {
@@ -183,8 +194,7 @@ export default function MerchantAnalyticsDashboard() {
                   es:
                     comparison.estore.orders > 0
                       ? formatPrice(
-                          comparison.estore.revenue /
-                            comparison.estore.orders,
+                          comparison.estore.revenue / comparison.estore.orders,
                         )
                       : "—",
                 },

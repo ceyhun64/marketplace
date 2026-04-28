@@ -12,20 +12,15 @@ import type { AnalyticsPeriod } from "@/types/api";
 
 const RevenueChart = dynamic(
   () => import("@/components/modules/charts/AdminRevenueChart"),
-  { ssr: false, loading: () => <ChartSkeleton /> },
+  { ssr: false },
 );
 const OrderChart = dynamic(
   () => import("@/components/modules/charts/AdminOrderChart"),
-  { ssr: false, loading: () => <ChartSkeleton /> },
+  { ssr: false },
 );
 const SourceChart = dynamic(
   () => import("@/components/modules/charts/AdminSourceChart"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-[180px] h-[180px] bg-gray-100 rounded-full animate-pulse mx-auto" />
-    ),
-  },
+  { ssr: false },
 );
 
 function ChartSkeleton() {
@@ -171,7 +166,7 @@ export default function AdminAnalyticsPage() {
           {revenueLoading || overviewLoading ? (
             <ChartSkeleton />
           ) : (
-            <RevenueChart data={chartRevenue} />
+            <RevenueChart key={`revenue-${period}`} data={chartRevenue} />
           )}
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-5">
@@ -179,7 +174,7 @@ export default function AdminAnalyticsPage() {
           {revenueLoading || overviewLoading ? (
             <ChartSkeleton />
           ) : (
-            <OrderChart data={chartOrders} />
+            <OrderChart key={`orders-${period}`} data={chartOrders} />
           )}
         </div>
       </div>

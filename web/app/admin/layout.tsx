@@ -4,7 +4,6 @@ const adminLinks = [
   { href: "/admin", label: "Dashboard", icon: "grid" },
   { href: "/admin/merchants", label: "Merchants", icon: "store" },
   { href: "/admin/products", label: "Products", icon: "package" },
-  { href: "/admin/products/pending", label: "Pending Approval", icon: "clock" },
   { href: "/admin/orders", label: "Orders", icon: "shopping-cart" },
   { href: "/admin/fulfillment", label: "Fulfillment", icon: "truck" },
   { href: "/admin/couriers", label: "Couriers", icon: "user-check" },
@@ -21,7 +20,10 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen" style={{ background: "var(--off-white)" }}>
+    <div
+      className="flex min-h-screen"
+      style={{ background: "var(--off-white)" }}
+    >
       <Sidebar links={adminLinks} role="Admin" />
       <main className="flex-1 ml-60 p-8">{children}</main>
     </div>
