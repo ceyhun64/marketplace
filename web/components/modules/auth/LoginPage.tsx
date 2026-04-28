@@ -119,7 +119,7 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-8 pt-8 border-t border-black/[0.03] text-center">
+          <div className="mt-8 pt-8 border-t border-black/[0.03] text-center space-y-3">
             <p className="text-sm text-[var(--charcoal-soft)]">
               Don't have an account?{" "}
               <Link
@@ -127,6 +127,16 @@ export default function LoginPage() {
                 className="text-[var(--charcoal)] font-bold hover:text-[var(--red)] transition-colors inline-flex items-center gap-1 group"
               >
                 Register
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </p>
+            <p className="text-sm text-[var(--charcoal-soft)]">
+              Want to sell on our platform?{" "}
+              <Link
+                href="/auth/apply-merchant"
+                className="text-[var(--charcoal)] font-bold hover:text-[var(--red)] transition-colors inline-flex items-center gap-1 group"
+              >
+                Become a Merchant
                 <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
               </Link>
             </p>
