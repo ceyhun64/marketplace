@@ -35,6 +35,7 @@ public class AppDbContext : DbContext
 
         // ── Enum → string ────────────────────────────────────────────────────
         modelBuilder.Entity<User>().Property(u => u.Role).HasConversion<string>();
+        modelBuilder.Entity<User>().Property(u => u.AccountStatus).HasConversion<string>();
         modelBuilder.Entity<Order>().Property(o => o.Status).HasConversion<string>();
         modelBuilder.Entity<Order>().Property(o => o.Source).HasConversion<string>();
         modelBuilder.Entity<Order>().Property(o => o.ShippingRate).HasConversion<string>();

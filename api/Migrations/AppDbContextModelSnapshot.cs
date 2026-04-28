@@ -737,6 +737,14 @@ namespace api.Migrations
                     b.Property<bool>("IsVerified")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("AccountStatus")
+                        .IsRequired()
+                        .HasDefaultValue("Active")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("text");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -774,6 +782,8 @@ namespace api.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("AccountStatus");
 
                     b.ToTable("Users");
                 });

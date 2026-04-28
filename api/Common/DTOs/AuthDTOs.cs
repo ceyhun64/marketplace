@@ -31,6 +31,20 @@ public sealed record ResetPasswordRequest(
 
 public sealed record VerifyEmailRequest([Required] string Token);
 
+public sealed record MerchantApplyRequest(
+    [Required][EmailAddress] string Email,
+    [Required][MinLength(8)] string Password,
+    [Required][MaxLength(50)] string FirstName,
+    [Required][MaxLength(50)] string LastName,
+    [Phone] string? Phone,
+    [Required][MaxLength(100)] string StoreName,
+    [Required][MaxLength(80)] string Slug,
+    [MaxLength(500)] string? Description,
+    double Latitude = 0,
+    double Longitude = 0,
+    int HandlingHours = 24
+);
+
 // ── RESPONSE DTOs ─────────────────────────────────────────────────────────────
 
 public sealed record AuthResponse(

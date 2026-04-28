@@ -11,6 +11,8 @@ public class User
     public string LastName { get; set; } = string.Empty;
     public string? Phone { get; set; }
     public UserRole Role { get; set; } = UserRole.Customer;
+    public AccountStatus AccountStatus { get; set; } = AccountStatus.Active;
+    public string? RejectionReason { get; set; }
     public bool IsVerified { get; set; } = false;
     public string? VerificationToken { get; set; }
     public string? RefreshToken { get; set; }

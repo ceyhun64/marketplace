@@ -120,6 +120,18 @@ public class AuthController : ControllerBase
             return Unauthorized(new MessageResponse("E-posta veya şifre hatalı.", false));
         }
 
+        // Merchant başvurusu henüz onaylanmamışsa girişe izin verme
+        if (user.AccountStatus == AccountStatus.PendingApproval)
+            return Unauthorized(new MessageResponse(
+                "Hesabınız henüz onaylanmadı. Lütfen yönetici onayını bekleyin.", false));
+
+        if (user.AccountStatus == AccountStatus.Rejected)
+            return Unauthorized(new MessageResponse(
+                $"Başvurunuz reddedildi. Detay: {user.RejectionReason ?? "Belirtilmedi"}", false));
+
+        if (user.AccountStatus == AccountStatus.Suspended)
+            return Unauthorized(new MessageResponse("Hesabınız askıya alınmıştır.", false));
+
         var (accessToken, refreshToken, expiresAt) = await IssueTokens(user);
 
         _logger.LogInformation("Kullanıcı giriş yaptı: {Email} [{Role}]", user.Email, user.Role);
@@ -302,6 +314,90 @@ public class AuthController : ControllerBase
         });
 
         return Ok(new MessageResponse("Şifreniz başarıyla güncellendi."));
+    }
+
+    // ── POST /api/auth/register-merchant ─────────────────────────────────────
+    /// <summary>
+    /// Option B: Herkes merchant başvurusu yapabilir.
+    /// Hesap PendingApproval statüsüyle oluşur; admin onaylayana kadar JWT verilmez.
+    /// </summary>
+    [HttpPost("register-merchant")]
+    [ProducesResponseType(typeof(MessageResponse), 201)]
+    [ProducesResponseType(typeof(MessageResponse), 409)]
+    [ProducesResponseType(typeof(MessageResponse), 400)]
+    public async Task<IActionResult> RegisterMerchant([FromBody] MerchantApplyRequest req)
+    {
+        if (await _db.Users.AnyAsync(u => u.Email == req.Email.ToLower()))
+            return Conflict(new MessageResponse("Bu e-posta adresi zaten kullanılıyor.", false));
+
+        if (await _db.MerchantProfiles.AnyAsync(m => m.Slug == req.Slug))
+            return Conflict(new MessageResponse("Bu mağaza URL'i (slug) zaten kullanımda.", false));
+
+        var user = new User
+        {
+            Email       = req.Email.ToLower().Trim(),
+            FirstName   = req.FirstName.Trim(),
+            LastName    = req.LastName.Trim(),
+            Phone       = req.Phone?.Trim(),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
+            Role          = UserRole.Merchant,
+            AccountStatus = AccountStatus.PendingApproval,   // ← onay bekliyor
+            IsVerified    = false,
+            VerificationToken = Guid.NewGuid().ToString("N"),
+        };
+
+        var merchant = new MerchantProfile
+        {
+            UserId       = user.Id,
+            StoreName    = req.StoreName.Trim(),
+            Slug         = req.Slug.ToLower().Trim(),
+            Description  = req.Description?.Trim(),
+            Latitude     = req.Latitude,
+            Longitude    = req.Longitude,
+            HandlingHours = req.HandlingHours,
+            IsActive     = false,   // admin onaylayana kadar pasif
+        };
+
+        _db.Users.Add(user);
+        _db.MerchantProfiles.Add(merchant);
+        await _db.SaveChangesAsync();
+
+        _logger.LogInformation("Yeni merchant başvurusu: {Email} / Mağaza: {Store}", user.Email, merchant.StoreName);
+
+        // Admin'e bildirim e-postası (arka planda)
+        var adminEmail = _config["ADMIN_EMAIL"];
+        if (!string.IsNullOrEmpty(adminEmail))
+        {
+            var frontendUrl = _config["FRONTEND_URL"] ?? "http://localhost:3000";
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _notification.SendEmailAsync(
+                        adminEmail,
+                        "Yeni Merchant Başvurusu",
+                        $"""
+                        Yeni bir merchant başvurusu geldi:
+
+                        Ad Soyad : {user.FirstName} {user.LastName}
+                        E-posta  : {user.Email}
+                        Mağaza   : {merchant.StoreName} ({merchant.Slug})
+
+                        Onaylamak veya reddetmek için yönetim panelini ziyaret edin:
+                        {frontendUrl}/admin/merchants/pending
+                        """
+                    );
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Admin bildirim e-postası gönderilemedi.");
+                }
+            });
+        }
+
+        return StatusCode(201, new MessageResponse(
+            "Başvurunuz alındı. Yönetici onayından sonra hesabınız aktifleştirilecektir."
+        ));
     }
 
     // ── POST /api/auth/verify-email ───────────────────────────────────────────

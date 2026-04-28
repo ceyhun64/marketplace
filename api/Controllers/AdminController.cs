@@ -16,11 +16,22 @@ public class AdminController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly ICurrentUserService _currentUser;
+    private readonly INotificationService _notification;
+    private readonly IConfiguration _config;
+    private readonly ILogger<AdminController> _logger;
 
-    public AdminController(AppDbContext db, ICurrentUserService currentUser)
+    public AdminController(
+        AppDbContext db,
+        ICurrentUserService currentUser,
+        INotificationService notification,
+        IConfiguration config,
+        ILogger<AdminController> logger)
     {
         _db = db;
         _currentUser = currentUser;
+        _notification = notification;
+        _config = config;
+        _logger = logger;
     }
 
     [HttpGet("dashboard")]
@@ -42,6 +53,10 @@ public class AdminController : ControllerBase
         var activeMerchants = await _db.MerchantProfiles.CountAsync(m => m.IsActive);
         var totalUsers = await _db.Users.CountAsync();
         var pendingProducts = await _db.Products.CountAsync(p => !p.IsApproved && !p.IsDeleted);
+        var pendingMerchants = await _db.Users.CountAsync(u =>
+            u.Role == UserRole.Merchant &&
+            u.AccountStatus == AccountStatus.PendingApproval &&
+            !u.IsDeleted);
         var activeShipments = await _db.Shipments.CountAsync(s =>
             s.Status != ShipmentStatus.Delivered && s.Status != ShipmentStatus.Failed
         );
@@ -59,9 +74,161 @@ public class AdminController : ControllerBase
                 merchants = new { totalMerchants, activeMerchants },
                 totalUsers,
                 pendingProducts,
+                pendingMerchants,
                 activeShipments,
             }
         );
+    }
+
+    // ── MERCHANT APPLICATIONS (Option B) ────────────────────────────────────
+
+    /// <summary>Onay bekleyen merchant başvurularını listeler.</summary>
+    [HttpGet("merchants/pending")]
+    public async Task<IActionResult> GetPendingMerchants()
+    {
+        var pending = await _db.Users
+            .Include(u => u.MerchantProfile)
+            .Where(u =>
+                u.Role == UserRole.Merchant &&
+                u.AccountStatus == AccountStatus.PendingApproval &&
+                !u.IsDeleted)
+            .OrderBy(u => u.CreatedAt)
+            .Select(u => new
+            {
+                u.Id,
+                u.Email,
+                u.FirstName,
+                u.LastName,
+                u.Phone,
+                u.CreatedAt,
+                Store = u.MerchantProfile == null ? null : new
+                {
+                    u.MerchantProfile.Id,
+                    u.MerchantProfile.StoreName,
+                    u.MerchantProfile.Slug,
+                    u.MerchantProfile.Description,
+                }
+            })
+            .ToListAsync();
+
+        return Ok(pending);
+    }
+
+    /// <summary>Merchant başvurusunu onaylar — hesap aktifleşir, JWT alabilir.</summary>
+    [HttpPost("merchants/{userId:guid}/approve")]
+    public async Task<IActionResult> ApproveMerchant(Guid userId)
+    {
+        var user = await _db.Users
+            .Include(u => u.MerchantProfile)
+            .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+
+        if (user is null)
+            return NotFound(new { message = "Kullanıcı bulunamadı." });
+
+        if (user.Role != UserRole.Merchant)
+            return BadRequest(new { message = "Bu kullanıcı merchant değil." });
+
+        if (user.AccountStatus != AccountStatus.PendingApproval)
+            return BadRequest(new { message = $"Başvuru zaten işleme alınmış: {user.AccountStatus}" });
+
+        user.AccountStatus = AccountStatus.Active;
+        user.IsVerified    = true;
+
+        if (user.MerchantProfile is not null)
+        {
+            user.MerchantProfile.IsActive   = true;
+            user.MerchantProfile.UpdatedAt  = DateTime.UtcNow;
+        }
+
+        user.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        _logger.LogInformation("Merchant onaylandı: {Email}", user.Email);
+
+        // Başvuru sahibine onay e-postası
+        var frontendUrl = _config["FRONTEND_URL"] ?? "http://localhost:3000";
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _notification.SendEmailAsync(
+                    user.Email,
+                    "Merchant başvurunuz onaylandı 🎉",
+                    $"""
+                    Merhaba {user.FirstName},
+
+                    Merchant başvurunuz onaylandı. Artık hesabınıza giriş yapabilirsiniz:
+                    {frontendUrl}/auth/login
+
+                    İyi satışlar!
+                    """
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Onay e-postası gönderilemedi: {Email}", user.Email);
+            }
+        });
+
+        return Ok(new { message = "Merchant başvurusu onaylandı.", userId });
+    }
+
+    /// <summary>Merchant başvurusunu reddeder.</summary>
+    [HttpPost("merchants/{userId:guid}/reject")]
+    public async Task<IActionResult> RejectMerchant(
+        Guid userId,
+        [FromBody] RejectMerchantDto dto)
+    {
+        var user = await _db.Users
+            .Include(u => u.MerchantProfile)
+            .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+
+        if (user is null)
+            return NotFound(new { message = "Kullanıcı bulunamadı." });
+
+        if (user.AccountStatus != AccountStatus.PendingApproval)
+            return BadRequest(new { message = $"Başvuru zaten işleme alınmış: {user.AccountStatus}" });
+
+        user.AccountStatus  = AccountStatus.Rejected;
+        user.RejectionReason = dto.Reason;
+        user.UpdatedAt      = DateTime.UtcNow;
+
+        if (user.MerchantProfile is not null)
+        {
+            user.MerchantProfile.IsActive  = false;
+            user.MerchantProfile.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await _db.SaveChangesAsync();
+
+        _logger.LogInformation("Merchant başvurusu reddedildi: {Email} — {Reason}", user.Email, dto.Reason);
+
+        // Başvuru sahibine red e-postası
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _notification.SendEmailAsync(
+                    user.Email,
+                    "Merchant başvurunuz hakkında",
+                    $"""
+                    Merhaba {user.FirstName},
+
+                    Maalesef merchant başvurunuz bu aşamada kabul edilemedi.
+
+                    Sebep: {dto.Reason}
+
+                    Daha fazla bilgi için bizimle iletişime geçebilirsiniz.
+                    """
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Red e-postası gönderilemedi: {Email}", user.Email);
+            }
+        });
+
+        return Ok(new { message = "Başvuru reddedildi.", userId });
     }
 
     // ── MERCHANTS ────────────────────────────────────────────────────────────
@@ -398,6 +565,8 @@ public class AdminController : ControllerBase
 }
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────
+
+public record RejectMerchantDto(string Reason);
 
 public record CreateMerchantDto(
     string Email,
