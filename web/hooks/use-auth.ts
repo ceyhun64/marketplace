@@ -25,6 +25,19 @@ interface AuthState {
     lastName: string;
     phone: string;
   }) => Promise<void>;
+  applyMerchant: (data: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phone?: string;
+    storeName: string;
+    slug: string;
+    description?: string;
+    latitude?: number;
+    longitude?: number;
+    handlingHours?: number;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -85,6 +98,30 @@ export const useAuth = create<AuthState>()(
               : null) ??
             "Kayıt başarısız";
 
+          set({ error: msg, isLoading: false });
+          throw err;
+        }
+      },
+
+      applyMerchant: async (data) => {
+        set({ isLoading: true, error: null });
+        try {
+          await api.post("/api/auth/register-merchant", data);
+          set({ isLoading: false });
+        } catch (err: unknown) {
+          const responseData = (
+            err as {
+              response?: {
+                data?: { message?: string; errors?: Record<string, string[]> };
+              };
+            }
+          )?.response?.data;
+          const msg =
+            responseData?.message ??
+            (responseData?.errors
+              ? Object.values(responseData.errors).flat()[0]
+              : null) ??
+            "Başvuru gönderilemedi";
           set({ error: msg, isLoading: false });
           throw err;
         }
