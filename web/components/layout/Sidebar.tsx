@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { useEffect, useState } from "react";
 import {
   LayoutGrid,
   Store,
@@ -51,23 +52,29 @@ export function Sidebar({ links, role }: SidebarProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
 
+  // Hydration guard: user bilgisini yalnızca client mount sonrası göster
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    // skipHydration kullandığımız için store'u manuel rehydrate et
+    useAuth.persist.rehydrate();
+    setMounted(true);
+  }, []);
+
   const handleLogout = async () => {
     await logout();
     router.push("/auth/login");
   };
-  const isActive = (href: string) => {
-    // Mevcut sayfa (pathname) tam olarak linke eşitse aktiftir
-    if (pathname === href) return true;
 
-    // Eğer link sadece kök dizin değilse (yani /admin/ gibi bir alt yol ise)
-    // ve pathname bu yol ile başlıyorsa yine aktiftir.
-    // Bu sayede /admin/merchants/new sayfasındayken "Merchants" aktif kalır.
+  const isActive = (href: string) => {
+    if (pathname === href) return true;
     if (href !== "/admin" && href !== "/merchant" && href !== "/courier") {
       return pathname.startsWith(href + "/");
     }
-
     return false;
   };
+
+  // Client mount olmadan user-specific içerik render etme
+  const displayEmail = mounted ? (user?.email ?? "") : "";
 
   return (
     <aside
@@ -179,14 +186,14 @@ export function Sidebar({ links, role }: SidebarProps) {
             className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
             style={{ background: "var(--red)" }}
           >
-            {user?.email?.charAt(0).toUpperCase() || "U"}
+            {displayEmail.charAt(0).toUpperCase() || "U"}
           </div>
           <div className="flex flex-col min-w-0">
             <span className="text-xs font-semibold text-white/80 truncate">
-              {user?.email?.split("@")[0]}
+              {displayEmail.split("@")[0]}
             </span>
             <span className="text-[10px] text-white/35 truncate lowercase">
-              {user?.email}
+              {displayEmail}
             </span>
           </div>
         </div>

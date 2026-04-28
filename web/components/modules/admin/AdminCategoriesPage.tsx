@@ -30,6 +30,7 @@ import {
   FolderOpen,
   Folder,
   Tag,
+  AlertTriangle,
 } from "lucide-react";
 
 interface Category {
@@ -53,6 +54,8 @@ export default function AdminCategoriesPage() {
   const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const [editTarget, setEditTarget] = useState<Category | null>(null);
   const [form, setForm] = useState<CategoryForm>({
     name: "",
@@ -97,6 +100,8 @@ export default function AdminCategoriesPage() {
     onSuccess: () => {
       toast.success("Category deleted");
       queryClient.invalidateQueries({ queryKey: ["categories"] });
+      setDeleteOpen(false);
+      setDeleteTarget(null);
     },
     onError: () => toast.error("Failed to delete"),
   });
@@ -118,6 +123,11 @@ export default function AdminCategoriesPage() {
       iconUrl: cat.iconUrl || "",
     });
     setEditOpen(true);
+  };
+
+  const openDelete = (cat: Category) => {
+    setDeleteTarget(cat);
+    setDeleteOpen(true);
   };
 
   return (
@@ -212,6 +222,7 @@ export default function AdminCategoriesPage() {
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                       {cat.iconUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={cat.iconUrl} alt="" className="w-5 h-5" />
                       ) : (
                         <FolderOpen className="w-4 h-4 text-blue-600" />
@@ -240,14 +251,7 @@ export default function AdminCategoriesPage() {
                       size="sm"
                       variant="ghost"
                       className="h-8 w-8 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
-                      onClick={() => {
-                        if (
-                          confirm(
-                            "Are you sure you want to delete this category?",
-                          )
-                        )
-                          deleteMutation.mutate(cat.id);
-                      }}
+                      onClick={() => openDelete(cat)}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
@@ -285,14 +289,7 @@ export default function AdminCategoriesPage() {
                             size="sm"
                             variant="ghost"
                             className="h-7 w-7 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
-                            onClick={() => {
-                              if (
-                                confirm(
-                                  "Are you sure you want to delete this subcategory?",
-                                )
-                              )
-                                deleteMutation.mutate(sub.id);
-                            }}
+                            onClick={() => openDelete(sub)}
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>
@@ -359,6 +356,47 @@ export default function AdminCategoriesPage() {
               disabled={updateMutation.isPending}
             >
               {updateMutation.isPending ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirm Dialog */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-rose-500" />
+              Delete Category
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-gray-900">
+                {deleteTarget?.name}
+              </span>
+              ? This action cannot be undone.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteOpen(false);
+                setDeleteTarget(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() =>
+                deleteTarget && deleteMutation.mutate(deleteTarget.id)
+              }
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -438,11 +476,4 @@ function CategoryFormFields({
       </div>
     </div>
   );
-}
-
-interface CategoryFormProps {
-  name: string;
-  slug: string;
-  parentId: string;
-  iconUrl: string;
 }

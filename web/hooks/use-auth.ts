@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import api from "@/lib/api";
 import { setTokens, clearTokens, getRoleFromToken } from "@/lib/auth";
 
@@ -58,10 +58,8 @@ export const useAuth = create<AuthState>()(
           });
           const { accessToken, refreshToken } = data;
 
-          // Cookie'ye yaz — middleware artık okuyabilir
           setTokens(accessToken, refreshToken);
 
-          // .NET'in uzun claim adını destekleyen helper kullan
           const role = getRoleFromToken(accessToken);
           if (!role) throw new Error("Token'da rol bulunamadı");
 
@@ -90,7 +88,6 @@ export const useAuth = create<AuthState>()(
             }
           )?.response?.data;
 
-          // FluentValidation hataları errors objesi döner
           const msg =
             responseData?.message ??
             (responseData?.errors
@@ -133,7 +130,7 @@ export const useAuth = create<AuthState>()(
         } catch {
           // sessizce geç
         } finally {
-          clearTokens(); // cookie'leri sil
+          clearTokens();
           set({ user: null });
         }
       },
@@ -142,7 +139,9 @@ export const useAuth = create<AuthState>()(
     }),
     {
       name: "auth-store",
+      storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({ user: s.user }),
+      skipHydration: true, // server ile client arasındaki hydration mismatch'i önler
     },
   ),
 );

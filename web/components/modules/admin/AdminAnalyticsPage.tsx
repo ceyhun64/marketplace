@@ -12,17 +12,11 @@ import type { AnalyticsPeriod } from "@/types/api";
 
 const RevenueChart = dynamic(
   () => import("@/components/modules/charts/AdminRevenueChart"),
-  {
-    ssr: false,
-    loading: () => <ChartSkeleton />,
-  },
+  { ssr: false, loading: () => <ChartSkeleton /> },
 );
 const OrderChart = dynamic(
   () => import("@/components/modules/charts/AdminOrderChart"),
-  {
-    ssr: false,
-    loading: () => <ChartSkeleton />,
-  },
+  { ssr: false, loading: () => <ChartSkeleton /> },
 );
 const SourceChart = dynamic(
   () => import("@/components/modules/charts/AdminSourceChart"),
@@ -46,19 +40,27 @@ const PERIOD_OPTIONS: { label: string; value: AnalyticsPeriod }[] = [
   { label: "Monthly", value: "monthly" },
 ];
 
+/** API'den gelen veriyi güvenli şekilde diziye çevirir */
+function toArray(data: unknown): any[] {
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === "object") {
+    // { items: [...] } veya { data: [...] } şeklinde gelebilir
+    const obj = data as Record<string, unknown>;
+    if (Array.isArray(obj.items)) return obj.items;
+    if (Array.isArray(obj.data)) return obj.data;
+  }
+  return [];
+}
+
 export default function AdminAnalyticsPage() {
   const [period, setPeriod] = useState<AnalyticsPeriod>("weekly");
 
   const { data: overview, isLoading: overviewLoading } = useAdminOverview();
-  const { data: revenueData, isLoading: revenueLoading } =
+  const { data: revenueRaw, isLoading: revenueLoading } =
     useAdminRevenue(period);
-  // fulfillmentStats is untyped (any) — returned by useAdminFulfillmentStats
   const { data: fulfillmentStats, isLoading: fulfillmentLoading } =
     useAdminFulfillmentStats();
 
-  // AdminOverviewResponse fields:
-  //   totalGmv, totalOrders, totalMerchants, totalCustomers,
-  //   averageDeliveryHours, fulfillmentSuccessRate, revenueChart
   const kpiCards = [
     {
       label: "Total GMV",
@@ -91,15 +93,21 @@ export default function AdminAnalyticsPage() {
     },
   ];
 
-  // revenueData → SalesDataPoint[]: { date, revenue, orderCount, source? }
-  const chartRevenue = (revenueData ?? overview?.revenueChart ?? []).map(
-    (d: any) => ({ gun: d.date ?? d.label, gelir: d.revenue ?? 0 }),
-  );
-  const chartOrders = (revenueData ?? overview?.revenueChart ?? []).map(
-    (d: any) => ({ gun: d.date ?? d.label, siparis: d.orderCount ?? 0 }),
-  );
+  // revenueRaw'ı güvenli diziye çevir, sonra chart formatına map'le
+  const revenuePoints = toArray(revenueRaw).length
+    ? toArray(revenueRaw)
+    : toArray(overview?.revenueChart);
 
-  // Pie chart uses hardcoded split since overview has no per-source breakdown
+  const chartRevenue = revenuePoints.map((d: any) => ({
+    gun: d.date ?? d.label ?? "",
+    gelir: d.revenue ?? 0,
+  }));
+
+  const chartOrders = revenuePoints.map((d: any) => ({
+    gun: d.date ?? d.label ?? "",
+    siparis: d.orderCount ?? 0,
+  }));
+
   const sourceData = [
     { name: "Marketplace", value: 68, color: "var(--chart-2)" },
     { name: "E-Store", value: 32, color: "var(--chart-3)" },
@@ -249,7 +257,6 @@ export default function AdminAnalyticsPage() {
               {[
                 {
                   label: "Avg. Delivery Time",
-                  // prefer overview field, fall back to fulfillmentStats (any)
                   value:
                     overview?.averageDeliveryHours != null
                       ? `${overview.averageDeliveryHours.toFixed(1)}h`
