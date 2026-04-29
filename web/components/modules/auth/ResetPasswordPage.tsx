@@ -8,14 +8,8 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import {
-  KeyRound,
-  ArrowLeft,
-  CheckCircle2,
-  Eye,
-  EyeOff,
-  Loader2,
-} from "lucide-react";
+import { KeyRound, ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
+import PasswordInput from "@/components/ui/password-input";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -23,7 +17,6 @@ function ResetPasswordForm() {
   const token = searchParams.get("token") || "";
 
   const [form, setForm] = useState({ password: "", confirm: "" });
-  const [showPassword, setShowPassword] = useState(false);
   const [done, setDone] = useState(false);
 
   const mutation = useMutation({
@@ -199,30 +192,16 @@ function ResetPasswordForm() {
               <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[var(--charcoal-soft)] ml-1">
                 New Password
               </Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, password: e.target.value }))
-                  }
-                  placeholder="••••••••"
-                  required
-                  className="h-12 pr-11 rounded-xl border-[var(--border-light)] bg-white/50 focus:bg-white transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--charcoal-soft)] hover:text-[var(--charcoal)] transition-colors duration-[150ms]"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
+              <PasswordInput
+                id="password"
+                value={form.password}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, password: e.target.value }))
+                }
+                placeholder="••••••••"
+                required
+                className="h-12 pr-11 rounded-xl border-[var(--border-light)] bg-white/50 focus:bg-white transition-all"
+              />
 
               {/* Strength Indicator */}
               {strength && (
@@ -251,9 +230,8 @@ function ResetPasswordForm() {
               <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[var(--charcoal-soft)] ml-1">
                 Confirm Password
               </Label>
-              <Input
+              <PasswordInput
                 id="confirm"
-                type={showPassword ? "text" : "password"}
                 value={form.confirm}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, confirm: e.target.value }))

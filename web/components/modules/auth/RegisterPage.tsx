@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowRight, Loader2, UserPlus } from "lucide-react";
 import PhoneInput from "@/components/ui/phone-input";
+import PasswordInput from "@/components/ui/password-input";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -150,9 +151,8 @@ export default function RegisterPage() {
                 <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[var(--charcoal-soft)] ml-1">
                   Password
                 </Label>
-                <Input
+                <PasswordInput
                   name="password"
-                  type="password"
                   value={form.password}
                   onChange={handleChange}
                   required
@@ -164,9 +164,8 @@ export default function RegisterPage() {
                 <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[var(--charcoal-soft)] ml-1">
                   Confirm
                 </Label>
-                <Input
+                <PasswordInput
                   name="confirm"
-                  type="password"
                   value={form.confirm}
                   onChange={handleChange}
                   required

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowRight, Loader2 } from "lucide-react";
+import PasswordInput from "@/components/ui/password-input";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -90,8 +91,7 @@ export default function LoginPage() {
                   Forgot?
                 </Link>
               </div>
-              <Input
-                type="password"
+              <PasswordInput
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
