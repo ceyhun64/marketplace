@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Package,
   ShoppingCart,
@@ -15,6 +14,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function MerchantDashboard() {
   const { data: profile } = useQuery({
@@ -92,6 +92,25 @@ export default function MerchantDashboard() {
     },
   ];
 
+  const planBadgeStyle =
+    plan === "Enterprise"
+      ? {
+          border: "1px solid rgba(200,16,46,0.4)",
+          color: "var(--red)",
+          background: "var(--red-muted)",
+        }
+      : plan === "Pro"
+        ? {
+            border: "1px solid rgba(59,130,246,0.4)",
+            color: "#3b82f6",
+            background: "#eff6ff",
+          }
+        : {
+            border: "1px solid rgba(0,0,0,0.12)",
+            color: "var(--charcoal-soft)",
+            background: "var(--off-white-2)",
+          };
+
   const quickLinks = [
     {
       href: "/merchant/catalogue",
@@ -142,21 +161,27 @@ export default function MerchantDashboard() {
         </div>
         <div className="flex items-center gap-2">
           <span
-            className={`text-xs px-2.5 py-1 rounded-full font-medium border ${
-              plan === "Enterprise"
-                ? "border-violet-300 text-violet-700 bg-violet-50"
-                : plan === "Pro"
-                  ? "border-blue-300 text-blue-700 bg-blue-50"
-                  : "border-gray-300 text-gray-600 bg-gray-50"
-            }`}
+            className="text-xs px-2.5 py-1 rounded-full font-medium"
+            style={planBadgeStyle}
           >
             {plan} Plan
           </span>
           {plan === "Basic" && (
             <Link href="/merchant/subscription">
-              <Button size="sm" variant="outline" className="text-xs h-7">
+              <button
+                className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all"
+                style={{ background: "var(--red)", color: "#fff" }}
+                onMouseEnter={(e) =>
+                  ((e.currentTarget as HTMLElement).style.background =
+                    "var(--red-dark)")
+                }
+                onMouseLeave={(e) =>
+                  ((e.currentTarget as HTMLElement).style.background =
+                    "var(--red)")
+                }
+              >
                 Upgrade →
-              </Button>
+              </button>
             </Link>
           )}
         </div>
@@ -252,25 +277,48 @@ export default function MerchantDashboard() {
 
       {/* Store Live Banner */}
       {slug && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between">
+        <div
+          className="rounded-xl p-4 flex items-center justify-between"
+          style={{
+            background: "var(--red-muted)",
+            border: "1px solid var(--red-subtle)",
+          }}
+        >
           <div className="flex items-center gap-3">
-            <Store className="w-5 h-5 text-blue-600" />
+            <Store
+              className="w-5 h-5 flex-shrink-0"
+              style={{ color: "var(--red)" }}
+            />
             <div>
-              <p className="font-medium text-blue-800 text-sm">
+              <p
+                className="font-medium text-sm"
+                style={{ color: "var(--charcoal)" }}
+              >
                 Your E-Store is Live
               </p>
-              <p className="text-xs text-blue-600">
+              <p
+                className="text-xs mt-0.5"
+                style={{ color: "var(--charcoal-soft)" }}
+              >
                 marketplace.com/store/{slug}
               </p>
             </div>
           </div>
           <Link href={`/store/${slug}`} target="_blank">
-            <Button
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
+            <button
+              className="text-xs font-semibold px-4 py-2 rounded-lg transition-all text-white"
+              style={{ background: "var(--red)" }}
+              onMouseEnter={(e) =>
+                ((e.currentTarget as HTMLElement).style.background =
+                  "var(--red-dark)")
+              }
+              onMouseLeave={(e) =>
+                ((e.currentTarget as HTMLElement).style.background =
+                  "var(--red)")
+              }
             >
               Visit Store
-            </Button>
+            </button>
           </Link>
         </div>
       )}

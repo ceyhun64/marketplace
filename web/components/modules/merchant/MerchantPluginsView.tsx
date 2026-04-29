@@ -212,9 +212,18 @@ export default function MerchantPluginsView() {
                       </div>
                       <Button
                         size="sm"
-                        className="rounded-xl text-xs h-7 bg-gray-900 hover:bg-gray-800 gap-1"
+                        className="rounded-xl text-xs h-7 gap-1 text-white"
+                        style={{ background: "var(--red)" }}
                         onClick={() => subscribeMutation.mutate(p.id)}
                         disabled={subscribeMutation.isPending}
+                        onMouseEnter={(e) =>
+                          ((e.currentTarget as HTMLElement).style.background =
+                            "var(--red-dark)")
+                        }
+                        onMouseLeave={(e) =>
+                          ((e.currentTarget as HTMLElement).style.background =
+                            "var(--red)")
+                        }
                       >
                         <Zap className="w-3 h-3" />
                         Activate
@@ -229,22 +238,37 @@ export default function MerchantPluginsView() {
       </div>
 
       {/* Plan upsell banner */}
-      <div className="bg-gray-900 text-white rounded-2xl p-5 flex items-center gap-4">
-        <Lock className="w-8 h-8 text-gray-400 flex-shrink-0" />
+      <div
+        className="rounded-2xl p-5 flex items-center gap-4"
+        style={{ background: "var(--charcoal)", color: "#fff" }}
+      >
+        <Lock
+          className="w-8 h-8 flex-shrink-0"
+          style={{ color: "rgba(255,255,255,0.35)" }}
+        />
         <div className="flex-1">
           <p className="text-sm font-semibold">Need access to more plugins?</p>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p
+            className="text-xs mt-0.5"
+            style={{ color: "rgba(255,255,255,0.45)" }}
+          >
             Upgrade to Pro or Enterprise to unlock the full Plugin Marketplace.
           </p>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="rounded-xl border-gray-600 text-white hover:bg-gray-800 whitespace-nowrap"
+        <button
+          className="rounded-xl text-xs font-semibold px-4 py-2 whitespace-nowrap transition-all text-white"
+          style={{ background: "var(--red)" }}
           onClick={() => (window.location.href = "/merchant/subscription")}
+          onMouseEnter={(e) =>
+            ((e.currentTarget as HTMLElement).style.background =
+              "var(--red-dark)")
+          }
+          onMouseLeave={(e) =>
+            ((e.currentTarget as HTMLElement).style.background = "var(--red)")
+          }
         >
           Upgrade Plan
-        </Button>
+        </button>
       </div>
     </div>
   );

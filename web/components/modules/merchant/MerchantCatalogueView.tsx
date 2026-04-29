@@ -186,7 +186,15 @@ export default function MerchantCatalogueView() {
         </div>
         <button
           onClick={handleAddNew}
-          className="flex items-center gap-2 bg-gray-900 hover:bg-gray-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors"
+          className="flex items-center gap-2 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-all"
+          style={{ background: "var(--red)" }}
+          onMouseEnter={(e) =>
+            ((e.currentTarget as HTMLElement).style.background =
+              "var(--red-dark)")
+          }
+          onMouseLeave={(e) =>
+            ((e.currentTarget as HTMLElement).style.background = "var(--red)")
+          }
         >
           <Plus className="w-4 h-4" />
           New Product
@@ -291,9 +299,12 @@ export default function MerchantCatalogueView() {
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                 publishFilter === f.key
-                  ? "bg-gray-900 text-white"
+                  ? "text-white"
                   : "text-gray-500 hover:text-gray-900"
               }`}
+              style={
+                publishFilter === f.key ? { background: "var(--red)" } : {}
+              }
             >
               {f.label}
             </button>
@@ -340,9 +351,10 @@ export default function MerchantCatalogueView() {
                     onClick={() => setPage(p)}
                     className={`w-9 h-9 text-sm rounded-lg transition-colors ${
                       p === page
-                        ? "bg-gray-900 text-white font-semibold"
+                        ? "text-white font-semibold"
                         : "border border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
                     }`}
+                    style={p === page ? { background: "var(--red)" } : {}}
                   >
                     {p}
                   </button>

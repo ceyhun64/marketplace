@@ -116,7 +116,13 @@ export default function MerchantSubscriptionView() {
       {isLoading ? (
         <Skeleton className="h-20 w-full rounded-2xl" />
       ) : (
-        <Card className="border border-gray-100 shadow-none rounded-2xl bg-gray-900 text-white">
+        <Card
+          className="border shadow-none rounded-2xl text-white"
+          style={{
+            background: "var(--charcoal)",
+            borderColor: "rgba(255,255,255,0.08)",
+          }}
+        >
           <CardContent className="py-5 px-6 flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">
@@ -162,16 +168,24 @@ export default function MerchantSubscriptionView() {
           const currentOrder = PLANS.findIndex((p) => p.key === currentPlan);
           const isDowngrade = currentOrder > planOrder;
 
+          const activeBorderStyle = isActive
+            ? { borderColor: "var(--red)" }
+            : {};
+
           return (
             <Card
               key={plan.key}
               className={`border-2 shadow-none rounded-2xl relative ${
-                isActive ? plan.activeBorder : "border-gray-100"
+                isActive ? "" : "border-gray-100"
               }`}
+              style={activeBorderStyle}
             >
               {isActive && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="bg-gray-900 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
+                  <span
+                    className="text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest"
+                    style={{ background: "var(--red)" }}
+                  >
                     Current
                   </span>
                 </div>
@@ -223,8 +237,23 @@ export default function MerchantSubscriptionView() {
                         ? "bg-gray-100 text-gray-400 cursor-default"
                         : isDowngrade
                           ? "border border-gray-200 text-gray-600 hover:bg-gray-50"
-                          : "bg-gray-900 text-white hover:bg-gray-700"
+                          : "text-white"
                     }`}
+                    style={
+                      !isActive && !isDowngrade
+                        ? { background: "var(--red)" }
+                        : {}
+                    }
+                    onMouseEnter={(e) => {
+                      if (!isActive && !isDowngrade)
+                        (e.currentTarget as HTMLElement).style.background =
+                          "var(--red-dark)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive && !isDowngrade)
+                        (e.currentTarget as HTMLElement).style.background =
+                          "var(--red)";
+                    }}
                   >
                     {isActive
                       ? "Current Plan"

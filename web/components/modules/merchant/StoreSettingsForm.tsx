@@ -72,8 +72,7 @@ export default function StoreSettingsForm({ store }: Props) {
   };
 
   return (
-    <div className="space-y-6 max-w-3xl">
-
+    <div className="space-y-6 ">
       {/* ── Branding ──────────────────────────────────────────────── */}
       <SettingsSection
         icon={<Store className="w-4 h-4" />}
@@ -140,7 +139,9 @@ export default function StoreSettingsForm({ store }: Props) {
           <input
             type="text"
             value={form.storeName}
-            onChange={(e) => setForm((f) => ({ ...f, storeName: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, storeName: e.target.value }))
+            }
             className={inputCls}
             placeholder="My Awesome Store"
           />
@@ -151,7 +152,9 @@ export default function StoreSettingsForm({ store }: Props) {
           <textarea
             rows={3}
             value={form.description}
-            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, description: e.target.value }))
+            }
             placeholder="Tell customers what makes your store special..."
             className={`${inputCls} resize-none`}
           />
@@ -209,14 +212,26 @@ export default function StoreSettingsForm({ store }: Props) {
         {/* Type selector */}
         <div className="grid grid-cols-2 gap-3">
           {[
-            { val: true,  label: "Subdomain",    desc: "store.platform.com", plan: "PRO+" },
-            { val: false, label: "Custom Domain", desc: "yourstore.com",      plan: "Enterprise" },
+            {
+              val: true,
+              label: "Subdomain",
+              desc: "store.platform.com",
+              plan: "PRO+",
+            },
+            {
+              val: false,
+              label: "Custom Domain",
+              desc: "yourstore.com",
+              plan: "Enterprise",
+            },
           ].map(({ val, label, desc, plan }) => {
             const active = domainForm.isSubdomain === val;
             return (
               <button
                 key={String(val)}
-                onClick={() => setDomainForm((f) => ({ ...f, isSubdomain: val }))}
+                onClick={() =>
+                  setDomainForm((f) => ({ ...f, isSubdomain: val }))
+                }
                 className={`relative p-4 rounded-xl border text-left transition-all ${
                   active
                     ? "border-blue-400 bg-blue-50/40 shadow-sm"
@@ -225,14 +240,20 @@ export default function StoreSettingsForm({ store }: Props) {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className={`text-sm font-semibold ${active ? "text-blue-700" : "text-gray-800"}`}>
+                    <p
+                      className={`text-sm font-semibold ${active ? "text-blue-700" : "text-gray-800"}`}
+                    >
                       {label}
                     </p>
-                    <p className="text-xs font-mono text-gray-400 mt-0.5">{desc}</p>
+                    <p className="text-xs font-mono text-gray-400 mt-0.5">
+                      {desc}
+                    </p>
                   </div>
                   <span
                     className={`shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded ${
-                      active ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"
+                      active
+                        ? "bg-blue-100 text-blue-700"
+                        : "bg-gray-100 text-gray-500"
                     }`}
                   >
                     {plan}
@@ -247,7 +268,9 @@ export default function StoreSettingsForm({ store }: Props) {
         </div>
 
         {/* Domain input */}
-        <Field label={domainForm.isSubdomain ? "Subdomain Name" : "Your Domain"}>
+        <Field
+          label={domainForm.isSubdomain ? "Subdomain Name" : "Your Domain"}
+        >
           <div className="flex">
             <input
               type="text"
@@ -292,7 +315,15 @@ export default function StoreSettingsForm({ store }: Props) {
         <button
           onClick={handleDomainSave}
           disabled={setDomain.isPending || !domainForm.domain.trim()}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-2 text-white text-sm font-medium px-5 py-2.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          style={{ background: "var(--red)" }}
+          onMouseEnter={(e) =>
+            ((e.currentTarget as HTMLElement).style.background =
+              "var(--red-dark)")
+          }
+          onMouseLeave={(e) =>
+            ((e.currentTarget as HTMLElement).style.background = "var(--red)")
+          }
         >
           {setDomain.isPending ? "Saving..." : "Save Domain"}
           {!setDomain.isPending && <ChevronRight className="w-3.5 h-3.5" />}
@@ -352,8 +383,17 @@ function SaveButton({
       className={`flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-xl transition-all disabled:opacity-50 ${
         saved
           ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-          : "bg-gray-900 text-white hover:bg-gray-700"
+          : "text-white"
       }`}
+      style={!saved ? { background: "var(--red)" } : {}}
+      onMouseEnter={(e) => {
+        if (!saved)
+          (e.currentTarget as HTMLElement).style.background = "var(--red-dark)";
+      }}
+      onMouseLeave={(e) => {
+        if (!saved)
+          (e.currentTarget as HTMLElement).style.background = "var(--red)";
+      }}
     >
       {loading ? (
         "Saving..."
