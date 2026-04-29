@@ -39,6 +39,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${manrope.variable} ${cormorant.variable} ${jetbrainsMono.variable}`}
     >
       <body

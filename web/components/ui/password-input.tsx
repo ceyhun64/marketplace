@@ -14,60 +14,19 @@ export interface PasswordInputProps extends Omit<
 }
 
 const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
-  (
-    { className, value = "", onChange, onBlur, maskDelay = 800, ...props },
-    ref,
-  ) => {
+  ({ className, value, onChange, onBlur, ...props }, ref) => {
     const [isVisible, setIsVisible] = React.useState(false);
-    const [isLastCharVisible, setIsLastCharVisible] = React.useState(false);
-    const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newValue = e.target.value;
-
-      // Silme işlemi yapılıyorsa veya değer kısalıyorsa direkt maskele
-      if (newValue.length <= value.length) {
-        onChange?.(e);
-        return;
-      }
-
-      // Yeni karakter eklendiğinde son karakteri göster
-      onChange?.(e);
-
-      if (!isVisible) {
-        setIsLastCharVisible(true);
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        timeoutRef.current = setTimeout(
-          () => setIsLastCharVisible(false),
-          maskDelay,
-        );
-      }
-    };
-
-    const getDisplayText = () => {
-      if (isVisible || value.length === 0) return value;
-      if (isLastCharVisible) {
-        return "•".repeat(value.length - 1) + value.slice(-1);
-      }
-      return "•".repeat(value.length);
-    };
 
     return (
       <div className="relative w-full group">
         <input
           {...props}
           ref={ref}
-          type="text"
-          value={getDisplayText()}
-          onChange={handleInputChange}
-          onBlur={(e) => {
-            setIsLastCharVisible(false);
-            onBlur?.(e);
-          }}
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          spellCheck={false}
+          type={isVisible ? "text" : "password"}
+          value={value}
+          onChange={onChange}
+          onBlur={onBlur}
+          autoComplete="current-password"
           className={cn(
             "flex h-10 w-full rounded-xl border border-input bg-background px-3.5 py-2 pr-10 text-sm transition-all",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -78,10 +37,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
         <button
           type="button"
           tabIndex={-1}
-          onClick={() => {
-            setIsVisible(!isVisible);
-            setIsLastCharVisible(false);
-          }}
+          onClick={() => setIsVisible(!isVisible)}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground outline-none"
         >
           {isVisible ? (
