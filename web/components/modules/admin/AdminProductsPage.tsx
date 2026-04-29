@@ -41,6 +41,7 @@ import {
   Package,
   Clock,
   Image as ImageIcon,
+  Pencil,
 } from "lucide-react";
 import MultiImageUploader from "@/components/ui/multiImageUploader";
 
@@ -105,6 +106,9 @@ export default function AdminProductsPage() {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [productToEdit, setProductToEdit] = useState<Product | null>(null);
+  const [editForm, setEditForm] = useState<ProductForm>(defaultForm);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [form, setForm] = useState<ProductForm>(defaultForm);
@@ -174,6 +178,19 @@ export default function AdminProductsPage() {
     onError: () => toast.error("Operation failed"),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: object }) =>
+      api.put(`/api/products/${id}`, data),
+    onSuccess: () => {
+      toast.success("Product updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      handleEditDialogClose(false);
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Failed to update product");
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/api/products/${id}`),
     onSuccess: () => {
@@ -229,6 +246,61 @@ export default function AdminProductsPage() {
       publishToStore: form.publishToStore,
     };
     createMutation.mutate(payload);
+  };
+
+  const handleEditDialogClose = (open: boolean) => {
+    setEditOpen(open);
+    if (!open) {
+      setProductToEdit(null);
+      setEditForm(defaultForm);
+    }
+  };
+
+  const openEdit = (product: Product) => {
+    setProductToEdit(product);
+    setEditForm({
+      name: product.name,
+      description: product.description,
+      categoryId: product.categoryId,
+      subcategoryId: "",
+      tags: product.tags?.join(", ") || "",
+      images: product.images || [],
+      price: product.price?.toString() || "",
+      stock: product.stock?.toString() || "0",
+      merchantId: "",
+      publishToMarket: false,
+      publishToStore: true,
+    });
+    setEditOpen(true);
+  };
+
+  const handleEditSubmit = () => {
+    if (!productToEdit) return;
+    const priceNum = parseFloat(editForm.price);
+    const stockNum = parseInt(editForm.stock, 10);
+
+    if (!editForm.name.trim()) return toast.error("Product name is required");
+    if (!editForm.description.trim())
+      return toast.error("Description is required");
+    if (!editForm.categoryId) return toast.error("Please select a category");
+    if (isNaN(priceNum) || priceNum < 0)
+      return toast.error("Please enter a valid price");
+    if (isNaN(stockNum) || stockNum < 0)
+      return toast.error("Please enter a valid stock quantity");
+
+    const payload = {
+      name: editForm.name.trim(),
+      description: editForm.description.trim(),
+      categoryId: editForm.subcategoryId || editForm.categoryId,
+      images: editForm.images,
+      tags: editForm.tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean),
+      price: priceNum,
+      stock: stockNum,
+    };
+    updateMutation.mutate({ id: productToEdit.id, data: payload });
   };
 
   const handleDialogClose = (open: boolean) => {
@@ -442,6 +514,14 @@ export default function AdminProductsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                            onClick={() => openEdit(product)}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
                           {!product.isApproved && (
                             <Button
                               size="sm"
@@ -806,6 +886,166 @@ export default function AdminProductsPage() {
               }
             >
               {createMutation.isPending ? "Creating..." : "Create Product"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Product Dialog */}
+      <Dialog open={editOpen} onOpenChange={handleEditDialogClose}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Product</DialogTitle>
+            <DialogDescription>
+              Update the details for{" "}
+              <span className="font-semibold">{productToEdit?.name}</span>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {/* Images */}
+            <MultiImageUploader
+              label="Product Images"
+              folder="marketplace/products"
+              maxFiles={6}
+              initialUrls={editForm.images}
+              onUpdate={(urls) => setEditForm((f) => ({ ...f, images: urls }))}
+            />
+
+            <div className="space-y-1.5">
+              <Label>Product Name *</Label>
+              <Input
+                placeholder="e.g. iPhone 15 Pro"
+                value={editForm.name}
+                onChange={(e) =>
+                  setEditForm((f) => ({ ...f, name: e.target.value }))
+                }
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Description *</Label>
+              <Textarea
+                placeholder="Brief product description..."
+                rows={3}
+                value={editForm.description}
+                onChange={(e) =>
+                  setEditForm((f) => ({ ...f, description: e.target.value }))
+                }
+              />
+            </div>
+
+            {/* Price & Stock */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Price ($) *</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={editForm.price}
+                  onChange={(e) =>
+                    setEditForm((f) => ({ ...f, price: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Stock *</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={editForm.stock}
+                  onChange={(e) =>
+                    setEditForm((f) => ({ ...f, stock: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Category */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Main Category *</Label>
+                <Select
+                  value={editForm.categoryId}
+                  onValueChange={(v) =>
+                    setEditForm((f) => ({
+                      ...f,
+                      categoryId: v,
+                      subcategoryId: "",
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {rootCategories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {categories.filter((c) => c.parentId === editForm.categoryId)
+                .length > 0 && (
+                <div className="space-y-1.5">
+                  <Label>Subcategory</Label>
+                  <Select
+                    value={editForm.subcategoryId}
+                    onValueChange={(v) =>
+                      setEditForm((f) => ({ ...f, subcategoryId: v }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select subcategory" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories
+                        .filter((c) => c.parentId === editForm.categoryId)
+                        .map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Tags</Label>
+              <Input
+                placeholder="technology, smartphone, apple (comma separated)"
+                value={editForm.tags}
+                onChange={(e) =>
+                  setEditForm((f) => ({ ...f, tags: e.target.value }))
+                }
+              />
+              <p className="text-xs text-gray-400">Separate tags with commas</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => handleEditDialogClose(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEditSubmit}
+              disabled={
+                updateMutation.isPending ||
+                !editForm.name ||
+                !editForm.description ||
+                !editForm.categoryId ||
+                !editForm.price
+              }
+            >
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
