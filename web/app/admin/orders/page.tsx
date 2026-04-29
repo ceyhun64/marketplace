@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import AdminOrdersPage from "@/components/modules/admin/AdminOrdersPage";
 
+
 export default function AdminOrdersRoute() {
   return (
     <Suspense
