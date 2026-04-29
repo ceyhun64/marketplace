@@ -63,10 +63,14 @@ interface Order {
 }
 
 interface PaginatedOrders {
-  items: Order[];
-  totalCount: number;
-  page: number;
-  limit: number;
+  // /api/orders/admin/all → { data: Order[], pagination: { total, page, limit, pages } }
+  data: Order[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
 }
 
 const STATUS_OPTIONS = [
@@ -143,8 +147,8 @@ export default function AdminOrdersPage() {
     },
   });
 
-  const orders: Order[] = data?.items ?? [];
-  const totalPages = data ? Math.ceil(data.totalCount / 20) : 1;
+  const orders: Order[] = data?.data ?? [];
+  const totalPages = data ? Math.ceil(data.pagination.total / 20) : 1;
   const filtered = search
     ? orders.filter(
         (o) =>
@@ -155,7 +159,7 @@ export default function AdminOrdersPage() {
     : orders;
 
   const stats = {
-    total: data?.totalCount ?? 0,
+    total: data?.pagination?.total ?? 0,
     pending: orders.filter((o) => o.status === "PENDING").length,
     inTransit: orders.filter((o) =>
       ["PICKED_UP", "IN_TRANSIT", "OUT_FOR_DELIVERY"].includes(o.status),

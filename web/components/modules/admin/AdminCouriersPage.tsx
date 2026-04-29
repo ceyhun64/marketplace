@@ -33,7 +33,9 @@ export default function AdminCouriersPage() {
     setLoading(true);
     try {
       const res = await api.get<Courier[]>("/api/couriers");
-      setCouriers(Array.isArray(res.data) ? res.data : []);
+      // ApiResponse interceptor tarafından açılır → res.data artık Courier[]
+      const list = Array.isArray(res.data) ? res.data : [];
+      setCouriers(list);
     } catch {
       setCouriers([]);
     } finally {

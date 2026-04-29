@@ -63,22 +63,31 @@ export default function AdminInvoicesPage() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (merchantFilter !== "all") params.set("merchantId", merchantFilter);
-      const res = await api.get(`/invoices/admin/all?${params}`);
-      return res.data;
+      const res = await api.get(`/api/invoices/admin/all?${params}`);
+      // Backend: ApiResponse<{ items, totalCount, page, limit }>
+      // interceptor açar → res.data = { items, totalCount, page, limit }
+      return res.data?.items ?? res.data ?? [];
     },
   });
 
   const { data: summary } = useQuery<InvoiceSummary>({
     queryKey: ["admin-invoice-summary"],
     queryFn: async () => {
-      const res = await api.get("/invoices/admin/summary");
-      return res.data;
+      // /invoices/admin/summary backend'de yok; admin/all'dan hesapla
+      const res = await api.get(`/api/invoices/admin/all?limit=1000&page=1`);
+      const items: AdminInvoice[] = res.data?.items ?? res.data ?? [];
+      return {
+        totalInvoices: res.data?.totalCount ?? items.length,
+        totalRevenue: items.reduce((s, i) => s + (i.totalAmount ?? 0), 0),
+        totalVat: items.reduce((s, i) => s + (i.vatAmount ?? 0), 0),
+        pendingPdf: items.filter((i) => !i.pdfUrl).length,
+      };
     },
   });
 
   const handleDownload = async (invoiceId: string, invoiceNumber: string) => {
     try {
-      const res = await api.get(`/invoices/${invoiceId}/download`, {
+      const res = await api.get(`/api/invoices/${invoiceId}/download`, {
         responseType: "blob",
       });
       const url = URL.createObjectURL(new Blob([res.data]));

@@ -115,7 +115,9 @@ export default function AdminSubscriptionsPage() {
     onError: () => toast.error("Failed to update plan"),
   });
 
-  const merchants: MerchantSubscription[] = merchantsData?.data || [];
+  // Backend GET /api/admin/merchants → { total, page, limit, items: [...] }
+  // camelCase dönüşümü interceptor tarafından yapılır, ApiResponse sarmalayıcı YOK → items doğrudan gelir
+  const merchants: MerchantSubscription[] = merchantsData?.items || [];
 
   const filtered = merchants.filter(
     (m) =>

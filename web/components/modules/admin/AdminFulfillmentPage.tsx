@@ -75,7 +75,7 @@ interface Courier {
   name: string;
   phone: string;
   isActive: boolean;
-  activeShipments: number;
+  activeShipmentCount: number; // backend alanı — activeShipments değil
 }
 
 const STATUS_CONFIG: Record<
@@ -191,8 +191,10 @@ export default function AdminFulfillmentPage() {
     onError: () => toast.error("Failed to assign courier"),
   });
 
+  // /api/fulfillment → { data: Shipment[], pagination: {...} } — interceptor açmıyor (success alanı yok)
   const shipments: Shipment[] = shipmentsData?.data || [];
-  const couriers: Courier[] = couriersData?.data || [];
+  // /api/couriers → ApiResponse<Courier[]> — interceptor tarafından açılır, doğrudan dizi gelir
+  const couriers: Courier[] = Array.isArray(couriersData) ? couriersData : couriersData?.data || [];
 
   const filtered = shipments.filter(
     (s) =>
@@ -515,11 +517,11 @@ export default function AdminFulfillmentPage() {
                             <p className="text-xs text-gray-400">
                               {courier.phone} ·{" "}
                               <span className="text-amber-500">
-                                {courier.activeShipments} active packages
+                                {courier.activeShipmentCount} active packages
                               </span>
                             </p>
                           </div>
-                          {courier.activeShipments === 0 && (
+                          {courier.activeShipmentCount === 0 && (
                             <span className="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full">
                               Available
                             </span>

@@ -344,7 +344,9 @@ public class AdminController : ControllerBase
     [HttpPut("merchants/{id:guid}")]
     public async Task<IActionResult> UpdateMerchant(Guid id, [FromBody] UpdateMerchantDto dto)
     {
-        var merchant = await _db.MerchantProfiles.FindAsync(id);
+        var merchant = await _db.MerchantProfiles
+            .Include(m => m.Subscription)
+            .FirstOrDefaultAsync(m => m.Id == id);
         if (merchant == null)
             return NotFound();
 
@@ -354,6 +356,33 @@ public class AdminController : ControllerBase
         merchant.HandlingHours = dto.HandlingHours ?? merchant.HandlingHours;
         merchant.UpdatedAt = DateTime.UtcNow;
 
+        // Plan değişikliği — Subscription tablosunu güncelle veya oluştur
+        if (!string.IsNullOrEmpty(dto.Plan) &&
+            Enum.TryParse<PlanType>(dto.Plan, ignoreCase: true, out var newPlan))
+        {
+            if (merchant.Subscription is not null)
+            {
+                merchant.Subscription.Plan = newPlan;
+                merchant.Subscription.UpdatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                var sub = new Subscription
+                {
+                    Id = Guid.NewGuid(),
+                    MerchantId = merchant.Id,
+                    Plan = newPlan,
+                    IsActive = true,
+                    StartDate = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow.AddYears(10),
+                    AutoRenew = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                };
+                _db.Subscriptions.Add(sub);
+            }
+        }
+
         await _db.SaveChangesAsync();
         return Ok(
             new
@@ -361,6 +390,7 @@ public class AdminController : ControllerBase
                 merchant.Id,
                 merchant.StoreName,
                 merchant.IsActive,
+                Plan = merchant.Subscription?.Plan.ToString() ?? "Basic",
             }
         );
     }
@@ -585,7 +615,8 @@ public record UpdateMerchantDto(
     string? StoreName,
     double? Latitude,
     double? Longitude,
-    int? HandlingHours
+    int? HandlingHours,
+    string? Plan
 );
 
 public record UpdateStatusDto(string Status);

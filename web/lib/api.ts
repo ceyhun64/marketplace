@@ -59,6 +59,20 @@ api.interceptors.response.use(
   (response) => {
     // Backend PascalCase → frontend camelCase
     response.data = toCamel(response.data);
+
+    // ApiResponse<T> sarmalayıcısını aç:
+    // { success: true, data: T } → T
+    // Böylece tüm sayfalarda res.data direkt T olur.
+    if (
+      response.data !== null &&
+      typeof response.data === "object" &&
+      "success" in response.data &&
+      "data" in response.data &&
+      response.data.success === true
+    ) {
+      response.data = response.data.data;
+    }
+
     return response;
   },
   async (error: AxiosError) => {
