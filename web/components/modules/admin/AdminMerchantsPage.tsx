@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import PhoneInput from "@/components/ui/phone-input";
 import {
   Plus,
   MoreHorizontal,
@@ -101,6 +102,10 @@ export default function AdminMerchantsPage() {
   const [selectedPending, setSelectedPending] =
     useState<PendingMerchant | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [suspendConfirmOpen, setSuspendConfirmOpen] = useState(false);
+  const [merchantToSuspend, setMerchantToSuspend] = useState<Merchant | null>(
+    null,
+  );
   const [form, setForm] = useState<CreateMerchantForm>({
     storeName: "",
     email: "",
@@ -158,17 +163,19 @@ export default function AdminMerchantsPage() {
   });
 
   const suspendMutation = useMutation({
-    mutationFn: (id: string) => api.post(`/api/admin/merchants/${id}/suspend`),
+    mutationFn: (id: string) => api.patch(`/api/admin/merchants/${id}/suspend`),
     onSuccess: () => {
       toast.success("Merchant status updated");
       queryClient.invalidateQueries({ queryKey: ["admin-merchants"] });
+      setSuspendConfirmOpen(false);
+      setMerchantToSuspend(null);
     },
     onError: () => toast.error("Operation failed"),
   });
 
   const setupMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: object }) =>
-      api.post(`/api/admin/merchants/${id}/setup`, data),
+      api.post(`/api/admin/store/${id}/setup`, data),
     onSuccess: () => {
       toast.success("Store setup complete");
       queryClient.invalidateQueries({ queryKey: ["admin-merchants"] });
@@ -481,9 +488,10 @@ export default function AdminMerchantsPage() {
                                   ? "text-emerald-600"
                                   : "text-rose-600"
                               }
-                              onClick={() =>
-                                suspendMutation.mutate(merchant.id)
-                              }
+                              onClick={() => {
+                                setMerchantToSuspend(merchant);
+                                setSuspendConfirmOpen(true);
+                              }}
                             >
                               {!merchant.isActive ? (
                                 <>
@@ -581,7 +589,9 @@ export default function AdminMerchantsPage() {
                     <TableCell>
                       <div>
                         <p className="font-medium text-sm text-gray-900">
-                          {p.store?.storeName || <span className="text-gray-300">—</span>}
+                          {p.store?.storeName || (
+                            <span className="text-gray-300">—</span>
+                          )}
                         </p>
                         <p className="text-xs text-gray-400 font-mono">
                           /store/{p.store?.slug}
@@ -695,13 +705,10 @@ export default function AdminMerchantsPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Phone</Label>
-              <Input
-                type="tel"
-                placeholder="+1 5xx xxx xxxx"
+              <PhoneInput
                 value={form.phone}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, phone: e.target.value }))
-                }
+                onChange={(v) => setForm((f) => ({ ...f, phone: v ?? "" }))}
+                defaultCountry="TR"
               />
             </div>
           </div>
@@ -782,6 +789,80 @@ export default function AdminMerchantsPage() {
               disabled={setupMutation.isPending}
             >
               {setupMutation.isPending ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Suspend / Activate Confirm Dialog */}
+      <Dialog
+        open={suspendConfirmOpen}
+        onOpenChange={(o) => {
+          setSuspendConfirmOpen(o);
+          if (!o) setMerchantToSuspend(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>
+              {merchantToSuspend?.isActive
+                ? "Suspend Merchant"
+                : "Activate Merchant"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-3">
+            <p className="text-sm text-gray-600">
+              {merchantToSuspend?.isActive ? (
+                <>
+                  Are you sure you want to{" "}
+                  <span className="font-semibold text-rose-600">suspend</span>{" "}
+                  <span className="font-semibold text-gray-900">
+                    {merchantToSuspend?.storeName}
+                  </span>
+                  ? Their store will be hidden and they won&apos;t be able to
+                  access the platform.
+                </>
+              ) : (
+                <>
+                  Are you sure you want to{" "}
+                  <span className="font-semibold text-emerald-600">
+                    activate
+                  </span>{" "}
+                  <span className="font-semibold text-gray-900">
+                    {merchantToSuspend?.storeName}
+                  </span>
+                  ? Their store will become visible again.
+                </>
+              )}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSuspendConfirmOpen(false);
+                setMerchantToSuspend(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              className={
+                merchantToSuspend?.isActive
+                  ? "bg-rose-600 hover:bg-rose-700 text-white"
+                  : "bg-emerald-600 hover:bg-emerald-700 text-white"
+              }
+              onClick={() =>
+                merchantToSuspend &&
+                suspendMutation.mutate(merchantToSuspend.id)
+              }
+              disabled={suspendMutation.isPending}
+            >
+              {suspendMutation.isPending
+                ? "Updating..."
+                : merchantToSuspend?.isActive
+                  ? "Suspend"
+                  : "Activate"}
             </Button>
           </DialogFooter>
         </DialogContent>

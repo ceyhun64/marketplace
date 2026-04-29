@@ -105,6 +105,8 @@ export default function AdminProductsPage() {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [addOpen, setAddOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [form, setForm] = useState<ProductForm>(defaultForm);
 
   const { data: productsData, isLoading: productsLoading } = useQuery({
@@ -460,12 +462,8 @@ export default function AdminProductsPage() {
                             variant="ghost"
                             className="h-7 w-7 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
                             onClick={() => {
-                              if (
-                                confirm(
-                                  "Are you sure you want to delete this product?",
-                                )
-                              )
-                                deleteMutation.mutate(product.id);
+                              setProductToDelete(product);
+                              setDeleteConfirmOpen(true);
                             }}
                           >
                             <XCircle className="w-4 h-4" />
@@ -808,6 +806,55 @@ export default function AdminProductsPage() {
               }
             >
               {createMutation.isPending ? "Creating..." : "Create Product"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirm Dialog */}
+      <Dialog
+        open={deleteConfirmOpen}
+        onOpenChange={(o) => {
+          setDeleteConfirmOpen(o);
+          if (!o) setProductToDelete(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Delete Product</DialogTitle>
+            <DialogDescription>This action cannot be undone.</DialogDescription>
+          </DialogHeader>
+          <div className="py-3">
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-gray-900">
+                {productToDelete?.name}
+              </span>
+              ? This will permanently remove the product from the platform.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteConfirmOpen(false);
+                setProductToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (productToDelete) {
+                  deleteMutation.mutate(productToDelete.id);
+                  setDeleteConfirmOpen(false);
+                  setProductToDelete(null);
+                }
+              }}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete Product"}
             </Button>
           </DialogFooter>
         </DialogContent>

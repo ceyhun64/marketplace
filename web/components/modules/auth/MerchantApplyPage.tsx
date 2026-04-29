@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowRight, Loader2, Store, CheckCircle2 } from "lucide-react";
+import PhoneInput from "@/components/ui/phone-input";
 
 export default function MerchantApplyPage() {
   const router = useRouter();
@@ -215,13 +216,10 @@ export default function MerchantApplyPage() {
                   <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[var(--charcoal-soft)] ml-1">
                     Phone
                   </Label>
-                  <Input
-                    name="phone"
-                    type="tel"
+                  <PhoneInput
                     value={form.phone}
-                    onChange={handleChange}
-                    placeholder="+1 (555) 000-0000"
-                    className="h-12 rounded-xl border-black/[0.05] bg-white/50 focus:bg-white transition-all"
+                    onChange={(v) => setForm((f) => ({ ...f, phone: v ?? "" }))}
+                    defaultCountry="TR"
                   />
                 </div>
 
