@@ -379,7 +379,7 @@ public static class DataSeeder
                         IsActive = true,
                         StartDate = mUser.CreatedAt,
                         ExpiresAt = DateTime.UtcNow.AddMonths(Rng.Next(1, 6)),
-                        PaymentId = $"PAY-SUB-{Guid.NewGuid():N[..8]}",
+                        PaymentId = $"PAY-SUB-{Guid.NewGuid():N}"[..16],
                         AutoRenew = true,
                         CreatedAt = mUser.CreatedAt,
                         UpdatedAt = DateTime.UtcNow,
@@ -923,56 +923,80 @@ public static class DataSeeder
             var allPlugins = await db.Plugins.ToListAsync();
             var allMerchants = await db.MerchantProfiles.ToListAsync();
 
-            var gaPlugin = allPlugins.First(p => p.Slug == "google-analytics");
-            var chatPlugin = allPlugins.First(p => p.Slug == "live-chat");
-            var seoPlugin = allPlugins.First(p => p.Slug == "seo-optimizer");
-            var emailPlugin = allPlugins.First(p => p.Slug == "email-marketing");
-            var accountPlugin = allPlugins.First(p => p.Slug == "accounting");
-            var whatsPlugin = allPlugins.First(p => p.Slug == "whatsapp-notify");
-            var fbPlugin = allPlugins.First(p => p.Slug == "facebook-pixel");
+            var gaPlugin = allPlugins.FirstOrDefault(p => p.Slug == "google-analytics");
+            var chatPlugin = allPlugins.FirstOrDefault(p => p.Slug == "live-chat");
+            var seoPlugin = allPlugins.FirstOrDefault(p => p.Slug == "seo-optimizer");
+            var emailPlugin = allPlugins.FirstOrDefault(p => p.Slug == "email-marketing");
+            var accountPlugin = allPlugins.FirstOrDefault(p => p.Slug == "accounting");
+            var whatsPlugin = allPlugins.FirstOrDefault(p => p.Slug == "whatsapp-notify");
+            var fbPlugin = allPlugins.FirstOrDefault(p => p.Slug == "facebook-pixel");
 
-            var techM = allMerchants.First(m => m.Slug == "techstore-turkiye");
-            var modaM = allMerchants.First(m => m.Slug == "moda-dunyasi");
-            var sporM = allMerchants.First(m => m.Slug == "spor-world");
+            var techM = allMerchants.FirstOrDefault(m => m.Slug == "techstore-turkiye");
+            var modaM = allMerchants.FirstOrDefault(m => m.Slug == "moda-dunyasi");
+            var sporM = allMerchants.FirstOrDefault(m => m.Slug == "spor-world");
 
-            db.MerchantPlugins.AddRange(
-                MakeMerchantPlugin(techM.Id, gaPlugin.Id, null, DateTime.UtcNow.AddMonths(2)),
-                MakeMerchantPlugin(
-                    techM.Id,
-                    chatPlugin.Id,
-                    "{\"apiKey\":\"lc_tech_abc123\"}",
-                    DateTime.UtcNow.AddMonths(1)
-                ),
-                MakeMerchantPlugin(techM.Id, seoPlugin.Id, null, DateTime.UtcNow.AddMonths(3)),
-                MakeMerchantPlugin(
-                    techM.Id,
-                    accountPlugin.Id,
-                    "{\"provider\":\"Logo\",\"token\":\"xyz\"}",
-                    DateTime.UtcNow.AddMonths(2)
-                ),
-                MakeMerchantPlugin(modaM.Id, gaPlugin.Id, null, DateTime.UtcNow.AddMonths(1)),
-                MakeMerchantPlugin(
-                    modaM.Id,
-                    emailPlugin.Id,
-                    "{\"apiKey\":\"mc_moda_key99\"}",
-                    DateTime.UtcNow.AddMonths(2)
-                ),
-                MakeMerchantPlugin(
-                    modaM.Id,
-                    whatsPlugin.Id,
-                    "{\"phone\":\"+905551112233\"}",
-                    DateTime.UtcNow.AddMonths(1)
-                ),
-                MakeMerchantPlugin(sporM.Id, gaPlugin.Id, null, DateTime.UtcNow.AddMonths(4)),
-                MakeMerchantPlugin(
-                    sporM.Id,
-                    fbPlugin.Id,
-                    "{\"pixelId\":\"1234567890\"}",
-                    DateTime.UtcNow.AddMonths(2)
-                )
-            );
-            await db.SaveChangesAsync();
-            Console.WriteLine("✅ 9 merchant plugin aboneliği oluşturuldu.");
+            if (techM == null || modaM == null || sporM == null)
+            {
+                Console.WriteLine(
+                    "⚠️  MerchantPlugin seed atlandı: gerekli merchant profilleri bulunamadı "
+                        + $"(techstore={techM != null}, moda={modaM != null}, spor={sporM != null})."
+                );
+            }
+            else if (
+                gaPlugin == null
+                || chatPlugin == null
+                || seoPlugin == null
+                || emailPlugin == null
+                || accountPlugin == null
+                || whatsPlugin == null
+                || fbPlugin == null
+            )
+            {
+                Console.WriteLine(
+                    "⚠️  MerchantPlugin seed atlandı: gerekli plugin kayıtları bulunamadı."
+                );
+            }
+            else
+            {
+                db.MerchantPlugins.AddRange(
+                    MakeMerchantPlugin(techM.Id, gaPlugin.Id, null, DateTime.UtcNow.AddMonths(2)),
+                    MakeMerchantPlugin(
+                        techM.Id,
+                        chatPlugin.Id,
+                        "{\"apiKey\":\"lc_tech_abc123\"}",
+                        DateTime.UtcNow.AddMonths(1)
+                    ),
+                    MakeMerchantPlugin(techM.Id, seoPlugin.Id, null, DateTime.UtcNow.AddMonths(3)),
+                    MakeMerchantPlugin(
+                        techM.Id,
+                        accountPlugin.Id,
+                        "{\"provider\":\"Logo\",\"token\":\"xyz\"}",
+                        DateTime.UtcNow.AddMonths(2)
+                    ),
+                    MakeMerchantPlugin(modaM.Id, gaPlugin.Id, null, DateTime.UtcNow.AddMonths(1)),
+                    MakeMerchantPlugin(
+                        modaM.Id,
+                        emailPlugin.Id,
+                        "{\"apiKey\":\"mc_moda_key99\"}",
+                        DateTime.UtcNow.AddMonths(2)
+                    ),
+                    MakeMerchantPlugin(
+                        modaM.Id,
+                        whatsPlugin.Id,
+                        "{\"phone\":\"+905551112233\"}",
+                        DateTime.UtcNow.AddMonths(1)
+                    ),
+                    MakeMerchantPlugin(sporM.Id, gaPlugin.Id, null, DateTime.UtcNow.AddMonths(4)),
+                    MakeMerchantPlugin(
+                        sporM.Id,
+                        fbPlugin.Id,
+                        "{\"pixelId\":\"1234567890\"}",
+                        DateTime.UtcNow.AddMonths(2)
+                    )
+                );
+                await db.SaveChangesAsync();
+                Console.WriteLine("✅ 9 merchant plugin aboneliği oluşturuldu.");
+            }
         }
 
         // ── 9. Siparişler, Kargo & Fatura ─────────────────────────────────────
@@ -1053,7 +1077,7 @@ public static class DataSeeder
                     Country = "TR",
                     DeliveryLatitude = dlat,
                     DeliveryLongitude = dlon,
-                    PaymentId = isPaid ? $"iyz_{Guid.NewGuid():N[..16]}" : null,
+                    PaymentId = isPaid ? $"iyz_{Guid.NewGuid():N}"[..20] : null,
                     IsPaid = isPaid,
                     PaidAt = isPaid ? createdAt.AddMinutes(5) : null,
                     CancellationReason =
@@ -1250,7 +1274,7 @@ public static class DataSeeder
             Config = config,
             SubscribedAt = DateTime.UtcNow.AddMonths(-1),
             ExpiresAt = expiresAt,
-            PaymentId = $"PAY-PLG-{Guid.NewGuid():N[..8]}",
+            PaymentId = $"PAY-PLG-{Guid.NewGuid():N}"[..16],
             AutoRenew = true,
             CreatedAt = DateTime.UtcNow.AddMonths(-1),
             UpdatedAt = DateTime.UtcNow,
