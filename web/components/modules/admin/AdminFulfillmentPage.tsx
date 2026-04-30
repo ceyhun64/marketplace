@@ -129,8 +129,12 @@ const STATUS_CONFIG: Record<
   },
 };
 
-function StatusBadge({ status }: { status: ShipmentStatus }) {
-  const cfg = STATUS_CONFIG[status];
+function StatusBadge({ status }: { status: string }) {
+  const cfg = STATUS_CONFIG[status as ShipmentStatus] ?? {
+    label: status ?? "Unknown",
+    color: "bg-gray-100 text-gray-600",
+    icon: <CircleDot className="w-3 h-3" />,
+  };
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${cfg.color}`}
@@ -194,7 +198,9 @@ export default function AdminFulfillmentPage() {
   // /api/fulfillment → { data: Shipment[], pagination: {...} } — interceptor açmıyor (success alanı yok)
   const shipments: Shipment[] = shipmentsData?.data || [];
   // /api/couriers → ApiResponse<Courier[]> — interceptor tarafından açılır, doğrudan dizi gelir
-  const couriers: Courier[] = Array.isArray(couriersData) ? couriersData : couriersData?.data || [];
+  const couriers: Courier[] = Array.isArray(couriersData)
+    ? couriersData
+    : couriersData?.data || [];
 
   const filtered = shipments.filter(
     (s) =>
