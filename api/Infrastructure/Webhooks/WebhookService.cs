@@ -26,7 +26,12 @@ public class WebhookService : IWebhookService
         var webhookUrls = _config["WEBHOOK_URLS"]?.Split(',') ?? [];
         if (webhookUrls.Length == 0)
         {
-            _logger.LogDebug("Kayıtlı webhook URL yok — event={Event}", eventType);
+            _logger.LogInformation(
+                "WEBHOOK_URLS tanımlı değil — event={Event} atlandı. "
+                    + "Webhook almak için ortam değişkenlerinde WEBHOOK_URLS değerini "
+                    + "virgülle ayrılmış URL listesi olarak tanımlayın.",
+                eventType
+            );
             return;
         }
 
