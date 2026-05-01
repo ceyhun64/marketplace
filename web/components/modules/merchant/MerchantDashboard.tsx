@@ -28,7 +28,9 @@ export default function MerchantDashboard() {
   const { data: offersData } = useQuery({
     queryKey: ["merchant-offers"],
     queryFn: async () => {
-      const res = await api.get("/api/merchants/offers");
+      const res = await api.get("/api/merchants/catalogue", {
+        params: { page: 1, limit: 20 },
+      });
       return res.data;
     },
   });
@@ -43,19 +45,20 @@ export default function MerchantDashboard() {
     },
   });
 
-  const offers = offersData?.items || offersData || [];
+  const offers = offersData?.items || offersData?.data || offersData || [];
   const orders = ordersData?.items || ordersData?.data || ordersData || [];
 
+  const serverStats = offersData?.stats;
   const stats = {
-    totalProducts: offers.length,
-    inMarket: offers.filter((o: any) => o.publishToMarket).length,
-    inStore: offers.filter((o: any) => o.publishToStore).length,
+    totalProducts: serverStats?.total ?? offersData?.total ?? offersData?.totalCount ?? offers.length,
+    inMarket: serverStats?.onMarket ?? offers.filter((o: any) => o.publishToMarket).length,
+    inStore: serverStats?.onStore ?? offers.filter((o: any) => o.publishToStore).length,
     pendingOrders: orders.length,
   };
 
-  const storeName = profile?.storeName || "My Store";
-  const slug = profile?.slug;
-  const plan = profile?.subscriptionPlan || "Basic";
+  const storeName = profile?.storeName || profile?.StoreName || "My Store";
+  const slug = profile?.slug || profile?.Slug;
+  const plan = profile?.subscriptionPlan || profile?.Subscription?.Plan || profile?.subscription?.plan || "Basic";
 
   const statCards = [
     {

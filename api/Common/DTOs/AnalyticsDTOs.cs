@@ -14,6 +14,7 @@ public class MerchantStatsDto : MerchantSalesDto
     public decimal MarketplaceRevenue { get; set; }
     public decimal EstoreRevenue { get; set; }
     public decimal AverageOrderValue { get; set; }
+    public int TotalProducts { get; set; }
 }
 
 public class SalesPeriodDto
@@ -23,14 +24,26 @@ public class SalesPeriodDto
     public int OrderCount { get; set; }
 }
 
+public class ChannelStatsDto
+{
+    public decimal Revenue { get; set; }
+    public int Orders { get; set; }
+    public double ConversionRate { get; set; }
+}
+
 public class MarketplaceComparisonDto
 {
-    public decimal MarketplaceRevenue { get; set; }
-    public decimal EstoreRevenue { get; set; }
-    public int MarketplaceOrders { get; set; }
-    public int EstoreOrders { get; set; }
-    public double MarketplaceConversionRate { get; set; }
-    public double EstoreConversionRate { get; set; }
+    // Nested structure matching frontend expectations
+    public ChannelStatsDto Marketplace { get; set; } = new();
+    public ChannelStatsDto Estore { get; set; } = new();
+
+    // Flat aliases for backward compatibility
+    public decimal MarketplaceRevenue => Marketplace.Revenue;
+    public decimal EstoreRevenue => Estore.Revenue;
+    public int MarketplaceOrders => Marketplace.Orders;
+    public int EstoreOrders => Estore.Orders;
+    public double MarketplaceConversionRate => Marketplace.ConversionRate;
+    public double EstoreConversionRate => Estore.ConversionRate;
 }
 
 public class TopProductDto
@@ -38,7 +51,11 @@ public class TopProductDto
     public Guid ProductId { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public int TotalSold { get; set; }
+    // Alias for frontend (useAnalytics expects totalQuantity)
+    public int TotalQuantity => TotalSold;
     public decimal TotalRevenue { get; set; }
+    public decimal MarketplaceRevenue { get; set; }
+    public decimal EstoreRevenue { get; set; }
 }
 
 public class AdminOverviewDto

@@ -83,14 +83,18 @@ public class AnalyticsService : IAnalyticsService
 
         return new MarketplaceComparisonDto
         {
-            MarketplaceRevenue = marketplace.Sum(o => o.TotalAmount),
-            EstoreRevenue = estore.Sum(o => o.TotalAmount),
-            MarketplaceOrders = marketplace.Count,
-            EstoreOrders = estore.Count,
-            MarketplaceConversionRate =
-                total == 0 ? 0 : Math.Round((double)marketplace.Count / total * 100, 2),
-            EstoreConversionRate =
-                total == 0 ? 0 : Math.Round((double)estore.Count / total * 100, 2),
+            Marketplace = new ChannelStatsDto
+            {
+                Revenue = marketplace.Sum(o => o.TotalAmount),
+                Orders = marketplace.Count,
+                ConversionRate = total == 0 ? 0 : Math.Round((double)marketplace.Count / total * 100, 2),
+            },
+            Estore = new ChannelStatsDto
+            {
+                Revenue = estore.Sum(o => o.TotalAmount),
+                Orders = estore.Count,
+                ConversionRate = total == 0 ? 0 : Math.Round((double)estore.Count / total * 100, 2),
+            },
         };
     }
 
@@ -99,20 +103,31 @@ public class AnalyticsService : IAnalyticsService
     {
         var merchantId = await GetMerchantIdAsync();
 
-        return await _db
+        var items = await _db
             .OrderItems.Include(i => i.Product)
-            .Where(i => i.MerchantId == merchantId)
-            .GroupBy(i => new { i.ProductId, i.Product.Name })
+            .Include(i => i.Order)
+            .Where(i => i.MerchantId == merchantId
+                && i.Order.Status != Domain.Enums.OrderStatus.Cancelled
+                && i.Order.Status != Domain.Enums.OrderStatus.Failed)
+            .ToListAsync();
+
+        return items
+            .GroupBy(i => new { i.ProductId, Name = i.Product?.Name ?? i.ProductName })
             .Select(g => new TopProductDto
             {
                 ProductId = g.Key.ProductId,
                 ProductName = g.Key.Name,
                 TotalSold = g.Sum(i => i.Quantity),
-                TotalRevenue = g.Sum(i => i.Quantity * i.UnitPrice),
+                TotalRevenue = g.Sum(i => i.LineTotal),
+                MarketplaceRevenue = g
+                    .Where(i => i.Order.Source == Domain.Enums.OrderSource.Marketplace)
+                    .Sum(i => i.LineTotal),
+                EstoreRevenue = g
+                    .Where(i => i.Order.Source == Domain.Enums.OrderSource.EStore)
+                    .Sum(i => i.LineTotal),
             })
             .OrderByDescending(x => x.TotalSold)
-            .Take(limit)
-            .ToListAsync();
+            .Take(limit);
     }
 
     // ── Admin: Genel bakış paneli ─────────────────────────────────────────
@@ -316,6 +331,7 @@ public class AnalyticsService : IAnalyticsService
             MarketplaceRevenue = marketplaceRevenue,
             EstoreRevenue = estoreRevenue,
             AverageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0,
+            TotalProducts = await _db.Products.CountAsync(p => p.MerchantId == merchantId && !p.IsDeleted),
             SalesByPeriod = new List<SalesPeriodDto>(),
         };
     }

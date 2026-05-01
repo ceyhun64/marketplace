@@ -105,10 +105,18 @@ public class MerchantsController : ControllerBase
         if (merchant == null)
             return NotFound(new { message = "Merchant profili bulunamadı." });
 
-        var query = _db
-            .Products.Include(p => p.Category)
-            .Where(p => p.MerchantId == merchant.Id)
-            .AsQueryable();
+        // Base query (all products, no publish filters) for aggregate stats
+        var allProductsQuery = _db.Products
+            .Where(p => p.MerchantId == merchant.Id && !p.IsDeleted);
+
+        var statsOnMarket = await allProductsQuery.CountAsync(p => p.PublishToMarket);
+        var statsOnStore = await allProductsQuery.CountAsync(p => p.PublishToStore);
+        var statsPendingApproval = await allProductsQuery.CountAsync(p => !p.IsApproved);
+        var statsOutOfStock = await allProductsQuery.CountAsync(p => p.Stock == 0);
+        var statsTotal = await allProductsQuery.CountAsync();
+
+        // Filtered query for pagination
+        var query = allProductsQuery.Include(p => p.Category).AsQueryable();
 
         if (publishedToMarket.HasValue)
             query = query.Where(p => p.PublishToMarket == publishedToMarket.Value);
@@ -141,9 +149,18 @@ public class MerchantsController : ControllerBase
             new
             {
                 total,
+                totalCount = total,
                 page,
                 limit,
                 items,
+                stats = new
+                {
+                    total = statsTotal,
+                    onMarket = statsOnMarket,
+                    onStore = statsOnStore,
+                    pendingApproval = statsPendingApproval,
+                    outOfStock = statsOutOfStock,
+                },
             }
         );
     }

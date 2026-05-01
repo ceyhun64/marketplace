@@ -113,10 +113,22 @@ export default function MerchantCatalogueView() {
     return allProducts;
   }, [allProducts, publishFilter]);
 
-  const totalCount = data?.totalCount ?? 0;
+  const totalCount = data?.totalCount ?? data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const stats = useMemo(() => {
+    // Use server-side stats (covers ALL products, not just current page)
+    const serverStats = data?.stats;
+    if (serverStats) {
+      return {
+        total: serverStats.total ?? totalCount,
+        onMarket: serverStats.onMarket ?? 0,
+        onStore: serverStats.onStore ?? 0,
+        pendingApproval: serverStats.pendingApproval ?? 0,
+        outOfStock: serverStats.outOfStock ?? 0,
+      };
+    }
+    // Fallback: compute from current page items (less accurate)
     const items = allProducts;
     return {
       total: totalCount,
@@ -125,7 +137,7 @@ export default function MerchantCatalogueView() {
       pendingApproval: items.filter((p) => !p.isApproved).length,
       outOfStock: items.filter((p) => p.stock === 0).length,
     };
-  }, [allProducts, totalCount]);
+  }, [data, allProducts, totalCount]);
 
   const handleEdit = (product: Product) => {
     setEditProduct(product);

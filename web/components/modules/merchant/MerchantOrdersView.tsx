@@ -26,22 +26,32 @@ export default function MerchantOrdersView() {
         },
       });
       const raw = res.data;
-      // Backend returns { data: [...], pagination: {...} }
-      // Normalize status values to SCREAMING_SNAKE_CASE for frontend enums
       const normalizeStatus = (s: string) =>
         s.replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase();
       const items = (raw?.data ?? raw?.items ?? raw ?? []).map((o: any) => ({
         ...o,
         status: o.status ? normalizeStatus(o.status) : o.status,
       }));
-      return items;
+      return { items, pagination: raw?.pagination };
     },
   });
 
-  const orders = Array.isArray(data) ? data : [];
+  // Fetch total counts per status for accurate stats (regardless of current filter)
+  const { data: allOrdersData } = useQuery({
+    queryKey: ["merchant-incoming-orders-all-stats"],
+    queryFn: async () => {
+      const res = await api.get("/api/orders/merchant/incoming", {
+        params: { limit: 1 },
+      });
+      return res.data?.pagination?.total ?? 0;
+    },
+  });
+
+  const orders = Array.isArray(data?.items) ? data.items : [];
+  const paginationTotal = data?.pagination?.total ?? orders.length;
 
   const stats = {
-    total: orders.length,
+    total: statusFilter === "all" ? paginationTotal : (allOrdersData ?? paginationTotal),
     pending: orders.filter((o: any) =>
       ["PENDING", "PAYMENT_CONFIRMED"].includes(o.status),
     ).length,
@@ -120,7 +130,7 @@ export default function MerchantOrdersView() {
           <p className="text-sm font-semibold text-gray-900">
             All Orders
             <span className="ml-2 text-sm font-normal text-gray-400">
-              ({orders.length} orders)
+              ({paginationTotal} orders)
             </span>
           </p>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
