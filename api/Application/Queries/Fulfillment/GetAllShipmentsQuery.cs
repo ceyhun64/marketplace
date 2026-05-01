@@ -43,6 +43,10 @@ public class GetAllShipmentsQueryHandler
             .Include(s => s.StatusHistory)
             .Include(s => s.Order)
                 .ThenInclude(o => o.Customer)
+            .Include(s => s.Order)
+                .ThenInclude(o => o.Items)
+                    .ThenInclude(i => i.Product)
+                        .ThenInclude(p => p.Merchant)
             .AsQueryable();
 
         if (
@@ -67,6 +71,14 @@ public class GetAllShipmentsQueryHandler
             {
                 Id = s.Id,
                 OrderId = s.OrderId,
+                OrderNumber = s.Order?.Id.ToString("N")[..8].ToUpper() ?? string.Empty,
+                CustomerName = s.Order?.Customer != null
+                    ? $"{s.Order.Customer.FirstName} {s.Order.Customer.LastName}".Trim()
+                    : s.Order?.RecipientName ?? string.Empty,
+                CustomerAddress = s.Order != null
+                    ? $"{s.Order.AddressLine}, {s.Order.City}".Trim(',', ' ')
+                    : string.Empty,
+                MerchantName = s.Order?.Items.FirstOrDefault()?.Product?.Merchant?.StoreName ?? string.Empty,
                 CourierId = s.CourierId,
                 CourierName =
                     s.Courier != null

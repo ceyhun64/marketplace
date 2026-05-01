@@ -43,7 +43,7 @@ export default function AdminDashboardPage() {
         pendingOrders: d.orders?.pendingOrders ?? d.pendingOrders ?? 0,
         totalMerchants: d.merchants?.totalMerchants ?? d.totalMerchants ?? 0,
         activeMerchants: d.merchants?.activeMerchants ?? d.activeMerchants ?? 0,
-        totalRevenue: d.revenue?.revenueThisMonth ?? d.totalRevenue ?? 0,
+        totalRevenue: d.totalRevenue ?? d.revenue?.revenueThisMonth ?? 0,
         totalProducts: d.totalProducts ?? 0,
         pendingProducts: d.pendingProducts ?? 0,
         pendingMerchants: d.pendingMerchants ?? 0,

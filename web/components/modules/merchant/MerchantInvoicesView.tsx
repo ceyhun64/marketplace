@@ -69,7 +69,7 @@ export default function MerchantInvoicesView() {
     },
   });
 
-  const invoices: Invoice[] = data?.data || [];
+  const invoices: Invoice[] = Array.isArray(data) ? data : data?.data || data?.items || [];
 
   const handleDownload = async (invoiceId: string, invoiceNumber: string) => {
     try {

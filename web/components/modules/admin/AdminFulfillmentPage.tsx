@@ -160,7 +160,15 @@ export default function AdminFulfillmentPage() {
     queryFn: async () => {
       const params = statusFilter !== "all" ? `?status=${statusFilter}` : "";
       const res = await api.get(`/api/fulfillment${params}`);
-      return res.data;
+      const raw = res.data;
+      // Normalize status values from PascalCase to SCREAMING_SNAKE_CASE
+      const normalizeStatus = (s: string) =>
+        s.replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase();
+      const items = (raw?.data ?? []).map((s: any) => ({
+        ...s,
+        status: s.status ? normalizeStatus(s.status) : s.status,
+      }));
+      return { ...raw, data: items };
     },
   });
 

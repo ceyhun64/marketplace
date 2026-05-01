@@ -44,7 +44,7 @@ export default function MerchantDashboard() {
   });
 
   const offers = offersData?.items || offersData || [];
-  const orders = ordersData?.items || ordersData || [];
+  const orders = ordersData?.items || ordersData?.data || ordersData || [];
 
   const stats = {
     totalProducts: offers.length,

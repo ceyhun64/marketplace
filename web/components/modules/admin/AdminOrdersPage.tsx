@@ -130,9 +130,12 @@ export default function AdminOrdersPage() {
       const res = await api.get<PaginatedOrders>(
         `/api/orders/admin/all?${params}`,
       );
-      // Normalize customerName and merchantStoreName from nested data
+      // Normalize customerName, merchantStoreName, and status values
+      const normalizeStatus = (s: string) =>
+        s.replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase();
       const orders = (res.data?.data ?? []).map((o: any) => ({
         ...o,
+        status: o.status ? normalizeStatus(o.status) : o.status,
         customerName: o.customerName || o.customer?.email || o.shippingAddress?.fullName || "—",
         merchantStoreName: o.merchantStoreName || o.items?.[0]?.merchantStoreName || "—",
       }));

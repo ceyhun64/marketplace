@@ -317,7 +317,9 @@ export default function AdminCouriersPage() {
                     </span>
                   </td>
                   <td className="px-5 py-4 text-xs text-gray-400">
-                    {new Date(courier.createdAt).toLocaleDateString("en-US")}
+                    {courier.createdAt
+                      ? new Date(courier.createdAt).toLocaleDateString("en-US")
+                      : "—"}
                   </td>
                   <td className="px-5 py-4">
                     <button

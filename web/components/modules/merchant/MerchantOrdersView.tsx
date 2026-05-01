@@ -25,26 +25,35 @@ export default function MerchantOrdersView() {
           limit: 50,
         },
       });
-      return res.data;
+      const raw = res.data;
+      // Backend returns { data: [...], pagination: {...} }
+      // Normalize status values to SCREAMING_SNAKE_CASE for frontend enums
+      const normalizeStatus = (s: string) =>
+        s.replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase();
+      const items = (raw?.data ?? raw?.items ?? raw ?? []).map((o: any) => ({
+        ...o,
+        status: o.status ? normalizeStatus(o.status) : o.status,
+      }));
+      return items;
     },
   });
 
-  const orders = data?.items || data || [];
+  const orders = Array.isArray(data) ? data : [];
 
   const stats = {
     total: orders.length,
     pending: orders.filter((o: any) =>
-      ["placed", "payment_confirmed"].includes(o.status),
+      ["PENDING", "PAYMENT_CONFIRMED"].includes(o.status),
     ).length,
     processing: orders.filter((o: any) =>
       [
-        "label_generated",
-        "courier_assigned",
-        "picked_up",
-        "in_transit",
+        "LABEL_GENERATED",
+        "COURIER_ASSIGNED",
+        "PICKED_UP",
+        "IN_TRANSIT",
       ].includes(o.status),
     ).length,
-    delivered: orders.filter((o: any) => o.status === "delivered").length,
+    delivered: orders.filter((o: any) => o.status === "DELIVERED").length,
   };
 
   return (

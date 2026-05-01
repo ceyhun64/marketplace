@@ -13,7 +13,10 @@ public record AdminDashboardResult(
     AdminMerchantStats Merchants,
     int TotalUsers,
     int PendingProducts,
-    int ActiveShipments
+    int ActiveShipments,
+    int TotalProducts,
+    int PendingMerchants,
+    decimal TotalRevenue
 );
 
 public record AdminOrderStats(int TotalOrders, int OrdersToday, int OrdersThisMonth);
@@ -66,6 +69,19 @@ public class GetAdminDashboardQueryHandler
             s => s.Status != ShipmentStatus.Delivered && s.Status != ShipmentStatus.Failed,
             cancellationToken
         );
+        var totalProducts = await _db.Products.CountAsync(
+            p => !p.IsDeleted,
+            cancellationToken
+        );
+        var pendingMerchants = await _db.Users.CountAsync(
+            u => u.Role == UserRole.Merchant && u.AccountStatus == AccountStatus.PendingApproval && !u.IsDeleted,
+            cancellationToken
+        );
+        var totalRevenue =
+            await _db.Orders
+                .Where(o => o.Status != OrderStatus.Cancelled)
+                .SumAsync(o => (decimal?)o.TotalAmount, cancellationToken)
+            ?? 0;
 
         return new AdminDashboardResult(
             new AdminOrderStats(totalOrders, ordersToday, ordersThisMonth),
@@ -73,7 +89,10 @@ public class GetAdminDashboardQueryHandler
             new AdminMerchantStats(totalMerchants, activeMerchants),
             totalUsers,
             pendingProducts,
-            activeShipments
+            activeShipments,
+            totalProducts,
+            pendingMerchants,
+            totalRevenue
         );
     }
 }

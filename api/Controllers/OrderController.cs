@@ -397,6 +397,7 @@ public class OrdersController(
             CustomerName = order.Customer != null
                 ? $"{order.Customer.FirstName} {order.Customer.LastName}".Trim()
                 : order.RecipientName,
+            MerchantStoreName = order.Items.FirstOrDefault()?.Product?.Merchant?.StoreName ?? string.Empty,
             Source = order.Source.ToString(),
             Status = order.Status.ToString(),
             TotalAmount = order.TotalAmount,

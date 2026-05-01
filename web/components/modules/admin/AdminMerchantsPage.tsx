@@ -135,7 +135,15 @@ export default function AdminMerchantsPage() {
     queryKey: ["admin-merchants", search],
     queryFn: async () => {
       const res = await api.get("/api/admin/merchants", { params: { search } });
-      return res.data;
+      const raw = res.data;
+      const items = (raw?.items ?? raw ?? []).map((m: any) => ({
+        ...m,
+        email: m.email ?? m.user?.email ?? "",
+        customDomain: m.customDomain ?? null,
+        domainVerified: m.domainVerified ?? false,
+        plan: m.plan ?? null,
+      }));
+      return { ...raw, items };
     },
     enabled: tab === "active",
   });

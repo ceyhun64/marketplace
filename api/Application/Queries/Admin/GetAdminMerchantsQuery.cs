@@ -14,8 +14,10 @@ public record AdminMerchantItem(
     bool IsActive,
     DateTime CreatedAt,
     AdminMerchantUser User,
-    string Plan,
-    int ProductCount
+    string? Plan,
+    int ProductCount,
+    string? CustomDomain,
+    bool DomainVerified
 );
 
 public record AdminMerchantUser(Guid Id, string Email);
@@ -65,8 +67,10 @@ public class GetAdminMerchantsQueryHandler
                 m.IsActive,
                 m.CreatedAt,
                 new AdminMerchantUser(m.User.Id, m.User.Email),
-                m.Subscription == null ? "none" : m.Subscription.Plan.ToString(),
-                m.Products.Count(p => !p.IsDeleted)
+                m.Subscription == null ? null : m.Subscription.Plan.ToString(),
+                m.Products.Count(p => !p.IsDeleted),
+                m.CustomDomain,
+                m.DomainVerified
             ))
             .ToListAsync(cancellationToken);
 

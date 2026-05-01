@@ -5,6 +5,7 @@ public class OrderDto
     public Guid Id { get; set; }
     public Guid CustomerId { get; set; }
     public string CustomerName { get; set; } = string.Empty;
+    public string MerchantStoreName { get; set; } = string.Empty;
     public string Source { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public decimal TotalAmount { get; set; }

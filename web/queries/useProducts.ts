@@ -177,7 +177,12 @@ export function useMerchantProducts(filters?: ProductFilters) {
       const { data } = await api.get<ProductsResponse>(
         `/api/merchants/catalogue?${params}`,
       );
-      return data;
+      // Backend returns { total, items } — normalize to { totalCount, items }
+      return {
+        ...data,
+        totalCount: (data as any).totalCount ?? (data as any).total ?? 0,
+        items: (data as any).items ?? [],
+      } as ProductsResponse;
     },
   });
 }
