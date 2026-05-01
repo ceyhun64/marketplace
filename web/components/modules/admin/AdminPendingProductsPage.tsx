@@ -175,7 +175,7 @@ export default function AdminPendingProductsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-pending-products"],
     queryFn: async () => {
-      const res = await api.get("/api/products/admin/pending");
+      const res = await api.get("/api/admin/products/pending");
       return res.data;
     },
     refetchInterval: 30000,

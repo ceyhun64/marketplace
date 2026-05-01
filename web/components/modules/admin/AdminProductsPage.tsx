@@ -165,7 +165,7 @@ export default function AdminProductsPage() {
   const approveMutation = useMutation({
     mutationFn: ({ id, approved }: { id: string; approved: boolean }) => {
       if (approved) {
-        return api.patch(`/api/admin/products/${id}/approve`);
+        return api.patch(`/api/products/${id}/approve`);
       } else {
         return api.delete(`/api/products/${id}`);
       }
@@ -180,7 +180,7 @@ export default function AdminProductsPage() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: object }) =>
-      api.put(`/api/products/${id}`, data),
+      api.patch(`/api/products/${id}/update`, data),
     onSuccess: () => {
       toast.success("Product updated successfully");
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });

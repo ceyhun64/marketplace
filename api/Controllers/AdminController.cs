@@ -61,21 +61,39 @@ public class AdminController : ControllerBase
             s.Status != ShipmentStatus.Delivered && s.Status != ShipmentStatus.Failed
         );
 
+        var totalProducts = await _db.Products.CountAsync(p => !p.IsDeleted);
+        var pendingOrders = await _db.Orders.CountAsync(o =>
+            o.Status == OrderStatus.Pending || o.Status == OrderStatus.PaymentConfirmed
+        );
+        var totalShipments = await _db.Shipments.CountAsync();
+        var deliveredShipments = await _db.Shipments.CountAsync(s => s.Status == ShipmentStatus.Delivered);
+        var fulfillmentSuccessRate = totalShipments == 0
+            ? 0.0
+            : Math.Round((double)deliveredShipments / totalShipments * 100, 2);
+
         return Ok(
             new
             {
                 orders = new
                 {
                     totalOrders,
+                    pendingOrders,
                     ordersToday,
                     ordersThisMonth,
                 },
-                revenue = new { revenueThisMonth },
+                revenue = new { revenueThisMonth, totalRevenue = revenueThisMonth },
                 merchants = new { totalMerchants, activeMerchants },
                 totalUsers,
+                totalProducts,
                 pendingProducts,
                 pendingMerchants,
                 activeShipments,
+                fulfillmentSuccessRate,
+                // Flat aliases for backward compatibility
+                totalOrders,
+                totalMerchants,
+                activeMerchants,
+                totalRevenue = revenueThisMonth,
             }
         );
     }

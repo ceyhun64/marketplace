@@ -486,6 +486,52 @@ public class ProductsController : ControllerBase
         return Ok(new { message = "Ürün onaylandı." });
     }
 
+    /// <summary>Ürün güncelle (Admin veya Merchant)</summary>
+    [HttpPatch("{id:guid}/update")]
+    [Authorize(Policy = "AdminOrMerchant")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductRequest dto)
+    {
+        var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        var product = await _db.Products.FindAsync(id);
+        if (product == null)
+            return NotFound(new { message = "Ürün bulunamadı." });
+
+        // Merchant sadece kendi ürününü güncelleyebilir
+        if (userRole == "Merchant")
+        {
+            var merchant = await _db.MerchantProfiles.FirstOrDefaultAsync(m =>
+                m.UserId == Guid.Parse(userIdClaim!)
+            );
+            if (merchant == null || product.MerchantId != merchant.Id)
+                return Forbid();
+        }
+
+        if (dto.Name != null) product.Name = dto.Name.Trim();
+        if (dto.Description != null) product.Description = dto.Description.Trim();
+        if (dto.CategoryId.HasValue) product.CategoryId = dto.CategoryId.Value;
+        if (dto.Images != null) product.Images = dto.Images;
+        if (dto.Tags != null) product.Tags = dto.Tags;
+        if (dto.Price.HasValue) product.Price = dto.Price.Value;
+        if (dto.Stock.HasValue) product.Stock = dto.Stock.Value;
+        if (dto.PublishToMarket.HasValue) product.PublishToMarket = dto.PublishToMarket.Value;
+        if (dto.PublishToStore.HasValue) product.PublishToStore = dto.PublishToStore.Value;
+        product.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return Ok(new ApiResponse<object>(new
+        {
+            product.Id,
+            product.Name,
+            product.Price,
+            product.Stock,
+            product.IsApproved,
+            product.PublishToMarket,
+            product.PublishToStore,
+        }));
+    }
+
     /// <summary>Ürün soft-delete</summary>
     [HttpDelete("{id:guid}")]
     [Authorize(Policy = "AdminOnly")]
@@ -500,4 +546,17 @@ public class ProductsController : ControllerBase
         await _db.SaveChangesAsync();
         return NoContent();
     }
+}
+
+public class UpdateProductRequest
+{
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    public Guid? CategoryId { get; set; }
+    public List<string>? Images { get; set; }
+    public List<string>? Tags { get; set; }
+    public decimal? Price { get; set; }
+    public int? Stock { get; set; }
+    public bool? PublishToMarket { get; set; }
+    public bool? PublishToStore { get; set; }
 }

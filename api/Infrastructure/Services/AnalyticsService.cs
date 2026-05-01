@@ -129,6 +129,7 @@ public class AnalyticsService : IAnalyticsService
             m.IsActive && !m.IsSuspended
         );
         var todayOrders = await _db.Orders.CountAsync(o => o.CreatedAt.Date == today);
+        var totalOrders = await _db.Orders.CountAsync();
         var pendingApprovals = await _db.Products.CountAsync(p => !p.IsApproved && !p.IsDeleted);
         var activeCouriers = await _db.Couriers.CountAsync(c => c.IsActive);
         var totalShipments = await _db.Shipments.CountAsync();
@@ -137,12 +138,24 @@ public class AnalyticsService : IAnalyticsService
         double successRate =
             totalShipments == 0 ? 0 : Math.Round((double)delivered / totalShipments * 100, 2);
 
+        // Ortalama teslimat süresi hesapla — Delivered olan shipment'larda UpdatedAt = teslim zamanı
+        var deliveredShipments = await _db.Shipments
+            .Where(s => s.Status == ShipmentStatus.Delivered)
+            .Select(s => new { s.CreatedAt, DeliveredAt = s.UpdatedAt })
+            .ToListAsync();
+
+        double avgDeliveryHours = deliveredShipments.Count > 0
+            ? deliveredShipments.Average(s => (s.DeliveredAt - s.CreatedAt).TotalHours)
+            : 0;
+
         return new AdminOverviewDto
         {
             TotalGmv = totalGmv,
-            ActiveMerchantCount = activeMerchants,
+            TotalMerchants = activeMerchants,
+            TotalOrders = totalOrders,
             TodayOrderCount = todayOrders,
             FulfillmentSuccessRate = successRate,
+            AverageDeliveryHours = Math.Round(avgDeliveryHours, 1),
             PendingProductApprovals = pendingApprovals,
             ActiveCourierCount = activeCouriers,
         };
@@ -239,6 +252,87 @@ public class AnalyticsService : IAnalyticsService
             DeliveredCount = delivered.Count,
             FailedCount = failed,
             CourierPerformance = courierPerf,
+        };
+    }
+
+    // ── Merchant: Genel istatistik özeti (dashboard stats widget) ────────
+    public async Task<MerchantStatsDto> GetMerchantStatsAsync()
+    {
+        var merchantId = await GetMerchantIdAsync();
+
+        var items = await _db
+            .OrderItems.Include(i => i.Order)
+            .Where(i =>
+                i.MerchantId == merchantId
+                && i.Order.Status != Domain.Enums.OrderStatus.Cancelled
+                && i.Order.Status != Domain.Enums.OrderStatus.Failed
+            )
+            .ToListAsync();
+
+        var orders = items.GroupBy(i => i.OrderId).Select(g => g.First().Order).ToList();
+
+        var marketplaceRevenue = items
+            .Where(i => i.Order.Source == Domain.Enums.OrderSource.Marketplace)
+            .Sum(i => i.LineTotal);
+
+        var estoreRevenue = items
+            .Where(i => i.Order.Source == Domain.Enums.OrderSource.EStore)
+            .Sum(i => i.LineTotal);
+
+        var totalRevenue = marketplaceRevenue + estoreRevenue;
+        var totalOrders = orders.Count;
+
+        return new MerchantStatsDto
+        {
+            TotalRevenue = totalRevenue,
+            TotalOrders = totalOrders,
+            MarketplaceRevenue = marketplaceRevenue,
+            EstoreRevenue = estoreRevenue,
+            AverageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0,
+            SalesByPeriod = new List<SalesPeriodDto>(),
+        };
+    }
+
+    // ── Merchant: Tek ürün analitik detayı ───────────────────────────────
+    public async Task<object> GetMerchantProductAnalyticsAsync(Guid productId)
+    {
+        var merchantId = await GetMerchantIdAsync();
+
+        var product = await _db.Products
+            .Where(p => p.Id == productId && p.MerchantId == merchantId && !p.IsDeleted)
+            .FirstOrDefaultAsync()
+            ?? throw new KeyNotFoundException("Ürün bulunamadı.");
+
+        var items = await _db
+            .OrderItems.Include(i => i.Order)
+            .Where(i =>
+                i.ProductId == productId
+                && i.Order.Status != Domain.Enums.OrderStatus.Cancelled
+                && i.Order.Status != Domain.Enums.OrderStatus.Failed
+            )
+            .ToListAsync();
+
+        var marketplaceItems = items.Where(i => i.Order.Source == Domain.Enums.OrderSource.Marketplace).ToList();
+        var estoreItems = items.Where(i => i.Order.Source == Domain.Enums.OrderSource.EStore).ToList();
+
+        return new
+        {
+            productId = product.Id,
+            productName = product.Name,
+            totalSold = items.Sum(i => i.Quantity),
+            totalRevenue = items.Sum(i => i.LineTotal),
+            marketplace = new
+            {
+                sold = marketplaceItems.Sum(i => i.Quantity),
+                revenue = marketplaceItems.Sum(i => i.LineTotal),
+                orders = marketplaceItems.Select(i => i.OrderId).Distinct().Count(),
+            },
+            estore = new
+            {
+                sold = estoreItems.Sum(i => i.Quantity),
+                revenue = estoreItems.Sum(i => i.LineTotal),
+                orders = estoreItems.Select(i => i.OrderId).Distinct().Count(),
+            },
         };
     }
 

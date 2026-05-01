@@ -75,7 +75,7 @@ export default function AdminCouriersPage() {
 
   async function handleToggleActive(id: string, current: boolean) {
     try {
-      await api.patch(`/api/couriers/${id}`, { isActive: !current });
+      await api.patch(`/api/couriers/${id}/toggle-active`);
       setCouriers((prev) =>
         prev.map((c) => (c.id === id ? { ...c, isActive: !current } : c)),
       );

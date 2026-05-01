@@ -25,6 +25,31 @@ public class AnalyticsController : ControllerBase
         return Ok(new ApiResponse<MerchantSalesDto>(data));
     }
 
+    // GET /api/analytics/merchant/stats — Merchant (dashboard özet widget)
+    [HttpGet("merchant/stats")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<IActionResult> GetMerchantStats()
+    {
+        var data = await _analyticsService.GetMerchantStatsAsync();
+        return Ok(new ApiResponse<MerchantStatsDto>(data));
+    }
+
+    // GET /api/analytics/merchant/product/{productId} — Merchant
+    [HttpGet("merchant/product/{productId:guid}")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<IActionResult> GetMerchantProductAnalytics(Guid productId)
+    {
+        try
+        {
+            var data = await _analyticsService.GetMerchantProductAnalyticsAsync(productId);
+            return Ok(new ApiResponse<object>(data));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new ApiResponse<string>(ex.Message));
+        }
+    }
+
     // GET /api/analytics/merchant/comparison — Merchant
     [HttpGet("merchant/comparison")]
     [Authorize(Policy = "MerchantOnly")]

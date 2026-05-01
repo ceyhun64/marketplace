@@ -44,11 +44,18 @@ public class TopProductDto
 public class AdminOverviewDto
 {
     public decimal TotalGmv { get; set; }
-    public int ActiveMerchantCount { get; set; }
-    public int TodayOrderCount { get; set; }
+    // Frontend "totalMerchants" bekliyor
+    public int TotalMerchants { get; set; }
+    // Frontend "totalOrders" bekliyor (bugünkü değil, genel toplam)
+    public int TotalOrders { get; set; }
     public double FulfillmentSuccessRate { get; set; }
+    // Frontend "averageDeliveryHours" bekliyor
+    public double AverageDeliveryHours { get; set; }
     public int PendingProductApprovals { get; set; }
     public int ActiveCourierCount { get; set; }
+    // Geriye dönük uyumluluk için eski alan adları da tut
+    public int ActiveMerchantCount => TotalMerchants;
+    public int TodayOrderCount { get; set; }
 }
 
 public class RevenueReportDto
@@ -72,6 +79,10 @@ public class FulfillmentAnalyticsDto
     public int TotalShipments { get; set; }
     public int DeliveredCount { get; set; }
     public int FailedCount { get; set; }
+    // Frontend "successRate" alanını da bekliyor
+    public double SuccessRate => TotalShipments == 0
+        ? 0
+        : Math.Round((double)DeliveredCount / TotalShipments * 100, 2);
     public List<CourierPerformanceDto> CourierPerformance { get; set; } = new();
 }
 
