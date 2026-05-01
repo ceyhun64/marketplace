@@ -263,7 +263,90 @@ try
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Database.MigrateAsync();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+        try
+        {
+            // Tablolar zaten varsa (42P07) migration kaydını manuel ekle, sonra devam et
+            var conn = db.Database.GetDbConnection();
+            await conn.OpenAsync();
+
+            // __EFMigrationsHistory tablosu yoksa oluştur
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = """
+                    CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+                        "MigrationId"    character varying(150) NOT NULL,
+                        "ProductVersion" character varying(32)  NOT NULL,
+                        CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
+                    );
+                    """;
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            // Henüz kaydedilmemiş migration'ları __EFMigrationsHistory'e ekle
+            // (tablolar fiziksel olarak zaten mevcutsa bile çakışmayı önler)
+            var pendingMigrations = (await db.Database.GetPendingMigrationsAsync()).ToList();
+            if (pendingMigrations.Count > 0)
+            {
+                // Tablo varlığını kontrol et (42P07 senaryosu)
+                await using var checkCmd = conn.CreateCommand();
+                checkCmd.CommandText = """
+                    SELECT EXISTS (
+                        SELECT 1 FROM information_schema.tables
+                        WHERE table_schema = 'public'
+                          AND table_name   = 'Categories'
+                    );
+                    """;
+                var tablesExist = (bool)(await checkCmd.ExecuteScalarAsync() ?? false);
+
+                if (tablesExist)
+                {
+                    // Tablolar var ama migration kaydı yok → sadece kaydı ekle
+                    logger.LogWarning(
+                        "Tablolar zaten mevcut. {Count} migration kaydı __EFMigrationsHistory'e ekleniyor (tablo oluşturulmayacak).",
+                        pendingMigrations.Count
+                    );
+
+                    // EF runtime'ının kullandığı ProductVersion'ı al
+                    var productVersion = typeof(Microsoft.EntityFrameworkCore.DbContext)
+                        .Assembly.GetName().Version?.ToString() ?? "8.0.0";
+
+                    await using var insertCmd = conn.CreateCommand();
+                    var values = string.Join(
+                        ", ",
+                        pendingMigrations.Select(m =>
+                            $"('{m}', '{productVersion}')"
+                        )
+                    );
+                    insertCmd.CommandText = $"""
+                        INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+                        VALUES {values}
+                        ON CONFLICT ("MigrationId") DO NOTHING;
+                        """;
+                    await insertCmd.ExecuteNonQueryAsync();
+
+                    logger.LogInformation("Migration kayıtları eklendi. Uygulama başlatılıyor.");
+                }
+                else
+                {
+                    // Tablolar yok → normal migration çalıştır
+                    await conn.CloseAsync();
+                    await db.Database.MigrateAsync();
+                }
+            }
+            else
+            {
+                logger.LogInformation("Bekleyen migration yok.");
+                await conn.CloseAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Migration sırasında beklenmeyen hata oluştu.");
+            throw;
+        }
+
         await DataSeeder.SeedAsync(db);
     }
 
