@@ -473,26 +473,17 @@ public static class DataSeeder
         {
             couriers = await db.Couriers.ToListAsync();
 
-            // Mevcut courier kullanıcılarının şifresini seed şifresiyle senkronize et
-            var courierEmails = new[]
-            {
-                "courier1@marketplace.com",
-                "courier2@marketplace.com",
-                "courier3@marketplace.com",
-                "courier4@marketplace.com",
-            };
-            var courierUsers = await db
-                .Users.Where(u => u.Role == UserRole.Courier && courierEmails.Contains(u.Email))
-                .ToListAsync();
-            var expectedHash = BCrypt.Net.BCrypt.HashPassword("Courier123!");
+            // Tüm courier kullanıcılarının şifresini seed şifresiyle senkronize et
+            var courierUsers = await db.Users.Where(u => u.Role == UserRole.Courier).ToListAsync();
             foreach (var cu in courierUsers)
             {
                 if (!BCrypt.Net.BCrypt.Verify("Courier123!", cu.PasswordHash))
                 {
-                    cu.PasswordHash = expectedHash;
+                    cu.PasswordHash = BCrypt.Net.BCrypt.HashPassword("Courier123!");
                     cu.AccountStatus = AccountStatus.Active;
                     cu.IsVerified = true;
                     cu.UpdatedAt = DateTime.UtcNow;
+                    Console.WriteLine($"🔑 Courier şifresi güncellendi: {cu.Email}");
                 }
             }
             await db.SaveChangesAsync();
