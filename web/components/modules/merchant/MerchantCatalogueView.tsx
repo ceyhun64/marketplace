@@ -113,7 +113,7 @@ export default function MerchantCatalogueView() {
     return allProducts;
   }, [allProducts, publishFilter]);
 
-  const totalCount = data?.totalCount ?? data?.total ?? 0;
+  const totalCount = data?.totalCount ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const stats = useMemo(() => {

@@ -6,11 +6,20 @@ import type { Product } from "@/types/entities";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+export interface ProductStats {
+  total: number;
+  onMarket: number;
+  onStore: number;
+  pendingApproval: number;
+  outOfStock: number;
+}
+
 export interface ProductsResponse {
   items: Product[];
   totalCount: number;
   page: number;
   limit: number;
+  stats?: ProductStats;
 }
 
 export interface ProductFilters {
