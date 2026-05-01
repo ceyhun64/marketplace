@@ -4,12 +4,17 @@ public class ShipmentDto
 {
     public Guid Id { get; set; }
     public Guid OrderId { get; set; }
+    public string OrderNumber { get; set; } = string.Empty;
+    public string CustomerName { get; set; } = string.Empty;
+    public string CustomerAddress { get; set; } = string.Empty;
+    public string MerchantName { get; set; } = string.Empty;
     public Guid? CourierId { get; set; }
     public string? CourierName { get; set; }
     public string Status { get; set; } = string.Empty;
     public string TrackingNumber { get; set; } = string.Empty;
     public DateTime EstimatedDelivery { get; set; }
     public string? LabelUrl { get; set; }
+    public string ShippingRate { get; set; } = string.Empty;
     public List<ShipmentStatusHistoryDto> History { get; set; } = new();
     public DateTime CreatedAt { get; set; }
 }

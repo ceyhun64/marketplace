@@ -246,6 +246,8 @@ public class OrdersController(
         var query = db
             .Orders.Include(o => o.Items)
                 .ThenInclude(i => i.Product)
+                    .ThenInclude(p => p.Merchant)
+            .Include(o => o.Customer)
             .Include(o => o.Shipment)
             .AsQueryable();
 
@@ -392,6 +394,9 @@ public class OrdersController(
         {
             Id = order.Id,
             CustomerId = order.CustomerId,
+            CustomerName = order.Customer != null
+                ? $"{order.Customer.FirstName} {order.Customer.LastName}".Trim()
+                : order.RecipientName,
             Source = order.Source.ToString(),
             Status = order.Status.ToString(),
             TotalAmount = order.TotalAmount,
@@ -414,6 +419,7 @@ public class OrdersController(
                     ProductName = i.ProductName,
                     ProductImageUrl = i.ProductImage,
                     MerchantId = i.MerchantId,
+                    MerchantStoreName = i.Product?.Merchant?.StoreName ?? string.Empty,
                     Quantity = i.Quantity,
                     UnitPrice = i.UnitPrice,
                     SubTotal = i.UnitPrice * i.Quantity,

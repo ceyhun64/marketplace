@@ -28,6 +28,7 @@ interface DashboardStats {
   pendingProducts: number;
   pendingMerchants: number;
   fulfillmentSuccessRate: number;
+  activeDeliveries: number;
   recentOrders?: any[];
 }
 
@@ -47,6 +48,7 @@ export default function AdminDashboardPage() {
         pendingProducts: d.pendingProducts ?? 0,
         pendingMerchants: d.pendingMerchants ?? 0,
         fulfillmentSuccessRate: d.fulfillmentSuccessRate ?? 0,
+        activeDeliveries: d.activeShipments ?? d.activeDeliveries ?? 0,
         recentOrders: d.recentOrders,
       } as DashboardStats;
     },
@@ -121,7 +123,7 @@ export default function AdminDashboardPage() {
     },
     {
       label: "Active Deliveries",
-      value: 0,
+      value: stats.activeDeliveries ?? 0,
       icon: Truck,
       color: "text-indigo-600",
       bg: "bg-indigo-50",

@@ -14,26 +14,31 @@ public class CourierService : ICourierService
 
     public async Task<IEnumerable<CourierDto>> GetAllAsync(bool? isActive)
     {
-        var query = _db.Couriers.Include(c => c.User).AsQueryable();
+        var query = _db.Couriers.Include(c => c.User).Include(c => c.Shipments).AsQueryable();
 
         if (isActive.HasValue)
             query = query.Where(c => c.IsActive == isActive.Value);
 
-        return await query
-            .Select(c => new CourierDto
-            {
-                Id = c.Id,
-                Email = c.User.Email,
-                FullName = $"{c.User.FirstName} {c.User.LastName}".Trim(),
-                PhoneNumber = c.User.Phone,
-                IsActive = c.IsActive,
-                CurrentLat = c.CurrentLatitude,
-                CurrentLng = c.CurrentLongitude,
-                ActiveShipmentCount = c.Shipments.Count(s =>
-                    s.Status != ShipmentStatus.Delivered && s.Status != ShipmentStatus.Failed
-                ),
-            })
-            .ToListAsync();
+        var couriers = await query.ToListAsync();
+
+        return couriers.Select(c => new CourierDto
+        {
+            Id = c.Id,
+            UserId = c.UserId,
+            Email = c.User.Email,
+            Name = $"{c.User.FirstName} {c.User.LastName}".Trim(),
+            FullName = $"{c.User.FirstName} {c.User.LastName}".Trim(),
+            Phone = c.User.Phone,
+            PhoneNumber = c.User.Phone,
+            IsActive = c.IsActive,
+            CurrentLat = c.CurrentLatitude,
+            CurrentLng = c.CurrentLongitude,
+            ActiveShipmentCount = c.Shipments.Count(s =>
+                s.Status != ShipmentStatus.Delivered && s.Status != ShipmentStatus.Failed
+            ),
+            TotalDelivered = c.Shipments.Count(s => s.Status == ShipmentStatus.Delivered),
+            CreatedAt = c.User.CreatedAt,
+        });
     }
 
     public async Task<CourierDto?> GetByIdAsync(Guid id)

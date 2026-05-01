@@ -39,10 +39,12 @@ const PERIOD_OPTIONS: { label: string; value: AnalyticsPeriod }[] = [
 function toArray(data: unknown): any[] {
   if (Array.isArray(data)) return data;
   if (data && typeof data === "object") {
-    // { items: [...] } veya { data: [...] } şeklinde gelebilir
+    // { items: [...] } veya { data: [...] } veya { rows: [...] } şeklinde gelebilir
     const obj = data as Record<string, unknown>;
     if (Array.isArray(obj.items)) return obj.items;
     if (Array.isArray(obj.data)) return obj.data;
+    if (Array.isArray(obj.rows)) return obj.rows;
+    if (Array.isArray(obj.salesByPeriod)) return obj.salesByPeriod;
   }
   return [];
 }
@@ -88,18 +90,17 @@ export default function AdminAnalyticsPage() {
     },
   ];
 
-  // revenueRaw'ı güvenli diziye çevir, sonra chart formatına map'le
-  const revenuePoints = toArray(revenueRaw).length
-    ? toArray(revenueRaw)
-    : toArray(overview?.revenueChart);
+  // revenueRaw is RevenueReportDto: { period, rows, chartData }
+  // chartData has time-series: [{ date, revenue, orderCount, label }]
+  const rawChartData = (revenueRaw as any)?.chartData ?? toArray(revenueRaw) ?? toArray(overview?.revenueChart);
 
-  const chartRevenue = revenuePoints.map((d: any) => ({
-    gun: d.date ?? d.label ?? "",
+  const chartRevenue = rawChartData.map((d: any) => ({
+    gun: d.label ?? d.date?.slice(0, 10) ?? "",
     gelir: d.revenue ?? 0,
   }));
 
-  const chartOrders = revenuePoints.map((d: any) => ({
-    gun: d.date ?? d.label ?? "",
+  const chartOrders = rawChartData.map((d: any) => ({
+    gun: d.label ?? d.date?.slice(0, 10) ?? "",
     siparis: d.orderCount ?? 0,
   }));
 

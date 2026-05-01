@@ -48,6 +48,8 @@ public class AdminOverviewDto
     public int TotalMerchants { get; set; }
     // Frontend "totalOrders" bekliyor (bugünkü değil, genel toplam)
     public int TotalOrders { get; set; }
+    // Frontend "totalCustomers" bekliyor
+    public int TotalCustomers { get; set; }
     public double FulfillmentSuccessRate { get; set; }
     // Frontend "averageDeliveryHours" bekliyor
     public double AverageDeliveryHours { get; set; }
@@ -62,6 +64,17 @@ public class RevenueReportDto
 {
     public string Period { get; set; } = string.Empty;
     public List<MerchantRevenueRowDto> Rows { get; set; } = new();
+    /// <summary>Time-series data for revenue/orders charts</summary>
+    public List<RevenueChartPointDto> ChartData { get; set; } = new();
+}
+
+public class RevenueChartPointDto
+{
+    public DateTime Date { get; set; }
+    public decimal Revenue { get; set; }
+    public int OrderCount { get; set; }
+    // Alias for frontend compatibility
+    public string Label => Date.ToString("MM/dd");
 }
 
 public class MerchantRevenueRowDto
@@ -83,6 +96,9 @@ public class FulfillmentAnalyticsDto
     public double SuccessRate => TotalShipments == 0
         ? 0
         : Math.Round((double)DeliveredCount / TotalShipments * 100, 2);
+    // Frontend "activeCourierCount" ve "pendingAssignCount" bekliyor
+    public int ActiveCourierCount { get; set; }
+    public int PendingAssignCount { get; set; }
     public List<CourierPerformanceDto> CourierPerformance { get; set; } = new();
 }
 

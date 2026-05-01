@@ -33,6 +33,12 @@ public class FulfillmentController(
             .Shipments.Include(s => s.Courier)
                 .ThenInclude(c => c!.User)
             .Include(s => s.StatusHistory)
+            .Include(s => s.Order)
+                .ThenInclude(o => o.Customer)
+            .Include(s => s.Order)
+                .ThenInclude(o => o.Items)
+                    .ThenInclude(i => i.Product)
+                        .ThenInclude(p => p.Merchant)
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(status) && Enum.TryParse<ShipmentStatus>(status, out var ps))
@@ -318,6 +324,14 @@ public class FulfillmentController(
         {
             Id = s.Id,
             OrderId = s.OrderId,
+            OrderNumber = s.Order != null ? s.Order.Id.ToString("N").ToUpper()[..8] : string.Empty,
+            CustomerName = s.Order?.Customer != null
+                ? $"{s.Order.Customer.FirstName} {s.Order.Customer.LastName}".Trim()
+                : s.Order?.RecipientName ?? string.Empty,
+            CustomerAddress = s.Order != null
+                ? $"{s.Order.AddressLine}, {s.Order.City}".Trim(',', ' ')
+                : string.Empty,
+            MerchantName = s.Order?.Items?.FirstOrDefault()?.Product?.Merchant?.StoreName ?? string.Empty,
             CourierId = s.CourierId,
             CourierName =
                 s.Courier != null
@@ -327,6 +341,7 @@ public class FulfillmentController(
             TrackingNumber = s.TrackingNumber,
             EstimatedDelivery = s.EstimatedDelivery,
             LabelUrl = s.LabelUrl,
+            ShippingRate = s.Order != null ? s.Order.ShippingRate.ToString() : string.Empty,
             History = s
                 .StatusHistory.OrderByDescending(h => h.ChangedAt)
                 .Select(h => new ShipmentStatusHistoryDto

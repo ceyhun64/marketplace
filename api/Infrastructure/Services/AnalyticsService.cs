@@ -132,6 +132,7 @@ public class AnalyticsService : IAnalyticsService
         var totalOrders = await _db.Orders.CountAsync();
         var pendingApprovals = await _db.Products.CountAsync(p => !p.IsApproved && !p.IsDeleted);
         var activeCouriers = await _db.Couriers.CountAsync(c => c.IsActive);
+        var totalCustomers = await _db.Users.CountAsync(u => u.Role == UserRole.Customer && !u.IsDeleted);
         var totalShipments = await _db.Shipments.CountAsync();
         var delivered = await _db.Shipments.CountAsync(s => s.Status == ShipmentStatus.Delivered);
 
@@ -153,6 +154,7 @@ public class AnalyticsService : IAnalyticsService
             TotalGmv = totalGmv,
             TotalMerchants = activeMerchants,
             TotalOrders = totalOrders,
+            TotalCustomers = totalCustomers,
             TodayOrderCount = todayOrders,
             FulfillmentSuccessRate = successRate,
             AverageDeliveryHours = Math.Round(avgDeliveryHours, 1),
@@ -166,7 +168,7 @@ public class AnalyticsService : IAnalyticsService
     {
         var sinceDate = PeriodToDate(period);
 
-        // OrderItem.MerchantId üzerinden gruplama
+        // Per-merchant summary rows (for table view)
         var rows = await _db
             .OrderItems.Include(i => i.Order)
             .Include(i => i.Product)
@@ -187,7 +189,24 @@ public class AnalyticsService : IAnalyticsService
             .OrderByDescending(r => r.Revenue)
             .ToListAsync();
 
-        return new RevenueReportDto { Period = period, Rows = rows };
+        // Time-series chart data grouped by date
+        var chartData = await _db.Orders
+            .Where(o =>
+                o.CreatedAt >= sinceDate
+                && o.Status != OrderStatus.Cancelled
+                && o.Status != OrderStatus.Failed
+            )
+            .GroupBy(o => o.CreatedAt.Date)
+            .Select(g => new RevenueChartPointDto
+            {
+                Date = g.Key,
+                Revenue = g.Sum(o => o.TotalAmount),
+                OrderCount = g.Count(),
+            })
+            .OrderBy(g => g.Date)
+            .ToListAsync();
+
+        return new RevenueReportDto { Period = period, Rows = rows, ChartData = chartData };
     }
 
     // ── Admin/Milestone 2: Fulfillment performans analitikleri ───────────
@@ -251,6 +270,14 @@ public class AnalyticsService : IAnalyticsService
             TotalShipments = total,
             DeliveredCount = delivered.Count,
             FailedCount = failed,
+            ActiveCourierCount = shipments.Where(s =>
+                s.CourierId.HasValue &&
+                s.Status != ShipmentStatus.Delivered &&
+                s.Status != ShipmentStatus.Failed
+            ).Select(s => s.CourierId).Distinct().Count(),
+            PendingAssignCount = shipments.Count(s =>
+                s.Status == ShipmentStatus.LabelGenerated && !s.CourierId.HasValue
+            ),
             CourierPerformance = courierPerf,
         };
     }

@@ -130,7 +130,13 @@ export default function AdminOrdersPage() {
       const res = await api.get<PaginatedOrders>(
         `/api/orders/admin/all?${params}`,
       );
-      return res.data;
+      // Normalize customerName and merchantStoreName from nested data
+      const orders = (res.data?.data ?? []).map((o: any) => ({
+        ...o,
+        customerName: o.customerName || o.customer?.email || o.shippingAddress?.fullName || "—",
+        merchantStoreName: o.merchantStoreName || o.items?.[0]?.merchantStoreName || "—",
+      }));
+      return { ...res.data, data: orders };
     },
   });
 

@@ -66,7 +66,15 @@ export default function AdminInvoicesPage() {
       const res = await api.get(`/api/invoices/admin/all?${params}`);
       // Backend: ApiResponse<{ items, totalCount, page, limit }>
       // interceptor açar → res.data = { items, totalCount, page, limit }
-      return res.data?.items ?? res.data ?? [];
+      const items = res.data?.items ?? res.data ?? [];
+      // Normalize field names: backend uses merchantStoreName/customerFullName
+      return items.map((inv: any) => ({
+        ...inv,
+        merchantName: inv.merchantName ?? inv.merchantStoreName ?? "—",
+        customerName: inv.customerName ?? inv.customerFullName ?? "—",
+        subTotal: inv.subTotal ?? inv.subtotal ?? 0,
+        vatAmount: inv.vatAmount ?? 0,
+      }));
     },
   });
 
@@ -87,15 +95,33 @@ export default function AdminInvoicesPage() {
 
   const handleDownload = async (invoiceId: string, invoiceNumber: string) => {
     try {
+      // First try to get the PDF URL directly
+      const checkRes = await api.get(`/api/invoices/${invoiceId}`);
+      const pdfUrl = checkRes.data?.pdfUrl;
+      
+      if (pdfUrl) {
+        // If there's a direct URL, open it
+        window.open(pdfUrl, "_blank");
+        return;
+      }
+
+      // Otherwise download as blob
       const res = await api.get(`/api/invoices/${invoiceId}/download`, {
         responseType: "blob",
       });
-      const url = URL.createObjectURL(new Blob([res.data]));
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${invoiceNumber}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
+      
+      // Check if response is actually a PDF blob (not an error JSON)
+      const contentType = res.headers?.["content-type"] ?? "";
+      if (contentType.includes("application/pdf")) {
+        const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${invoiceNumber}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        toast.error("PDF not available for this invoice");
+      }
     } catch {
       toast.error("Failed to download invoice");
     }

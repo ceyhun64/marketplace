@@ -3,13 +3,20 @@ namespace api.Common.DTOs;
 public class CourierDto
 {
     public Guid Id { get; set; }
+    public Guid UserId { get; set; }
+    // Frontend expects "name" (not "fullName")
+    public string Name { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    // Frontend expects "phone" (not "phoneNumber")
+    public string? Phone { get; set; }
     public string? PhoneNumber { get; set; }
     public bool IsActive { get; set; }
     public double? CurrentLat { get; set; }
     public double? CurrentLng { get; set; }
     public int ActiveShipmentCount { get; set; }
+    public int TotalDelivered { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
 
 public class CreateCourierDto
