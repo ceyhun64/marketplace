@@ -35,11 +35,19 @@ public class InvoiceSummaryDto
     public Guid Id { get; set; }
     public string InvoiceNumber { get; set; } = string.Empty;
     public Guid OrderId { get; set; }
+    public string OrderNumber { get; set; } = string.Empty;
     public string MerchantStoreName { get; set; } = string.Empty;
-    public string CustomerFullName { get; set; } = string.Empty;
+    // "CustomerName" matches what the frontend Invoice interface expects
+    public string CustomerName { get; set; } = string.Empty;
+    // Keep for backward compat
+    public string CustomerFullName => CustomerName;
+    public decimal SubTotal { get; set; }
+    public decimal VatRate { get; set; }
+    public decimal VatAmount { get; set; }
     public decimal TotalAmount { get; set; }
     public string? PdfUrl { get; set; }
     public DateTime IssuedAt { get; set; }
+    public string Source { get; set; } = string.Empty;
 }
 
 public class AccountingEntryDto

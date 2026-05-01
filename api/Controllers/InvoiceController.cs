@@ -30,6 +30,7 @@ public class InvoicesController(
             return NotFound(new ApiResponse<string>("Merchant profili bulunamadı."));
 
         var invoices = await db.Invoices
+            .Include(i => i.Order)
             .Where(i => i.MerchantId == merchant.Id)
             .OrderByDescending(i => i.IssuedAt)
             .Select(i => new InvoiceSummaryDto
@@ -37,11 +38,16 @@ public class InvoicesController(
                 Id = i.Id,
                 InvoiceNumber = i.InvoiceNumber,
                 OrderId = i.OrderId,
+                OrderNumber = i.Order != null ? i.Order.Id.ToString().Substring(0, 8).ToUpper() : string.Empty,
                 MerchantStoreName = i.MerchantStoreName,
-                CustomerFullName = i.CustomerFullName,
+                CustomerName = i.CustomerFullName,
+                SubTotal = i.SubTotal,
+                VatRate = i.VatRate,
+                VatAmount = i.VatAmount,
                 TotalAmount = i.TotalAmount,
                 PdfUrl = i.PdfUrl,
                 IssuedAt = i.IssuedAt,
+                Source = i.Order != null ? i.Order.Source.ToString().ToUpper() : string.Empty,
             })
             .ToListAsync();
 
@@ -66,6 +72,7 @@ public class InvoicesController(
         var totalCount = await query.CountAsync();
 
         var items = await query
+            .Include(i => i.Order)
             .OrderByDescending(i => i.IssuedAt)
             .Skip((page - 1) * limit)
             .Take(limit)
@@ -74,11 +81,16 @@ public class InvoicesController(
                 Id = i.Id,
                 InvoiceNumber = i.InvoiceNumber,
                 OrderId = i.OrderId,
+                OrderNumber = i.Order != null ? i.Order.Id.ToString().Substring(0, 8).ToUpper() : string.Empty,
                 MerchantStoreName = i.MerchantStoreName,
-                CustomerFullName = i.CustomerFullName,
+                CustomerName = i.CustomerFullName,
+                SubTotal = i.SubTotal,
+                VatRate = i.VatRate,
+                VatAmount = i.VatAmount,
                 TotalAmount = i.TotalAmount,
                 PdfUrl = i.PdfUrl,
                 IssuedAt = i.IssuedAt,
+                Source = i.Order != null ? i.Order.Source.ToString().ToUpper() : string.Empty,
             })
             .ToListAsync();
 
@@ -191,11 +203,16 @@ public class InvoicesController(
                 Id = invoice.Id,
                 InvoiceNumber = invoice.InvoiceNumber,
                 OrderId = invoice.OrderId,
+                OrderNumber = order.Id.ToString().Substring(0, 8).ToUpper(),
                 MerchantStoreName = invoice.MerchantStoreName,
-                CustomerFullName = invoice.CustomerFullName,
+                CustomerName = invoice.CustomerFullName,
+                SubTotal = invoice.SubTotal,
+                VatRate = invoice.VatRate,
+                VatAmount = invoice.VatAmount,
                 TotalAmount = invoice.TotalAmount,
                 PdfUrl = invoice.PdfUrl,
                 IssuedAt = invoice.IssuedAt,
+                Source = order.Source.ToString().ToUpper(),
             }));
         }
         catch (Exception ex)
@@ -214,7 +231,7 @@ public class InvoicesController(
         OrderId = i.OrderId,
         MerchantId = i.MerchantId,
         MerchantStoreName = i.MerchantStoreName,
-        CustomerFullName = i.CustomerFullName,
+        CustomerName = i.CustomerFullName,
         CustomerEmail = i.CustomerEmail,
         SubTotal = i.SubTotal,
         VatRate = i.VatRate,

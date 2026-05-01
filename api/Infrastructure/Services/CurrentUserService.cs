@@ -30,7 +30,9 @@ public class CurrentUserService : ICurrentUserService
     {
         get
         {
-            var value = _httpContextAccessor.HttpContext?.User.FindFirstValue("MerchantId");
+            // Token claim is stored as "merchantId" (lowercase) — try both casings
+            var value = _httpContextAccessor.HttpContext?.User.FindFirstValue("merchantId")
+                     ?? _httpContextAccessor.HttpContext?.User.FindFirstValue("MerchantId");
             return Guid.TryParse(value, out var id) ? id : null;
         }
     }
