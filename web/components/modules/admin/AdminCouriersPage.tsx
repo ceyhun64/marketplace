@@ -59,7 +59,12 @@ export default function AdminCouriersPage() {
     setFormLoading(true);
     setFormError("");
     try {
-      await api.post("/api/couriers", form);
+      await api.post("/api/couriers", {
+        fullName: form.name,
+        email: form.email,
+        password: form.password,
+        phoneNumber: form.phone,
+      });
       setShowForm(false);
       setForm({ name: "", email: "", password: "", phone: "" });
       await load();

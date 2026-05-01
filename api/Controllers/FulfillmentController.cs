@@ -201,7 +201,7 @@ public class FulfillmentController(
 
     [HttpPost("{id:guid}/pickup-confirm")]
     [Authorize(Policy = "CourierOnly")]
-    public async Task<IActionResult> PickupConfirm(Guid id, [FromBody] PickupConfirmDto dto)
+    public async Task<IActionResult> PickupConfirm(Guid id, [FromBody] PickupConfirmDto? dto = null)
     {
         var courier = await db.Couriers.FirstOrDefaultAsync(c => c.UserId == currentUser.UserId);
         if (courier == null)
@@ -225,7 +225,10 @@ public class FulfillmentController(
 
     [HttpPost("{id:guid}/delivered")]
     [Authorize(Policy = "CourierOnly")]
-    public async Task<IActionResult> MarkDelivered(Guid id, [FromBody] DeliveredConfirmDto dto)
+    public async Task<IActionResult> MarkDelivered(
+        Guid id,
+        [FromBody] DeliveredConfirmDto? dto = null
+    )
     {
         var courier = await db.Couriers.FirstOrDefaultAsync(c => c.UserId == currentUser.UserId);
         if (courier == null)
@@ -325,13 +328,16 @@ public class FulfillmentController(
             Id = s.Id,
             OrderId = s.OrderId,
             OrderNumber = s.Order != null ? s.Order.Id.ToString("N").ToUpper()[..8] : string.Empty,
-            CustomerName = s.Order?.Customer != null
-                ? $"{s.Order.Customer.FirstName} {s.Order.Customer.LastName}".Trim()
-                : s.Order?.RecipientName ?? string.Empty,
-            CustomerAddress = s.Order != null
-                ? $"{s.Order.AddressLine}, {s.Order.City}".Trim(',', ' ')
-                : string.Empty,
-            MerchantName = s.Order?.Items?.FirstOrDefault()?.Product?.Merchant?.StoreName ?? string.Empty,
+            CustomerName =
+                s.Order?.Customer != null
+                    ? $"{s.Order.Customer.FirstName} {s.Order.Customer.LastName}".Trim()
+                    : s.Order?.RecipientName ?? string.Empty,
+            CustomerAddress =
+                s.Order != null
+                    ? $"{s.Order.AddressLine}, {s.Order.City}".Trim(',', ' ')
+                    : string.Empty,
+            MerchantName =
+                s.Order?.Items?.FirstOrDefault()?.Product?.Merchant?.StoreName ?? string.Empty,
             CourierId = s.CourierId,
             CourierName =
                 s.Courier != null
