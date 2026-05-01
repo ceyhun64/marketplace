@@ -29,8 +29,8 @@ public class InvoicesController(
         if (merchant == null)
             return NotFound(new ApiResponse<string>("Merchant profili bulunamadı."));
 
-        var invoices = await db.Invoices
-            .Include(i => i.Order)
+        var invoices = await db
+            .Invoices.Include(i => i.Order)
             .Where(i => i.MerchantId == merchant.Id)
             .OrderByDescending(i => i.IssuedAt)
             .Select(i => new InvoiceSummaryDto
@@ -38,7 +38,10 @@ public class InvoicesController(
                 Id = i.Id,
                 InvoiceNumber = i.InvoiceNumber,
                 OrderId = i.OrderId,
-                OrderNumber = i.Order != null ? i.Order.Id.ToString().Substring(0, 8).ToUpper() : string.Empty,
+                OrderNumber =
+                    i.Order != null
+                        ? i.Order.Id.ToString().Substring(0, 8).ToUpper()
+                        : string.Empty,
                 MerchantStoreName = i.MerchantStoreName,
                 CustomerName = i.CustomerFullName,
                 SubTotal = i.SubTotal,
@@ -81,7 +84,10 @@ public class InvoicesController(
                 Id = i.Id,
                 InvoiceNumber = i.InvoiceNumber,
                 OrderId = i.OrderId,
-                OrderNumber = i.Order != null ? i.Order.Id.ToString().Substring(0, 8).ToUpper() : string.Empty,
+                OrderNumber =
+                    i.Order != null
+                        ? i.Order.Id.ToString().Substring(0, 8).ToUpper()
+                        : string.Empty,
                 MerchantStoreName = i.MerchantStoreName,
                 CustomerName = i.CustomerFullName,
                 SubTotal = i.SubTotal,
@@ -94,7 +100,17 @@ public class InvoicesController(
             })
             .ToListAsync();
 
-        return Ok(new ApiResponse<object>(new { items, totalCount, page, limit }));
+        return Ok(
+            new ApiResponse<object>(
+                new
+                {
+                    items,
+                    totalCount,
+                    page,
+                    limit,
+                }
+            )
+        );
     }
 
     // ── GET /api/invoices/{id} — Detay (merchant, admin, müşteri) ────────────
@@ -102,8 +118,8 @@ public class InvoicesController(
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var invoice = await db.Invoices
-            .Include(i => i.Order)
+        var invoice = await db
+            .Invoices.Include(i => i.Order)
                 .ThenInclude(o => o.Items)
             .FirstOrDefaultAsync(i => i.Id == id);
 
@@ -136,8 +152,8 @@ public class InvoicesController(
     [HttpGet("{id:guid}/download")]
     public async Task<IActionResult> DownloadPdf(Guid id)
     {
-        var invoice = await db.Invoices
-            .Include(i => i.Order)
+        var invoice = await db
+            .Invoices.Include(i => i.Order)
                 .ThenInclude(o => o.Items)
             .FirstOrDefaultAsync(i => i.Id == id);
 
@@ -183,8 +199,8 @@ public class InvoicesController(
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> GenerateForOrder(Guid orderId)
     {
-        var order = await db.Orders
-            .Include(o => o.Items)
+        var order = await db
+            .Orders.Include(o => o.Items)
             .Include(o => o.Customer)
             .FirstOrDefaultAsync(o => o.Id == orderId);
 
@@ -198,22 +214,26 @@ public class InvoicesController(
         try
         {
             var invoice = await invoiceGenerator.GenerateAndSaveAsync(order);
-            return Ok(new ApiResponse<InvoiceSummaryDto>(new InvoiceSummaryDto
-            {
-                Id = invoice.Id,
-                InvoiceNumber = invoice.InvoiceNumber,
-                OrderId = invoice.OrderId,
-                OrderNumber = order.Id.ToString().Substring(0, 8).ToUpper(),
-                MerchantStoreName = invoice.MerchantStoreName,
-                CustomerName = invoice.CustomerFullName,
-                SubTotal = invoice.SubTotal,
-                VatRate = invoice.VatRate,
-                VatAmount = invoice.VatAmount,
-                TotalAmount = invoice.TotalAmount,
-                PdfUrl = invoice.PdfUrl,
-                IssuedAt = invoice.IssuedAt,
-                Source = order.Source.ToString().ToUpper(),
-            }));
+            return Ok(
+                new ApiResponse<InvoiceSummaryDto>(
+                    new InvoiceSummaryDto
+                    {
+                        Id = invoice.Id,
+                        InvoiceNumber = invoice.InvoiceNumber,
+                        OrderId = invoice.OrderId,
+                        OrderNumber = order.Id.ToString().Substring(0, 8).ToUpper(),
+                        MerchantStoreName = invoice.MerchantStoreName,
+                        CustomerName = invoice.CustomerFullName,
+                        SubTotal = invoice.SubTotal,
+                        VatRate = invoice.VatRate,
+                        VatAmount = invoice.VatAmount,
+                        TotalAmount = invoice.TotalAmount,
+                        PdfUrl = invoice.PdfUrl,
+                        IssuedAt = invoice.IssuedAt,
+                        Source = order.Source.ToString().ToUpper(),
+                    }
+                )
+            );
         }
         catch (Exception ex)
         {
@@ -224,29 +244,33 @@ public class InvoicesController(
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private static InvoiceDto MapToDto(Invoice i) => new()
-    {
-        Id = i.Id,
-        InvoiceNumber = i.InvoiceNumber,
-        OrderId = i.OrderId,
-        MerchantId = i.MerchantId,
-        MerchantStoreName = i.MerchantStoreName,
-        CustomerName = i.CustomerFullName,
-        CustomerEmail = i.CustomerEmail,
-        SubTotal = i.SubTotal,
-        VatRate = i.VatRate,
-        VatAmount = i.VatAmount,
-        ShippingAmount = i.ShippingAmount,
-        TotalAmount = i.TotalAmount,
-        PdfUrl = i.PdfUrl,
-        IsSent = i.IsSent,
-        IssuedAt = i.IssuedAt,
-        LineItems = i.Order?.Items.Select(item => new InvoiceLineItemDto
+    private static InvoiceDto MapToDto(Invoice i) =>
+        new()
         {
-            ProductName = item.ProductName,
-            Quantity = item.Quantity,
-            UnitPrice = item.UnitPrice,
-            LineTotal = item.LineTotal,
-        }).ToList() ?? [],
-    };
+            Id = i.Id,
+            InvoiceNumber = i.InvoiceNumber,
+            OrderId = i.OrderId,
+            MerchantId = i.MerchantId,
+            MerchantStoreName = i.MerchantStoreName,
+            CustomerFullName = i.CustomerFullName,
+            CustomerEmail = i.CustomerEmail,
+            SubTotal = i.SubTotal,
+            VatRate = i.VatRate,
+            VatAmount = i.VatAmount,
+            ShippingAmount = i.ShippingAmount,
+            TotalAmount = i.TotalAmount,
+            PdfUrl = i.PdfUrl,
+            IsSent = i.IsSent,
+            IssuedAt = i.IssuedAt,
+            LineItems =
+                i.Order?.Items.Select(item => new InvoiceLineItemDto
+                    {
+                        ProductName = item.ProductName,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.UnitPrice,
+                        LineTotal = item.LineTotal,
+                    })
+                    .ToList()
+                ?? [],
+        };
 }
