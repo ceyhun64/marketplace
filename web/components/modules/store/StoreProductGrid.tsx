@@ -26,6 +26,9 @@ interface StoreOffer {
   stock: number;
   rating: number;
   categoryName?: string;
+  merchantId?: string;
+  merchantStoreName?: string;
+  merchantSlug?: string;
 }
 
 interface StoreProductGridProps {
@@ -169,10 +172,10 @@ export function StoreProductGrid({
                         offerId: offer.id,
                         productId: offer.productId,
                         productName: offer.productName,
-                        productImage: offer.productImages[0] ?? "", // image → productImage
-                        merchantId: "", // API'den gelmiyor, StoreOffer'a ekle veya boş bırak
-                        merchantStoreName: "", // aynı şekilde
-                        merchantSlug: storeSlug,
+                        productImage: offer.productImages[0] ?? "",
+                        merchantId: offer.merchantId ?? "",
+                        merchantStoreName: offer.merchantStoreName ?? "",
+                        merchantSlug: offer.merchantSlug ?? storeSlug,
                         price: offer.price,
                         stock: offer.stock,
                         source: "ESTORE",

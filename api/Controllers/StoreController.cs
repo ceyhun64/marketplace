@@ -105,6 +105,7 @@ public class StoreController : ControllerBase
 
         var query = _db
             .Products.Include(p => p.Category)
+            .Include(p => p.Merchant)
             .Where(p =>
                 p.MerchantId == merchant.Id && p.PublishToStore && p.Stock > 0 && !p.IsDeleted
             )
@@ -124,10 +125,13 @@ public class StoreController : ControllerBase
             .Select(p => new
             {
                 p.Id,
+                p.MerchantId,
                 p.Name,
                 p.Images,
                 p.Price,
                 p.Stock,
+                MerchantStoreName = p.Merchant.StoreName,
+                MerchantSlug = p.Merchant.Slug,
                 Category = p.Category == null ? null : new { p.Category.Name, p.Category.Slug },
             })
             .ToListAsync();

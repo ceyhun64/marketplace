@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// ── Yapılandırma ────────────────────────────────────────────────────────────
+// yourplatform.com ile eşleşen ana host — bu domain'ler e-mağaza yönlendirmesi dışında tutulur
+const MAIN_HOSTS = [
+  "yourplatform.com",
+  "www.yourplatform.com",
+  "localhost",
+];
+
+// Wildcard subdomain desteği: xxx.yourplatform.com → /store/xxx
+const PLATFORM_DOMAIN = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN ?? "yourplatform.com";
+
 const PROTECTED: Record<string, string[]> = {
   "/admin": ["Admin"],
   "/merchant": ["Merchant"],
@@ -30,7 +41,53 @@ function parseJwtRole(token: string): string | null {
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const hostname = req.headers.get("host") ?? "";
+  const hostWithoutPort = hostname.split(":")[0];
 
+  // ── Custom Domain / Wildcard Subdomain → E-Mağaza Yönlendirmesi ──────────
+  // Nginx X-Store-Slug header'ı gönderiyorsa (wildcard subdomain)
+  const nginxSlug = req.headers.get("x-store-slug");
+  if (nginxSlug && pathname === "/") {
+    const url = req.nextUrl.clone();
+    url.pathname = `/store/${nginxSlug}`;
+    return NextResponse.rewrite(url);
+  }
+
+  // Wildcard subdomain: xxx.yourplatform.com → /store/xxx
+  if (
+    !MAIN_HOSTS.includes(hostWithoutPort) &&
+    hostWithoutPort.endsWith(`.${PLATFORM_DOMAIN}`)
+  ) {
+    const slug = hostWithoutPort.replace(`.${PLATFORM_DOMAIN}`, "");
+    // api, www gibi sistem subdomain'lerini dışla
+    const EXCLUDED_SUBDOMAINS = ["api", "www", "admin", "mail", "cdn"];
+    if (!EXCLUDED_SUBDOMAINS.includes(slug)) {
+      const url = req.nextUrl.clone();
+      url.pathname = `/store/${slug}${pathname === "/" ? "" : pathname}`;
+      return NextResponse.rewrite(url);
+    }
+  }
+
+  // Özel domain: mycustomstore.com → backend'den slug eşlemesi gerekir.
+  // Burada ana platform domaini olmayan ve subdomain pattern'e de uymayan
+  // custom domainler için /store/[slug] rewrite yapılabilir.
+  // Bu eşlemeyi yapmak için Next.js API route veya middleware fetch gerekir;
+  // basit implementasyon: Nginx proxy_set_header X-Forwarded-Host ile yapılır.
+  const forwardedHost = req.headers.get("x-forwarded-host");
+  if (
+    forwardedHost &&
+    !MAIN_HOSTS.includes(forwardedHost) &&
+    !forwardedHost.endsWith(`.${PLATFORM_DOMAIN}`) &&
+    forwardedHost !== PLATFORM_DOMAIN
+  ) {
+    // Custom domain: /store/... prefix ekle (slug backend'den alınmalı)
+    // Şimdilik domain'i slug olarak kullanıyoruz; gerçek uygulamada DB lookup gerekir
+    const url = req.nextUrl.clone();
+    url.pathname = `/store/${forwardedHost}${pathname === "/" ? "" : pathname}`;
+    return NextResponse.rewrite(url);
+  }
+
+  // ── Auth Guard ───────────────────────────────────────────────────────────
   const matchedPrefix = Object.keys(PROTECTED).find((prefix) =>
     pathname.startsWith(prefix),
   );
@@ -61,11 +118,7 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/admin/:path*",
-    "/merchant/:path*",
-    "/courier/:path*",
-    "/orders/:path*",
-    "/checkout/:path*",
-    "/profile/:path*",
+    // E-mağaza custom domain/subdomain rewrite için tüm route'lar
+    "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };

@@ -401,12 +401,21 @@ public class ProductsController : ControllerBase
         else
         {
             // Merchant: kendi profilini bul
-            var merchant = await _db.MerchantProfiles.FirstOrDefaultAsync(m =>
-                m.UserId == Guid.Parse(userIdClaim!)
-            );
+            var merchant = await _db.MerchantProfiles
+                .Include(m => m.Subscription)
+                .FirstOrDefaultAsync(m => m.UserId == Guid.Parse(userIdClaim!));
             if (merchant == null)
                 return Forbid();
             merchantId = merchant.Id;
+
+            // Plan kontrolü: PublishToMarket sadece Pro+ planlarda
+            if (dto.PublishToMarket)
+            {
+                var plan = merchant.Subscription?.Plan ?? api.Domain.Enums.PlanType.Basic;
+                if (plan == api.Domain.Enums.PlanType.Basic)
+                    return BadRequest(new ApiResponse<string>(
+                        "Marketplace'e ürün yayınlamak için Pro veya Enterprise planı gereklidir."));
+            }
         }
 
         var product = new Product
@@ -501,11 +510,20 @@ public class ProductsController : ControllerBase
         // Merchant sadece kendi ürününü güncelleyebilir
         if (userRole == "Merchant")
         {
-            var merchant = await _db.MerchantProfiles.FirstOrDefaultAsync(m =>
-                m.UserId == Guid.Parse(userIdClaim!)
-            );
+            var merchant = await _db.MerchantProfiles
+                .Include(m => m.Subscription)
+                .FirstOrDefaultAsync(m => m.UserId == Guid.Parse(userIdClaim!));
             if (merchant == null || product.MerchantId != merchant.Id)
                 return Forbid();
+
+            // Plan kontrolü: PublishToMarket sadece Pro+ planlarda
+            if (dto.PublishToMarket == true)
+            {
+                var plan = merchant.Subscription?.Plan ?? api.Domain.Enums.PlanType.Basic;
+                if (plan == api.Domain.Enums.PlanType.Basic)
+                    return BadRequest(new ApiResponse<string>(
+                        "Marketplace'e ürün yayınlamak için Pro veya Enterprise planı gereklidir."));
+            }
         }
 
         if (dto.Name != null) product.Name = dto.Name.Trim();

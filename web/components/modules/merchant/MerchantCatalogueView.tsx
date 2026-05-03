@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { toast } from "sonner";
-import { Search, Plus, AlertTriangle } from "lucide-react";
+import { Search, Plus, AlertTriangle, Lock, Zap } from "lucide-react";
+import Link from "next/link";
 
 import ProductCatalogueTable from "@/components/modules/merchant/ProductCatalogueTable";
 import ProductFormModal from "@/components/modules/merchant/ProductFormModal";
@@ -13,6 +14,8 @@ import {
   useTogglePublish,
   type ProductFilters,
 } from "@/queries/useProducts";
+
+import { useMySubscription } from "@/queries/useSubscription";
 
 import type { Product } from "@/types/entities";
 
@@ -76,6 +79,11 @@ export default function MerchantCatalogueView() {
   const [publishFilter, setPublishFilter] = useState<
     "all" | "market" | "store" | "none"
   >("all");
+
+  // Abonelik planı — Basic planda marketplace yayını kısıtlı
+  const { data: subscription } = useMySubscription();
+  const currentPlan = subscription?.plan ?? "BASIC";
+  const canPublishToMarket = currentPlan === "PRO" || currentPlan === "ENTERPRISE";
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
@@ -161,6 +169,16 @@ export default function MerchantCatalogueView() {
     field: "publishToMarket" | "publishToStore",
     value: boolean,
   ) => {
+    // Plan kısıtlaması: Basic planda marketplace yayını yapılamaz
+    if (field === "publishToMarket" && value && !canPublishToMarket) {
+      toast.error("Marketplace'e yayın yapmak için Pro veya Enterprise planı gereklidir.", {
+        action: {
+          label: "Planı Yükselt",
+          onClick: () => window.location.href = "/merchant/subscription",
+        },
+      });
+      return;
+    }
     try {
       await togglePublish.mutateAsync({ id, [field]: value });
       const channelName =
@@ -184,6 +202,32 @@ export default function MerchantCatalogueView() {
 
   return (
     <div className="space-y-6">
+      {/* Basic Plan Marketplace Uyarısı */}
+      {!canPublishToMarket && (
+        <div
+          className="flex items-center gap-3 px-4 py-3 rounded-xl"
+          style={{ background: "rgba(139,94,26,0.08)", border: "1.5px solid rgba(139,94,26,0.25)" }}
+        >
+          <Lock className="w-4 h-4 flex-shrink-0" style={{ color: "#8b5e1a" }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold" style={{ color: "#8b5e1a" }}>
+              Marketplace Yayını — Pro Plan Gerekli
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: "rgba(139,94,26,0.75)" }}>
+              Basic planda ürünler yalnızca e-mağazanızda görünür. Marketplace'e yayınlamak için planınızı yükseltin.
+            </p>
+          </div>
+          <Link
+            href="/merchant/subscription"
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg text-white whitespace-nowrap"
+            style={{ background: "#8b5e1a" }}
+          >
+            <Zap className="w-3 h-3" />
+            Planı Yükselt
+          </Link>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -415,6 +459,7 @@ export default function MerchantCatalogueView() {
             setEditProduct(null);
           }}
           onSuccess={handleModalSuccess}
+          canPublishToMarket={canPublishToMarket}
         />
       )}
 

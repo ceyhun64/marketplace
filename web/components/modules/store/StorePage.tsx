@@ -33,6 +33,9 @@ interface StoreOffer {
   stock: number;
   rating: number;
   categoryName?: string;
+  merchantId?: string;
+  merchantStoreName?: string;
+  merchantSlug?: string;
 }
 
 export async function generateMetadata({

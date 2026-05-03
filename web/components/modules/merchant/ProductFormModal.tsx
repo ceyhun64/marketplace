@@ -11,6 +11,7 @@ interface Props {
   product?: Product | null;
   onClose: () => void;
   onSuccess: () => void;
+  canPublishToMarket?: boolean;
 }
 
 interface FormState {
@@ -41,6 +42,7 @@ export default function ProductFormModal({
   product,
   onClose,
   onSuccess,
+  canPublishToMarket = true,
 }: Props) {
   const isEdit = !!product;
   const { data: categories = [] } = useCategories();
@@ -235,10 +237,18 @@ export default function ProductFormModal({
             />
             <ToggleRow
               label="Publish to Marketplace"
-              description="Visible in general listing (approval may be required)"
-              checked={form.publishToMarket}
-              onChange={(v) => set("publishToMarket", v)}
+              description={
+                canPublishToMarket
+                  ? "Visible in general listing (approval may be required)"
+                  : "Pro veya Enterprise plan gerekli"
+              }
+              checked={form.publishToMarket && canPublishToMarket}
+              onChange={(v) => {
+                if (!canPublishToMarket) return;
+                set("publishToMarket", v);
+              }}
               color="bg-blue-600"
+              disabled={!canPublishToMarket}
             />
           </div>
 
@@ -310,29 +320,34 @@ function ToggleRow({
   checked,
   onChange,
   color,
+  disabled = false,
 }: {
   label: string;
   description: string;
   checked: boolean;
   onChange: (v: boolean) => void;
   color: string;
+  disabled?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className={`flex items-center justify-between ${disabled ? "opacity-50" : ""}`}>
       <div>
         <p className="text-sm font-medium text-gray-800">{label}</p>
         <p className="text-xs text-gray-400">{description}</p>
       </div>
       <button
         type="button"
-        onClick={() => onChange(!checked)}
+        onClick={() => !disabled && onChange(!checked)}
+        disabled={disabled}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-          checked ? color : "bg-gray-200"
+          disabled ? "cursor-not-allowed" : "cursor-pointer"
+        } ${
+          checked && !disabled ? color : "bg-gray-200"
         }`}
       >
         <span
           className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-            checked ? "translate-x-6" : "translate-x-1"
+            checked && !disabled ? "translate-x-6" : "translate-x-1"
           }`}
         />
       </button>
