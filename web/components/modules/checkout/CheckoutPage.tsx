@@ -18,8 +18,37 @@ import {
   Loader2,
 } from "lucide-react";
 import api from "@/lib/api";
+import { CITY_COORDINATES } from "@/lib/constants";
 import type { ShippingRate } from "@/types/enums";
 import type { ShippingAddress } from "@/types/entities";
+
+/**
+ * Şehir adından koordinat çözer.
+ * Türkçe karakter normalizasyonu + kısmi eşleşme destekler.
+ */
+function resolveCityCoords(
+  city?: string,
+): { lat: number; lng: number } | undefined {
+  if (!city?.trim()) return undefined;
+  const rawKey = city.toLowerCase().trim();
+  // Doğrudan eşleşme
+  if (CITY_COORDINATES[rawKey]) return CITY_COORDINATES[rawKey];
+  // Türkçe karakter normalizasyonu
+  const normalize = (s: string) =>
+    s
+      .replace(/[ıİ]/g, "i")
+      .replace(/[ğĞ]/g, "g")
+      .replace(/[üÜ]/g, "u")
+      .replace(/[şŞ]/g, "s")
+      .replace(/[öÖ]/g, "o")
+      .replace(/[çÇ]/g, "c");
+  const normalizedCity = normalize(rawKey);
+  const match = Object.entries(CITY_COORDINATES).find(([key]) =>
+    normalize(key).startsWith(normalizedCity) ||
+    normalizedCity.startsWith(normalize(key))
+  );
+  return match?.[1];
+}
 
 type Step = "address" | "shipping" | "payment";
 const STEPS: Step[] = ["address", "shipping", "payment"];
@@ -156,6 +185,9 @@ function ShippingStep({
   onNext: () => void;
   onBack: () => void;
 }) {
+  // Şehirden koordinat çöz — ETA önizlemesi için
+  const cityCoords = resolveCityCoords(address.city);
+
   return (
     <div className="space-y-5">
       <h2 className="text-lg font-bold text-gray-900">Kargo Seçeneği</h2>
@@ -167,10 +199,17 @@ function ShippingStep({
               .filter(Boolean)
               .join(", ")}
           </span>
+          {cityCoords && (
+            <span className="ml-auto text-xs text-emerald-500 font-medium shrink-0">
+              📍 ETA hesaplanıyor
+            </span>
+          )}
         </div>
       )}
       <ShippingRateSelect
         merchantId={merchantId ?? ""}
+        destinationLat={cityCoords?.lat}
+        destinationLng={cityCoords?.lng}
         value={value}
         onChange={onChange}
       />

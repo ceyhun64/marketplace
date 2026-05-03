@@ -45,10 +45,11 @@ export function useMerchantStats() {
   return useQuery({
     queryKey: analyticsKeys.merchantStats(),
     queryFn: async () => {
-      const { data } = await api.get<MerchantStatsResponse>(
+      const { data } = await api.get<any>(
         "/api/analytics/merchant/stats",
       );
-      return data;
+      // Backend ApiResponse<MerchantStatsDto> döndürür → data.data veya data
+      return (data?.data ?? data) as MerchantStatsResponse;
     },
     staleTime: STALE_TIME.MEDIUM,
   });
@@ -65,7 +66,7 @@ export function useMerchantSalesChart(period: AnalyticsPeriod = "weekly") {
         `/api/analytics/merchant/sales?period=${period}`,
       );
       // API dizi veya obje dönebilir
-      const raw = data?.data ?? data?.items ?? data?.salesChart ?? data;
+      const raw = data?.data ?? data?.items ?? data?.salesChart ?? data?.salesByPeriod ?? data;
       return (Array.isArray(raw) ? raw : []) as SalesDataPoint[];
     },
     staleTime: STALE_TIME.MEDIUM,
@@ -80,7 +81,8 @@ export function useMerchantComparison() {
     queryKey: analyticsKeys.merchantComparison(),
     queryFn: async () => {
       const { data } = await api.get<any>("/api/analytics/merchant/comparison");
-      // API yanıtını normalize et — nested veya flat gelebilir
+      // Backend ApiResponse<MarketplaceComparisonDto> döndürür
+      // MarketplaceComparisonDto: { marketplace: {revenue, orders, conversionRate}, estore: {...} }
       const raw = data?.data ?? data ?? {};
       const empty = { revenue: 0, orders: 0, conversionRate: 0 };
       return {
@@ -99,10 +101,12 @@ export function useMerchantTopProducts(limit = 10) {
   return useQuery({
     queryKey: analyticsKeys.merchantTopProducts(),
     queryFn: async () => {
-      const { data } = await api.get<TopProduct[]>(
+      const { data } = await api.get<any>(
         `/api/analytics/merchant/top-products?limit=${limit}`,
       );
-      return data;
+      // Backend ApiResponse<IEnumerable<TopProductDto>> döndürür
+      const raw = data?.data ?? data;
+      return (Array.isArray(raw) ? raw : []) as TopProduct[];
     },
     staleTime: STALE_TIME.MEDIUM,
   });
@@ -115,10 +119,10 @@ export function useMerchantProductAnalytics(productId: string) {
   return useQuery({
     queryKey: analyticsKeys.merchantProduct(productId),
     queryFn: async () => {
-      const { data } = await api.get(
+      const { data } = await api.get<any>(
         `/api/analytics/merchant/product/${productId}`,
       );
-      return data;
+      return data?.data ?? data;
     },
     enabled: !!productId,
     staleTime: STALE_TIME.MEDIUM,
@@ -134,10 +138,10 @@ export function useAdminOverview() {
   return useQuery({
     queryKey: analyticsKeys.adminOverview(),
     queryFn: async () => {
-      const { data } = await api.get<AdminOverviewResponse>(
+      const { data } = await api.get<any>(
         "/api/analytics/admin/overview",
       );
-      return data;
+      return (data?.data ?? data) as AdminOverviewResponse;
     },
     staleTime: STALE_TIME.MEDIUM,
   });
@@ -150,10 +154,10 @@ export function useAdminRevenue(period: AnalyticsPeriod = "monthly") {
   return useQuery({
     queryKey: analyticsKeys.adminRevenue(period),
     queryFn: async () => {
-      const { data } = await api.get(
+      const { data } = await api.get<any>(
         `/api/analytics/admin/revenue?period=${period}`,
       );
-      return data;
+      return data?.data ?? data;
     },
     staleTime: STALE_TIME.MEDIUM,
   });
@@ -166,8 +170,8 @@ export function useAdminFulfillmentStats() {
   return useQuery({
     queryKey: analyticsKeys.adminFulfillment(),
     queryFn: async () => {
-      const { data } = await api.get("/api/analytics/admin/fulfillment");
-      return data;
+      const { data } = await api.get<any>("/api/analytics/admin/fulfillment");
+      return data?.data ?? data;
     },
     staleTime: STALE_TIME.MEDIUM,
   });

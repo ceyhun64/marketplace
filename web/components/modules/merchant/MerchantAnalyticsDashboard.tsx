@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 import MerchantSalesChart from "@/components/modules/charts/MerchantSalesChart";
 import {
@@ -11,6 +12,11 @@ import {
 } from "@/queries/useAnalytics";
 import { formatPrice, formatCompactNumber, formatPercent } from "@/lib/format";
 import type { AnalyticsPeriod } from "@/types/api";
+
+const ComparisonChart = dynamic(
+  () => import("@/components/modules/analytics/ComparisonChart"),
+  { ssr: false },
+);
 
 const PERIODS: { value: AnalyticsPeriod; label: string }[] = [
   { value: "daily", label: "Daily" },
@@ -36,15 +42,22 @@ export default function MerchantAnalyticsDashboard() {
       if (Array.isArray(obj.items)) return obj.items;
       if (Array.isArray(obj.data)) return obj.data;
       if (Array.isArray(obj.salesChart)) return obj.salesChart;
+      if (Array.isArray(obj.salesByPeriod)) return obj.salesByPeriod;
     }
     return [];
   }
 
   // Grafik için API verisini MerchantSalesChart formatına çevir
+  // Backend SalesPeriodDto: { label, revenue, orderCount }
+  // Backend SalesDataPoint: { date, revenue, orderCount, source }
   const chartData = toArray(salesChart).map((d) => ({
-    gun: new Date(d.date).toLocaleDateString("tr-TR", { weekday: "short" }),
-    marketplace: d.source === "MARKETPLACE" || !d.source ? d.revenue : 0,
-    estore: d.source === "ESTORE" ? d.revenue : 0,
+    gun: d.label
+      ? d.label
+      : d.date
+        ? new Date(d.date).toLocaleDateString("tr-TR", { weekday: "short" })
+        : "—",
+    marketplace: d.source === "MARKETPLACE" || !d.source ? (d.revenue ?? 0) : 0,
+    estore: d.source === "ESTORE" ? (d.revenue ?? 0) : 0,
   }));
 
   const kpis = [
@@ -165,56 +178,62 @@ export default function MerchantAnalyticsDashboard() {
               ))}
             </div>
           ) : comparison ? (
-            <div className="divide-y divide-gray-100">
-              <div className="grid grid-cols-3 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                <span>Metric</span>
-                <span className="text-center">Marketplace</span>
-                <span className="text-right">E-Store</span>
-              </div>
-              {[
-                {
-                  label: "Revenue",
-                  mk: formatPrice(comparison.marketplace.revenue),
-                  es: formatPrice(comparison.estore.revenue),
-                },
-                {
-                  label: "Orders",
-                  mk: comparison.marketplace.orders.toString(),
-                  es: comparison.estore.orders.toString(),
-                },
-                {
-                  label: "Avg. Order",
-                  mk:
-                    comparison.marketplace.orders > 0
-                      ? formatPrice(
-                          comparison.marketplace.revenue /
-                            comparison.marketplace.orders,
-                        )
-                      : "—",
-                  es:
-                    comparison.estore.orders > 0
-                      ? formatPrice(
-                          comparison.estore.revenue / comparison.estore.orders,
-                        )
-                      : "—",
-                },
-                {
-                  label: "Conv. Rate",
-                  mk: formatPercent(comparison.marketplace.conversionRate),
-                  es: formatPercent(comparison.estore.conversionRate),
-                },
-              ].map((row) => (
-                <div key={row.label} className="grid grid-cols-3 py-3 text-sm">
-                  <span className="text-gray-600">{row.label}</span>
-                  <span className="text-center font-semibold text-blue-600">
-                    {row.mk}
-                  </span>
-                  <span className="text-right font-semibold text-emerald-600">
-                    {row.es}
-                  </span>
+            <>
+              {/* Görsel karşılaştırma grafiği */}
+              <ComparisonChart data={comparison} className="mb-4" />
+
+              {/* Sayısal tablo */}
+              <div className="divide-y divide-gray-100">
+                <div className="grid grid-cols-3 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                  <span>Metric</span>
+                  <span className="text-center">Marketplace</span>
+                  <span className="text-right">E-Store</span>
                 </div>
-              ))}
-            </div>
+                {[
+                  {
+                    label: "Revenue",
+                    mk: formatPrice(comparison.marketplace.revenue),
+                    es: formatPrice(comparison.estore.revenue),
+                  },
+                  {
+                    label: "Orders",
+                    mk: comparison.marketplace.orders.toString(),
+                    es: comparison.estore.orders.toString(),
+                  },
+                  {
+                    label: "Avg. Order",
+                    mk:
+                      comparison.marketplace.orders > 0
+                        ? formatPrice(
+                            comparison.marketplace.revenue /
+                              comparison.marketplace.orders,
+                          )
+                        : "—",
+                    es:
+                      comparison.estore.orders > 0
+                        ? formatPrice(
+                            comparison.estore.revenue / comparison.estore.orders,
+                          )
+                        : "—",
+                  },
+                  {
+                    label: "Conv. Rate",
+                    mk: formatPercent(comparison.marketplace.conversionRate),
+                    es: formatPercent(comparison.estore.conversionRate),
+                  },
+                ].map((row) => (
+                  <div key={row.label} className="grid grid-cols-3 py-3 text-sm">
+                    <span className="text-gray-600">{row.label}</span>
+                    <span className="text-center font-semibold text-blue-600">
+                      {row.mk}
+                    </span>
+                    <span className="text-right font-semibold text-emerald-600">
+                      {row.es}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
             <p className="text-sm text-gray-400 text-center py-8">
               No data available

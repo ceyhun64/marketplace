@@ -27,9 +27,7 @@ public record UpdateMerchantProfileRequest(
     string? BannerUrl
 );
 
-public record SuspendMerchantRequest(
-    string Reason
-);
+public record SuspendMerchantRequest(string Reason);
 
 // ── RESPONSE DTOs ────────────────────────────────────────────────────────────
 
@@ -101,15 +99,6 @@ public record MerchantAnalyticsResponse(
     List<TopProductItem> TopProducts
 );
 
-public record DailySalesItem(
-    DateOnly Date,
-    decimal Revenue,
-    int OrderCount
-);
+public record DailySalesItem(DateOnly Date, decimal Revenue, int OrderCount);
 
-public record TopProductItem(
-    Guid ProductId,
-    string ProductName,
-    int UnitsSold,
-    decimal Revenue
-);
+public record TopProductItem(Guid ProductId, string ProductName, int UnitsSold, decimal Revenue);
