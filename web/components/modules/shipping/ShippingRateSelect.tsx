@@ -38,11 +38,13 @@ function ShippingOptionCard({
   selected,
   onSelect,
   isLoading,
+  hasCoords,
 }: {
   option: ShippingOption;
   selected: boolean;
   onSelect: () => void;
   isLoading: boolean;
+  hasCoords: boolean;
 }) {
   const Icon = option.rate === "EXPRESS" ? Zap : Package;
   const etaWindow = option.eta
@@ -106,7 +108,7 @@ function ShippingOptionCard({
                 {etaWindow}
               </span>
             </span>
-          ) : (destinationLat !== undefined && destinationLng !== undefined) ? (
+          ) : hasCoords ? (
             <span className="text-amber-500">ETA hesaplanamadı</span>
           ) : (
             <span>Teslimat tarihini görmek için adres girin.</span>
@@ -150,6 +152,9 @@ export function ShippingRateSelect({
           selected={value === option.rate}
           onSelect={() => onChange(option.rate)}
           isLoading={isLoading}
+          hasCoords={
+            destinationLat !== undefined && destinationLng !== undefined
+          }
         />
       ))}
     </div>
