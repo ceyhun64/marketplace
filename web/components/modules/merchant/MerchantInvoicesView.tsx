@@ -64,26 +64,40 @@ export default function MerchantInvoicesView() {
   const { data, isLoading } = useQuery({
     queryKey: ["merchant-invoices"],
     queryFn: async () => {
-      const res = await api.get("/api/invoices");
+      const res = await api.get("/api/merchants/invoices");
       return res.data;
     },
   });
 
-  const invoices: Invoice[] = Array.isArray(data) ? data : data?.data || data?.items || [];
+  // Backend yeni format: { total, totalRevenue, invoices: [...] }
+  const invoices: Invoice[] = Array.isArray(data)
+    ? data
+    : data?.invoices || data?.data || data?.items || [];
 
   const handleDownload = async (invoiceId: string, invoiceNumber: string) => {
     try {
-      const res = await api.get(`/api/invoices/${invoiceId}/download`, {
-        responseType: "blob",
-      });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `invoice-${invoiceNumber}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      // Backend'den PDF URL'i al, sonra Cloudinary'den indir
+      const res = await api.get(`/api/merchants/invoices/${invoiceId}/download`);
+      const pdfUrl = res.data?.pdfUrl;
+
+      if (pdfUrl) {
+        // Cloudinary CDN URL'ini yeni sekmede aç
+        window.open(pdfUrl, "_blank");
+      } else {
+        // Fallback: blob olarak indir
+        const blobRes = await api.get(
+          `/api/merchants/invoices/${invoiceId}/download`,
+          { responseType: "blob" }
+        );
+        const url = window.URL.createObjectURL(new Blob([blobRes.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `invoice-${invoiceNumber}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      }
       toast.success("Downloading invoice...");
     } catch {
       toast.error("Failed to download invoice");

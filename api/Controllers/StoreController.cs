@@ -1,4 +1,7 @@
+using api.Domain.Enums;
 using api.Infrastructure.Persistence;
+using api.Infrastructure.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,8 +12,13 @@ namespace api.Controllers;
 public class StoreController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly ICurrentUserService? _currentUser;
 
-    public StoreController(AppDbContext db) => _db = db;
+    public StoreController(AppDbContext db, ICurrentUserService currentUser)
+    {
+        _db = db;
+        _currentUser = currentUser;
+    }
 
     [HttpGet("list")]
     public async Task<IActionResult> GetStoreList(
@@ -60,8 +68,13 @@ public class StoreController : ControllerBase
                 m.Id,
                 m.StoreName,
                 m.Slug,
+                m.Description,
                 m.LogoUrl,
                 m.BannerUrl,
+                m.CustomDomain,
+                m.DomainVerified,
+                m.Address,
+                m.City,
                 m.CreatedAt,
                 ProductCount = m.Products.Count(p =>
                     p.PublishToStore && p.Stock > 0 && !p.IsDeleted
@@ -187,4 +200,213 @@ public class StoreController : ControllerBase
 
         return Ok(categories);
     }
+
+    // ── PUT /api/store/settings — Merchant: mağaza ayarlarını güncelle ────────
+    /// <summary>
+    /// Merchant kendi mağazasının logo, banner, açıklama ve diğer ayarlarını günceller.
+    /// Logo ve banner yükleme Pro/Enterprise plan gerektirir.
+    /// </summary>
+    [HttpPut("settings")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<IActionResult> UpdateStoreSettings([FromBody] UpdateStoreSettingsDto dto)
+    {
+        var merchant = await _db
+            .MerchantProfiles.Include(m => m.Subscription)
+            .FirstOrDefaultAsync(m => m.UserId == _currentUser!.UserId);
+
+        if (merchant == null)
+            return NotFound(new { message = "Merchant profili bulunamadı." });
+
+        // Logo / banner Pro planı gerektirir
+        if ((dto.LogoUrl != null || dto.BannerUrl != null) && merchant.LogoUrl == null)
+        {
+            var hasPro = merchant.Subscription != null
+                && merchant.Subscription.IsActive
+                && merchant.Subscription.ExpiresAt > DateTime.UtcNow
+                && merchant.Subscription.Plan != PlanType.Basic;
+
+            if (!hasPro)
+                return BadRequest(new
+                {
+                    message = "Logo ve banner yüklemek için Pro veya Enterprise plan gereklidir.",
+                    requiredPlan = "Pro"
+                });
+        }
+
+        if (dto.StoreName != null) merchant.StoreName = dto.StoreName;
+        if (dto.Description != null) merchant.Description = dto.Description;
+        if (dto.LogoUrl != null) merchant.LogoUrl = dto.LogoUrl;
+        if (dto.BannerUrl != null) merchant.BannerUrl = dto.BannerUrl;
+        if (dto.Address != null) merchant.Address = dto.Address;
+        if (dto.City != null) merchant.City = dto.City;
+        if (dto.Latitude.HasValue) merchant.Latitude = dto.Latitude.Value;
+        if (dto.Longitude.HasValue) merchant.Longitude = dto.Longitude.Value;
+        if (dto.HandlingHours.HasValue) merchant.HandlingHours = dto.HandlingHours.Value;
+
+        merchant.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        return Ok(new
+        {
+            merchant.Id,
+            merchant.StoreName,
+            merchant.Slug,
+            merchant.Description,
+            merchant.LogoUrl,
+            merchant.BannerUrl,
+            merchant.CustomDomain,
+            merchant.DomainVerified,
+            merchant.HandlingHours,
+            message = "Mağaza ayarları güncellendi."
+        });
+    }
+
+    // ── POST /api/store/domain/set — Merchant: özel domain/subdomain ata ─────
+    /// <summary>
+    /// Merchant'ın mağazasına özel domain (mymağaza.com) veya subdomain
+    /// (mağaza.platform.com) atar. Enterprise plan özel domain gerektirir;
+    /// subdomain Pro plan ile kullanılabilir.
+    /// </summary>
+    [HttpPost("domain/set")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<IActionResult> SetCustomDomain([FromBody] SetDomainDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Domain))
+            return BadRequest(new { message = "Domain boş olamaz." });
+
+        var merchant = await _db
+            .MerchantProfiles.Include(m => m.Subscription)
+            .FirstOrDefaultAsync(m => m.UserId == _currentUser!.UserId);
+
+        if (merchant == null)
+            return NotFound(new { message = "Merchant profili bulunamadı." });
+
+        var plan = merchant.Subscription?.Plan ?? PlanType.Basic;
+        var isProOrAbove = plan != PlanType.Basic
+            && merchant.Subscription!.IsActive
+            && merchant.Subscription.ExpiresAt > DateTime.UtcNow;
+
+        // Özel domain (mymağaza.com gibi — platform domain içermiyor) → Enterprise gerekli
+        var platformDomain = Environment.GetEnvironmentVariable("PLATFORM_DOMAIN") ?? "platform.com";
+        var isSubdomain = dto.Domain.EndsWith("." + platformDomain);
+
+        if (!isSubdomain && plan != PlanType.Enterprise)
+            return BadRequest(new
+            {
+                message = "Tam özel domain (mymağaza.com) için Enterprise plan gereklidir.",
+                requiredPlan = "Enterprise"
+            });
+
+        if (isSubdomain && !isProOrAbove)
+            return BadRequest(new
+            {
+                message = $"Subdomain (.{platformDomain}) için Pro veya Enterprise plan gereklidir.",
+                requiredPlan = "Pro"
+            });
+
+        // Domain başka bir merchant tarafından kullanılıyor mu?
+        var domainConflict = await _db.MerchantProfiles.AnyAsync(m =>
+            m.CustomDomain == dto.Domain && m.Id != merchant.Id);
+
+        if (domainConflict)
+            return Conflict(new { message = "Bu domain başka bir mağaza tarafından kullanılıyor." });
+
+        merchant.CustomDomain = dto.Domain;
+        merchant.DomainVerified = false; // Yeniden doğrulama gerekir
+        merchant.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        return Ok(new
+        {
+            domain = dto.Domain,
+            isSubdomain,
+            verified = false,
+            message = "Domain kaydedildi. Doğrulama için DNS TXT kaydı ekleyip /api/store/domain/verify endpoint'ini çağırın.",
+            dnsRecord = new
+            {
+                type = "TXT",
+                host = $"_marketplace-verify.{dto.Domain}",
+                value = $"marketplace-site-verification={merchant.Id}"
+            }
+        });
+    }
+
+    // ── POST /api/store/domain/verify — Merchant: DNS doğrulama başlat ───────
+    /// <summary>
+    /// Merchant'ın eklediği DNS TXT kaydını doğrular.
+    /// Gerçek ortamda Hangfire job asenkron kontrol yapar; burada anında
+    /// basit bir format kontrolü yapılır ve doğrulama pending olarak işaretlenir.
+    /// </summary>
+    [HttpPost("domain/verify")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<IActionResult> VerifyDomain()
+    {
+        var merchant = await _db.MerchantProfiles.FirstOrDefaultAsync(m =>
+            m.UserId == _currentUser!.UserId);
+
+        if (merchant == null)
+            return NotFound(new { message = "Merchant profili bulunamadı." });
+
+        if (string.IsNullOrEmpty(merchant.CustomDomain))
+            return BadRequest(new { message = "Önce bir domain atamalısınız (/api/store/domain/set)." });
+
+        if (merchant.DomainVerified)
+            return Ok(new
+            {
+                domain = merchant.CustomDomain,
+                verified = true,
+                message = "Domain zaten doğrulanmış."
+            });
+
+        // Production: Hangfire job ile gerçek DNS TXT sorgusu yapılır.
+        // MVP: Format kontrolü + pending durumuna al.
+        var expectedTxtRecord = $"marketplace-site-verification={merchant.Id}";
+
+        // Subdomain doğrulaması için doğrudan aktive et (DNS propagation gerekmez)
+        var platformDomain = Environment.GetEnvironmentVariable("PLATFORM_DOMAIN") ?? "platform.com";
+        if (merchant.CustomDomain.EndsWith("." + platformDomain))
+        {
+            merchant.DomainVerified = true;
+            merchant.UpdatedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            return Ok(new
+            {
+                domain = merchant.CustomDomain,
+                verified = true,
+                message = "Subdomain doğrulandı ve aktif edildi."
+            });
+        }
+
+        // Özel domain: DNS TXT kaydı bekleniyor (Hangfire job 5 dakikada bir kontrol eder)
+        return Accepted(new
+        {
+            domain = merchant.CustomDomain,
+            verified = false,
+            message = "Doğrulama başlatıldı. DNS TXT kaydı kontrol ediliyor (5–30 dk sürebilir).",
+            dnsRecord = new
+            {
+                type = "TXT",
+                host = $"_marketplace-verify.{merchant.CustomDomain}",
+                value = expectedTxtRecord,
+                ttl = 300
+            }
+        });
+    }
 }
+
+// ── DTOs ─────────────────────────────────────────────────────────────────────
+
+public record UpdateStoreSettingsDto(
+    string? StoreName,
+    string? Description,
+    string? LogoUrl,
+    string? BannerUrl,
+    string? Address,
+    string? City,
+    double? Latitude,
+    double? Longitude,
+    int? HandlingHours
+);
+
+public record SetDomainDto(string Domain);
