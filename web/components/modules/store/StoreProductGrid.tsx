@@ -53,7 +53,7 @@ export function StoreProductGrid({
   const [sort, setSort] = useState("default");
   const { addItem } = useCart();
 
-  const filtered = offers
+  const filtered = (Array.isArray(offers) ? offers : [])
     .filter((o) => o.productName.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
       if (sort === "price_asc") return a.price - b.price;

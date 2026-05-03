@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPrice, formatDateTime, formatShortDate } from "@/lib/format";
 import {
@@ -99,9 +99,8 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
             const canPack = order.status === "PAYMENT_CONFIRMED";
 
             return (
-              <>
+              <Fragment key={order.id}>
                 <tr
-                  key={order.id}
                   className="hover:bg-gray-50 transition-colors cursor-pointer"
                   onClick={() => setExpandedId(isExpanded ? null : order.id)}
                 >
@@ -164,7 +163,7 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
 
                 {/* Expanded: order items */}
                 {isExpanded && (
-                  <tr key={`${order.id}-expanded`} className="bg-gray-50/80">
+                  <tr className="bg-gray-50/80">
                     <td colSpan={7} className="px-5 py-4">
                       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                         Order Items
@@ -203,7 +202,7 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             );
           })}
         </tbody>
