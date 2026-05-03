@@ -546,6 +546,37 @@ public class ProductsController : ControllerBase
         await _db.SaveChangesAsync();
         return NoContent();
     }
+
+    /// <summary>Marketplace ürünlerinden kullanılan tüm tag listesi</summary>
+    [HttpGet("tags")]
+    public async Task<IActionResult> GetAllTags()
+    {
+        var tags = await _db.Products
+            .Where(p => p.PublishToMarket && p.IsApproved && !p.IsDeleted)
+            .SelectMany(p => p.Tags)
+            .Distinct()
+            .OrderBy(t => t)
+            .ToListAsync();
+
+        return Ok(tags);
+    }
+
+    /// <summary>Ürün reddet (Admin)</summary>
+    [HttpPatch("{id:guid}/reject")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> Reject(Guid id, [FromBody] RejectProductRequest dto)
+    {
+        var product = await _db.Products.FindAsync(id);
+        if (product == null)
+            return NotFound();
+
+        // Mark as not approved; optionally soft-delete or add rejection note
+        product.IsApproved = false;
+        product.PublishToMarket = false;
+        product.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Ürün reddedildi.", reason = dto.Reason });
+    }
 }
 
 public class UpdateProductRequest
@@ -559,4 +590,9 @@ public class UpdateProductRequest
     public int? Stock { get; set; }
     public bool? PublishToMarket { get; set; }
     public bool? PublishToStore { get; set; }
+}
+
+public class RejectProductRequest
+{
+    public string? Reason { get; set; }
 }

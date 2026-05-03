@@ -613,6 +613,47 @@ public class AdminController : ControllerBase
             }
         );
     }
+
+    // ── USERS ─────────────────────────────────────────────────────────────────
+
+    [HttpGet("users")]
+    public async Task<IActionResult> GetUsers(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20,
+        [FromQuery] string? search = null,
+        [FromQuery] string? role = null)
+    {
+        var query = _db.Users.Where(u => !u.IsDeleted).AsQueryable();
+
+        if (!string.IsNullOrEmpty(search))
+            query = query.Where(u =>
+                EF.Functions.ILike(u.Email, $"%{search}%") ||
+                EF.Functions.ILike(u.FirstName, $"%{search}%") ||
+                EF.Functions.ILike(u.LastName, $"%{search}%"));
+
+        if (!string.IsNullOrEmpty(role) && Enum.TryParse<UserRole>(role, true, out var parsedRole))
+            query = query.Where(u => u.Role == parsedRole);
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(u => u.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .Select(u => new
+            {
+                u.Id,
+                u.Email,
+                u.FirstName,
+                u.LastName,
+                Role = u.Role.ToString(),
+                IsEmailVerified = u.IsVerified,
+                u.IsDeleted,
+                u.CreatedAt,
+            })
+            .ToListAsync();
+
+        return Ok(new { total, page, limit, items });
+    }
 }
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────

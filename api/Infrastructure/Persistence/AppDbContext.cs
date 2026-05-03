@@ -22,6 +22,7 @@ public class AppDbContext : DbContext
     public DbSet<AccountingEntry> AccountingEntries => Set<AccountingEntry>();
     public DbSet<Plugin> Plugins => Set<Plugin>();
     public DbSet<MerchantPlugin> MerchantPlugins => Set<MerchantPlugin>();
+    public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -199,5 +200,22 @@ public class AppDbContext : DbContext
 
         // ── Soft-delete filtresi ──────────────────────────────────────────────
         modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);
+
+        // ── WishlistItem ──────────────────────────────────────────────────────
+        modelBuilder.Entity<WishlistItem>()
+            .HasIndex(w => new { w.CustomerId, w.ProductId })
+            .IsUnique();
+
+        modelBuilder.Entity<WishlistItem>()
+            .HasOne(w => w.Customer)
+            .WithMany()
+            .HasForeignKey(w => w.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WishlistItem>()
+            .HasOne(w => w.Product)
+            .WithMany()
+            .HasForeignKey(w => w.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

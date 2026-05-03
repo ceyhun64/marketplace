@@ -10,8 +10,9 @@ import {
   X,
   ChevronDown,
   Loader2,
+  Tag,
 } from "lucide-react";
-import { useProducts, type ProductFilters } from "@/queries/useProducts";
+import { useProducts, useProductTags, type ProductFilters } from "@/queries/useProducts";
 import { useCategories } from "@/queries/useCategories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -136,7 +137,16 @@ function FilterSidebar({
   onReset,
 }: FilterSidebarProps) {
   const { data: categories } = useCategories();
+  const { data: availableTags } = useProductTags();
   const rootCategories = (categories ?? []).filter((c) => !c.parentId);
+  const selectedTags: string[] = filters.tags ?? [];
+
+  const toggleTag = (tag: string) => {
+    const next = selectedTags.includes(tag)
+      ? selectedTags.filter((t) => t !== tag)
+      : [...selectedTags, tag];
+    onFilterChange("tags", next.length ? next : undefined);
+  };
 
   return (
     <aside className="space-y-6">
@@ -250,6 +260,41 @@ function FilterSidebar({
           />
         </div>
       </div>
+
+      {/* Tags */}
+      {availableTags && availableTags.length > 0 && (
+        <div>
+          <h3
+            className="font-mono text-[11px] uppercase tracking-[0.15em] mb-3 flex items-center gap-1.5"
+            style={{ color: "var(--charcoal-soft)" }}
+          >
+            <Tag className="w-3 h-3" />
+            Tags
+          </h3>
+          <div className="flex flex-wrap gap-1.5">
+            {availableTags.map((tag) => {
+              const active = selectedTags.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  onClick={() => toggleTag(tag)}
+                  className="px-3 py-1 rounded-full text-[12px] font-medium transition-all"
+                  style={{
+                    background: active ? "var(--charcoal)" : "var(--off-white)",
+                    color: active ? "#fff" : "var(--charcoal-soft)",
+                    border: active
+                      ? "1.5px solid var(--charcoal)"
+                      : "1.5px solid rgba(51,51,51,0.12)",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  {tag}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <button
         onClick={onReset}

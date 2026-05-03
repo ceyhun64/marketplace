@@ -251,3 +251,15 @@ export function useTogglePublish() {
     },
   });
 }
+
+/** Marketplace'teki tüm tag'leri getirir — filtre seçimi için */
+export function useProductTags() {
+  return useQuery({
+    queryKey: [...productKeys.all, "tags"] as const,
+    queryFn: async () => {
+      const { data } = await api.get<string[]>("/api/products/tags");
+      return data ?? [];
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+}

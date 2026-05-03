@@ -1,9 +1,11 @@
 using api.Common.DTOs;
+using api.Infrastructure.Persistence;
 using api.Infrastructure.Services;
 
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace api.Controllers;
 
@@ -13,11 +15,19 @@ public class SubscriptionsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ISubscriptionService _subscriptionService;
+    private readonly AppDbContext _db;
+    private readonly ICurrentUserService _currentUser;
 
-    public SubscriptionsController(IMediator mediator, ISubscriptionService subscriptionService)
+    public SubscriptionsController(
+        IMediator mediator,
+        ISubscriptionService subscriptionService,
+        AppDbContext db,
+        ICurrentUserService currentUser)
     {
         _mediator = mediator;
         _subscriptionService = subscriptionService;
+        _db = db;
+        _currentUser = currentUser;
     }
 
     // GET /api/subscriptions/plans — Public
@@ -40,10 +50,33 @@ public class SubscriptionsController : ControllerBase
         return Ok(new ApiResponse<SubscriptionDto>(result.Data));
     }
 
+    // POST /api/subscriptions/upgrade — Merchant (alias for subscribe)
+    [HttpPost("upgrade")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<IActionResult> Upgrade([FromBody] UpgradeRequestDto request)
+    {
+        var subscribeRequest = new SubscribeRequestDto { PlanType = request.Plan };
+        var result = await _subscriptionService.SubscribeAsync(subscribeRequest);
+        if (!result.Success)
+            return BadRequest(new ApiResponse<string>(result.Message));
+        return Ok(new ApiResponse<SubscriptionDto>(result.Data));
+    }
+
     // GET /api/subscriptions/current — Merchant
     [HttpGet("current")]
     [Authorize(Policy = "MerchantOnly")]
     public async Task<IActionResult> GetCurrentSubscription()
+    {
+        var subscription = await _subscriptionService.GetCurrentSubscriptionAsync();
+        if (subscription == null)
+            return NotFound(new ApiResponse<string>("Aktif abonelik bulunamadı."));
+        return Ok(new ApiResponse<SubscriptionDto>(subscription));
+    }
+
+    // GET /api/subscriptions/my — Merchant (alias for current)
+    [HttpGet("my")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<IActionResult> GetMySubscription()
     {
         var subscription = await _subscriptionService.GetCurrentSubscriptionAsync();
         if (subscription == null)
@@ -81,4 +114,39 @@ public class SubscriptionsController : ControllerBase
             return BadRequest(new ApiResponse<string>(result.Message));
         return Ok(new ApiResponse<string>("Plugin aboneliği başarıyla oluşturuldu."));
     }
+
+    // GET /api/subscriptions/admin/all — Admin
+    [HttpGet("admin/all")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> GetAllSubscriptions(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20)
+    {
+        var query = _db.Subscriptions
+            .Include(s => s.Merchant)
+            .AsQueryable();
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(s => s.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .Select(s => new
+            {
+                s.Id,
+                s.MerchantId,
+                MerchantName = s.Merchant.StoreName,
+                Plan = s.Plan.ToString(),
+                s.IsActive,
+                s.StartDate,
+                s.ExpiresAt,
+                Price = s.MonthlyPrice,
+                s.CreatedAt,
+            })
+            .ToListAsync();
+
+        return Ok(new ApiResponse<object>(new { total, page, limit, items }));
+    }
 }
+
+public record UpgradeRequestDto(string Plan);
