@@ -121,6 +121,8 @@ export interface Order {
   shippingAddress: ShippingAddress | string; // API string(JSON) dönebilir
   paymentId?: string;
   invoiceId?: string;
+  invoiceNumber?: string;
+  invoicePdfUrl?: string;
   items: OrderItem[];
   shipment?: Shipment;
   createdAt: string;

@@ -9,11 +9,17 @@ public class OrderDto
     public string Source { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public decimal TotalAmount { get; set; }
+    public decimal ShippingCost { get; set; }
+    public decimal VatAmount { get; set; }
     public string ShippingRate { get; set; } = string.Empty;
     public string? PaymentId { get; set; }
     public ShippingAddressDto ShippingAddress { get; set; } = new();
     public List<OrderItemDto> Items { get; set; } = new();
     public ShipmentSummaryDto? Shipment { get; set; }
+    // Milestone 3: Otomatik fatura — ödeme onaylandığında oluşturulur
+    public Guid? InvoiceId { get; set; }
+    public string? InvoiceNumber { get; set; }
+    public string? InvoicePdfUrl { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

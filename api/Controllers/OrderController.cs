@@ -103,6 +103,7 @@ public class OrdersController(
             .Orders.Include(o => o.Items)
                 .ThenInclude(i => i.Product)
             .Include(o => o.Shipment)
+            .Include(o => o.Invoice)
             .Where(o => o.CustomerId == currentUser.UserId);
 
         if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, out var ps))
@@ -139,6 +140,7 @@ public class OrdersController(
                     .ThenInclude(p => p.Category)
             .Include(o => o.Shipment)
                 .ThenInclude(s => s!.StatusHistory)
+            .Include(o => o.Invoice)
             .FirstOrDefaultAsync(o => o.Id == id);
 
         if (order == null)
@@ -249,6 +251,7 @@ public class OrdersController(
                     .ThenInclude(p => p.Merchant)
             .Include(o => o.Customer)
             .Include(o => o.Shipment)
+            .Include(o => o.Invoice)
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, out var ps))
@@ -299,6 +302,7 @@ public class OrdersController(
                 .ThenInclude(i => i.Product)
             .Include(o => o.Customer)
             .Include(o => o.Shipment)
+            .Include(o => o.Invoice)
             .Where(o => o.Items.Any(i => i.MerchantId == merchantId.Value))
             .AsQueryable();
 
@@ -401,6 +405,8 @@ public class OrdersController(
             Source = order.Source.ToString(),
             Status = order.Status.ToString(),
             TotalAmount = order.TotalAmount,
+            ShippingCost = order.ShippingAmount,
+            VatAmount = order.Invoice?.VatAmount ?? 0,
             ShippingRate = order.ShippingRate.ToString(),
             PaymentId = order.PaymentId,
             ShippingAddress = new ShippingAddressDto
@@ -437,6 +443,10 @@ public class OrdersController(
                         EstimatedDelivery = order.Shipment.EstimatedDelivery,
                         LabelUrl = order.Shipment.LabelUrl,
                     },
+            // Milestone 3: Otomatik QuestPDF fatura — ödeme onaylandığında oluşturulur
+            InvoiceId = order.Invoice?.Id,
+            InvoiceNumber = order.Invoice?.InvoiceNumber,
+            InvoicePdfUrl = order.Invoice?.PdfUrl,
             CreatedAt = order.CreatedAt,
             UpdatedAt = order.UpdatedAt,
         };

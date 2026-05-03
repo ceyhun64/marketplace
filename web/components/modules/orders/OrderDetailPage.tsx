@@ -11,6 +11,7 @@ import {
   AlertCircle,
   ExternalLink,
   ShoppingBag,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -414,6 +415,34 @@ export default function OrderDetailPage() {
               )}
             </CardContent>
           </Card>
+        )}
+
+        {/* Milestone 3: Fatura indirme — ödeme onaylandığında otomatik oluşur */}
+        {order.invoicePdfUrl && (
+          <a
+            href={order.invoicePdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between gap-3 bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-sm hover:border-gray-300 transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
+                <FileText className="w-4 h-4 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  Invoice
+                  {order.invoiceNumber && (
+                    <span className="ml-1.5 font-mono text-xs text-gray-400">
+                      #{order.invoiceNumber}
+                    </span>
+                  )}
+                </p>
+                <p className="text-xs text-gray-400">Download PDF invoice</p>
+              </div>
+            </div>
+            <ExternalLink className="w-4 h-4 text-gray-300 group-hover:text-gray-500 shrink-0" />
+          </a>
         )}
 
         {/* Cancel order */}
