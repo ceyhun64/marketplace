@@ -9,24 +9,27 @@ import {
   Minus,
   ShoppingBag,
   ArrowRight,
+  ArrowLeft,
   Tag,
   Truck,
   Zap,
+  Package,
+  ShieldCheck,
 } from "lucide-react";
 import { useCart, useCartSummary } from "@/hooks/use-cart";
-import { cn } from "@/lib/utils";
 
-const inputStyle = {
+const inputStyle: React.CSSProperties = {
   flex: 1,
   height: "2.5rem",
   padding: "0 1rem",
   background: "var(--off-white)",
   border: "1.5px solid rgba(51,51,51,0.15)",
-  borderRadius: "8px",
+  borderRadius: "10px",
   fontFamily: "var(--font-mono)",
   fontSize: "0.8125rem",
   color: "var(--charcoal)",
   outline: "none",
+  transition: "border-color 0.15s, background 0.15s",
 };
 
 export default function CartPage() {
@@ -35,6 +38,22 @@ export default function CartPage() {
   const summary = useCartSummary();
   const router = useRouter();
   const [coupon, setCoupon] = useState("");
+  const [couponApplied, setCouponApplied] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const handleRemove = (offerId: string) => {
+    setRemovingId(offerId);
+    setTimeout(() => {
+      removeItem(offerId);
+      setRemovingId(null);
+    }, 250);
+  };
+
+  const handleApplyCoupon = () => {
+    if (coupon.trim()) setCouponApplied(true);
+  };
+
+  // ── Empty State ────────────────────────────────────────────────────────────
 
   if (summary.isEmpty) {
     return (
@@ -43,43 +62,64 @@ export default function CartPage() {
         style={{ background: "var(--off-white)" }}
       >
         <div className="text-center max-w-md">
+          {/* Icon */}
           <div
-            className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6"
+            className="w-28 h-28 rounded-full flex items-center justify-center mx-auto mb-8"
             style={{
               background: "#fff",
-              boxShadow: "0 4px 16px rgba(51,51,51,0.08)",
+              boxShadow: "0 8px 32px rgba(51,51,51,0.08)",
             }}
           >
             <ShoppingBag
-              className="w-10 h-10"
-              style={{ color: "rgba(51,51,51,0.15)" }}
+              className="w-12 h-12"
+              style={{ color: "rgba(51,51,51,0.12)" }}
             />
           </div>
+
+          <div
+            className="font-mono text-[11px] tracking-[0.18em] uppercase mb-3"
+            style={{ color: "var(--charcoal-soft)" }}
+          >
+            Nothing here yet
+          </div>
+
           <h1
-            className="font-normal mb-3 text-[var(--charcoal)]"
+            className="font-normal mb-4 text-[var(--charcoal)]"
             style={{
               fontFamily: "var(--font-display)",
-              fontSize: "2.5rem",
+              fontSize: "clamp(2rem, 5vw, 3rem)",
+              lineHeight: 1.1,
             }}
           >
             Your cart is <em style={{ color: "var(--red)" }}>empty</em>
           </h1>
+
           <p
-            className="mb-8 text-[0.9375rem]"
-            style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
+            className="mb-10 text-[0.9375rem] leading-relaxed"
+            style={{
+              color: "var(--charcoal-soft)",
+              fontFamily: "var(--font-body)",
+            }}
           >
-            Discover thousands of products from our sellers and add them to your
-            cart.
+            Discover thousands of products from our verified sellers and add
+            your favorites to cart.
           </p>
+
           <Link
             href="/products"
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg text-sm font-semibold text-white transition-colors"
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-sm font-semibold text-white transition-all"
             style={{
               background: "var(--charcoal)",
               fontFamily: "var(--font-body)",
+              boxShadow: "0 4px 20px rgba(51,51,51,0.15)",
+              letterSpacing: "0.02em",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--red)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "var(--charcoal)")}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "var(--red)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "var(--charcoal)")
+            }
           >
             Browse Products
             <ArrowRight className="w-4 h-4" />
@@ -89,12 +129,38 @@ export default function CartPage() {
     );
   }
 
+  // ── Cart ───────────────────────────────────────────────────────────────────
+
   return (
-    <main className="min-h-screen py-12 px-4" style={{ background: "var(--off-white)" }}>
+    <main
+      className="min-h-screen py-12 px-4"
+      style={{ background: "var(--off-white)" }}
+    >
       <div className="max-w-[1300px] mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-10">
+        {/* ── Page Header ─────────────────────────────────────────────────── */}
+        <div className="flex items-start justify-between mb-10">
           <div>
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-1.5 text-sm mb-4 transition-colors"
+              style={{
+                color: "var(--charcoal-soft)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "var(--font-body)",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.color = "var(--charcoal)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = "var(--charcoal-soft)")
+              }
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Continue Shopping
+            </button>
+
             <div className="flex items-center gap-3 mb-3">
               <span
                 className="inline-block w-6 h-px"
@@ -112,20 +178,22 @@ export default function CartPage() {
               style={{
                 fontFamily: "var(--font-display)",
                 fontSize: "clamp(2rem, 4vw, 3rem)",
+                lineHeight: 1.1,
               }}
             >
               Shopping <em style={{ color: "var(--red)" }}>Cart</em>
             </h1>
             <p
-              className="font-mono text-[12px] mt-1"
+              className="font-mono text-[12px] mt-2"
               style={{ color: "var(--charcoal-soft)" }}
             >
               {summary.itemCount} item{summary.itemCount !== 1 ? "s" : ""}
             </p>
           </div>
+
           <button
             onClick={clearCart}
-            className="text-sm font-semibold transition-colors"
+            className="text-sm font-semibold transition-colors mt-2"
             style={{
               color: "var(--charcoal-soft)",
               fontFamily: "var(--font-body)",
@@ -134,27 +202,32 @@ export default function CartPage() {
               cursor: "pointer",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--red)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--charcoal-soft)")}
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = "var(--charcoal-soft)")
+            }
           >
-            Clear Cart
+            Clear All
           </button>
         </div>
 
-        <div className="grid lg:grid-cols-[1fr_380px] gap-8">
-          {/* Cart Items */}
+        <div className="grid lg:grid-cols-[1fr_400px] gap-8">
+          {/* ── Cart Items ─────────────────────────────────────────────────── */}
           <div className="space-y-3">
             {items.map((item) => (
               <div
                 key={item.offerId}
-                className="bg-white rounded-2xl p-5 flex gap-5"
+                className="bg-white rounded-2xl p-5 flex gap-5 transition-all duration-300"
                 style={{
                   border: "1px solid rgba(51,51,51,0.08)",
-                  boxShadow: "0 1px 3px rgba(51,51,51,0.04)",
+                  boxShadow: "0 1px 4px rgba(51,51,51,0.04)",
+                  opacity: removingId === item.offerId ? 0 : 1,
+                  transform:
+                    removingId === item.offerId ? "translateX(20px)" : "none",
                 }}
               >
                 {/* Product Image */}
                 <div
-                  className="w-24 h-24 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
+                  className="w-[100px] h-[100px] rounded-xl flex-shrink-0 overflow-hidden"
                   style={{ background: "var(--off-white)" }}
                 >
                   {item.productImage ? (
@@ -164,17 +237,19 @@ export default function CartPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <ShoppingBag
-                      className="w-8 h-8"
-                      style={{ color: "rgba(51,51,51,0.15)" }}
-                    />
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Package
+                        className="w-8 h-8"
+                        style={{ color: "rgba(51,51,51,0.15)" }}
+                      />
+                    </div>
                   )}
                 </div>
 
                 {/* Details */}
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start gap-4">
-                    <div>
+                    <div className="min-w-0">
                       <h3
                         className="font-bold text-[15px] leading-tight text-[var(--charcoal)] truncate"
                         style={{ fontFamily: "var(--font-body)" }}
@@ -184,7 +259,7 @@ export default function CartPage() {
                       {item.merchantStoreName && (
                         <Link
                           href={`/store/${item.merchantSlug ?? item.merchantId}`}
-                          className="font-mono text-[11px] mt-1 inline-block transition-colors"
+                          className="font-mono text-[11px] mt-1 inline-block transition-opacity"
                           style={{ color: "var(--red)" }}
                           onMouseEnter={(e) =>
                             (e.currentTarget.style.opacity = "0.7")
@@ -198,13 +273,13 @@ export default function CartPage() {
                       )}
                     </div>
                     <button
-                      onClick={() => removeItem(item.offerId)}
+                      onClick={() => handleRemove(item.offerId)}
                       className="p-2 rounded-full transition-all flex-shrink-0"
                       style={{ color: "var(--charcoal-soft)" }}
                       onMouseEnter={(e) => {
                         const el = e.currentTarget as HTMLElement;
                         el.style.color = "var(--red)";
-                        el.style.background = "rgba(200,16,46,0.08)";
+                        el.style.background = "rgba(187,16,35,0.08)";
                       }}
                       onMouseLeave={(e) => {
                         const el = e.currentTarget as HTMLElement;
@@ -216,17 +291,17 @@ export default function CartPage() {
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between mt-4">
-                    {/* Quantity */}
+                  <div className="flex items-center justify-between mt-5">
+                    {/* Quantity stepper */}
                     <div
-                      className="flex items-center gap-1 rounded-lg p-1"
+                      className="flex items-center rounded-xl p-1 gap-0.5"
                       style={{ background: "var(--off-white)" }}
                     >
                       <button
                         onClick={() =>
                           updateQuantity(item.offerId, item.quantity - 1)
                         }
-                        className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg transition-all"
                         style={{ color: "var(--charcoal)" }}
                         onMouseEnter={(e) =>
                           (e.currentTarget.style.background = "#fff")
@@ -238,8 +313,11 @@ export default function CartPage() {
                         <Minus className="w-3 h-3" />
                       </button>
                       <span
-                        className="w-8 text-center text-sm font-bold font-mono"
-                        style={{ color: "var(--charcoal)" }}
+                        className="w-9 text-center text-sm font-bold"
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          color: "var(--charcoal)",
+                        }}
                       >
                         {item.quantity}
                       </span>
@@ -251,7 +329,7 @@ export default function CartPage() {
                           item.stock !== undefined &&
                           item.quantity >= item.stock
                         }
-                        className="w-7 h-7 flex items-center justify-center rounded-lg transition-all disabled:opacity-40"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg transition-all disabled:opacity-40"
                         style={{ color: "var(--charcoal)" }}
                         onMouseEnter={(e) =>
                           (e.currentTarget.style.background = "#fff")
@@ -267,7 +345,7 @@ export default function CartPage() {
                     {/* Price */}
                     <div className="text-right">
                       <div
-                        className="text-[18px] font-bold text-[var(--charcoal)]"
+                        className="text-[1.25rem] font-bold text-[var(--charcoal)]"
                         style={{ fontFamily: "var(--font-display)" }}
                       >
                         ₺{(item.price * item.quantity).toFixed(2)}
@@ -287,14 +365,14 @@ export default function CartPage() {
             ))}
           </div>
 
-          {/* Order Summary */}
+          {/* ── Right Column ─────────────────────────────────────────────── */}
           <div className="space-y-4">
             {/* Shipping Speed */}
             <div
               className="bg-white rounded-2xl p-5"
               style={{
                 border: "1px solid rgba(51,51,51,0.08)",
-                boxShadow: "0 1px 3px rgba(51,51,51,0.04)",
+                boxShadow: "0 1px 4px rgba(51,51,51,0.04)",
               }}
             >
               <h3
@@ -309,7 +387,7 @@ export default function CartPage() {
                   <button
                     key={rate}
                     onClick={() => setShippingRate(rate)}
-                    className="w-full flex items-center justify-between p-3.5 rounded-xl border-2 transition-all"
+                    className="w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all"
                     style={{
                       borderColor:
                         summary.shippingRate === rate
@@ -318,18 +396,33 @@ export default function CartPage() {
                       background:
                         summary.shippingRate === rate
                           ? "rgba(51,51,51,0.04)"
-                          : "transparent",
+                          : "#fff",
                     }}
                   >
                     <div className="flex items-center gap-3">
-                      {rate === "EXPRESS" ? (
-                        <Zap className="w-4 h-4" style={{ color: "var(--red)" }} />
-                      ) : (
-                        <Truck
-                          className="w-4 h-4"
-                          style={{ color: "var(--charcoal-soft)" }}
-                        />
-                      )}
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center"
+                        style={{
+                          background:
+                            summary.shippingRate === rate
+                              ? rate === "EXPRESS"
+                                ? "rgba(187,16,35,0.1)"
+                                : "rgba(51,51,51,0.08)"
+                              : "var(--off-white)",
+                        }}
+                      >
+                        {rate === "EXPRESS" ? (
+                          <Zap
+                            className="w-4 h-4"
+                            style={{ color: "var(--red)" }}
+                          />
+                        ) : (
+                          <Truck
+                            className="w-4 h-4"
+                            style={{ color: "var(--charcoal-soft)" }}
+                          />
+                        )}
+                      </div>
                       <div className="text-left">
                         <div
                           className="text-sm font-bold text-[var(--charcoal)]"
@@ -338,22 +431,26 @@ export default function CartPage() {
                           {rate === "EXPRESS" ? "Express" : "Regular"}
                         </div>
                         <div
-                          className="font-mono text-[11px]"
+                          className="font-mono text-[10px]"
                           style={{ color: "var(--charcoal-soft)" }}
                         >
-                          {rate === "EXPRESS" ? "1-2 days" : "3-5 days"}
+                          {rate === "EXPRESS"
+                            ? "1–2 business days"
+                            : "3–5 business days"}
                         </div>
                       </div>
                     </div>
-                    <span
-                      className="font-bold text-sm text-[var(--charcoal)]"
-                      style={{
-                        fontFamily: "var(--font-display)",
-                        fontSize: "1rem",
-                      }}
-                    >
-                      ₺{rate === "EXPRESS" ? "49.90" : "19.90"}
-                    </span>
+                    <div className="text-right">
+                      <span
+                        className="font-bold text-[var(--charcoal)]"
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontSize: "1.1rem",
+                        }}
+                      >
+                        ₺{rate === "EXPRESS" ? "49.90" : "19.90"}
+                      </span>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -364,7 +461,7 @@ export default function CartPage() {
               className="bg-white rounded-2xl p-5"
               style={{
                 border: "1px solid rgba(51,51,51,0.08)",
-                boxShadow: "0 1px 3px rgba(51,51,51,0.04)",
+                boxShadow: "0 1px 4px rgba(51,51,51,0.04)",
               }}
             >
               <h3
@@ -374,54 +471,101 @@ export default function CartPage() {
                 <Tag className="w-4 h-4" style={{ color: "var(--red)" }} />
                 Coupon Code
               </h3>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={coupon}
-                  onChange={(e) => setCoupon(e.target.value.toUpperCase())}
-                  placeholder="ENTER CODE"
-                  style={inputStyle}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "var(--red)";
-                    e.currentTarget.style.background = "#fff";
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(51,51,51,0.15)";
-                    e.currentTarget.style.background = "var(--off-white)";
-                  }}
-                />
-                <button
-                  className="px-5 py-2 rounded-lg text-sm font-semibold transition-all"
+
+              {couponApplied ? (
+                <div
+                  className="flex items-center justify-between px-4 py-3 rounded-xl"
                   style={{
-                    border: "1.5px solid rgba(51,51,51,0.15)",
-                    color: "var(--charcoal)",
-                    background: "transparent",
-                    fontFamily: "var(--font-body)",
-                  }}
-                  onMouseEnter={(e) => {
-                    const el = e.currentTarget as HTMLElement;
-                    el.style.background = "var(--charcoal)";
-                    el.style.color = "#fff";
-                    el.style.borderColor = "var(--charcoal)";
-                  }}
-                  onMouseLeave={(e) => {
-                    const el = e.currentTarget as HTMLElement;
-                    el.style.background = "transparent";
-                    el.style.color = "var(--charcoal)";
-                    el.style.borderColor = "rgba(51,51,51,0.15)";
+                    background: "rgba(45,122,79,0.06)",
+                    border: "1px solid rgba(45,122,79,0.2)",
                   }}
                 >
-                  Apply
-                </button>
-              </div>
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck
+                      className="w-4 h-4"
+                      style={{ color: "#2d7a4f" }}
+                    />
+                    <span
+                      className="font-mono text-[12px] font-bold"
+                      style={{ color: "#2d7a4f" }}
+                    >
+                      {coupon} applied
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setCouponApplied(false);
+                      setCoupon("");
+                    }}
+                    className="font-mono text-[11px] transition-colors"
+                    style={{
+                      color: "var(--charcoal-soft)",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.color = "var(--red)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.color = "var(--charcoal-soft)")
+                    }
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={coupon}
+                    onChange={(e) => setCoupon(e.target.value.toUpperCase())}
+                    placeholder="ENTER CODE"
+                    style={inputStyle}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = "var(--charcoal)";
+                      e.currentTarget.style.background = "#fff";
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = "rgba(51,51,51,0.15)";
+                      e.currentTarget.style.background = "var(--off-white)";
+                    }}
+                    onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    className="px-5 py-2 rounded-xl text-sm font-semibold transition-all flex-shrink-0"
+                    style={{
+                      border: "1.5px solid rgba(51,51,51,0.15)",
+                      color: "var(--charcoal)",
+                      background: "transparent",
+                      fontFamily: "var(--font-body)",
+                    }}
+                    onMouseEnter={(e) => {
+                      const el = e.currentTarget as HTMLElement;
+                      el.style.background = "var(--charcoal)";
+                      el.style.color = "#fff";
+                      el.style.borderColor = "var(--charcoal)";
+                    }}
+                    onMouseLeave={(e) => {
+                      const el = e.currentTarget as HTMLElement;
+                      el.style.background = "transparent";
+                      el.style.color = "var(--charcoal)";
+                      el.style.borderColor = "rgba(51,51,51,0.15)";
+                    }}
+                  >
+                    Apply
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Summary */}
+            {/* Order Summary */}
             <div
               className="bg-white rounded-2xl p-5"
               style={{
                 border: "1px solid rgba(51,51,51,0.08)",
-                boxShadow: "0 1px 3px rgba(51,51,51,0.04)",
+                boxShadow: "0 1px 4px rgba(51,51,51,0.04)",
               }}
             >
               <h3
@@ -451,12 +595,32 @@ export default function CartPage() {
                       fontFamily: "var(--font-body)",
                     }}
                   >
-                    Shipping
+                    Shipping (
+                    {summary.shippingRate === "EXPRESS" ? "Express" : "Regular"}
+                    )
                   </span>
                   <span className="font-semibold text-[var(--charcoal)]">
                     ₺{summary.shipping.toFixed(2)}
                   </span>
                 </div>
+                {couponApplied && (
+                  <div className="flex justify-between text-[0.875rem]">
+                    <span
+                      style={{
+                        color: "#2d7a4f",
+                        fontFamily: "var(--font-body)",
+                      }}
+                    >
+                      Discount ({coupon})
+                    </span>
+                    <span
+                      className="font-semibold"
+                      style={{ color: "#2d7a4f" }}
+                    >
+                      –₺0.00
+                    </span>
+                  </div>
+                )}
                 <div
                   className="flex justify-between pt-4"
                   style={{ borderTop: "1px solid rgba(51,51,51,0.08)" }}
@@ -471,7 +635,7 @@ export default function CartPage() {
                     className="font-bold text-[var(--charcoal)]"
                     style={{
                       fontFamily: "var(--font-display)",
-                      fontSize: "1.5rem",
+                      fontSize: "1.6rem",
                     }}
                   >
                     ₺{summary.total.toFixed(2)}
@@ -485,13 +649,15 @@ export default function CartPage() {
                 </p>
               </div>
 
+              {/* Checkout Button */}
               <button
                 onClick={() => router.push("/checkout")}
-                className="w-full mt-5 h-12 rounded-lg flex items-center justify-center gap-2 text-sm font-semibold text-white transition-all"
+                className="w-full mt-6 h-13 py-3.5 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold text-white transition-all"
                 style={{
                   background: "var(--charcoal)",
                   fontFamily: "var(--font-body)",
-                  boxShadow: "0 4px 16px rgba(51,51,51,0.12)",
+                  boxShadow: "0 4px 20px rgba(51,51,51,0.15)",
+                  letterSpacing: "0.02em",
                 }}
                 onMouseEnter={(e) =>
                   (e.currentTarget.style.background = "var(--red)")
@@ -504,15 +670,27 @@ export default function CartPage() {
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              <Link
-                href="/products"
-                className="block text-center font-mono text-[11px] mt-4 transition-colors"
-                style={{ color: "var(--charcoal-soft)" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--charcoal)")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--charcoal-soft)")}
-              >
-                Continue Shopping
-              </Link>
+              {/* Trust signals */}
+              <div className="mt-4 flex items-center justify-center gap-4">
+                <div
+                  className="flex items-center gap-1.5 font-mono text-[10px]"
+                  style={{ color: "var(--charcoal-soft)" }}
+                >
+                  <ShieldCheck className="w-3 h-3" />
+                  Secure Checkout
+                </div>
+                <div
+                  className="w-px h-3"
+                  style={{ background: "rgba(51,51,51,0.12)" }}
+                />
+                <div
+                  className="flex items-center gap-1.5 font-mono text-[10px]"
+                  style={{ color: "var(--charcoal-soft)" }}
+                >
+                  <Truck className="w-3 h-3" />
+                  Free Returns
+                </div>
+              </div>
             </div>
           </div>
         </div>

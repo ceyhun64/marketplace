@@ -1,11 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { useCart, useCartSummary } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/format";
 import { SHIPPING_RATE_LABELS } from "@/types/enums";
-import { SHIPPING_COSTS } from "@/lib/constants";
-import { DEFAULT_VAT_RATE } from "@/lib/constants";
+import { SHIPPING_COSTS, DEFAULT_VAT_RATE } from "@/lib/constants";
+import { Package, Minus, Plus } from "lucide-react";
 
 interface Props {
   /** Show condensed version (no item edit) for payment step */
@@ -19,72 +18,126 @@ export default function CartSummary({ readonly }: Props) {
   const vatAmount = summary.subtotal * DEFAULT_VAT_RATE;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+    <div
+      className="bg-white rounded-2xl overflow-hidden"
+      style={{
+        border: "1px solid rgba(51,51,51,0.08)",
+        boxShadow: "0 1px 4px rgba(51,51,51,0.04)",
+      }}
+    >
       {/* Header */}
-      <div className="px-5 py-4 border-b border-gray-100">
-        <h3 className="font-semibold text-[var(--charcoal)]">Order Summary</h3>
-        <p className="font-mono text-xs text-[var(--charcoal-soft)] mt-0.5">
-          {summary.itemCount} items
+      <div
+        className="px-5 py-4"
+        style={{ borderBottom: "1px solid rgba(51,51,51,0.06)" }}
+      >
+        <h3
+          className="font-bold text-[var(--charcoal)]"
+          style={{ fontFamily: "var(--font-body)" }}
+        >
+          Order Summary
+        </h3>
+        <p className="font-mono text-[11px] text-[var(--charcoal-soft)] mt-0.5">
+          {summary.itemCount} item{summary.itemCount !== 1 ? "s" : ""}
         </p>
       </div>
 
       {/* Items */}
-      <div className="divide-y divide-gray-50 max-h-72 overflow-y-auto">
+      <div
+        className="divide-y max-h-72 overflow-y-auto"
+        style={{ borderColor: "rgba(51,51,51,0.04)" }}
+      >
         {items.map((item) => (
-          <div key={item.offerId} className="flex gap-3 px-5 py-3">
-            {/* Görsel */}
-            <div className="w-14 h-14 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+          <div key={item.offerId} className="flex gap-3 px-5 py-3.5">
+            {/* Product image */}
+            <div
+              className="w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0"
+              style={{
+                background: "var(--off-white)",
+                border: "1px solid rgba(51,51,51,0.06)",
+              }}
+            >
               {item.productImage ? (
-                <Image
+                <img
                   src={item.productImage}
                   alt={item.productName}
-                  width={56}
-                  height={56}
-                  className="object-cover w-full h-full"
+                  className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-2xl">📦</span>
+                <Package
+                  className="w-5 h-5"
+                  style={{ color: "rgba(51,51,51,0.2)" }}
+                />
               )}
             </div>
 
-            {/* Bilgi */}
+            {/* Info */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[var(--charcoal)] truncate">
+              <p
+                className="text-[13px] font-semibold text-[var(--charcoal)] truncate"
+                style={{ fontFamily: "var(--font-body)" }}
+              >
                 {item.productName}
               </p>
-              <p className="font-mono text-[10px] text-[var(--charcoal-soft)] truncate">
-                {item.merchantStoreName}
-              </p>
+              {item.merchantStoreName && (
+                <p className="font-mono text-[10px] text-[var(--charcoal-soft)] truncate mt-0.5">
+                  {item.merchantStoreName}
+                </p>
+              )}
 
-              <div className="flex items-center justify-between mt-1.5">
+              <div className="flex items-center justify-between mt-2">
                 {!readonly ? (
-                  <div className="flex items-center gap-1 border border-gray-200 rounded-lg overflow-hidden">
+                  <div
+                    className="flex items-center rounded-lg overflow-hidden"
+                    style={{ border: "1px solid rgba(51,51,51,0.12)" }}
+                  >
                     <button
                       onClick={() =>
                         updateQuantity(item.offerId, item.quantity - 1)
                       }
-                      className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors text-sm"
+                      className="w-6 h-6 flex items-center justify-center transition-colors text-[var(--charcoal-soft)]"
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background = "var(--off-white)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background = "transparent")
+                      }
                     >
-                      −
+                      <Minus className="w-2.5 h-2.5" />
                     </button>
-                    <span className="w-6 text-center text-xs font-medium">
+                    <span
+                      className="w-6 text-center text-[12px] font-bold"
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        color: "var(--charcoal)",
+                      }}
+                    >
                       {item.quantity}
                     </span>
                     <button
                       onClick={() =>
                         updateQuantity(item.offerId, item.quantity + 1)
                       }
-                      className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors text-sm"
+                      className="w-6 h-6 flex items-center justify-center transition-colors text-[var(--charcoal-soft)]"
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background = "var(--off-white)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background = "transparent")
+                      }
                     >
-                      +
+                      <Plus className="w-2.5 h-2.5" />
                     </button>
                   </div>
                 ) : (
-                  <span className="text-xs text-[var(--charcoal-soft)]">
-                    {item.quantity} adet
+                  <span className="font-mono text-[11px] text-[var(--charcoal-soft)]">
+                    × {item.quantity}
                   </span>
                 )}
-                <span className="font-heading font-semibold text-sm text-[var(--charcoal)]">
+
+                <span
+                  className="font-bold text-[13px] text-[var(--charcoal)]"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
                   {formatPrice(item.price * item.quantity)}
                 </span>
               </div>
@@ -93,7 +146,12 @@ export default function CartSummary({ readonly }: Props) {
             {!readonly && (
               <button
                 onClick={() => removeItem(item.offerId)}
-                className="text-gray-300 hover:text-red-400 transition-colors text-sm self-start mt-1"
+                className="text-[var(--charcoal-soft)] hover:text-[var(--red)] transition-colors self-start mt-1 text-[11px]"
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                }}
               >
                 ✕
               </button>
@@ -102,23 +160,68 @@ export default function CartSummary({ readonly }: Props) {
         ))}
       </div>
 
-      {/* Fiyat Özeti */}
-      <div className="px-5 py-4 border-t border-gray-100 space-y-2">
-        <div className="flex justify-between text-sm text-[var(--charcoal-soft)]">
-          <span>Ara toplam</span>
-          <span>{formatPrice(summary.subtotal)}</span>
+      {/* Price breakdown */}
+      <div
+        className="px-5 py-4 space-y-2.5"
+        style={{ borderTop: "1px solid rgba(51,51,51,0.06)" }}
+      >
+        <div className="flex justify-between text-[13px]">
+          <span
+            style={{
+              color: "var(--charcoal-soft)",
+              fontFamily: "var(--font-body)",
+            }}
+          >
+            Subtotal
+          </span>
+          <span className="font-semibold text-[var(--charcoal)]">
+            {formatPrice(summary.subtotal)}
+          </span>
         </div>
-        <div className="flex justify-between text-sm text-[var(--charcoal-soft)]">
-          <span>KDV (%20)</span>
-          <span>{formatPrice(vatAmount)}</span>
+        <div className="flex justify-between text-[13px]">
+          <span
+            style={{
+              color: "var(--charcoal-soft)",
+              fontFamily: "var(--font-body)",
+            }}
+          >
+            VAT (20%)
+          </span>
+          <span className="font-semibold text-[var(--charcoal)]">
+            {formatPrice(vatAmount)}
+          </span>
         </div>
-        <div className="flex justify-between text-sm text-[var(--charcoal-soft)]">
-          <span>Kargo ({SHIPPING_RATE_LABELS[summary.shippingRate]})</span>
-          <span>{formatPrice(summary.shipping)}</span>
+        <div className="flex justify-between text-[13px]">
+          <span
+            style={{
+              color: "var(--charcoal-soft)",
+              fontFamily: "var(--font-body)",
+            }}
+          >
+            Shipping ({SHIPPING_RATE_LABELS[summary.shippingRate]})
+          </span>
+          <span className="font-semibold text-[var(--charcoal)]">
+            {formatPrice(summary.shipping)}
+          </span>
         </div>
-        <div className="flex justify-between text-base font-semibold text-[var(--charcoal)] pt-2 border-t border-gray-100">
-          <span className="font-heading">Toplam</span>
-          <span className="font-heading text-[var(--red)]">
+        <div
+          className="flex justify-between pt-3"
+          style={{ borderTop: "1px solid rgba(51,51,51,0.06)" }}
+        >
+          <span
+            className="font-bold text-[var(--charcoal)]"
+            style={{ fontFamily: "var(--font-body)" }}
+          >
+            Total
+          </span>
+          <span
+            className="font-bold"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "1.25rem",
+              color: "var(--red)",
+            }}
+          >
             {formatPrice(summary.total + vatAmount)}
           </span>
         </div>

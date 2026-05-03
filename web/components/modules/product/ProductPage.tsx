@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { fetchISR } from "@/lib/fetch";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
-import {AddToCartButton} from "@/components/modules/store/AddToCartButton";
+import { AddToCartButton } from "@/components/modules/store/AddToCartButton";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -72,8 +72,21 @@ async function ProductDetail({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-6xl text-gray-300">
-                📦
+              <div className="w-full h-full flex items-center justify-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-20 h-20"
+                  style={{ color: "rgba(51,51,51,0.12)" }}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                >
+                  <path d="m7.5 4.27 9 5.15" />
+                  <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                  <path d="m3.3 7 8.7 5 8.7-5" />
+                  <path d="M12 22V12" />
+                </svg>
               </div>
             )}
           </div>

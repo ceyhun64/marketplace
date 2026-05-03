@@ -16,11 +16,13 @@ interface ProductOffer {
   rating: number;
   reviewCount: number;
   stock: number;
-  imageEmoji: string;
+  imageUrl: string;
   isBuyBox: boolean;
   eta: string;
 }
 
+// ── Gerçek ürün görselleri — Unsplash CDN (ücretsiz, lisanssız) ─────────────
+// Kendi görselinizi eklemek için imageUrl alanını güncelleyin.
 const MOCK_PRODUCTS: ProductOffer[] = [
   {
     id: "1",
@@ -34,7 +36,8 @@ const MOCK_PRODUCTS: ProductOffer[] = [
     rating: 4.8,
     reviewCount: 234,
     stock: 45,
-    imageEmoji: "🎧",
+    imageUrl:
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80",
     isBuyBox: true,
     eta: "Tomorrow",
   },
@@ -49,7 +52,8 @@ const MOCK_PRODUCTS: ProductOffer[] = [
     rating: 4.6,
     reviewCount: 89,
     stock: 120,
-    imageEmoji: "👕",
+    imageUrl:
+      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80",
     isBuyBox: true,
     eta: "2-3 days",
   },
@@ -65,7 +69,8 @@ const MOCK_PRODUCTS: ProductOffer[] = [
     rating: 4.9,
     reviewCount: 412,
     stock: 28,
-    imageEmoji: "☕",
+    imageUrl:
+      "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=600&q=80",
     isBuyBox: true,
     eta: "Today",
   },
@@ -80,7 +85,8 @@ const MOCK_PRODUCTS: ProductOffer[] = [
     rating: 4.7,
     reviewCount: 156,
     stock: 67,
-    imageEmoji: "🧘",
+    imageUrl:
+      "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=600&q=80",
     isBuyBox: true,
     eta: "2-3 days",
   },
@@ -96,7 +102,8 @@ const MOCK_PRODUCTS: ProductOffer[] = [
     rating: 4.5,
     reviewCount: 78,
     stock: 15,
-    imageEmoji: "⌨️",
+    imageUrl:
+      "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=600&q=80",
     isBuyBox: true,
     eta: "3-4 days",
   },
@@ -111,7 +118,8 @@ const MOCK_PRODUCTS: ProductOffer[] = [
     rating: 4.6,
     reviewCount: 328,
     stock: 200,
-    imageEmoji: "🧴",
+    imageUrl:
+      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=600&q=80",
     isBuyBox: true,
     eta: "Tomorrow",
   },
@@ -127,7 +135,8 @@ const MOCK_PRODUCTS: ProductOffer[] = [
     rating: 4.8,
     reviewCount: 94,
     stock: 53,
-    imageEmoji: "🧩",
+    imageUrl:
+      "https://images.unsplash.com/photo-1596493575896-43e4e6a7b7d5?w=600&q=80",
     isBuyBox: true,
     eta: "2-3 days",
   },
@@ -142,7 +151,8 @@ const MOCK_PRODUCTS: ProductOffer[] = [
     rating: 4.7,
     reviewCount: 167,
     stock: 38,
-    imageEmoji: "👜",
+    imageUrl:
+      "https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&q=80",
     isBuyBox: true,
     eta: "Tomorrow",
   },
@@ -212,7 +222,10 @@ export default function FeaturedProducts() {
               className="relative pb-4 text-sm font-semibold transition-colors duration-200"
               style={{
                 fontFamily: "var(--font-body)",
-                color: activeTab === tab.value ? "var(--charcoal)" : "var(--charcoal-soft)",
+                color:
+                  activeTab === tab.value
+                    ? "var(--charcoal)"
+                    : "var(--charcoal-soft)",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
@@ -306,12 +319,29 @@ function ProductCard({
 
       {/* Image Container */}
       <div
-        className="relative aspect-[4/5] overflow-hidden flex items-center justify-center text-6xl"
+        className="relative aspect-[4/5] overflow-hidden"
         style={{ background: "var(--off-white)" }}
       >
-        <span className="transition-transform duration-500 group-hover:scale-110 select-none">
-          {product.imageEmoji}
-        </span>
+        {/* Gerçek ürün görseli */}
+        <img
+          src={product.imageUrl}
+          alt={product.productName}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          loading="lazy"
+          onError={(e) => {
+            // Görsel yüklenemezse fallback göster
+            const target = e.currentTarget as HTMLImageElement;
+            target.style.display = "none";
+            const parent = target.parentElement;
+            if (parent) {
+              const fallback = document.createElement("div");
+              fallback.className =
+                "w-full h-full flex items-center justify-center";
+              fallback.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" style="color:rgba(51,51,51,0.15)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" x2="21" y1="6" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`;
+              parent.appendChild(fallback);
+            }
+          }}
+        />
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
@@ -353,19 +383,24 @@ function ProductCard({
 
         {/* Quick Add */}
         <div className="absolute bottom-3 left-3 right-3 translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-          <button
+          <Link
+            href={`/product/${product.productId}`}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold text-white transition-colors"
             style={{
               background: "var(--charcoal)",
               fontFamily: "var(--font-body)",
               letterSpacing: "0.03em",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--red)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "var(--charcoal)")}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "var(--red)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "var(--charcoal)")
+            }
           >
             <ShoppingBag className="w-3.5 h-3.5" />
-            Add to Cart
-          </button>
+            View Product
+          </Link>
         </div>
       </div>
 
