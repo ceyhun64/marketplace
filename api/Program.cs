@@ -58,7 +58,9 @@ try
 
     // ── PostgreSQL + EF Core ──────────────────────────────────────────────────
     var npgsqlConn = ToNpgsql(config["DATABASE_URL"]!, builder.Environment.IsDevelopment());
-    builder.Services.AddDbContext<AppDbContext>(opt => opt.UseNpgsql(npgsqlConn));
+    builder.Services.AddDbContext<AppDbContext>(opt =>
+        opt.UseNpgsql(npgsqlConn)
+           .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
     // ── Redis Cache ───────────────────────────────────────────────────────────
     var redisConn = ToRedis(config["REDIS_URL"]!);

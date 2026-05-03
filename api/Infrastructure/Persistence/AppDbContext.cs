@@ -31,8 +31,13 @@ public class AppDbContext : DbContext
         // ── Unique indexler ──────────────────────────────────────────────────
         modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
         modelBuilder.Entity<MerchantProfile>().HasIndex(m => m.Slug).IsUnique();
+        modelBuilder.Entity<MerchantProfile>().HasIndex(m => m.UserId).IsUnique();
+        modelBuilder.Entity<Courier>().HasIndex(c => c.UserId).IsUnique();
         modelBuilder.Entity<Shipment>().HasIndex(s => s.TrackingNumber).IsUnique();
+        modelBuilder.Entity<Shipment>().HasIndex(s => s.OrderId).IsUnique();
         modelBuilder.Entity<Invoice>().HasIndex(i => i.InvoiceNumber).IsUnique();
+        modelBuilder.Entity<Invoice>().HasIndex(i => i.OrderId).IsUnique();
+        modelBuilder.Entity<Subscription>().HasIndex(s => s.MerchantId).IsUnique();
 
         // ── Enum → string ────────────────────────────────────────────────────
         modelBuilder.Entity<User>().Property(u => u.Role).HasConversion<string>();
