@@ -1,13 +1,12 @@
-"use client";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { serverFetch } from "@/lib/fetch";
+import { fetchISR } from "@/lib/fetch";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Star, Package, ShoppingCart, Clock } from "lucide-react";
+import { ArrowLeft, Star, Package, Clock } from "lucide-react";
 import { AddToCartButton } from "@/components/modules/store/AddToCartButton";
 import { WishlistButton } from "@/components/modules/store/WishlistButton";
 
@@ -40,7 +39,9 @@ export async function generateMetadata({
 }: Props): Promise<Metadata> {
   try {
     const params = await paramsPromise;
-    const product = (await serverFetch.product(params.id)) as ProductDetail;
+    const resp = await fetchISR<{ data: ProductDetail }>(`/api/products/${params.id}`);
+    const product = resp?.data;
+    if (!product) return { title: "Product Not Found" };
     return {
       title: `${product.name} | Product Details`,
       description: product.description?.slice(0, 160),
@@ -58,23 +59,25 @@ export default async function StoreProductPage({
   params: paramsPromise,
 }: Props) {
   const params = await paramsPromise;
-  let product: ProductDetail;
-  let offers: StoreOffer[];
+  let product: ProductDetail | null = null;
+  let offers: StoreOffer[] = [];
 
   try {
-    [product, offers] = await Promise.all([
-      serverFetch.product(params.id) as Promise<ProductDetail>,
-      (async () => {
-        const all = (await serverFetch.storeProducts(
-          params.slug,
-        )) as StoreOffer[];
-        return all.filter((o) => o.productId === params.id);
-      })(),
+    const [productResp, offersResp] = await Promise.all([
+      fetchISR<{ data: ProductDetail }>(`/api/products/${params.id}`),
+      fetchISR<{ data: StoreOffer[] }>(`/api/store/${params.slug}/products`),
     ]);
+
+    product = productResp?.data ?? null;
+    const allOffers = offersResp?.data ?? [];
+    offers = allOffers.filter((o: StoreOffer) => o.productId === params.id);
   } catch {
     notFound();
   }
 
+  if (!product) notFound();
+
+  const safeProduct = product as ProductDetail;
   const storeOffer = offers[0];
 
   return (
@@ -91,7 +94,7 @@ export default async function StoreProductPage({
           </Link>
           <span>/</span>
           <span className="text-foreground truncate max-w-xs">
-            {product.name}
+            {safeProduct.name}
           </span>
         </div>
 
@@ -106,10 +109,10 @@ export default async function StoreProductPage({
           {/* Images */}
           <div className="space-y-3">
             <div className="relative aspect-square rounded-xl overflow-hidden bg-muted">
-              {product.images[0] ? (
+              {safeProduct.images[0] ? (
                 <Image
-                  src={product.images[0]}
-                  alt={product.name}
+                  src={safeProduct.images[0]}
+                  alt={safeProduct.name}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 50vw"
@@ -121,16 +124,16 @@ export default async function StoreProductPage({
                 </div>
               )}
             </div>
-            {product.images.length > 1 && (
+            {safeProduct.images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-1">
-                {product.images.map((img, i) => (
+                {safeProduct.images.map((img, i) => (
                   <div
                     key={i}
                     className="relative h-16 w-16 shrink-0 rounded-md overflow-hidden border"
                   >
                     <Image
                       src={img}
-                      alt={`${product.name} ${i + 1}`}
+                      alt={`${safeProduct.name} ${i + 1}`}
                       fill
                       className="object-cover"
                     />
@@ -142,12 +145,12 @@ export default async function StoreProductPage({
 
           {/* Info */}
           <div>
-            {product.categoryName && (
+            {safeProduct.categoryName && (
               <Badge variant="secondary" className="mb-2">
-                {product.categoryName}
+                {safeProduct.categoryName}
               </Badge>
             )}
-            <h1 className="text-2xl font-bold mb-3">{product.name}</h1>
+            <h1 className="text-2xl font-bold mb-3">{safeProduct.name}</h1>
 
             {storeOffer && (
               <>
@@ -187,16 +190,16 @@ export default async function StoreProductPage({
 
                 <AddToCartButton
                   offerId={storeOffer.id}
-                  productId={product.id}
-                  productName={product.name}
-                  image={product.images[0] ?? ""}
+                  productId={safeProduct.id}
+                  productName={safeProduct.name}
+                  image={safeProduct.images[0] ?? ""}
                   price={storeOffer.price}
-                  merchantId={params.slug} // ya da gerçek merchantId varsa onu kullan
+                  merchantId={params.slug}
                   disabled={storeOffer.stock === 0}
                 />
                 <WishlistButton
-                  productId={product.id}
-                  productName={product.name}
+                  productId={safeProduct.id}
+                  productName={safeProduct.name}
                   className="w-full"
                 />
               </>
@@ -207,13 +210,13 @@ export default async function StoreProductPage({
             <div>
               <h2 className="font-semibold mb-2">Product Description</h2>
               <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
-                {product.description}
+                {safeProduct.description}
               </p>
             </div>
 
-            {product.tags.length > 0 && (
+            {safeProduct.tags.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-1.5">
-                {product.tags.map((tag) => (
+                {safeProduct.tags.map((tag) => (
                   <Badge key={tag} variant="outline" className="text-xs">
                     {tag}
                   </Badge>

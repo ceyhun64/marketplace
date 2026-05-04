@@ -7,6 +7,10 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { WishlistButton } from "@/components/modules/store/WishlistButton";
 
+// UUID formatını kontrol eder — mock "p1" gibi ID'ler geçersiz
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isValidUUID = (id: string) => UUID_REGEX.test(id);
+
 interface ProductOffer {
   id: string;
   productId: string;
@@ -175,16 +179,16 @@ export default function FeaturedProducts() {
   const { data: apiData, isLoading } = useQuery({
     queryKey: ["featured-products", activeTab],
     queryFn: async () => {
-      const params = new URLSearchParams({ limit: "8" });
-      const { data } = await api.get(`/api/products/featured?${params}`);
+      const params = new URLSearchParams({ limit: "8", sort: "newest" });
+      const { data } = await api.get(`/api/products?${params}`);
       return data;
     },
     staleTime: 1000 * 60 * 5,
   });
 
   // API'den gelen ürünleri ProductOffer formatına çevir
-  const apiProducts: ProductOffer[] = Array.isArray(apiData)
-    ? apiData.map((p: any) => ({
+  const apiProducts: ProductOffer[] = Array.isArray(apiData?.items)
+    ? apiData.items.map((p: any) => ({
         id: p.id,
         productId: p.id,
         productName: p.name,
@@ -199,8 +203,9 @@ export default function FeaturedProducts() {
         reviewCount: 0,
         eta: "2-4 iş günü",
       }))
-    : MOCK_PRODUCTS;
+    : [];
 
+  // Mock ürünlerde geçerli UUID olmadığı için linkler devre dışı — sadece gerçek API verisi kullanılır
   const products = apiProducts.length > 0 ? apiProducts : MOCK_PRODUCTS;
 
   return (
@@ -394,6 +399,7 @@ function ProductCard({
 
         {/* Quick Add */}
         <div className="absolute bottom-3 left-3 right-3 translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+          {isValidUUID(product.productId) ? (
           <Link
             href={`/product/${product.productId}`}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold text-white transition-colors"
@@ -412,6 +418,20 @@ function ProductCard({
             <ShoppingBag className="w-3.5 h-3.5" />
             View Product
           </Link>
+          ) : (
+          <span
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold text-white cursor-default"
+            style={{
+              background: "var(--charcoal)",
+              fontFamily: "var(--font-body)",
+              letterSpacing: "0.03em",
+              opacity: 0.5,
+            }}
+          >
+            <ShoppingBag className="w-3.5 h-3.5" />
+            View Product
+          </span>
+          )}
         </div>
       </div>
 
@@ -429,6 +449,7 @@ function ProductCard({
           </span>
         </div>
 
+        {isValidUUID(product.productId) ? (
         <Link href={`/product/${product.productId}`}>
           <h3
             className="font-bold text-[14px] leading-snug line-clamp-2 text-[var(--charcoal)] hover:text-[var(--red)] transition-colors"
@@ -437,6 +458,14 @@ function ProductCard({
             {product.productName}
           </h3>
         </Link>
+        ) : (
+          <h3
+            className="font-bold text-[14px] leading-snug line-clamp-2 text-[var(--charcoal)]"
+            style={{ fontFamily: "var(--font-body)" }}
+          >
+            {product.productName}
+          </h3>
+        )}
 
         <div className="flex items-center justify-between pt-1">
           <div>
