@@ -97,6 +97,15 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = getRefreshToken();
+
+        // Refresh token yoksa kullanıcı zaten giriş yapmamış demektir.
+        // Login sayfasına yönlendirmek yerine sadece hatayı ilet.
+        if (!refreshToken) {
+          isRefreshing = false;
+          processQueue(error, null);
+          return Promise.reject(error);
+        }
+
         const { data } = await axios.post<{
           accessToken: string;
           refreshToken: string;
