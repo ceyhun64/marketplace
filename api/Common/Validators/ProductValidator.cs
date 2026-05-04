@@ -17,8 +17,22 @@ public class CreateProductRequestValidator : AbstractValidator<CreateProductRequ
             .MinimumLength(10).WithMessage("Açıklama en az 10 karakter olmalıdır.")
             .MaximumLength(5000).WithMessage("Açıklama en fazla 5000 karakter olabilir.");
 
+        When(x => x.ShortDescription is not null, () =>
+        {
+            RuleFor(x => x.ShortDescription)
+                .MaximumLength(500).WithMessage("Kısa açıklama en fazla 500 karakter olabilir.");
+        });
+
         RuleFor(x => x.CategoryId)
             .NotEmpty().WithMessage("Kategori seçimi zorunludur.");
+
+        RuleFor(x => x.Price)
+            .GreaterThan(0).WithMessage("Fiyat 0'dan büyük olmalıdır.")
+            .LessThanOrEqualTo(999_999.99m).WithMessage("Geçersiz fiyat değeri.");
+
+        RuleFor(x => x.Stock)
+            .GreaterThanOrEqualTo(0).WithMessage("Stok negatif olamaz.")
+            .LessThanOrEqualTo(100_000).WithMessage("Maksimum stok 100.000 adettir.");
 
         RuleFor(x => x.Images)
             .NotNull().WithMessage("Görsel listesi boş olamaz.")
@@ -53,17 +67,41 @@ public class UpdateProductRequestValidator : AbstractValidator<UpdateProductRequ
                 .MaximumLength(5000).WithMessage("Açıklama en fazla 5000 karakter olabilir.");
         });
 
+        When(x => x.ShortDescription is not null, () =>
+        {
+            RuleFor(x => x.ShortDescription)
+                .MaximumLength(500).WithMessage("Kısa açıklama en fazla 500 karakter olabilir.");
+        });
+
         When(x => x.Images is not null, () =>
         {
             RuleFor(x => x.Images)
                 .Must(imgs => imgs!.Count >= 1).WithMessage("En az 1 görsel olmalıdır.")
                 .Must(imgs => imgs!.Count <= 10).WithMessage("En fazla 10 görsel olabilir.");
+
+            RuleForEach(x => x.Images)
+                .Must(url => Uri.TryCreate(url, UriKind.Absolute, out _))
+                .WithMessage("Geçersiz görsel URL formatı.");
         });
 
         When(x => x.Tags is not null, () =>
         {
             RuleFor(x => x.Tags)
                 .Must(tags => tags!.Count <= 20).WithMessage("En fazla 20 etiket olabilir.");
+        });
+
+        When(x => x.Price.HasValue, () =>
+        {
+            RuleFor(x => x.Price!.Value)
+                .GreaterThan(0).WithMessage("Fiyat 0'dan büyük olmalıdır.")
+                .LessThanOrEqualTo(999_999.99m).WithMessage("Geçersiz fiyat değeri.");
+        });
+
+        When(x => x.Stock.HasValue, () =>
+        {
+            RuleFor(x => x.Stock!.Value)
+                .GreaterThanOrEqualTo(0).WithMessage("Stok negatif olamaz.")
+                .LessThanOrEqualTo(100_000).WithMessage("Maksimum stok 100.000 adettir.");
         });
     }
 }

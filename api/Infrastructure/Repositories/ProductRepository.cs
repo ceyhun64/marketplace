@@ -15,7 +15,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
     ) =>
         await _set.Include(p => p.Category)
             .Include(p => p.Merchant)
-            .FirstOrDefaultAsync(p => p.Id == productId, ct);
+            .FirstOrDefaultAsync(p => p.Id == productId && !p.IsDeleted, ct);
 
     public async Task<(IReadOnlyList<Product> Items, int TotalCount)> SearchAsync(
         string? searchTerm,
@@ -30,7 +30,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
     {
         var query = _set.Include(p => p.Category)
             .Include(p => p.Merchant)
-            .Where(p => p.PublishToMarket && p.IsApproved)
+            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && p.Stock > 0)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -73,7 +73,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
     ) =>
         await _set.Include(p => p.Category)
             .Include(p => p.Merchant)
-            .Where(p => p.PublishToMarket && p.IsApproved && p.Stock > 0)
+            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && p.Stock > 0)
             .OrderByDescending(p => p.CreatedAt)
             .Take(limit)
             .ToListAsync(ct);
@@ -83,7 +83,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
         CancellationToken ct = default
     ) =>
         await _set.Include(p => p.Category)
-            .Where(p => p.MerchantId == merchantId)
+            .Where(p => p.MerchantId == merchantId && !p.IsDeleted)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync(ct);
 }

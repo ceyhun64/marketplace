@@ -10,8 +10,14 @@ public record CreateProductCommand(
     string Name,
     string Description,
     Guid CategoryId,
+    decimal Price,
+    int Stock,
+    Guid? MerchantId = null,
     List<string>? Images = null,
-    List<string>? Tags = null
+    List<string>? Tags = null,
+    string? ShortDescription = null,
+    bool PublishToMarket = false,
+    bool PublishToStore = true
 ) : IRequest<CreateProductResult>;
 
 public record CreateProductResult(Guid Id, string Name, bool IsApproved);
@@ -33,19 +39,41 @@ public class CreateProductCommandHandler
         CancellationToken cancellationToken
     )
     {
-        // nameof ile tip-safe karşılaştırma
         bool isAdmin = _currentUser.Role is nameof(UserRole.Admin);
+
+        // MerchantId çözümleme: admin başka merchant adına ekleyebilir
+        Guid merchantId;
+        if (isAdmin && request.MerchantId.HasValue)
+        {
+            merchantId = request.MerchantId.Value;
+        }
+        else
+        {
+            var merchant = await _db.MerchantProfiles
+                .FirstOrDefaultAsync(m => m.UserId == _currentUser.UserId, cancellationToken);
+            if (merchant is null)
+                throw new InvalidOperationException("Merchant profili bulunamadı.");
+            merchantId = merchant.Id;
+        }
 
         var product = new Product
         {
             Id = Guid.NewGuid(),
-            Name = request.Name,
-            Description = request.Description,
+            MerchantId = merchantId,
+            Name = request.Name.Trim(),
+            Description = request.Description.Trim(),
+            ShortDescription = request.ShortDescription?.Trim(),
             CategoryId = request.CategoryId,
             Images = request.Images ?? [],
             Tags = request.Tags ?? [],
+            Price = request.Price,
+            Stock = request.Stock,
+            PublishToMarket = request.PublishToMarket,
+            PublishToStore = request.PublishToStore,
             IsApproved = isAdmin,
+            IsDeleted = false,
             CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
         };
 
         _db.Products.Add(product);

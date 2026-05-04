@@ -35,7 +35,7 @@ public class ProductsController : ControllerBase
             .Products.Include(p => p.Category)
                 .ThenInclude(c => c != null ? c.Parent : null)
             .Include(p => p.Merchant)
-            .Where(p => p.PublishToMarket && p.IsApproved && p.Stock > 0)
+            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && p.Stock > 0)
             .AsQueryable();
 
         // Kategori filtresi: ana kategori slug'ına göre (hem ana hem alt kategoriler dahil)
@@ -126,12 +126,13 @@ public class ProductsController : ControllerBase
         var product = await _db
             .Products.Include(p => p.Category)
             .Include(p => p.Merchant)
-            .Where(p => p.Id == id)
+            .Where(p => p.Id == id && !p.IsDeleted)
             .Select(p => new
             {
                 p.Id,
                 p.Name,
                 p.Description,
+                p.ShortDescription,
                 p.Images,
                 p.Tags,
                 p.Price,
@@ -172,7 +173,7 @@ public class ProductsController : ControllerBase
     {
         var product = await _db.Products
             .Include(p => p.Merchant)
-            .Where(p => p.Id == id && p.IsApproved && p.Stock > 0)
+            .Where(p => p.Id == id && !p.IsDeleted && p.IsApproved && p.Stock > 0)
             .Select(p => new
             {
                 OfferId = p.Id,
@@ -200,7 +201,7 @@ public class ProductsController : ControllerBase
     {
         var offers = await _db.Products
             .Include(p => p.Merchant)
-            .Where(p => p.Id == id && p.IsApproved && p.Stock > 0)
+            .Where(p => p.Id == id && !p.IsDeleted && p.IsApproved && p.Stock > 0)
             .Select(p => new
             {
                 Id = p.Id,
@@ -237,7 +238,7 @@ public class ProductsController : ControllerBase
             .Products.Include(p => p.Category)
                 .ThenInclude(c => c != null ? c.Parent : null)
             .Include(p => p.Merchant)
-            .Where(p => p.PublishToMarket && p.IsApproved && p.Stock > 0)
+            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && p.Stock > 0)
             .AsQueryable();
 
         // Full-text arama
@@ -327,7 +328,7 @@ public class ProductsController : ControllerBase
     {
         var products = await _db
             .Products.Include(p => p.Merchant)
-            .Where(p => p.PublishToMarket && p.IsApproved && p.Stock > 0)
+            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && p.Stock > 0)
             .OrderByDescending(p => p.CreatedAt)
             .Take(limit)
             .Select(p => new
@@ -420,7 +421,7 @@ public class ProductsController : ControllerBase
 
         if (userRole == "Admin")
         {
-            // Admin: dto'da MerchantId verilmişse onu kullan, yoksa ilk aktif merchant'ı kullan
+            // Admin: dto'da MerchantId verilmişse onu kullan, yoksa kendi profilini bul
             if (dto.MerchantId.HasValue)
             {
                 var merchantExists = await _db.MerchantProfiles.AnyAsync(m =>
@@ -432,13 +433,11 @@ public class ProductsController : ControllerBase
             }
             else
             {
-                // Admin kendi adına ekliyorsa, admin user'ının merchant profili aranır
                 var adminMerchant = await _db
                     .MerchantProfiles.Where(m => m.UserId == Guid.Parse(userIdClaim!))
                     .FirstOrDefaultAsync();
                 if (adminMerchant == null)
                 {
-                    // Admin için merchant profili yoksa ilk aktif merchant'a ata
                     var fallback = await _db.MerchantProfiles.FirstOrDefaultAsync(m => m.IsActive);
                     if (fallback == null)
                         return BadRequest(
@@ -481,6 +480,7 @@ public class ProductsController : ControllerBase
             MerchantId = merchantId,
             Name = dto.Name.Trim(),
             Description = dto.Description.Trim(),
+            ShortDescription = dto.ShortDescription?.Trim(),
             CategoryId = dto.CategoryId,
             Images = dto.Images ?? new List<string>(),
             Tags = dto.Tags ?? new List<string>(),
@@ -488,7 +488,7 @@ public class ProductsController : ControllerBase
             Stock = dto.Stock,
             PublishToMarket = dto.PublishToMarket,
             PublishToStore = dto.PublishToStore,
-            IsApproved = userRole == "Admin", // Admin eklerse otomatik onaylı
+            IsApproved = userRole == "Admin",
             IsDeleted = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
@@ -520,7 +520,7 @@ public class ProductsController : ControllerBase
         var pending = await _db
             .Products.Include(p => p.Category)
             .Include(p => p.Merchant)
-            .Where(p => !p.IsApproved)
+            .Where(p => !p.IsDeleted && !p.IsApproved)
             .OrderByDescending(p => p.CreatedAt)
             .Select(p => new
             {
@@ -542,9 +542,9 @@ public class ProductsController : ControllerBase
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Approve(Guid id)
     {
-        var product = await _db.Products.FindAsync(id);
+        var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
         if (product == null)
-            return NotFound();
+            return NotFound(new { message = "Ürün bulunamadı." });
 
         product.IsApproved = true;
         product.UpdatedAt = DateTime.UtcNow;
@@ -560,7 +560,7 @@ public class ProductsController : ControllerBase
         var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
-        var product = await _db.Products.FindAsync(id);
+        var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
         if (product == null)
             return NotFound(new { message = "Ürün bulunamadı." });
 
@@ -585,6 +585,7 @@ public class ProductsController : ControllerBase
 
         if (dto.Name != null) product.Name = dto.Name.Trim();
         if (dto.Description != null) product.Description = dto.Description.Trim();
+        if (dto.ShortDescription != null) product.ShortDescription = dto.ShortDescription.Trim();
         if (dto.CategoryId.HasValue) product.CategoryId = dto.CategoryId.Value;
         if (dto.Images != null) product.Images = dto.Images;
         if (dto.Tags != null) product.Tags = dto.Tags;
@@ -612,9 +613,9 @@ public class ProductsController : ControllerBase
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var product = await _db.Products.FindAsync(id);
+        var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
         if (product == null)
-            return NotFound();
+            return NotFound(new { message = "Ürün bulunamadı." });
 
         product.IsDeleted = true;
         product.UpdatedAt = DateTime.UtcNow;
@@ -627,7 +628,7 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> GetAllTags()
     {
         var tags = await _db.Products
-            .Where(p => p.PublishToMarket && p.IsApproved && !p.IsDeleted)
+            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved)
             .SelectMany(p => p.Tags)
             .Distinct()
             .OrderBy(t => t)
@@ -641,11 +642,10 @@ public class ProductsController : ControllerBase
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Reject(Guid id, [FromBody] RejectProductRequest dto)
     {
-        var product = await _db.Products.FindAsync(id);
+        var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
         if (product == null)
-            return NotFound();
+            return NotFound(new { message = "Ürün bulunamadı." });
 
-        // Mark as not approved; optionally soft-delete or add rejection note
         product.IsApproved = false;
         product.PublishToMarket = false;
         product.UpdatedAt = DateTime.UtcNow;
@@ -654,10 +654,17 @@ public class ProductsController : ControllerBase
     }
 }
 
+// ── Local request / response types ─────────────────────────────────────────
+
+/// <summary>
+/// Ürün güncelleme isteği. Sadece gönderilen alanlar güncellenir.
+/// ProductDTOs.cs'deki record ile çakışmayı önlemek için burada class olarak tanımlandı.
+/// </summary>
 public class UpdateProductRequest
 {
     public string? Name { get; set; }
     public string? Description { get; set; }
+    public string? ShortDescription { get; set; }
     public Guid? CategoryId { get; set; }
     public List<string>? Images { get; set; }
     public List<string>? Tags { get; set; }

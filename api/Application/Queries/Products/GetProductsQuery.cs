@@ -38,12 +38,15 @@ public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, GetProd
         CancellationToken cancellationToken
     )
     {
-        var query = _db.Products.Include(p => p.Category).AsQueryable();
+        var query = _db.Products
+            .Include(p => p.Category)
+            .Where(p => !p.IsDeleted)
+            .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.Search))
             query = query.Where(p =>
-                p.Name.ToLower().Contains(request.Search.ToLower())
-                || p.Description.ToLower().Contains(request.Search.ToLower())
+                EF.Functions.ILike(p.Name, $"%{request.Search}%")
+                || EF.Functions.ILike(p.Description, $"%{request.Search}%")
             );
 
         if (request.CategoryId.HasValue)

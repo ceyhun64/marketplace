@@ -29,18 +29,14 @@ public record CreateProductRequest(
     List<string> Tags,
     decimal Price,
     int Stock,
-    Guid? MerchantId, // Admin kendi adına veya belirli merchant adına ekleyebilir
+    Guid? MerchantId = null,          // Admin kendi adına veya belirli merchant adına ekleyebilir
+    string? ShortDescription = null,  // Opsiyonel kısa açıklama
     bool PublishToMarket = false,
     bool PublishToStore = true
 );
 
-public record UpdateProductRequest(
-    string? Name,
-    string? Description,
-    Guid? CategoryId,
-    List<string>? Images,
-    List<string>? Tags
-);
+// UpdateProductRequest — ProductsController.cs içinde class olarak tanımlanmıştır.
+// Burada ayrıca tanımlanmaz; önceki record kaldırıldı.
 
 public record CreateOfferRequest(
     Guid ProductId,
@@ -65,6 +61,7 @@ public record ProductResponse(
     Guid Id,
     string Name,
     string Description,
+    string? ShortDescription,
     Guid CategoryId,
     string CategoryName,
     List<string> Images,
@@ -113,6 +110,7 @@ public record ProductDetailResponse(
     Guid Id,
     string Name,
     string Description,
+    string? ShortDescription,
     Guid CategoryId,
     string CategoryName,
     List<string> Images,

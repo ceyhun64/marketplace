@@ -13,7 +13,11 @@ public record MerchantProductDto(
     string Description,
     Guid CategoryId,
     string CategoryName,
+    decimal Price,
+    int Stock,
     bool IsApproved,
+    bool PublishToMarket,
+    bool PublishToStore,
     int OfferCount,
     DateTime CreatedAt
 );
@@ -45,7 +49,7 @@ public class GetMerchantProductsQueryHandler
 
         return await _db
             .Products.Include(p => p.Category)
-            .Where(p => p.MerchantId == merchant.Id)
+            .Where(p => p.MerchantId == merchant.Id && !p.IsDeleted)
             .OrderByDescending(p => p.CreatedAt)
             .Select(p => new MerchantProductDto(
                 p.Id,
@@ -53,7 +57,11 @@ public class GetMerchantProductsQueryHandler
                 p.Description,
                 p.CategoryId,
                 p.Category != null ? p.Category.Name : "",
+                p.Price,
+                p.Stock,
                 p.IsApproved,
+                p.PublishToMarket,
+                p.PublishToStore,
                 0,
                 p.CreatedAt
             ))
