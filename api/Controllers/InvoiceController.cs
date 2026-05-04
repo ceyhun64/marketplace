@@ -193,6 +193,101 @@ public class InvoicesController(
         }
     }
 
+    // ── GET /api/invoices/accounting — Admin: tüm muhasebe kayıtları ──────────
+    /// <summary>
+    /// Muhasebe kayıtlarını (AccountingEntry) listeler.
+    /// Admin tüm kayıtları görebilir; merchantId ile filtrele.
+    /// Milestone 3: "Muhasebe kayıtları: sipariş/fatura/ödeme bağlantılı tam iz"
+    /// </summary>
+    [HttpGet("accounting")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> GetAccountingEntries(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20,
+        [FromQuery] Guid? merchantId = null,
+        [FromQuery] string? entryType = null
+    )
+    {
+        var query = db.AccountingEntries
+            .Include(e => e.Invoice)
+            .Include(e => e.Merchant)
+            .AsQueryable();
+
+        if (merchantId.HasValue)
+            query = query.Where(e => e.MerchantId == merchantId.Value);
+
+        if (!string.IsNullOrEmpty(entryType))
+            query = query.Where(e => e.EntryType == entryType.ToUpper());
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(e => e.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .Select(e => new AccountingEntryDto
+            {
+                Id = e.Id,
+                InvoiceNumber = e.Invoice.InvoiceNumber,
+                MerchantStoreName = e.Merchant.StoreName,
+                EntryType = e.EntryType,
+                Amount = e.Amount,
+                Description = e.Description,
+                PaymentReference = e.PaymentReference,
+                CreatedAt = e.CreatedAt,
+            })
+            .ToListAsync();
+
+        return Ok(new ApiResponse<object>(new { items, totalCount, page, limit }));
+    }
+
+    // ── GET /api/invoices/accounting/merchant — Merchant: kendi muhasebe kayıtları
+    /// <summary>
+    /// Merchant kendi muhasebe izini görür (sipariş/fatura/ödeme tam iz).
+    /// </summary>
+    [HttpGet("accounting/merchant")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<IActionResult> GetMyAccountingEntries(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20,
+        [FromQuery] string? entryType = null
+    )
+    {
+        var userId = currentUser.UserId;
+        var merchant = await db.MerchantProfiles.FirstOrDefaultAsync(m => m.UserId == userId);
+        if (merchant == null)
+            return NotFound(new ApiResponse<string>("Merchant profili bulunamadı."));
+
+        var query = db.AccountingEntries
+            .Include(e => e.Invoice)
+            .Where(e => e.MerchantId == merchant.Id)
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(entryType))
+            query = query.Where(e => e.EntryType == entryType.ToUpper());
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(e => e.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .Select(e => new AccountingEntryDto
+            {
+                Id = e.Id,
+                InvoiceNumber = e.Invoice.InvoiceNumber,
+                MerchantStoreName = merchant.StoreName,
+                EntryType = e.EntryType,
+                Amount = e.Amount,
+                Description = e.Description,
+                PaymentReference = e.PaymentReference,
+                CreatedAt = e.CreatedAt,
+            })
+            .ToListAsync();
+
+        return Ok(new ApiResponse<object>(new { items, totalCount, page, limit }));
+    }
+
     // ── POST /api/invoices/generate/{orderId} — Admin: Sipariş için fatura üret
 
     [HttpPost("generate/{orderId:guid}")]

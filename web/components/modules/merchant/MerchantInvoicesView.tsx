@@ -30,7 +30,12 @@ import {
   Receipt,
   Calendar,
   ExternalLink,
+  BookOpen,
+  ArrowUpCircle,
+  ArrowDownCircle,
 } from "lucide-react";
+import { useMerchantAccountingEntries } from "@/queries/useInvoices";
+import type { AccountingEntry } from "@/types/entities";
 
 interface Invoice {
   id: string;
@@ -60,6 +65,15 @@ function formatCurrency(amount: number) {
 export default function MerchantInvoicesView() {
   const [search, setSearch] = useState("");
   const [monthFilter, setMonthFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState<"invoices" | "accounting">("invoices");
+  const [accountingEntryType, setAccountingEntryType] = useState("all");
+
+  const { data: accountingData, isLoading: accountingLoading } =
+    useMerchantAccountingEntries({
+      limit: 100,
+      entryType: accountingEntryType !== "all" ? accountingEntryType : undefined,
+    });
+  const accountingEntries: AccountingEntry[] = accountingData?.items ?? [];
 
   const { data, isLoading } = useQuery({
     queryKey: ["merchant-invoices"],
@@ -137,7 +151,35 @@ export default function MerchantInvoicesView() {
         </p>
       </div>
 
+      {/* Tab Switcher */}
+      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+        <button
+          onClick={() => setActiveTab("invoices")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === "invoices"
+              ? "bg-white text-gray-900 shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <Receipt className="w-4 h-4" />
+          Invoices
+        </button>
+        <button
+          onClick={() => setActiveTab("accounting")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === "accounting"
+              ? "bg-white text-gray-900 shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <BookOpen className="w-4 h-4" />
+          Accounting Ledger
+        </button>
+      </div>
+
       {/* Stats */}
+      {activeTab === "invoices" && (
+      <>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
@@ -371,6 +413,103 @@ export default function MerchantInvoicesView() {
           </Table>
         </div>
       </div>
+      </> )} {/* end invoices tab */}
+
+      {/* Accounting Ledger Tab */}
+      {activeTab === "accounting" && (
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">Accounting Ledger</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Sipariş/fatura/ödeme bağlantılı tam muhasebe izi
+              </p>
+            </div>
+            <Select value={accountingEntryType} onValueChange={setAccountingEntryType}>
+              <SelectTrigger className="w-36 h-8 text-xs rounded-lg">
+                <SelectValue placeholder="Entry type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="SALE">Sale</SelectItem>
+                <SelectItem value="REFUND">Refund</SelectItem>
+                <SelectItem value="ADJUSTMENT">Adjustment</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50">
+                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Invoice #</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Amount</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Description</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Payment Ref</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {accountingLoading
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      {Array.from({ length: 6 }).map((_, j) => (
+                        <TableCell key={j}><div className="h-4 w-24 bg-gray-100 animate-pulse rounded" /></TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                : accountingEntries.map((entry) => (
+                    <TableRow key={entry.id} className="hover:bg-gray-50 transition-colors">
+                      <TableCell className="font-mono text-xs font-semibold text-gray-700">
+                        {entry.invoiceNumber}
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                            entry.entryType === "SALE"
+                              ? "bg-green-50 text-green-700"
+                              : entry.entryType === "REFUND"
+                              ? "bg-red-50 text-red-700"
+                              : "bg-orange-50 text-orange-700"
+                          }`}
+                        >
+                          {entry.entryType === "SALE" ? (
+                            <ArrowUpCircle className="w-3 h-3" />
+                          ) : (
+                            <ArrowDownCircle className="w-3 h-3" />
+                          )}
+                          {entry.entryType}
+                        </span>
+                      </TableCell>
+                      <TableCell
+                        className={`text-sm font-semibold ${
+                          entry.amount >= 0 ? "text-green-700" : "text-red-700"
+                        }`}
+                      >
+                        {entry.amount >= 0 ? "+" : ""}₺{entry.amount.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600 max-w-xs truncate">
+                        {entry.description}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-gray-400">
+                        {entry.paymentReference ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-500">
+                        {new Date(entry.createdAt).toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+            </TableBody>
+          </Table>
+
+          {!accountingLoading && accountingEntries.length === 0 && (
+            <div className="text-center py-16 text-gray-400">
+              <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">No accounting entries found</p>
+            </div>
+          )}
+        </div>
+      )} {/* end accounting tab */}
     </div>
   );
 }

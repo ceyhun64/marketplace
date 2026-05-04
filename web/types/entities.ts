@@ -240,3 +240,20 @@ export interface MerchantPlugin {
   expiresAt?: string;
   autoRenew: boolean;
 }
+
+// ── AccountingEntry ───────────────────────────────────────────────────────────
+
+/** Muhasebe kaydı — sipariş/fatura/ödeme tam iz (M3) */
+export interface AccountingEntry {
+  id: string;
+  invoiceNumber: string;
+  merchantStoreName: string;
+  /** SALE | REFUND | ADJUSTMENT */
+  entryType: "SALE" | "REFUND" | "ADJUSTMENT" | string;
+  /** Pozitif = gelir, Negatif = iade/düzeltme */
+  amount: number;
+  description: string;
+  paymentReference?: string;
+  createdAt: string;
+}
+

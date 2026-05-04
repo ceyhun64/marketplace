@@ -81,3 +81,64 @@ export function useDownloadInvoice() {
     },
   });
 }
+
+// ── Accounting Entries ────────────────────────────────────────────────────────
+
+import type { AccountingEntry } from "@/types/entities";
+
+export const accountingKeys = {
+  all: ["accounting"] as const,
+  admin: (filters?: object) => [...accountingKeys.all, "admin", filters] as const,
+  merchant: (filters?: object) => [...accountingKeys.all, "merchant", filters] as const,
+};
+
+/** Admin: tüm muhasebe kayıtlarını listele (M3 — tam iz) */
+export function useAdminAccountingEntries(filters?: {
+  page?: number;
+  limit?: number;
+  merchantId?: string;
+  entryType?: string;
+}) {
+  return useQuery({
+    queryKey: accountingKeys.admin(filters),
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.page) params.set("page", String(filters.page));
+      if (filters?.limit) params.set("limit", String(filters.limit));
+      if (filters?.merchantId) params.set("merchantId", filters.merchantId);
+      if (filters?.entryType) params.set("entryType", filters.entryType);
+      const { data } = await api.get<{
+        items: AccountingEntry[];
+        totalCount: number;
+        page: number;
+        limit: number;
+      }>(`/api/invoices/accounting?${params}`);
+      return data;
+    },
+  });
+}
+
+/** Merchant: kendi muhasebe kayıtlarını listele (M3 — tam iz) */
+export function useMerchantAccountingEntries(filters?: {
+  page?: number;
+  limit?: number;
+  entryType?: string;
+}) {
+  return useQuery({
+    queryKey: accountingKeys.merchant(filters),
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.page) params.set("page", String(filters.page));
+      if (filters?.limit) params.set("limit", String(filters.limit));
+      if (filters?.entryType) params.set("entryType", filters.entryType);
+      const { data } = await api.get<{
+        items: AccountingEntry[];
+        totalCount: number;
+        page: number;
+        limit: number;
+      }>(`/api/invoices/accounting/merchant?${params}`);
+      return data;
+    },
+  });
+}
+
