@@ -35,22 +35,27 @@ public class AnalyticsService : IAnalyticsService
 
         var merchantOrders = items.GroupBy(i => i.Order).Select(g => g.Key).ToList();
 
+        // Kanal ayrımlı periyot verisi — Marketplace + EStore ayrı kayıt olarak döner
         var salesByPeriod = merchantOrders
             .GroupBy(o =>
-                period.ToLower() switch
+            (
+                Label: period.ToLower() switch
                 {
                     "daily" => o.CreatedAt.ToString("HH:00"),
                     "weekly" => o.CreatedAt.DayOfWeek.ToString(),
                     _ => o.CreatedAt.ToString("yyyy-MM-dd"),
-                }
-            )
+                },
+                Source: o.Source == OrderSource.Marketplace ? "MARKETPLACE" : "ESTORE"
+            ))
             .Select(g => new SalesPeriodDto
             {
-                Label = g.Key,
+                Label = g.Key.Label,
                 Revenue = g.Sum(o => o.TotalAmount),
                 OrderCount = g.Count(),
+                Source = g.Key.Source,
             })
             .OrderBy(x => x.Label)
+            .ThenBy(x => x.Source)
             .ToList();
 
         return new MerchantSalesDto

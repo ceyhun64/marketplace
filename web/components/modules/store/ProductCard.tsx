@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ShoppingCart, Store, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/types/entities";
+import { WishlistButton } from "@/components/modules/store/WishlistButton";
 
 interface ProductCardProps {
   product: Product;
@@ -101,6 +102,15 @@ export function ProductCard({
             ))}
           </div>
         )}
+
+        {/* Wishlist icon — top-right overlay */}
+        <div className="absolute right-2.5 top-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <WishlistButton
+            productId={product.id}
+            productName={product.name}
+            variant="icon"
+          />
+        </div>
       </Link>
 
       {/* Info */}

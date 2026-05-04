@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ShoppingBag, Star, Heart } from "lucide-react";
+import { ArrowRight, ShoppingBag, Star } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/lib/api";
+import { WishlistButton } from "@/components/modules/store/WishlistButton";
 
 interface ProductOffer {
   id: string;
@@ -166,16 +169,39 @@ const TABS = [
 ];
 
 export default function FeaturedProducts() {
-  const [wishlist, setWishlist] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState("featured");
 
-  const toggleWishlist = (id: string) => {
-    setWishlist((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
+  // Gerçek API'den ürünleri çek
+  const { data: apiData, isLoading } = useQuery({
+    queryKey: ["featured-products", activeTab],
+    queryFn: async () => {
+      const params = new URLSearchParams({ limit: "8" });
+      const { data } = await api.get(`/api/products/featured?${params}`);
+      return data;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // API'den gelen ürünleri ProductOffer formatına çevir
+  const apiProducts: ProductOffer[] = Array.isArray(apiData)
+    ? apiData.map((p: any) => ({
+        id: p.id,
+        productId: p.id,
+        productName: p.name,
+        categoryName: p.category?.name ?? "",
+        merchantName: p.merchant?.storeName ?? "",
+        merchantSlug: p.merchant?.slug ?? "",
+        price: p.price,
+        stock: p.stock,
+        imageUrl: p.images?.[0] ?? "",
+        isBuyBox: true,
+        rating: 4.5,
+        reviewCount: 0,
+        eta: "2-4 iş günü",
+      }))
+    : MOCK_PRODUCTS;
+
+  const products = apiProducts.length > 0 ? apiProducts : MOCK_PRODUCTS;
 
   return (
     <section className="py-20 lg:py-24">
@@ -245,12 +271,10 @@ export default function FeaturedProducts() {
 
         {/* Products grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-6">
-          {MOCK_PRODUCTS.map((product) => (
+          {products.map((product) => (
             <ProductCard
               key={product.id}
               product={product}
-              isWishlisted={wishlist.has(product.id)}
-              onWishlist={() => toggleWishlist(product.id)}
             />
           ))}
         </div>
@@ -290,12 +314,8 @@ export default function FeaturedProducts() {
 
 function ProductCard({
   product,
-  isWishlisted,
-  onWishlist,
 }: {
   product: ProductOffer;
-  isWishlisted: boolean;
-  onWishlist: () => void;
 }) {
   const discount = product.originalPrice
     ? Math.round(
@@ -364,22 +384,13 @@ function ProductCard({
         </div>
 
         {/* Wishlist */}
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            onWishlist();
-          }}
-          className="absolute top-3 right-3 w-9 h-9 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
-          style={{ boxShadow: "0 2px 8px rgba(51,51,51,0.12)" }}
-        >
-          <Heart
-            className="w-4 h-4"
-            style={{
-              color: isWishlisted ? "var(--red)" : "var(--charcoal-soft)",
-              fill: isWishlisted ? "var(--red)" : "none",
-            }}
+        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <WishlistButton
+            productId={product.productId}
+            productName={product.productName}
+            variant="icon"
           />
-        </button>
+        </div>
 
         {/* Quick Add */}
         <div className="absolute bottom-3 left-3 right-3 translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">

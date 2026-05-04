@@ -58,9 +58,48 @@ public class StoreController : ControllerBase
         );
     }
 
+    // ── GET /api/store/by-domain/{domain} — Custom domain'den store lookup ───
+    /// <summary>
+    /// Özel domain veya subdomain ile gelen isteklerde mağazayı bulur.
+    /// Nginx custom domain proxy'si bu endpoint'i çağırarak slug'ı öğrenir.
+    /// </summary>
+    [HttpGet("by-domain/{domain}")]
+    public async Task<IActionResult> GetStoreByDomain(string domain)
+    {
+        if (string.IsNullOrWhiteSpace(domain))
+            return BadRequest(new { message = "Domain boş olamaz." });
+
+        var store = await _db
+            .MerchantProfiles.Where(m =>
+                m.IsActive && m.DomainVerified && m.CustomDomain == domain
+            )
+            .Select(m => new
+            {
+                m.Id,
+                m.StoreName,
+                m.Slug,
+                m.Description,
+                m.LogoUrl,
+                m.BannerUrl,
+                m.CustomDomain,
+                m.DomainVerified,
+                m.CreatedAt,
+                ProductCount = m.Products.Count(p =>
+                    p.PublishToStore && p.Stock > 0 && !p.IsDeleted
+                ),
+            })
+            .FirstOrDefaultAsync();
+
+        if (store == null)
+            return NotFound(new { message = "Bu domain ile eşleşen doğrulanmış mağaza bulunamadı." });
+
+        return Ok(store);
+    }
+
     [HttpGet("{slug}")]
     public async Task<IActionResult> GetStore(string slug)
     {
+        // Önce slug ile ara
         var store = await _db
             .MerchantProfiles.Where(m => m.Slug == slug && m.IsActive)
             .Select(m => new
@@ -82,6 +121,31 @@ public class StoreController : ControllerBase
             })
             .FirstOrDefaultAsync();
 
+        // Slug bulunamazsa özel domain ile dene (middleware custom domain → /store/{domain} rewrite yapar)
+        if (store == null && slug.Contains('.'))
+        {
+            store = await _db
+                .MerchantProfiles.Where(m => m.IsActive && m.DomainVerified && m.CustomDomain == slug)
+                .Select(m => new
+                {
+                    m.Id,
+                    m.StoreName,
+                    m.Slug,
+                    m.Description,
+                    m.LogoUrl,
+                    m.BannerUrl,
+                    m.CustomDomain,
+                    m.DomainVerified,
+                    m.Address,
+                    m.City,
+                    m.CreatedAt,
+                    ProductCount = m.Products.Count(p =>
+                        p.PublishToStore && p.Stock > 0 && !p.IsDeleted
+                    ),
+                })
+                .FirstOrDefaultAsync();
+        }
+
         if (store == null)
             return NotFound(new { message = "Mağaza bulunamadı." });
         return Ok(store);
@@ -99,6 +163,12 @@ public class StoreController : ControllerBase
         var merchant = await _db.MerchantProfiles.FirstOrDefaultAsync(m =>
             m.Slug == slug && m.IsActive
         );
+
+        // Custom domain fallback
+        if (merchant == null && slug.Contains('.'))
+            merchant = await _db.MerchantProfiles.FirstOrDefaultAsync(m =>
+                m.IsActive && m.DomainVerified && m.CustomDomain == slug
+            );
 
         if (merchant == null)
             return NotFound(new { message = "Mağaza bulunamadı." });
@@ -181,6 +251,11 @@ public class StoreController : ControllerBase
         var merchant = await _db.MerchantProfiles.FirstOrDefaultAsync(m =>
             m.Slug == slug && m.IsActive
         );
+
+        if (merchant == null && slug.Contains('.'))
+            merchant = await _db.MerchantProfiles.FirstOrDefaultAsync(m =>
+                m.IsActive && m.DomainVerified && m.CustomDomain == slug
+            );
 
         if (merchant == null)
             return NotFound(new { message = "Mağaza bulunamadı." });

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Star, Package, ShoppingCart, Clock } from "lucide-react";
 import { AddToCartButton } from "@/components/modules/store/AddToCartButton";
+import { WishlistButton } from "@/components/modules/store/WishlistButton";
 
 interface Props {
   params: Promise<{ slug: string; id: string }>;
@@ -192,6 +193,11 @@ export default async function StoreProductPage({
                   price={storeOffer.price}
                   merchantId={params.slug} // ya da gerçek merchantId varsa onu kullan
                   disabled={storeOffer.stock === 0}
+                />
+                <WishlistButton
+                  productId={product.id}
+                  productName={product.name}
+                  className="w-full"
                 />
               </>
             )}

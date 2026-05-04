@@ -4,6 +4,7 @@ import { fetchISR } from "@/lib/fetch";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AddToCartButton } from "@/components/modules/store/AddToCartButton";
+import { WishlistButton } from "@/components/modules/store/WishlistButton";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -182,6 +183,11 @@ async function ProductDetail({
                 price={buyBox.price}
                 merchantId={buyBox.merchantId}
                 image={product.images?.[0]}
+              />
+              <WishlistButton
+                productId={product.id}
+                productName={product.name}
+                className="w-full"
               />
             </div>
           ) : (

@@ -22,6 +22,11 @@ public class SalesPeriodDto
     public string Label { get; set; } = string.Empty;
     public decimal Revenue { get; set; }
     public int OrderCount { get; set; }
+    /// <summary>
+    /// Sipariş kaynağı — "MARKETPLACE" | "ESTORE" | null (toplam).
+    /// Merchant analitik grafiğinde kanal ayrımı için kullanılır.
+    /// </summary>
+    public string? Source { get; set; }
 }
 
 public class ChannelStatsDto
