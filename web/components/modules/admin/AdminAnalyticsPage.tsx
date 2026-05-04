@@ -92,7 +92,10 @@ export default function AdminAnalyticsPage() {
 
   // revenueRaw is RevenueReportDto: { period, rows, chartData }
   // chartData has time-series: [{ date, revenue, orderCount, label }]
-  const rawChartData = (revenueRaw as any)?.chartData ?? toArray(revenueRaw) ?? toArray(overview?.revenueChart);
+  const rawChartData =
+    (revenueRaw as any)?.chartData ??
+    toArray(revenueRaw) ??
+    toArray(overview?.revenueChart);
 
   const chartRevenue = rawChartData.map((d: any) => ({
     gun: d.label ?? d.date?.slice(0, 10) ?? "",
