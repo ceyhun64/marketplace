@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -40,20 +41,23 @@ export const wishlistKeys = {
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
-/** Müşterinin istek listesini getirir */
+/** Müşterinin istek listesini getirir — sadece giriş yapılmışsa */
 export function useWishlist() {
+  const { user } = useAuth();
   return useQuery({
     queryKey: wishlistKeys.list(),
     queryFn: async () => {
       const { data } = await api.get<WishlistResponse>("/api/wishlist");
       return data;
     },
+    enabled: !!user, // ✅ Giriş yapılmamışsa API çağrısı yapılmaz
     staleTime: 1000 * 60 * 2,
   });
 }
 
 /** Belirli bir ürünün istek listesinde olup olmadığını kontrol eder */
 export function useWishlistCheck(productId: string) {
+  const { user } = useAuth();
   return useQuery({
     queryKey: wishlistKeys.check(productId),
     queryFn: async () => {
@@ -62,7 +66,7 @@ export function useWishlistCheck(productId: string) {
       );
       return data;
     },
-    enabled: !!productId,
+    enabled: !!user && !!productId, // ✅ Sadece giriş yapılmışsa
     staleTime: 1000 * 60,
   });
 }

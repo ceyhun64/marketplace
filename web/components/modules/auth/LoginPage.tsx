@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import PasswordInput from "@/components/ui/password-input";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, isLoading, error, clearError } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,6 +24,12 @@ export default function LoginPage() {
       await login(email, password);
       const { user } = useAuth.getState();
       if (!user) return;
+      // ?redirect parametresi varsa oraya git (sadece Customer için)
+      const redirect = searchParams.get("redirect");
+      if (redirect && user.role === "Customer") {
+        router.push(redirect);
+        return;
+      }
       const roleRoutes: Record<string, string> = {
         Admin: "/admin",
         Merchant: "/merchant",

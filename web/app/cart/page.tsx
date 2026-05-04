@@ -17,6 +17,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useCart, useCartSummary } from "@/hooks/use-cart";
+import { useAuth } from "@/hooks/use-auth";
 
 const inputStyle: React.CSSProperties = {
   flex: 1,
@@ -37,9 +38,19 @@ export default function CartPage() {
     useCart();
   const summary = useCartSummary();
   const router = useRouter();
+  const { user } = useAuth();
   const [coupon, setCoupon] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+
+  // Giriş yapılmamışsa login sayfasına yönlendir
+  const handleCheckout = () => {
+    if (!user) {
+      router.push("/auth/login?redirect=/checkout");
+    } else {
+      router.push("/checkout");
+    }
+  };
 
   const handleRemove = (offerId: string) => {
     setRemovingId(offerId);
@@ -651,7 +662,7 @@ export default function CartPage() {
 
               {/* Checkout Button */}
               <button
-                onClick={() => router.push("/checkout")}
+                onClick={handleCheckout}
                 className="w-full mt-6 h-13 py-3.5 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold text-white transition-all"
                 style={{
                   background: "var(--charcoal)",
@@ -666,9 +677,16 @@ export default function CartPage() {
                   (e.currentTarget.style.background = "var(--charcoal)")
                 }
               >
-                Proceed to Checkout
+                {user ? "Siparişi Tamamla" : "Giriş Yap & Sipariş Ver"}
                 <ArrowRight className="w-4 h-4" />
               </button>
+
+              {/* Misafir bilgi notu */}
+              {!user && (
+                <p className="mt-3 text-center font-mono text-[10px]" style={{ color: "var(--charcoal-soft)" }}>
+                  Sepetiniz giriş yapana kadar bu cihazda saklanır.
+                </p>
+              )}
 
               {/* Trust signals */}
               <div className="mt-4 flex items-center justify-center gap-4">
