@@ -140,6 +140,8 @@ public class ProductsController : ControllerBase
                 p.PublishToStore,
                 p.IsApproved,
                 p.CreatedAt,
+                CategoryName = p.Category == null ? null : p.Category.Name,
+                CategorySlug = p.Category == null ? null : p.Category.Slug,
                 Category = p.Category == null
                     ? null
                     : new
@@ -159,7 +161,62 @@ public class ProductsController : ControllerBase
 
         if (product == null)
             return NotFound(new { message = "Ürün bulunamadı." });
-        return Ok(product);
+
+        // Frontend { data: ... } yapısı bekliyor
+        return Ok(new { data = product });
+    }
+
+    /// <summary>Ürün buy-box — en iyi fiyatlı aktif teklif</summary>
+    [HttpGet("{id:guid}/buybox")]
+    public async Task<IActionResult> GetBuyBox(Guid id, [FromQuery] decimal? customerLat = null, [FromQuery] decimal? customerLng = null)
+    {
+        var product = await _db.Products
+            .Include(p => p.Merchant)
+            .Where(p => p.Id == id && p.IsApproved && p.Stock > 0)
+            .Select(p => new
+            {
+                OfferId = p.Id,
+                Price = p.Price,
+                Stock = p.Stock,
+                MerchantId = p.Merchant.Id,
+                MerchantName = p.Merchant.StoreName,
+                MerchantSlug = p.Merchant.Slug,
+                Rating = (double?)4.5,
+                Eta = "2-4 iş günü",
+                ShippingRate = "STANDARD",
+            })
+            .OrderBy(p => p.Price)
+            .FirstOrDefaultAsync();
+
+        if (product == null)
+            return Ok(new { data = (object?)null });
+
+        return Ok(new { data = product });
+    }
+
+    /// <summary>Ürün teklifleri — tüm satıcılar</summary>
+    [HttpGet("{id:guid}/offers")]
+    public async Task<IActionResult> GetOffers(Guid id, [FromQuery] decimal? customerLat = null, [FromQuery] decimal? customerLng = null)
+    {
+        var offers = await _db.Products
+            .Include(p => p.Merchant)
+            .Where(p => p.Id == id && p.IsApproved && p.Stock > 0)
+            .Select(p => new
+            {
+                Id = p.Id,
+                Price = p.Price,
+                Stock = p.Stock,
+                MerchantId = p.Merchant.Id,
+                MerchantName = p.Merchant.StoreName,
+                MerchantSlug = p.Merchant.Slug,
+                Rating = (double?)4.5,
+                Eta = "2-4 iş günü",
+                ShippingRate = "STANDARD",
+            })
+            .OrderBy(p => p.Price)
+            .ToListAsync();
+
+        return Ok(new { data = offers });
     }
 
     /// <summary>Full-text arama — kategori, alt kategori, tag, fiyat filtreli</summary>

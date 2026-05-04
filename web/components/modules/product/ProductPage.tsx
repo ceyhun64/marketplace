@@ -25,9 +25,9 @@ async function ProductDetail({
       : "";
 
   const [productData, buyBoxData, offersData] = await Promise.all([
-    fetchISR<{ data: any }>(`/products/${productId}`),
-    fetchISR<{ data: any }>(`/products/${productId}/buybox${etaParams}`),
-    fetchISR<{ data: any[] }>(`/products/${productId}/offers${etaParams}`),
+    fetchISR<{ data: any }>(`/api/products/${productId}`),
+    fetchISR<{ data: any }>(`/api/products/${productId}/buybox${etaParams}`),
+    fetchISR<{ data: any[] }>(`/api/products/${productId}/offers${etaParams}`),
   ]);
 
   if (!productData?.data) notFound();
@@ -304,7 +304,7 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
 
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params;
-  const data = await fetchISR<{ data: any }>(`/products/${id}`);
+  const data = await fetchISR<{ data: any }>(`/api/products/${id}`);
   const product = data?.data;
   return {
     title: product ? `${product.name} — Marketplace` : "Product",
