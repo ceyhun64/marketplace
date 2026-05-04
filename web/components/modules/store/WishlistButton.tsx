@@ -11,6 +11,9 @@ import { useAuth } from "@/hooks/use-auth";
 import api from "@/lib/api";
 import { toast } from "sonner";
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isValidUUID = (id: string) => UUID_REGEX.test(id);
+
 interface WishlistButtonProps {
   productId: string;
   productName?: string;
@@ -43,7 +46,7 @@ export function WishlistButton({
       }>(`/api/wishlist/check/${productId}`);
       return data;
     },
-    enabled: !!user, // Sadece giriş yapılmışsa çalış
+    enabled: !!user && isValidUUID(productId), // Sadece giriş yapılmışsa ve geçerli UUID ise çalış
     staleTime: 1000 * 60 * 2,
   });
 

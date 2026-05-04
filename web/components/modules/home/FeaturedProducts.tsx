@@ -2,166 +2,168 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ShoppingBag, Star } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { WishlistButton } from "@/components/modules/store/WishlistButton";
+import { ProductCard } from "@/components/modules/store/ProductCard";
+import type { Product } from "@/types/entities";
 
-// UUID formatını kontrol eder — mock "p1" gibi ID'ler geçersiz
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const isValidUUID = (id: string) => UUID_REGEX.test(id);
-
-interface ProductOffer {
-  id: string;
-  productId: string;
-  productName: string;
-  categoryName: string;
-  merchantName: string;
-  merchantSlug: string;
-  price: number;
-  originalPrice?: number;
-  rating: number;
-  reviewCount: number;
-  stock: number;
-  imageUrl: string;
-  isBuyBox: boolean;
-  eta: string;
-}
-
-// ── Gerçek ürün görselleri — Unsplash CDN (ücretsiz, lisanssız) ─────────────
-// Kendi görselinizi eklemek için imageUrl alanını güncelleyin.
-const MOCK_PRODUCTS: ProductOffer[] = [
+// Sabit mock UUID'ler — gerçek UUID formatında olduğu için WishlistButton
+// API isteği yapmaz (backend'de bu ID'ler yoktur ama 500 hatası da vermez,
+// çünkü WishlistButton artık sadece user giriş yapmışsa istek atar).
+// API'den gerçek ürünler geldiğinde mock veriler zaten kullanılmaz.
+const MOCK_PRODUCTS: Product[] = [
   {
-    id: "1",
-    productId: "p1",
-    productName: "Wireless Bluetooth Headphones Pro",
-    categoryName: "Electronics",
-    merchantName: "TechStore TR",
+    id: "00000000-0000-0000-0000-000000000001",
+    merchantId: "00000000-0000-0000-0000-000000000000",
+    merchantStoreName: "TechStore TR",
     merchantSlug: "techstore-tr",
-    price: 899,
-    originalPrice: 1299,
-    rating: 4.8,
-    reviewCount: 234,
-    stock: 45,
-    imageUrl:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80",
-    isBuyBox: true,
-    eta: "Tomorrow",
-  },
-  {
-    id: "2",
-    productId: "p2",
-    productName: "Organic Cotton Athletic Set",
-    categoryName: "Fashion",
-    merchantName: "Natural Wear",
-    merchantSlug: "natural-wear",
-    price: 249,
-    rating: 4.6,
-    reviewCount: 89,
-    stock: 120,
-    imageUrl:
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80",
-    isBuyBox: true,
-    eta: "2-3 days",
-  },
-  {
-    id: "3",
-    productId: "p3",
-    productName: "Ceramic Coffee Cup Set",
-    categoryName: "Home & Living",
-    merchantName: "Home Decor Plus",
-    merchantSlug: "home-decor-plus",
-    price: 349,
-    originalPrice: 499,
-    rating: 4.9,
-    reviewCount: 412,
-    stock: 28,
-    imageUrl:
-      "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=600&q=80",
-    isBuyBox: true,
-    eta: "Today",
-  },
-  {
-    id: "4",
-    productId: "p4",
-    productName: "Professional Yoga Mat 6mm",
-    categoryName: "Sports",
-    merchantName: "SportLife",
-    merchantSlug: "sportlife",
-    price: 599,
-    rating: 4.7,
-    reviewCount: 156,
-    stock: 67,
-    imageUrl:
-      "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=600&q=80",
-    isBuyBox: true,
-    eta: "2-3 days",
-  },
-  {
-    id: "5",
-    productId: "p5",
-    productName: "Mechanical Keyboard RGB Backlit",
+    name: "Wireless Bluetooth Headphones Pro",
+    description: "",
+    categoryId: "",
     categoryName: "Electronics",
-    merchantName: "PC World",
-    merchantSlug: "pc-world",
-    price: 1299,
-    originalPrice: 1799,
-    rating: 4.5,
-    reviewCount: 78,
-    stock: 15,
-    imageUrl:
-      "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=600&q=80",
-    isBuyBox: true,
-    eta: "3-4 days",
+    images: ["https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80"],
+    tags: [],
+    price: 899,
+    stock: 45,
+    publishToMarket: true,
+    publishToStore: true,
+    isApproved: true,
+    isDeleted: false,
+    createdAt: "",
   },
   {
-    id: "6",
-    productId: "p6",
-    productName: "Natural Argan Oil Shampoo",
-    categoryName: "Cosmetics",
-    merchantName: "Nature Beauty",
-    merchantSlug: "nature-beauty",
-    price: 129,
-    rating: 4.6,
-    reviewCount: 328,
-    stock: 200,
-    imageUrl:
-      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=600&q=80",
-    isBuyBox: true,
-    eta: "Tomorrow",
-  },
-  {
-    id: "7",
-    productId: "p7",
-    productName: "Kids Wooden Puzzle Set",
-    categoryName: "Gaming & Hobbies",
-    merchantName: "Toy World",
-    merchantSlug: "toy-world",
-    price: 189,
-    originalPrice: 259,
-    rating: 4.8,
-    reviewCount: 94,
-    stock: 53,
-    imageUrl:
-      "https://images.unsplash.com/photo-1596493575896-43e4e6a7b7d5?w=600&q=80",
-    isBuyBox: true,
-    eta: "2-3 days",
-  },
-  {
-    id: "8",
-    productId: "p8",
-    productName: "Minimalist Leather Wallet",
+    id: "00000000-0000-0000-0000-000000000002",
+    merchantId: "00000000-0000-0000-0000-000000000000",
+    merchantStoreName: "Natural Wear",
+    merchantSlug: "natural-wear",
+    name: "Organic Cotton Athletic Set",
+    description: "",
+    categoryId: "",
     categoryName: "Fashion",
-    merchantName: "Leather Craft",
+    images: ["https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80"],
+    tags: [],
+    price: 249,
+    stock: 120,
+    publishToMarket: true,
+    publishToStore: true,
+    isApproved: true,
+    isDeleted: false,
+    createdAt: "",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000003",
+    merchantId: "00000000-0000-0000-0000-000000000000",
+    merchantStoreName: "Home Decor Plus",
+    merchantSlug: "home-decor-plus",
+    name: "Ceramic Coffee Cup Set",
+    description: "",
+    categoryId: "",
+    categoryName: "Home & Living",
+    images: ["https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=600&q=80"],
+    tags: ["sale"],
+    price: 349,
+    stock: 28,
+    publishToMarket: true,
+    publishToStore: true,
+    isApproved: true,
+    isDeleted: false,
+    createdAt: "",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000004",
+    merchantId: "00000000-0000-0000-0000-000000000000",
+    merchantStoreName: "SportLife",
+    merchantSlug: "sportlife",
+    name: "Professional Yoga Mat 6mm",
+    description: "",
+    categoryId: "",
+    categoryName: "Sports",
+    images: ["https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=600&q=80"],
+    tags: [],
+    price: 599,
+    stock: 67,
+    publishToMarket: true,
+    publishToStore: true,
+    isApproved: true,
+    isDeleted: false,
+    createdAt: "",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000005",
+    merchantId: "00000000-0000-0000-0000-000000000000",
+    merchantStoreName: "PC World",
+    merchantSlug: "pc-world",
+    name: "Mechanical Keyboard RGB Backlit",
+    description: "",
+    categoryId: "",
+    categoryName: "Electronics",
+    images: ["https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=600&q=80"],
+    tags: ["sale"],
+    price: 1299,
+    stock: 15,
+    publishToMarket: true,
+    publishToStore: true,
+    isApproved: true,
+    isDeleted: false,
+    createdAt: "",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000006",
+    merchantId: "00000000-0000-0000-0000-000000000000",
+    merchantStoreName: "Nature Beauty",
+    merchantSlug: "nature-beauty",
+    name: "Natural Argan Oil Shampoo",
+    description: "",
+    categoryId: "",
+    categoryName: "Cosmetics",
+    images: ["https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=600&q=80"],
+    tags: [],
+    price: 129,
+    stock: 200,
+    publishToMarket: true,
+    publishToStore: true,
+    isApproved: true,
+    isDeleted: false,
+    createdAt: "",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000007",
+    merchantId: "00000000-0000-0000-0000-000000000000",
+    merchantStoreName: "Toy World",
+    merchantSlug: "toy-world",
+    name: "Kids Wooden Puzzle Set",
+    description: "",
+    categoryId: "",
+    categoryName: "Gaming & Hobbies",
+    images: ["https://images.unsplash.com/photo-1596493575896-43e4e6a7b7d5?w=600&q=80"],
+    tags: ["sale"],
+    price: 189,
+    stock: 53,
+    publishToMarket: true,
+    publishToStore: true,
+    isApproved: true,
+    isDeleted: false,
+    createdAt: "",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000008",
+    merchantId: "00000000-0000-0000-0000-000000000000",
+    merchantStoreName: "Leather Craft",
     merchantSlug: "leather-craft",
+    name: "Minimalist Leather Wallet",
+    description: "",
+    categoryId: "",
+    categoryName: "Fashion",
+    images: ["https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&q=80"],
+    tags: [],
     price: 449,
-    rating: 4.7,
-    reviewCount: 167,
     stock: 38,
-    imageUrl:
-      "https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&q=80",
-    isBuyBox: true,
-    eta: "Tomorrow",
+    publishToMarket: true,
+    publishToStore: true,
+    isApproved: true,
+    isDeleted: false,
+    createdAt: "",
   },
 ];
 
@@ -175,7 +177,6 @@ const TABS = [
 export default function FeaturedProducts() {
   const [activeTab, setActiveTab] = useState("featured");
 
-  // Gerçek API'den ürünleri çek
   const { data: apiData, isLoading } = useQuery({
     queryKey: ["featured-products", activeTab],
     queryFn: async () => {
@@ -186,26 +187,32 @@ export default function FeaturedProducts() {
     staleTime: 1000 * 60 * 5,
   });
 
-  // API'den gelen ürünleri ProductOffer formatına çevir
-  const apiProducts: ProductOffer[] = Array.isArray(apiData?.items)
-    ? apiData.items.map((p: any) => ({
-        id: p.id,
-        productId: p.id,
-        productName: p.name,
-        categoryName: p.category?.name ?? "",
-        merchantName: p.merchant?.storeName ?? "",
-        merchantSlug: p.merchant?.slug ?? "",
-        price: p.price,
-        stock: p.stock,
-        imageUrl: p.images?.[0] ?? "",
-        isBuyBox: true,
-        rating: 4.5,
-        reviewCount: 0,
-        eta: "2-4 iş günü",
-      }))
+  // API'den gelen ürünleri Product tipine dönüştür
+  const apiProducts: Product[] = Array.isArray(apiData?.items)
+    ? apiData.items.map(
+        (p: any): Product => ({
+          id: p.id,
+          merchantId: p.merchantId ?? "",
+          merchantStoreName: p.merchant?.storeName ?? p.merchantStoreName ?? "",
+          merchantSlug: p.merchant?.slug ?? p.merchantSlug ?? "",
+          name: p.name,
+          description: p.description ?? "",
+          categoryId: p.categoryId ?? "",
+          categoryName: p.category?.name ?? p.categoryName ?? "",
+          images: p.images ?? [],
+          tags: p.tags ?? [],
+          price: p.price,
+          stock: p.stock,
+          publishToMarket: p.publishToMarket ?? true,
+          publishToStore: p.publishToStore ?? true,
+          isApproved: p.isApproved ?? true,
+          isDeleted: p.isDeleted ?? false,
+          createdAt: p.createdAt ?? "",
+          updatedAt: p.updatedAt,
+        }),
+      )
     : [];
 
-  // Mock ürünlerde geçerli UUID olmadığı için linkler devre dışı — sadece gerçek API verisi kullanılır
   const products = apiProducts.length > 0 ? apiProducts : MOCK_PRODUCTS;
 
   return (
@@ -274,14 +281,22 @@ export default function FeaturedProducts() {
           ))}
         </div>
 
-        {/* Products grid */}
+        {/* Products grid — tek ProductCard bileşeni kullanılır */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-6">
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-            />
-          ))}
+          {isLoading
+            ? Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="rounded-2xl bg-gray-100 animate-pulse aspect-[3/4]"
+                />
+              ))
+            : products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  context="marketplace"
+                />
+              ))}
         </div>
 
         {/* View All CTA */}
@@ -314,184 +329,5 @@ export default function FeaturedProducts() {
         </div>
       </div>
     </section>
-  );
-}
-
-function ProductCard({
-  product,
-}: {
-  product: ProductOffer;
-}) {
-  const discount = product.originalPrice
-    ? Math.round(
-        ((product.originalPrice - product.price) / product.originalPrice) * 100,
-      )
-    : 0;
-
-  return (
-    <div
-      className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
-      style={{
-        boxShadow: "0 1px 3px rgba(51,51,51,0.06)",
-        border: "1px solid rgba(51,51,51,0.06)",
-      }}
-    >
-      {/* Red accent top */}
-      <div
-        className="h-[3px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
-        style={{ background: "var(--red)" }}
-      />
-
-      {/* Image Container */}
-      <div
-        className="relative aspect-[4/5] overflow-hidden"
-        style={{ background: "var(--off-white)" }}
-      >
-        {/* Gerçek ürün görseli */}
-        <img
-          src={product.imageUrl}
-          alt={product.productName}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
-          onError={(e) => {
-            // Görsel yüklenemezse fallback göster
-            const target = e.currentTarget as HTMLImageElement;
-            target.style.display = "none";
-            const parent = target.parentElement;
-            if (parent) {
-              const fallback = document.createElement("div");
-              fallback.className =
-                "w-full h-full flex items-center justify-center";
-              fallback.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" style="color:rgba(51,51,51,0.15)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" x2="21" y1="6" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`;
-              parent.appendChild(fallback);
-            }
-          }}
-        />
-
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-          {discount > 0 && (
-            <span
-              className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium text-white"
-              style={{ background: "var(--red)", letterSpacing: "0.05em" }}
-            >
-              -{discount}%
-            </span>
-          )}
-          {product.isBuyBox && (
-            <span
-              className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium text-white"
-              style={{ background: "var(--charcoal)", letterSpacing: "0.05em" }}
-            >
-              BEST OFFER
-            </span>
-          )}
-        </div>
-
-        {/* Wishlist */}
-        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <WishlistButton
-            productId={product.productId}
-            productName={product.productName}
-            variant="icon"
-          />
-        </div>
-
-        {/* Quick Add */}
-        <div className="absolute bottom-3 left-3 right-3 translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-          {isValidUUID(product.productId) ? (
-          <Link
-            href={`/product/${product.productId}`}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold text-white transition-colors"
-            style={{
-              background: "var(--charcoal)",
-              fontFamily: "var(--font-body)",
-              letterSpacing: "0.03em",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.background = "var(--red)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.background = "var(--charcoal)")
-            }
-          >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            View Product
-          </Link>
-          ) : (
-          <span
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold text-white cursor-default"
-            style={{
-              background: "var(--charcoal)",
-              fontFamily: "var(--font-body)",
-              letterSpacing: "0.03em",
-              opacity: 0.5,
-            }}
-          >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            View Product
-          </span>
-          )}
-        </div>
-      </div>
-
-      {/* Info */}
-      <div className="p-4 space-y-2">
-        <div className="flex justify-between items-center">
-          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--charcoal-soft)]">
-            {product.categoryName}
-          </span>
-          <span
-            className="font-mono text-[10px] uppercase tracking-[0.08em]"
-            style={{ color: "var(--red)" }}
-          >
-            {product.merchantName}
-          </span>
-        </div>
-
-        {isValidUUID(product.productId) ? (
-        <Link href={`/product/${product.productId}`}>
-          <h3
-            className="font-bold text-[14px] leading-snug line-clamp-2 text-[var(--charcoal)] hover:text-[var(--red)] transition-colors"
-            style={{ fontFamily: "var(--font-body)" }}
-          >
-            {product.productName}
-          </h3>
-        </Link>
-        ) : (
-          <h3
-            className="font-bold text-[14px] leading-snug line-clamp-2 text-[var(--charcoal)]"
-            style={{ fontFamily: "var(--font-body)" }}
-          >
-            {product.productName}
-          </h3>
-        )}
-
-        <div className="flex items-center justify-between pt-1">
-          <div>
-            <span
-              className="text-lg font-bold text-[var(--charcoal)] tracking-tight"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              ₺{product.price.toLocaleString("en-US")}
-            </span>
-            {product.originalPrice && (
-              <span className="block text-xs text-[var(--charcoal-soft)] line-through font-mono">
-                ₺{product.originalPrice.toLocaleString("en-US")}
-              </span>
-            )}
-          </div>
-          <div
-            className="flex items-center gap-1 px-2 py-1 rounded-lg"
-            style={{ background: "var(--off-white)" }}
-          >
-            <Star className="w-3 h-3 fill-[var(--red)] text-[var(--red)]" />
-            <span className="font-mono text-[11px] font-medium text-[var(--charcoal)]">
-              {product.rating}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
