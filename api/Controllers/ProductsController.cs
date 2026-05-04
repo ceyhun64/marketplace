@@ -654,21 +654,3 @@ public class ProductsController : ControllerBase
     }
 }
 
-// ── Local request / response types ─────────────────────────────────────────
-
-/// <summary>
-    public string? Description { get; set; }
-    public string? ShortDescription { get; set; }
-    public Guid? CategoryId { get; set; }
-    public List<string>? Images { get; set; }
-    public List<string>? Tags { get; set; }
-    public decimal? Price { get; set; }
-    public int? Stock { get; set; }
-    public bool? PublishToMarket { get; set; }
-    public bool? PublishToStore { get; set; }
-}
-
-public class RejectProductRequest
-{
-    public string? Reason { get; set; }
-}

@@ -142,3 +142,8 @@ public class UpdateProductRequest
     public bool? PublishToMarket { get; set; }
     public bool? PublishToStore { get; set; }
 }
+
+public class RejectProductRequest
+{
+    public string? Reason { get; set; }
+}

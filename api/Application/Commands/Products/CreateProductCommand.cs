@@ -3,6 +3,7 @@ using api.Domain.Enums;
 using api.Infrastructure.Persistence;
 using api.Infrastructure.Services;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace api.Application.Commands.Products;
 
