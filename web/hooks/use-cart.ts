@@ -49,9 +49,7 @@ interface CartState {
    * Giriş sonrası sunucudan gelen sepeti local sepet ile birleştirir.
    * Çakışma durumunda MAX quantity alınır (müşteri lehine).
    */
-  mergeWith: (
-    serverItems: Omit<CartItem, "quantity"> & { quantity: number }[],
-  ) => void;
+  mergeWith: (serverItems: CartItem[]) => void;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
