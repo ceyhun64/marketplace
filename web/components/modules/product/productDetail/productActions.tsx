@@ -1,15 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  Heart,
-  Minus,
-  Plus,
-  Share2,
-  ShoppingCart,
-  Upload,
-  BadgeCheck,
-} from "lucide-react";
+import { Heart, Minus, Plus, Share2, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ProductActionsProps {
@@ -18,11 +10,9 @@ interface ProductActionsProps {
   onAddToCart: () => void;
   onToggleFavorite: () => void;
   onShare: () => void;
-  onUploadImage: () => void;
   isFavorited: boolean;
-  hasUploadedImage: boolean;
   inStock: boolean;
-  sizeStockAvailable: boolean; // seçilen beden stokta var mı
+  sizeStockAvailable: boolean;
 }
 
 export default function ProductActions({
@@ -31,9 +21,7 @@ export default function ProductActions({
   onAddToCart,
   onToggleFavorite,
   onShare,
-  onUploadImage,
   isFavorited,
-  hasUploadedImage,
   inStock,
   sizeStockAvailable,
 }: ProductActionsProps) {
@@ -41,30 +29,7 @@ export default function ProductActions({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Resim Yükleme */}
-      <button
-        onClick={onUploadImage}
-        className={cn(
-          "h-12 w-full text-[11px] rounded-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm border",
-          hasUploadedImage
-            ? "bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
-            : "bg-white border-slate-200 text-slate-700 hover:border-slate-900 hover:bg-slate-50",
-        )}
-      >
-        {hasUploadedImage ? (
-          <>
-            <BadgeCheck size={16} className="text-orange-600" />
-            Farklı Resim Seç
-          </>
-        ) : (
-          <>
-            <Upload size={16} className="text-slate-500" />
-            Kendi Resmini Yükle
-          </>
-        )}
-      </button>
-
-      {/* Miktar + Sepete Ekle - Sadece quantity > 0 olduğunda göster */}
+      {/* Miktar + Sepete Ekle */}
       {quantity > 0 && (
         <div className="flex items-center gap-3">
           <div className="flex items-center bg-white h-12 px-4 gap-5 border border-slate-200 rounded-sm">
