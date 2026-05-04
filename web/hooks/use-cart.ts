@@ -1,3 +1,11 @@
+/**
+ * use-cart.ts  (güncellenmiş)
+ *
+ * Değişiklikler:
+ *  1. sessionStorage → localStorage  (sekme kapatınca kaybolmuyordu, şimdi tamamen kalıcı)
+ *  2. mergeGuestCart() export edildi → giriş sonrası server sepeti ile birleştirme için
+ */
+
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
@@ -37,6 +45,13 @@ interface CartState {
   clearCart: () => void;
   hasItem: (offerId: string) => boolean;
   getItemQuantity: (offerId: string) => number;
+  /**
+   * Giriş sonrası sunucudan gelen sepeti local sepet ile birleştirir.
+   * Çakışma durumunda MAX quantity alınır (müşteri lehine).
+   */
+  mergeWith: (
+    serverItems: Omit<CartItem, "quantity"> & { quantity: number }[],
+  ) => void;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -54,8 +69,6 @@ export const useCart = create<CartState>()(
       items: [],
       shippingRate: "REGULAR",
 
-      // ── Computed ─────────────────────────────────────────────────────────
-
       totalItems: () =>
         get().items.reduce((sum, item) => sum + item.quantity, 0),
 
@@ -66,8 +79,6 @@ export const useCart = create<CartState>()(
         get().items.length > 0 ? SHIPPING_COSTS[get().shippingRate] : 0,
 
       total: () => get().subtotal() + get().shippingCost(),
-
-      // ── Actions ──────────────────────────────────────────────────────────
 
       addItem: (newItem) =>
         set((state) => {
@@ -125,10 +136,42 @@ export const useCart = create<CartState>()(
 
       getItemQuantity: (offerId) =>
         get().items.find((i) => i.offerId === offerId)?.quantity ?? 0,
+
+      /**
+       * Sunucu sepetini local sepet ile birleştirir.
+       * Çakışmada MAX quantity kullanılır (kullanıcı lehine).
+       */
+      mergeWith: (serverItems) =>
+        set((state) => {
+          const merged = [...state.items];
+
+          serverItems.forEach((serverItem) => {
+            const localIdx = merged.findIndex(
+              (i) => i.offerId === serverItem.offerId,
+            );
+
+            if (localIdx >= 0) {
+              // Her ikisinde de var → büyük miktarı al
+              merged[localIdx] = {
+                ...merged[localIdx],
+                quantity: Math.max(
+                  merged[localIdx].quantity,
+                  serverItem.quantity,
+                ),
+              };
+            } else {
+              // Sadece sunucuda var → ekle
+              merged.push(serverItem);
+            }
+          });
+
+          return { items: merged };
+        }),
     }),
     {
       name: "marketplace-cart",
-      storage: createJSONStorage(() => sessionStorage),
+      // ✅ localStorage: sekme kapansa da, tarayıcı kapansa da korunur
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         items: state.items,
         shippingRate: state.shippingRate,
@@ -139,13 +182,9 @@ export const useCart = create<CartState>()(
 
 // ── Convenience selectors ─────────────────────────────────────────────────────
 
-/** Sepetteki benzersiz satıcı sayısı */
 export const useCartMerchantCount = () =>
   useCart((s) => new Set(s.items.map((i) => i.merchantId)).size);
 
-/** * Sepet özeti: ürün adedi, toplam fiyat
- * Infinite Loop hatasını önlemek için selector'lar parçalanmıştır.
- */
 export const useCartSummary = () => {
   const itemCount = useCart((s) => s.totalItems());
   const subtotal = useCart((s) => s.subtotal());
@@ -154,12 +193,5 @@ export const useCartSummary = () => {
   const shippingRate = useCart((s) => s.shippingRate);
   const isEmpty = useCart((s) => s.items.length === 0);
 
-  return {
-    itemCount,
-    subtotal,
-    shipping,
-    total,
-    shippingRate,
-    isEmpty,
-  };
+  return { itemCount, subtotal, shipping, total, shippingRate, isEmpty };
 };

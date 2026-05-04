@@ -1,9 +1,18 @@
 "use client";
 
+/**
+ * use-auth.ts  (güncellenmiş)
+ *
+ * login() sonunda:
+ *  1. Guest favori listesi sunucuya aktarılır (syncGuestWishlistToServer)
+ *  2. Eğer ileride server-side sepet eklenirse burada mergeWith() çağrılır
+ */
+
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import api from "@/lib/api";
 import { setTokens, clearTokens, getRoleFromToken } from "@/lib/auth";
+import { syncGuestWishlistToServer } from "@/hooks/use-hybrid-wishlist";
 
 export interface AuthUser {
   id: string;
@@ -65,6 +74,14 @@ export const useAuth = create<AuthState>()(
 
           const meRes = await api.get("/api/auth/me");
           set({ user: meRes.data, isLoading: false });
+
+          // ✅ Giriş başarılı → guest favori listesini sunucuya aktar
+          // Hata olsa bile sessizce geç (arka planda çalışır)
+          syncGuestWishlistToServer().catch(() => {});
+
+          // Not: Eğer ileride server-side sepet (saved cart) eklenirse:
+          // const { data: serverCart } = await api.get("/api/cart");
+          // useCart.getState().mergeWith(serverCart.items);
         } catch (err: unknown) {
           const msg =
             (err as { response?: { data?: { message?: string } } })?.response
@@ -132,6 +149,10 @@ export const useAuth = create<AuthState>()(
         } finally {
           clearTokens();
           set({ user: null });
+          // NOT: Favoriler ve sepet local'da kalmaya devam eder.
+          // Başka kullanıcı giriş yaparsa karışma olmaması için
+          // aynı cihazda farklı kullanıcı senaryosunu düşünüyorsanız
+          // burada useLocalWishlist.getState().clearAll() ekleyebilirsiniz.
         }
       },
 
@@ -141,7 +162,7 @@ export const useAuth = create<AuthState>()(
       name: "auth-store",
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({ user: s.user }),
-      skipHydration: true, // server ile client arasındaki hydration mismatch'i önler
+      skipHydration: true,
     },
   ),
 );
