@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Product } from "@/types/entities";
+import { ProductCard } from "@/components/modules/store/ProductCard";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest" },
@@ -26,88 +27,6 @@ const SORT_OPTIONS = [
   { value: "popular", label: "Most Popular" },
 ];
 
-function ProductCard({ product }: { product: Product }) {
-  return (
-    <Link
-      href={`/product/${product.id}`}
-      className="group bg-white block transition-all duration-300 hover:-translate-y-1"
-      style={{
-        borderRadius: "16px",
-        border: "1px solid rgba(51,51,51,0.08)",
-        boxShadow: "0 1px 3px rgba(51,51,51,0.06)",
-        overflow: "hidden",
-      }}
-    >
-      {/* Red accent top */}
-      <div
-        className="h-[3px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
-        style={{ background: "var(--red)" }}
-      />
-      {/* Image */}
-      <div
-        className="aspect-square overflow-hidden"
-        style={{ background: "var(--off-white)" }}
-      >
-        {product.images?.[0] ? (
-          <img
-            src={product.images[0]}
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ShoppingBag
-              className="w-10 h-10"
-              style={{ color: "rgba(51,51,51,0.1)" }}
-            />
-          </div>
-        )}
-      </div>
-      {/* Info */}
-      <div className="p-4">
-        {product.merchantStoreName && (
-          <p
-            className="font-mono text-[10px] uppercase tracking-[0.12em] mb-1 truncate"
-            style={{ color: "var(--red)" }}
-          >
-            {product.merchantStoreName}
-          </p>
-        )}
-        <h3
-          className="font-bold text-[14px] leading-snug mb-2 line-clamp-2 text-[var(--charcoal)] group-hover:text-[var(--red)] transition-colors"
-          style={{ fontFamily: "var(--font-body)" }}
-        >
-          {product.name}
-        </h3>
-        {product.categoryName && (
-          <p className="font-mono text-[11px] text-[var(--charcoal-soft)] mb-3 uppercase tracking-[0.08em]">
-            {product.categoryName}
-          </p>
-        )}
-        <div className="flex items-center justify-between">
-          <span
-            className="text-[18px] font-bold text-[var(--charcoal)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            ₺{product.price.toFixed(2)}
-          </span>
-          {product.stock !== undefined && product.stock <= 5 && (
-            <span
-              className="font-mono text-[10px] font-medium px-2 py-0.5 rounded-full"
-              style={{
-                color: "var(--red)",
-                background: "rgba(200,16,46,0.08)",
-                letterSpacing: "0.05em",
-              }}
-            >
-              {product.stock} left
-            </span>
-          )}
-        </div>
-      </div>
-    </Link>
-  );
-}
 
 function ProductSkeleton() {
   return (

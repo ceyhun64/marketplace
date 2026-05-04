@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { ShoppingCart, Store, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/types/entities";
@@ -27,7 +26,7 @@ export function ProductCard({
       ? `/store/${storeSlug}/product/${product.id}`
       : `/product/${product.id}`;
 
-  const coverImage = product.images[0] ?? "/placeholder-product.png";
+  const coverImage = product.images?.[0] ?? null;
   const isOutOfStock = product.stock === 0;
 
   return (
@@ -54,16 +53,25 @@ export function ProductCard({
         className="relative block aspect-square overflow-hidden"
         style={{ background: "var(--off-white)" }}
       >
-        <Image
-          src={coverImage}
-          alt={product.name}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          className={cn(
-            "object-cover transition-transform duration-300 group-hover:scale-105",
-            isOutOfStock && "opacity-60 grayscale",
-          )}
-        />
+        {coverImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={coverImage}
+            alt={product.name}
+            className={cn(
+              "w-full h-full object-cover transition-transform duration-300 group-hover:scale-105",
+              isOutOfStock && "opacity-60 grayscale",
+            )}
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <ShoppingCart
+              className="w-10 h-10"
+              style={{ color: "rgba(51,51,51,0.1)" }}
+            />
+          </div>
+        )}
 
         {isOutOfStock && (
           <div
@@ -83,7 +91,7 @@ export function ProductCard({
           </div>
         )}
 
-        {product.tags.length > 0 && (
+        {product.tags && product.tags.length > 0 && (
           <div className="absolute left-2.5 top-2.5 flex flex-wrap gap-1">
             {product.tags.slice(0, 2).map((tag) => (
               <span
@@ -103,7 +111,7 @@ export function ProductCard({
           </div>
         )}
 
-        {/* Wishlist icon — top-right overlay */}
+        {/* Wishlist icon */}
         <div className="absolute right-2.5 top-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <WishlistButton
             productId={product.id}
@@ -122,7 +130,9 @@ export function ProductCard({
             style={{ color: "var(--charcoal-soft)", letterSpacing: "0.05em" }}
             onClick={(e) => e.stopPropagation()}
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--red)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--charcoal-soft)")}
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = "var(--charcoal-soft)")
+            }
           >
             <Store className="h-3 w-3" />
             {product.merchantStoreName}
@@ -134,7 +144,9 @@ export function ProductCard({
             className="line-clamp-2 text-[0.875rem] font-bold leading-snug transition-colors text-[var(--charcoal)]"
             style={{ fontFamily: "var(--font-body)" }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--red)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--charcoal)")}
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = "var(--charcoal))")
+            }
           >
             {product.name}
           </h3>

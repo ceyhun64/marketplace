@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { fetchISR } from "@/lib/fetch";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProductCard } from "@/components/modules/store/ProductCard";
+import type { Product } from "@/types/entities";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -42,8 +44,30 @@ async function CategoryProducts({
   if (!categoryData?.data) notFound();
 
   const category = categoryData.data;
-  const products = productsData?.data || [];
+  const rawProducts = productsData?.data || [];
   const subcategories = category.subCategories || [];
+
+  // API verisini Product tipine normalize et
+  const products: Product[] = rawProducts.map((p: any): Product => ({
+    id: p.id ?? p.Id,
+    merchantId: p.merchantId ?? "",
+    merchantStoreName: p.merchantStoreName ?? p.merchant?.storeName ?? "",
+    merchantSlug: p.merchantSlug ?? p.merchant?.slug ?? "",
+    name: p.name ?? p.Name,
+    description: p.description ?? "",
+    categoryId: p.categoryId ?? "",
+    categoryName: p.categoryName ?? p.category?.name ?? "",
+    images: p.images ?? p.Images ?? [],
+    tags: p.tags ?? [],
+    price: p.price ?? p.Price ?? p.minPrice ?? 0,
+    stock: p.stock ?? 0,
+    publishToMarket: p.publishToMarket ?? true,
+    publishToStore: p.publishToStore ?? true,
+    isApproved: p.isApproved ?? true,
+    isDeleted: p.isDeleted ?? false,
+    createdAt: p.createdAt ?? "",
+    updatedAt: p.updatedAt,
+  }));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -133,7 +157,6 @@ async function CategoryProducts({
 
         {/* Main Content */}
         <main className="flex-1">
-          {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
@@ -155,7 +178,6 @@ async function CategoryProducts({
             </select>
           </div>
 
-          {/* Products Grid */}
           {products.length === 0 ? (
             <div className="text-center py-20 text-gray-400">
               <div className="text-4xl mb-3">📦</div>
@@ -163,39 +185,12 @@ async function CategoryProducts({
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-              {products.map((product: any) => (
-                <Link
+              {products.map((product) => (
+                <ProductCard
                   key={product.id}
-                  href={`/product/${product.id}`}
-                  className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
-                >
-                  <div className="aspect-square bg-gray-50 overflow-hidden">
-                    {product.images?.[0] ? (
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">
-                        📦
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <p className="text-sm font-medium text-gray-900 line-clamp-2">
-                      {product.name}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {product.categoryName}
-                    </p>
-                    <p className="text-base font-bold text-gray-900 mt-2">
-                      {product.minPrice
-                        ? `₺${product.minPrice.toLocaleString("tr-TR")}`
-                        : "Fiyat sorunuz"}
-                    </p>
-                  </div>
-                </Link>
+                  product={product}
+                  context="marketplace"
+                />
               ))}
             </div>
           )}

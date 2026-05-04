@@ -657,12 +657,6 @@ public class ProductsController : ControllerBase
 // ── Local request / response types ─────────────────────────────────────────
 
 /// <summary>
-/// Ürün güncelleme isteği. Sadece gönderilen alanlar güncellenir.
-/// ProductDTOs.cs'deki record ile çakışmayı önlemek için burada class olarak tanımlandı.
-/// </summary>
-public class UpdateProductRequest
-{
-    public string? Name { get; set; }
     public string? Description { get; set; }
     public string? ShortDescription { get; set; }
     public Guid? CategoryId { get; set; }

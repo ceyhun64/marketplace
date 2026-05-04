@@ -6,7 +6,6 @@ import {
   Zap,
   Tag,
   Clock,
-  ShoppingBag,
   ChevronRight,
   TrendingDown,
   Star,
@@ -14,9 +13,9 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProductCard } from "@/components/modules/store/ProductCard";
 import type { Product } from "@/types/entities";
 
-// ── Query — featured (deals) products ─────────────────────────────────────────
 function useDealsProducts() {
   return useQuery({
     queryKey: ["products", "deals"],
@@ -30,82 +29,6 @@ function useDealsProducts() {
   });
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
-function DealCardSkeleton() {
-  return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-black/5">
-      <Skeleton className="aspect-square w-full" />
-      <div className="p-4 space-y-2">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-4 w-1/2" />
-        <Skeleton className="h-8 w-full rounded-full" />
-      </div>
-    </div>
-  );
-}
-
-// ── Deal Card ─────────────────────────────────────────────────────────────────
-function DealCard({ product }: { product: Product }) {
-  return (
-    <Link
-      href={`/product/${product.id}`}
-      className="bg-white rounded-2xl overflow-hidden border border-black/5 shadow-sm hover:shadow-lg transition-all group block"
-    >
-      {/* Image */}
-      <div className="aspect-square  relative overflow-hidden">
-        {product.images?.[0] ? (
-          <img
-            src={product.images[0]}
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ShoppingBag className="w-10 h-10 text-[var(--charcoal)]/15" />
-          </div>
-        )}
-
-        {/* Deal badge */}
-        <div className="absolute top-3 left-3 bg-[var(--red)] text-white text-[10px] font-bold font-mono px-2 py-1 rounded-full flex items-center gap-1">
-          <Zap className="w-3 h-3" />
-          DEAL
-        </div>
-      </div>
-
-      {/* Info */}
-      <div className="p-4">
-        {product.merchantStoreName && (
-          <p className="text-[10px] font-mono font-bold text-[var(--charcoal-mid)] uppercase tracking-wider mb-1 truncate">
-            {product.merchantStoreName}
-          </p>
-        )}
-        <h3 className="font-bold text-[var(--charcoal)] text-[14px] leading-snug mb-3 line-clamp-2 group-hover:text-[var(--red)] transition-colors">
-          {product.name}
-        </h3>
-
-        <div className="flex items-center justify-between">
-          <span
-            className="text-[20px] font-bold text-[var(--charcoal)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            ₺{product.price.toFixed(2)}
-          </span>
-          {product.stock !== undefined && product.stock <= 5 && (
-            <span className="text-[10px] font-bold text-[var(--red)] bg-[var(--red)]/10 px-2 py-0.5 rounded-full">
-              {product.stock} left
-            </span>
-          )}
-        </div>
-
-        <div className="mt-3 h-9 leading-9 text-center rounded-full bg-[var(--charcoal)] group-hover:bg-[var(--red)] text-white text-[12px] font-bold transition-colors">
-          View Deal
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-// ── Filter Tab ─────────────────────────────────────────────────────────────────
 type Filter = "all" | "lowstock" | "new";
 
 const FILTERS: { key: Filter; label: string; icon: React.ReactNode }[] = [
@@ -122,7 +45,6 @@ const FILTERS: { key: Filter; label: string; icon: React.ReactNode }[] = [
   },
 ];
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function DealsPage() {
   const { data: products, isLoading, isError } = useDealsProducts();
   const [activeFilter, setActiveFilter] = useState<Filter>("all");
@@ -134,10 +56,9 @@ export default function DealsPage() {
   });
 
   return (
-    <main className="min-h-screen ">
+    <main className="min-h-screen">
       {/* Hero */}
       <div className="bg-[var(--charcoal)] py-14 px-4 relative overflow-hidden">
-        {/* Decorative rings */}
         <div className="absolute -top-10 -right-10 w-48 h-48 border-[20px] border-[var(--red)]/10 rounded-full" />
         <div className="absolute -bottom-16 left-32 w-32 h-32 border-[16px] border-[var(--charcoal-mid)]/15 rounded-full" />
 
@@ -155,10 +76,9 @@ export default function DealsPage() {
             Today&apos;s <span className="text-[var(--red)]">Deals</span>
           </h1>
           <p className="text-[var(--charcoal-soft)] text-[15px] mb-8">
-            Hand-picked offers from our top sellers. Don't miss out.
+            Hand-picked offers from our top sellers. Don&apos;t miss out.
           </p>
 
-          {/* Filter tabs */}
           <div className="flex items-center gap-2 flex-wrap">
             {FILTERS.map((f) => (
               <button
@@ -205,7 +125,17 @@ export default function DealsPage() {
         {isLoading && (
           <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {Array.from({ length: 12 }).map((_, i) => (
-              <DealCardSkeleton key={i} />
+              <div
+                key={i}
+                className="bg-white rounded-2xl overflow-hidden border border-black/5"
+              >
+                <Skeleton className="aspect-square w-full" />
+                <div className="p-4 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-8 w-full rounded-full" />
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -222,12 +152,14 @@ export default function DealsPage() {
         {!isLoading && !isError && filtered.length > 0 && (
           <>
             <p className="text-[13px] text-[var(--charcoal-soft)] mb-6">
-              <strong className="text-[var(--charcoal)]">{filtered.length}</strong>{" "}
+              <strong className="text-[var(--charcoal)]">
+                {filtered.length}
+              </strong>{" "}
               deals available
             </p>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
               {filtered.map((p) => (
-                <DealCard key={p.id} product={p} />
+                <ProductCard key={p.id} product={p} context="marketplace" />
               ))}
             </div>
           </>

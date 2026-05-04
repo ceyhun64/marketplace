@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { fetchISR, fetchSSR } from "@/lib/fetch";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProductCard } from "@/components/modules/store/ProductCard";
+import type { Product } from "@/types/entities";
 
 interface PageProps {
   searchParams: Promise<{
@@ -38,13 +40,34 @@ async function SearchResults({
     fetchISR<any>(`/api/categories`).catch(() => null),
   ]);
 
-  // Backend PagedResult<T> veya doğrudan array dönebilir
-  const products: any[] =
+  const rawProducts: any[] =
     results?.items ?? results?.data ?? (Array.isArray(results) ? results : []);
   const categories: any[] =
     categoriesData?.items ??
     categoriesData?.data ??
     (Array.isArray(categoriesData) ? categoriesData : []);
+
+  // Normalize to Product type
+  const products: Product[] = rawProducts.map((p: any): Product => ({
+    id: p.id ?? p.Id,
+    merchantId: p.merchantId ?? "",
+    merchantStoreName: p.merchantStoreName ?? p.merchant?.storeName ?? "",
+    merchantSlug: p.merchantSlug ?? p.merchant?.slug ?? "",
+    name: p.name ?? p.Name,
+    description: p.description ?? "",
+    categoryId: p.categoryId ?? "",
+    categoryName: p.categoryName ?? p.Category ?? p.category?.name ?? "",
+    images: p.images ?? p.Images ?? [],
+    tags: p.tags ?? [],
+    price: p.price ?? p.Price ?? p.minPrice ?? 0,
+    stock: p.stock ?? 0,
+    publishToMarket: p.publishToMarket ?? true,
+    publishToStore: p.publishToStore ?? true,
+    isApproved: p.isApproved ?? true,
+    isDeleted: p.isDeleted ?? false,
+    createdAt: p.createdAt ?? "",
+    updatedAt: p.updatedAt,
+  }));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -54,7 +77,7 @@ async function SearchResults({
           {q ? (
             <>
               Results for &ldquo;<span className="text-blue-600">{q}</span>
-              &rdquo; results
+              &rdquo;
             </>
           ) : (
             "All Products"
@@ -141,7 +164,7 @@ async function SearchResults({
                 No results found
               </h2>
               <p className="text-sm text-gray-500 mt-2">
-                Try different keywords or adjust filters temizleyebilirsiniz.
+                Try different keywords or adjust filters.
               </p>
               <Link
                 href="/"
@@ -152,45 +175,12 @@ async function SearchResults({
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-              {products.map((product: any) => (
-                <Link
-                  key={product.id ?? product.Id}
-                  href={`/product/${product.id ?? product.Id}`}
-                  className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
-                >
-                  <div className="aspect-square bg-gray-50 overflow-hidden">
-                    {(product.images?.[0] ?? product.Images?.[0]) ? (
-                      <img
-                        src={product.images?.[0] ?? product.Images?.[0]}
-                        alt={product.name ?? product.Name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl text-gray-300">
-                        📦
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <p className="text-sm font-medium text-gray-900 line-clamp-2">
-                      {product.name ?? product.Name}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {product.categoryName ?? product.Category}
-                    </p>
-                    <p className="text-base font-bold text-gray-900 mt-2">
-                      {(product.price ?? product.Price ?? product.minPrice) !=
-                      null
-                        ? `₺${(product.price ?? product.Price ?? product.minPrice).toLocaleString("tr-TR")}`
-                        : "Fiyat sorunuz"}
-                    </p>
-                    {product.offerCount > 1 && (
-                      <p className="text-xs text-blue-600 mt-0.5">
-                        {product.offerCount} sellers
-                      </p>
-                    )}
-                  </div>
-                </Link>
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  context="marketplace"
+                />
               ))}
             </div>
           )}

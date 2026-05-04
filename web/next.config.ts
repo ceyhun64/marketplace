@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: "https",
@@ -11,15 +14,16 @@ const nextConfig = {
         protocol: "https",
         hostname: "placehold.co",
       },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
     ],
   },
 
-  // ── Custom domain / subdomain desteği ────────────────────────────────────
-  // Wildcard subdomain'lerin doğru yönlendirilmesi için gerekli
   async headers() {
     return [
       {
-        // E-mağaza sayfaları için CDN cache kontrolü
         source: "/store/:path*",
         headers: [
           {
@@ -31,8 +35,6 @@ const nextConfig = {
     ];
   },
 
-  // Next.js 15+ → experimental.serverComponentsExternalPackages kaldırıldı,
-  // üst seviyeye serverExternalPackages olarak taşındı
   serverExternalPackages: [],
 };
 
