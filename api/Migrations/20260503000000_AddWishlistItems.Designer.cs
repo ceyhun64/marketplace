@@ -13,7 +13,7 @@ using api.Infrastructure.Persistence;
 namespace api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260504115607_AddWishlistItems")]
+    [Migration("20260503000000_AddWishlistItems")]
     partial class AddWishlistItems
     {
         /// <inheritdoc />
