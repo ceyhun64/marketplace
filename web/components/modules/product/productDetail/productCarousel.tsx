@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import ProductCard from "../productCard";
+import ProductCard from "@/components/modules/store/ProductCard";
 
 interface Product {
   id: number;

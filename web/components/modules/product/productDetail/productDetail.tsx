@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import {
   Heart,
-  Sparkles,
   Info,
   Eye,
   ShoppingCart,
@@ -17,16 +16,15 @@ import {
   Percent,
 } from "lucide-react";
 import { toast } from "sonner";
-import ProductTabs from "./productTabs";
-import ProductDetailSkeleton from "./productDetailSkeleton";
+import ProductTabs from "@/components/modules/product/productDetail/productTabs";
+import ProductDetailSkeleton from "@/components/modules/product/productDetail/productDetailSkeleton";
 import { useFavorite } from "@/contexts/favoriteContext";
 import { addToGuestCart } from "@/utils/cart";
-import DesignPanel from "@/components/modules/product/productDetail/design/designPanel";
-import ProductImageGallery from "./productImageGallery";
-import ProductInfo from "./productInfo";
-import ProductVariantSelector from "./productVariantSelector";
-import ProductActions from "./productActions";
-import ProductCarousel from "./productCarousel";
+import ProductImageGallery from "@/components/modules/product/productDetail/productImageGallery";
+import ProductInfo from "@/components/modules/product/productDetail/productInfo";
+import ProductVariantSelector from "@/components/modules/product/productDetail/productVariantSelector";
+import ProductActions from "@/components/modules/product/productDetail/productActions";
+import ProductCarousel from "@/components/modules/product/productDetail/productCarousel";
 
 interface Size {
   id: number;
@@ -40,7 +38,7 @@ interface StockEntry {
   sizeId: number | null;
   stock: number;
   priceModifier: number;
-}
+} 
 
 interface ProductData {
   id: number;
@@ -53,7 +51,7 @@ interface ProductData {
   discountAmount: number;
   mainImage: string;
   images: string[];
-  videoUrl: string | null; // ← YENİ
+  videoUrl: string | null;
   category: { id: number; name: string };
   middleCategory: { id: number; name: string } | null;
   subCategory: { id: number; name: string } | null;
@@ -131,7 +129,6 @@ interface ProductData {
 
 export default function ProductDetailPage() {
   const params = useParams() as { id?: string };
-  const router = useRouter();
   const productId = Number(params.id);
 
   const [product, setProduct] = useState<ProductData | null>(null);
@@ -139,20 +136,10 @@ export default function ProductDetailPage() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-  const [customDesign, setCustomDesign] = useState<string | null>(null);
-  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
-  const [uploadedImagePreview, setUploadedImagePreview] = useState<
-    string | null
-  >(null);
   const [selectedSizeId, setSelectedSizeId] = useState<number | null>(null);
   const [selectedStock, setSelectedStock] = useState<StockEntry | null>(null);
 
   const { isFavorited, addFavorite, removeFavorite } = useFavorite();
-  const cartDropdownRef = useRef<{ open: () => void; refreshCart: () => void }>(
-    null,
-  );
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -228,36 +215,6 @@ export default function ProductDetailPage() {
       : { hasDiscount: false, discountRate: 0 };
   };
 
-  const handleSaveDesign = (designUrl: string) => {
-    setCustomDesign(designUrl);
-    setUploadedImage(null);
-    setUploadedImagePreview(null);
-    setActiveIndex(0);
-    toast.success("Tasarımınız kaydedildi! Sepete ekleyebilirsiniz.");
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Dosya boyutu 5MB'dan küçük olmalıdır.");
-      return;
-    }
-    if (!file.type.startsWith("image/")) {
-      toast.error("Lütfen geçerli bir resim dosyası seçin.");
-      return;
-    }
-    setUploadedImage(file);
-    setCustomDesign(null);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setUploadedImagePreview(e.target?.result as string);
-      setActiveIndex(0);
-    };
-    reader.readAsDataURL(file);
-    toast.success("Resim yüklendi! Sepete ekleyebilirsiniz.");
-  };
-
   const handleAddToCart = async () => {
     if (!product) {
       toast.error("Ürün bilgisi bulunamadı.");
@@ -272,7 +229,6 @@ export default function ProductDetailPage() {
       return;
     }
 
-    const finalCustomImage = customDesign || uploadedImagePreview;
     const bulkDiscount = calculateBulkDiscount();
     let basePrice = product.price + (selectedStock?.priceModifier ?? 0);
     if (bulkDiscount.hasDiscount)
@@ -281,13 +237,13 @@ export default function ProductDetailPage() {
     if (!isLoggedIn) {
       addToGuestCart(
         product.id,
-        finalCustomImage ? `${product.title} (Özelleştirilmiş)` : product.title,
+        product.title,
         basePrice,
-        finalCustomImage || product.mainImage,
+        product.mainImage,
         product.category.name,
         quantity,
         selectedSizeId,
-        finalCustomImage,
+        null,
         product.bulkDiscountQty,
         product.bulkDiscountRate,
       );
@@ -305,8 +261,6 @@ export default function ProductDetailPage() {
       formData.append("productId", product.id.toString());
       formData.append("quantity", quantity.toString());
       if (selectedSizeId) formData.append("sizeId", selectedSizeId.toString());
-      if (customDesign) formData.append("customImage", customDesign);
-      else if (uploadedImage) formData.append("customImageFile", uploadedImage);
 
       const res = await fetch("/api/cart", {
         method: "POST",
@@ -320,7 +274,6 @@ export default function ProductDetailPage() {
             : `${quantity} adet ürün sepete eklendi!`,
         );
         window.dispatchEvent(new CustomEvent("cartUpdated"));
-        cartDropdownRef.current?.open?.();
       } else {
         const error = await res.json();
         toast.error(error.error || "Sepete ekleme hatası.");
@@ -352,7 +305,6 @@ export default function ProductDetailPage() {
       </div>
     );
 
-  const finalCustomImage = customDesign || uploadedImagePreview;
   const bulkDiscount = calculateBulkDiscount();
   let currentPrice = product.price + (selectedStock?.priceModifier ?? 0);
   if (bulkDiscount.hasDiscount)
@@ -366,48 +318,17 @@ export default function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 font-sans selection:bg-orange-100 selection:text-orange-900">
-      {showPreview && (
-        <DesignPanel
-          productImage={product.images[0] || product.mainImage}
-          onClose={() => setShowPreview(false)}
-          onSaveDesign={handleSaveDesign}
-          onDirectUpload={() => fileInputRef.current?.click()}
-        />
-      )}
-
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileSelect}
-        accept="image/*"
-        className="hidden"
-      />
-
       <div className="mx-auto px-6 pb-20 pt-4 md:pt-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* Galeri */}
           <div className="lg:col-span-6 lg:sticky lg:top-20 lg:self-start lg:z-40">
-            {/* ← YENİ: videoUrl prop eklendi */}
             <ProductImageGallery
               images={product.images}
               videoUrl={product.videoUrl}
               activeIndex={activeIndex}
               onIndexChange={setActiveIndex}
-              customDesign={customDesign}
-              uploadedImagePreview={uploadedImagePreview}
               hasDiscount={product.hasDiscount}
               discountPercentage={product.discountPercentage}
-              onShowPreview={() => setShowPreview(true)}
-              onRemoveCustomDesign={() => {
-                setCustomDesign(null);
-                toast.info("Özel tasarım kaldırıldı.");
-              }}
-              onRemoveUploadedImage={() => {
-                setUploadedImage(null);
-                setUploadedImagePreview(null);
-                if (fileInputRef.current) fileInputRef.current.value = "";
-                toast.info("Yüklenen resim kaldırıldı.");
-              }}
               productTitle={product.title}
             />
           </div>
@@ -431,7 +352,6 @@ export default function ProductDetailPage() {
                 inStock={product.stock.inStock}
                 lowStock={product.stock.lowStock}
                 stockQuantity={product.stock.quantity}
-                hasCustomImage={!!finalCustomImage}
                 selectedStock={selectedStock}
               />
 
@@ -449,21 +369,6 @@ export default function ProductDetailPage() {
                   currentTitle={product.title}
                   otherColors={product.otherColors}
                 />
-
-                {finalCustomImage && (
-                  <div className="bg-gradient-to-r from-orange-50 to-pink-50 border border-orange-200 p-4 rounded space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-bold text-orange-700 uppercase tracking-wider">
-                      <Sparkles size={14} /> Özelleştirilmiş Ürün
-                    </div>
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      Bu ürün{" "}
-                      {customDesign
-                        ? "tasarım paneliyle"
-                        : "yüklediğiniz resimle"}{" "}
-                      özelleştirilmiştir.
-                    </p>
-                  </div>
-                )}
 
                 {product.bulkDiscountQty !== null &&
                   product.bulkDiscountRate !== null &&
@@ -538,13 +443,12 @@ export default function ProductDetailPage() {
                       : addFavorite(product.id)
                   }
                   onShare={handleShare}
-                  onUploadImage={() => fileInputRef.current?.click()}
                   isFavorited={isFavorited(product.id)}
-                  hasUploadedImage={!!uploadedImagePreview}
                   inStock={product.stock.inStock}
                   sizeStockAvailable={!selectedStock || selectedStock.stock > 0}
                 />
 
+                {/* Fiyat Özeti */}
                 <div className="bg-slate-50 border border-slate-200 rounded p-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-600">
@@ -604,8 +508,9 @@ export default function ProductDetailPage() {
                 </div>
               </div>
 
+              {/* Ürün Özellikleri */}
               <div className="flex">
-                <div className="space-y-4 pt-4 border-t border-slate-100">
+                <div className="space-y-4 pt-4 border-t border-slate-100 w-full">
                   <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                     <Info size={14} className="text-orange-600" /> Ürün
                     Özellikleri
@@ -667,6 +572,7 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
+        {/* Meta İstatistikler */}
         <div className="grid grid-cols-3 gap-3 mt-8">
           {[
             {
@@ -703,6 +609,7 @@ export default function ProductDetailPage() {
           ))}
         </div>
 
+        {/* Benzer Ürünler */}
         {product.relatedProducts.length > 0 && (
           <ProductCarousel
             products={product.relatedProducts}
@@ -711,6 +618,7 @@ export default function ProductDetailPage() {
           />
         )}
 
+        {/* Markadan Diğer Ürünler */}
         {product.brand && product.brandProducts.length > 0 && (
           <ProductCarousel
             products={product.brandProducts}
@@ -719,6 +627,7 @@ export default function ProductDetailPage() {
           />
         )}
 
+        {/* Sekmeler */}
         <div className="mt-12 pt-8 border-t border-slate-100">
           <ProductTabs
             productId={product.id}
