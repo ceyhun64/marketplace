@@ -31,12 +31,9 @@ const nextConfig = {
     ];
   },
 
-  // Nginx'ten gelen x-store-slug header'ını Next.js'e ilet
-  // Bu, wildcard SSL + subdomain yönlendirme için kritiktir
-  experimental: {
-    // Server Components'in harici API çağrılarına izin ver
-    serverComponentsExternalPackages: [],
-  },
+  // Next.js 15+ → experimental.serverComponentsExternalPackages kaldırıldı,
+  // üst seviyeye serverExternalPackages olarak taşındı
+  serverExternalPackages: [],
 };
 
 module.exports = nextConfig;
