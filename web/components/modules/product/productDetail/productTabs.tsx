@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Comment {
   id: number;
@@ -53,7 +54,7 @@ export default function ProductTabs({
   const [title, setTitle] = useState("");
   const [commentText, setCommentText] = useState("");
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const { user: currentUser } = useAuth();
   // State'lerin yanına ekle
   const [suggestion, setSuggestion] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -108,19 +109,6 @@ export default function ProductTabs({
   ];
 
   useEffect(() => {
-    async function fetchUser() {
-      try {
-        const res = await fetch("/api/account/check");
-        const data = await res.json();
-        if (data.user) setCurrentUser(data.user);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
     if (productId) fetchComments();
   }, [productId]);
 
@@ -128,10 +116,9 @@ export default function ProductTabs({
     setIsLoading(true);
     try {
       const { data } = await api.get(`/api/review/${productId}`);
-      // Backend henüz review endpoint'i olmayabilir — dizi değilse boş bırak
-      setComments(Array.isArray(data) ? data : []);
-    } catch {
-      // 404 veya başka hata — sessizce boş state bırak
+      setComments(data ?? []);
+    } catch (error) {
+      console.error(error);
       setComments([]);
     } finally {
       setIsLoading(false);
