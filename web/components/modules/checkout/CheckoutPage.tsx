@@ -519,6 +519,7 @@ export default function CheckoutPage() {
     try {
       const { data } = await api.post<{ orderId: string }>("/api/orders", {
         items: items.map((i) => ({
+          offerId: i.offerId, // ← offerId gönder (tek merchant: offerId = productId)
           productId: i.productId,
           quantity: i.quantity,
         })),

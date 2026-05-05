@@ -29,6 +29,7 @@ import ProductActions from "@/components/modules/product/productDetail/productAc
 import ProductCarousel from "@/components/modules/product/productDetail/productCarousel";
 import { useHybridWishlist } from "@/hooks/use-hybrid-wishlist";
 import { useAuth } from "@/hooks/use-auth";
+import { useCart } from "@/hooks/use-cart";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -160,61 +161,6 @@ interface ProductData {
   bulkDiscountRate: number | null;
 }
 
-// ── Guest Cart Helper ─────────────────────────────────────────────────────────
-
-interface GuestCartItem {
-  productId: string;
-  title: string;
-  price: number;
-  mainImage: string;
-  category: string;
-  quantity: number;
-  sizeId: number | null;
-  variantId: number | null;
-  bulkDiscountQty: number | null;
-  bulkDiscountRate: number | null;
-}
-
-function addToGuestCart(
-  productId: string,
-  title: string,
-  price: number,
-  mainImage: string,
-  category: string,
-  quantity: number,
-  sizeId: number | null,
-  variantId: number | null,
-  bulkDiscountQty: number | null,
-  bulkDiscountRate: number | null,
-): void {
-  try {
-    const raw = localStorage.getItem("guest_cart");
-    const cart: GuestCartItem[] = raw ? JSON.parse(raw) : [];
-    const existingIdx = cart.findIndex(
-      (item) => item.productId === productId && item.sizeId === sizeId,
-    );
-    if (existingIdx >= 0) {
-      cart[existingIdx].quantity += quantity;
-    } else {
-      cart.push({
-        productId,
-        title,
-        price,
-        mainImage,
-        category,
-        quantity,
-        sizeId,
-        variantId,
-        bulkDiscountQty,
-        bulkDiscountRate,
-      });
-    }
-    localStorage.setItem("guest_cart", JSON.stringify(cart));
-  } catch (err) {
-    console.error("Guest cart error:", err);
-  }
-}
-
 // ── Channel Badges ────────────────────────────────────────────────────────────
 // PublishToMarket / PublishToStore / IsApproved görünürlük göstergesi
 
@@ -309,6 +255,7 @@ export default function ProductDetailPage() {
 
   const { user } = useAuth();
   const { isInWishlist, toggle: toggleWishlist } = useHybridWishlist();
+  const { addItem } = useCart();
 
   // useProduct hook — GET /api/products/{id} endpoint'ine bağlanır
   const { data: rawProduct, isLoading: loading } = useProduct(productId);
@@ -463,8 +410,13 @@ export default function ProductDetailPage() {
   }, [product, quantity]);
 
   // ── Sepete Ekle ─────────────────────────────────────────────────────────────
-
-  const handleAddToCart = async () => {
+  /**
+   * Zustand useCart (use-cart.ts) ile entegre.
+   * Tek merchant senaryosunda offerId = productId kullanılır.
+   * Misafir / giriş yapılmış kullanıcı ayrımı yok — Zustand localStorage'a persist eder.
+   * Giriş sonrası mergeWith() çağrısı auth hook'unda yapılmalı.
+   */
+  const handleAddToCart = () => {
     if (!product) {
       toast.error("Ürün bilgisi bulunamadı.");
       return;
@@ -483,50 +435,38 @@ export default function ProductDetailPage() {
     if (bulkDiscount.hasDiscount)
       basePrice = basePrice * (1 - bulkDiscount.discountRate / 100);
 
+    // Tek merchant senaryosunda offerId = productId (Offer yapısı yok)
+    // sizeId varsa offerId'yi productId_sizeId olarak oluştur (varyant ayrımı)
+    const offerId = selectedSizeId
+      ? `${product.id}_size_${selectedSizeId}`
+      : product.id;
+
+    // quantity kadar addItem çağır (her çağrı +1 ekler)
+    for (let i = 0; i < quantity; i++) {
+      addItem({
+        offerId,
+        productId: product.id,
+        productName: product.title,
+        productImage: product.mainImage,
+        price: basePrice,
+        merchantId: product.brand?.id?.toString() ?? "marketplace",
+        merchantStoreName: product.brand?.name,
+        merchantSlug: product.brand?.slug,
+        stock: selectedStock?.stock ?? product.stock.quantity,
+        source: "MARKETPLACE",
+      });
+    }
+
     const successMsg = bulkDiscount.hasDiscount
       ? `${quantity} adet ürün sepete eklendi! 🎉 %${bulkDiscount.discountRate} toplu alım indirimi uygulandı!`
       : `${quantity} adet ürün sepete eklendi!`;
 
-    if (!user) {
-      addToGuestCart(
-        product.id,
-        product.title,
-        basePrice,
-        product.mainImage,
-        product.category.name,
-        quantity,
-        selectedSizeId,
-        null,
-        product.bulkDiscountQty,
-        product.bulkDiscountRate,
-      );
-      toast.success(successMsg);
-      window.dispatchEvent(new CustomEvent("cartUpdated"));
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append("productId", product.id.toString());
-      formData.append("quantity", quantity.toString());
-      if (selectedSizeId) formData.append("sizeId", selectedSizeId.toString());
-
-      const res = await fetch("/api/cart", {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
-
-      if (res.ok) {
-        toast.success(successMsg);
-        window.dispatchEvent(new CustomEvent("cartUpdated"));
-      } else {
-        const error = await res.json();
-        toast.error(error.error || "Sepete ekleme hatası.");
-      }
-    } catch {
-      toast.error("Sepete ekleme hatası.");
-    }
+    toast.success(successMsg, {
+      description: !user
+        ? "Giriş yaptığınızda sepetiniz hesabınıza aktarılacak."
+        : undefined,
+      duration: !user ? 4000 : 2000,
+    });
   };
 
   // ── Favorilere Ekle/Çıkar ───────────────────────────────────────────────────
