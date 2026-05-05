@@ -62,7 +62,6 @@ api.interceptors.response.use(
 
     // ApiResponse<T> sarmalayıcısını aç:
     // { success: true, data: T } → T
-    // Böylece tüm sayfalarda res.data direkt T olur.
     if (
       response.data !== null &&
       typeof response.data === "object" &&
@@ -71,6 +70,17 @@ api.interceptors.response.use(
       response.data.success === true
     ) {
       response.data = response.data.data;
+    }
+
+    // Bazı endpoint'ler { data: T } döndürür (success field yok) — onu da aç
+    if (
+      response.data !== null &&
+      typeof response.data === "object" &&
+      !("success" in response.data) &&
+      "data" in response.data &&
+      Object.keys(response.data).length === 1
+    ) {
+      response.data = (response.data as { data: unknown }).data;
     }
 
     return response;

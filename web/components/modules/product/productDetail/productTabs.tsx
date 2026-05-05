@@ -128,9 +128,10 @@ export default function ProductTabs({
     setIsLoading(true);
     try {
       const { data } = await api.get(`/api/review/${productId}`);
-      setComments(data ?? []);
-    } catch (error) {
-      console.error(error);
+      // Backend henüz review endpoint'i olmayabilir — dizi değilse boş bırak
+      setComments(Array.isArray(data) ? data : []);
+    } catch {
+      // 404 veya başka hata — sessizce boş state bırak
       setComments([]);
     } finally {
       setIsLoading(false);

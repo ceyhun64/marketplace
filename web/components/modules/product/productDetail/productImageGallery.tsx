@@ -249,12 +249,12 @@ export default function ProductImageGallery({
           {/* Video or Image */}
           {isVideoActive && videoUrl ? (
             <VideoPlayer videoUrl={videoUrl} />
-          ) : (
+          ) : (images[activeIndex] ?? images[0]) ? (
             <CustomImageZoom
               src={images[activeIndex] ?? images[0]}
               alt={productTitle}
             />
-          )}
+          ) : null}
         </div>
       </div>
     </div>

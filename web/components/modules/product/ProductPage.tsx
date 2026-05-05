@@ -197,53 +197,53 @@ export default function ProductDetailPage() {
   // ── useProduct hook — backend'e doğrudan bağlanır (UUID string ile) ────────
   const { data: rawProduct, isLoading: loading } = useProduct(productId);
 
-  // Backend response'unu ProductData shape'ine map ediyoruz
+  // Backend response'unu ProductData shape'ine map ediyoruz.
+  // Backend Ok(new { data = product }) döndürüyor (success field yok)
+  // → axios interceptor unwrap YAPMAZ → rawProduct = { data: { id, name, ... } }
   const product = useMemo<ProductData | null>(() => {
     if (!rawProduct) return null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const raw = rawProduct as any;
+    const r = (rawProduct as any)?.data ?? (rawProduct as any);
+    if (!r?.id) return null; // henüz yüklenmemiş ya da geçersiz
     return {
-      id: raw.id ?? productId,
-      title: raw.name ?? raw.title ?? "",
-      description: raw.description ?? "",
-      price: raw.buyBox?.price ?? raw.price ?? 0,
+      id: r.id ?? productId,
+      title: r.name ?? r.title ?? "",
+      description: r.description ?? "",
+      price: r.price ?? 0,
       oldPrice: null,
       discountPercentage: 0,
       hasDiscount: false,
       discountAmount: 0,
-      mainImage: raw.images?.[0] ?? raw.mainImage ?? "",
-      images: raw.images ?? [],
+      mainImage: r.images?.[0] ?? r.mainImage ?? "",
+      images:
+        Array.isArray(r.images) && r.images.length > 0
+          ? r.images
+          : ["/placeholder.png"],
       videoUrl: null,
       category: {
         id: 0,
-        name: raw.categoryName ?? raw.category?.name ?? "",
+        name: r.category?.name ?? r.categoryName ?? "",
       },
       middleCategory: null,
       subCategory: null,
-      brand: raw.buyBox?.merchantStoreName
-        ? {
-            id: 0,
-            name: raw.buyBox.merchantStoreName,
-            image: null,
-          }
+      brand: r.merchant?.storeName
+        ? { id: 0, name: r.merchant.storeName, image: null }
         : null,
       color: null,
       productGroupId: null,
       otherColors: [],
-      rating: raw.buyBox?.rating ?? 0,
+      rating: 0,
       reviewCount: 0,
       ratingDistribution: {},
       reviews: [],
       stock: {
-        inStock: (raw.buyBox?.stock ?? raw.stock ?? 0) > 0,
-        quantity: raw.buyBox?.stock ?? raw.stock ?? 0,
-        lowStock:
-          (raw.buyBox?.stock ?? raw.stock ?? 0) > 0 &&
-          (raw.buyBox?.stock ?? raw.stock ?? 0) < 10,
+        inStock: (r.stock ?? 0) > 0,
+        quantity: r.stock ?? 0,
+        lowStock: (r.stock ?? 0) > 0 && (r.stock ?? 0) < 10,
       },
       shipping: {
         freeShipping: false,
-        estimatedDelivery: raw.buyBox?.estimatedDelivery ?? "",
+        estimatedDelivery: "",
         shippingCost: 0,
         expressAvailable: false,
         expressDelivery: "",
@@ -263,16 +263,15 @@ export default function ProductDetailPage() {
         views: 0,
         favorites: 0,
         purchaseCount: 0,
-        lastUpdated: raw.updatedAt ?? raw.createdAt ?? "",
+        lastUpdated: r.updatedAt ?? r.createdAt ?? "",
       },
-      availableSizes: raw.availableSizes ?? [],
-      stockMatrix: raw.stockMatrix?.length
-        ? raw.stockMatrix
-        : raw.buyBox
-          ? [{ id: 0, sizeId: null, stock: raw.buyBox.stock, priceModifier: 0 }]
+      availableSizes: [],
+      stockMatrix:
+        (r.stock ?? 0) > 0
+          ? [{ id: 0, sizeId: null, stock: r.stock, priceModifier: 0 }]
           : [],
-      bulkDiscountQty: raw.bulkDiscountQty ?? null,
-      bulkDiscountRate: raw.bulkDiscountRate ?? null,
+      bulkDiscountQty: null,
+      bulkDiscountRate: null,
     };
   }, [rawProduct, productId]);
 

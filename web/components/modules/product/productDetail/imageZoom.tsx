@@ -14,6 +14,9 @@ export function CustomImageZoom({ src, alt }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
+  // Boş src gelirse hiçbir şey render etme
+  if (!src) return null;
+
   const containerRef = useRef<HTMLDivElement>(null);
   const zoomLayerRef = useRef<HTMLDivElement>(null);
 
@@ -119,7 +122,6 @@ export function CustomImageZoom({ src, alt }: Props) {
     [isTouchDevice],
   );
 
-  
   return (
     <>
       <div
