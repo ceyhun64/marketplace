@@ -13,7 +13,7 @@ interface StockEntry {
 }
 
 interface ProductInfoProps {
-  id: number;
+  id: string;
   title: string;
   category: { id: number; name: string };
   middleCategory: { id: number; name: string } | null;

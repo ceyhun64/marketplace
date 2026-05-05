@@ -39,7 +39,7 @@ interface ProductVariantSelectorProps {
   onSizeChange: (sizeId: number) => void;
   // Color selection props
   productGroupId: string | null;
-  currentProductId: number;
+  currentProductId: string;
   currentColor: { id: number; name: string; hexCode: string } | null;
   currentMainImage: string;
   currentTitle: string;

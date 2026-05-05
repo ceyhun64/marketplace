@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useParams } from "next/navigation";
+import { useProduct } from "@/queries/useProducts";
 import {
   Info,
   Eye,
@@ -43,7 +44,7 @@ interface StockEntry {
 }
 
 interface ProductData {
-  id: number;
+  id: string;
   title: string;
   description: string;
   price: number;
@@ -132,7 +133,7 @@ interface ProductData {
 // ── Guest Cart Helper ─────────────────────────────────────────────────────────
 
 interface GuestCartItem {
-  productId: number;
+  productId: string;
   title: string;
   price: number;
   mainImage: string;
@@ -145,7 +146,7 @@ interface GuestCartItem {
 }
 
 function addToGuestCart(
-  productId: number,
+  productId: string,
   title: string,
   price: number,
   mainImage: string,
@@ -188,67 +189,110 @@ function addToGuestCart(
 
 export default function ProductDetailPage() {
   const params = useParams() as { id?: string };
-  const productId = Number(params.id);
+  const productId = params.id ?? "";
 
   const { user } = useAuth();
   const { isInWishlist, toggle: toggleWishlist } = useHybridWishlist();
 
-  const [product, setProduct] = useState<ProductData | null>(null);
-  const [loading, setLoading] = useState(true);
+  // ── useProduct hook — backend'e doğrudan bağlanır (UUID string ile) ────────
+  const { data: rawProduct, isLoading: loading } = useProduct(productId);
+
+  // Backend response'unu ProductData shape'ine map ediyoruz
+  const product = useMemo<ProductData | null>(() => {
+    if (!rawProduct) return null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw = rawProduct as any;
+    return {
+      id: raw.id ?? productId,
+      title: raw.name ?? raw.title ?? "",
+      description: raw.description ?? "",
+      price: raw.buyBox?.price ?? raw.price ?? 0,
+      oldPrice: null,
+      discountPercentage: 0,
+      hasDiscount: false,
+      discountAmount: 0,
+      mainImage: raw.images?.[0] ?? raw.mainImage ?? "",
+      images: raw.images ?? [],
+      videoUrl: null,
+      category: {
+        id: 0,
+        name: raw.categoryName ?? raw.category?.name ?? "",
+      },
+      middleCategory: null,
+      subCategory: null,
+      brand: raw.buyBox?.merchantStoreName
+        ? {
+            id: 0,
+            name: raw.buyBox.merchantStoreName,
+            image: null,
+          }
+        : null,
+      color: null,
+      productGroupId: null,
+      otherColors: [],
+      rating: raw.buyBox?.rating ?? 0,
+      reviewCount: 0,
+      ratingDistribution: {},
+      reviews: [],
+      stock: {
+        inStock: (raw.buyBox?.stock ?? raw.stock ?? 0) > 0,
+        quantity: raw.buyBox?.stock ?? raw.stock ?? 0,
+        lowStock:
+          (raw.buyBox?.stock ?? raw.stock ?? 0) > 0 &&
+          (raw.buyBox?.stock ?? raw.stock ?? 0) < 10,
+      },
+      shipping: {
+        freeShipping: false,
+        estimatedDelivery: raw.buyBox?.estimatedDelivery ?? "",
+        shippingCost: 0,
+        expressAvailable: false,
+        expressDelivery: "",
+        expressCost: 0,
+      },
+      specifications: {
+        weight: null,
+        dimensions: null,
+        material: null,
+        warranty: "—",
+        origin: "—",
+        certifications: [],
+      },
+      relatedProducts: [],
+      brandProducts: [],
+      meta: {
+        views: 0,
+        favorites: 0,
+        purchaseCount: 0,
+        lastUpdated: raw.updatedAt ?? raw.createdAt ?? "",
+      },
+      availableSizes: raw.availableSizes ?? [],
+      stockMatrix: raw.stockMatrix?.length
+        ? raw.stockMatrix
+        : raw.buyBox
+          ? [{ id: 0, sizeId: null, stock: raw.buyBox.stock, priceModifier: 0 }]
+          : [],
+      bulkDiscountQty: raw.bulkDiscountQty ?? null,
+      bulkDiscountRate: raw.bulkDiscountRate ?? null,
+    };
+  }, [rawProduct, productId]);
+
+  const favorited = isInWishlist(productId);
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedSizeId, setSelectedSizeId] = useState<number | null>(null);
-  const [selectedStock, setSelectedStock] = useState<StockEntry | null>(null);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
-
-  const productIdStr = productId.toString();
-  const favorited = isInWishlist(productIdStr);
-
-  // ── Fetch Product ───────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    const fetchProduct = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/products/${productId}`);
-        const data = await res.json();
-        if (data.success) {
-          setProduct(data.product);
-          setSelectedSizeId(null);
-          setSelectedStock(null);
-        } else {
-          setProduct(null);
-        }
-      } catch (error) {
-        console.error("Ürün yükleme hatası:", error);
-        setProduct(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (productId) fetchProduct();
-  }, [productId]);
 
   // ── Stock Matrix ────────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    if (!product) {
-      setSelectedStock(null);
-      return;
-    }
+  const selectedStock = useMemo<StockEntry | null>(() => {
+    if (!product) return null;
     if (product.availableSizes.length > 0) {
-      if (selectedSizeId) {
-        setSelectedStock(
-          product.stockMatrix.find((s) => s.sizeId === selectedSizeId) ?? null,
-        );
-      } else {
-        setSelectedStock(null);
-      }
-    } else {
-      setSelectedStock(
-        product.stockMatrix.find((s) => s.sizeId === null) ?? null,
-      );
+      return selectedSizeId
+        ? (product.stockMatrix.find((s) => s.sizeId === selectedSizeId) ?? null)
+        : null;
     }
+    return product.stockMatrix.find((s) => s.sizeId === null) ?? null;
   }, [selectedSizeId, product]);
 
   // ── Bulk Discount ───────────────────────────────────────────────────────────
@@ -344,7 +388,7 @@ export default function ProductDetailPage() {
     if (favoriteLoading) return;
     setFavoriteLoading(true);
     try {
-      const added = await toggleWishlist(productIdStr, {
+      const added = await toggleWishlist(productId, {
         productName: product.title,
         productImage: product.mainImage,
         price: product.price,

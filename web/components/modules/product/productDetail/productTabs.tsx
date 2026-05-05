@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import api from "@/lib/api";
 import {
   Star,
   ArrowRight,
@@ -31,7 +32,7 @@ interface Comment {
 }
 
 interface ProductTabsProps {
-  productId: number;
+  productId: string;
   productTitle: string;
   productPrice: number;
   productDescription?: string;
@@ -41,7 +42,7 @@ export default function ProductTabs({
   productId,
   productPrice,
   productDescription,
-  productTitle
+  productTitle,
 }: ProductTabsProps) {
   const [activeTab, setActiveTab] = useState<
     "info" | "comments" | "installments" | "suggestions"
@@ -126,11 +127,11 @@ export default function ProductTabs({
   const fetchComments = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/review/${productId}`);
-      const data = await res.json();
-      setComments(data);
+      const { data } = await api.get(`/api/review/${productId}`);
+      setComments(data ?? []);
     } catch (error) {
       console.error(error);
+      setComments([]);
     } finally {
       setIsLoading(false);
     }
