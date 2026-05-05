@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import {
-  Heart,
   Info,
   Eye,
   ShoppingCart,
@@ -14,6 +13,7 @@ import {
   TrendingUp,
   Users,
   Percent,
+  Heart,
 } from "lucide-react";
 import { toast } from "sonner";
 import ProductTabs from "@/components/modules/product/productDetail/productTabs";
@@ -23,6 +23,10 @@ import ProductInfo from "@/components/modules/product/productDetail/productInfo"
 import ProductVariantSelector from "@/components/modules/product/productDetail/productVariantSelector";
 import ProductActions from "@/components/modules/product/productDetail/productActions";
 import ProductCarousel from "@/components/modules/product/productDetail/productCarousel";
+import { useHybridWishlist } from "@/hooks/use-hybrid-wishlist";
+import { useAuth } from "@/hooks/use-auth";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Size {
   id: number;
@@ -125,18 +129,82 @@ interface ProductData {
   bulkDiscountRate: number | null;
 }
 
+// ── Guest Cart Helper ─────────────────────────────────────────────────────────
+
+interface GuestCartItem {
+  productId: number;
+  title: string;
+  price: number;
+  mainImage: string;
+  category: string;
+  quantity: number;
+  sizeId: number | null;
+  variantId: number | null;
+  bulkDiscountQty: number | null;
+  bulkDiscountRate: number | null;
+}
+
+function addToGuestCart(
+  productId: number,
+  title: string,
+  price: number,
+  mainImage: string,
+  category: string,
+  quantity: number,
+  sizeId: number | null,
+  variantId: number | null,
+  bulkDiscountQty: number | null,
+  bulkDiscountRate: number | null,
+): void {
+  try {
+    const raw = localStorage.getItem("guest_cart");
+    const cart: GuestCartItem[] = raw ? JSON.parse(raw) : [];
+    const existingIdx = cart.findIndex(
+      (item) => item.productId === productId && item.sizeId === sizeId,
+    );
+    if (existingIdx >= 0) {
+      cart[existingIdx].quantity += quantity;
+    } else {
+      cart.push({
+        productId,
+        title,
+        price,
+        mainImage,
+        category,
+        quantity,
+        sizeId,
+        variantId,
+        bulkDiscountQty,
+        bulkDiscountRate,
+      });
+    }
+    localStorage.setItem("guest_cart", JSON.stringify(cart));
+  } catch (err) {
+    console.error("Guest cart error:", err);
+  }
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export default function ProductDetailPage() {
   const params = useParams() as { id?: string };
   const productId = Number(params.id);
+
+  const { user } = useAuth();
+  const { isInWishlist, toggle: toggleWishlist } = useHybridWishlist();
 
   const [product, setProduct] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [selectedSizeId, setSelectedSizeId] = useState<number | null>(null);
   const [selectedStock, setSelectedStock] = useState<StockEntry | null>(null);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
+  const productIdStr = productId.toString();
+  const favorited = isInWishlist(productIdStr);
+
+  // ── Fetch Product ───────────────────────────────────────────────────────────
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -161,6 +229,8 @@ export default function ProductDetailPage() {
     if (productId) fetchProduct();
   }, [productId]);
 
+  // ── Stock Matrix ────────────────────────────────────────────────────────────
+
   useEffect(() => {
     if (!product) {
       setSelectedStock(null);
@@ -181,23 +251,9 @@ export default function ProductDetailPage() {
     }
   }, [selectedSizeId, product]);
 
-  useEffect(() => {
-    const checkLogin = async () => {
-      try {
-        const res = await fetch("/api/account/check", {
-          credentials: "include",
-        });
-        if (!res.ok) return setIsLoggedIn(false);
-        const data = await res.json();
-        setIsLoggedIn(!!data.user?.id);
-      } catch {
-        setIsLoggedIn(false);
-      }
-    };
-    checkLogin();
-  }, []);
+  // ── Bulk Discount ───────────────────────────────────────────────────────────
 
-  const calculateBulkDiscount = () => {
+  const calculateBulkDiscount = useCallback(() => {
     if (!product) return { hasDiscount: false, discountRate: 0 };
     const { bulkDiscountQty, bulkDiscountRate } = product;
     if (
@@ -210,7 +266,9 @@ export default function ProductDetailPage() {
     return quantity >= bulkDiscountQty
       ? { hasDiscount: true, discountRate: bulkDiscountRate }
       : { hasDiscount: false, discountRate: 0 };
-  };
+  }, [product, quantity]);
+
+  // ── Sepete Ekle ─────────────────────────────────────────────────────────────
 
   const handleAddToCart = async () => {
     if (!product) {
@@ -231,7 +289,12 @@ export default function ProductDetailPage() {
     if (bulkDiscount.hasDiscount)
       basePrice = basePrice * (1 - bulkDiscount.discountRate / 100);
 
-    if (!isLoggedIn) {
+    const successMsg = bulkDiscount.hasDiscount
+      ? `${quantity} adet ürün sepete eklendi! 🎉 %${bulkDiscount.discountRate} toplu alım indirimi uygulandı!`
+      : `${quantity} adet ürün sepete eklendi!`;
+
+    // Giriş yapmamış kullanıcı → localStorage sepeti
+    if (!user) {
       addToGuestCart(
         product.id,
         product.title,
@@ -244,15 +307,12 @@ export default function ProductDetailPage() {
         product.bulkDiscountQty,
         product.bulkDiscountRate,
       );
-      toast.success(
-        bulkDiscount.hasDiscount
-          ? `${quantity} adet ürün sepete eklendi! 🎉 %${bulkDiscount.discountRate} toplu alım indirimi uygulandı!`
-          : `${quantity} adet ürün sepete eklendi!`,
-      );
+      toast.success(successMsg);
       window.dispatchEvent(new CustomEvent("cartUpdated"));
       return;
     }
 
+    // Giriş yapmış kullanıcı → API
     try {
       const formData = new FormData();
       formData.append("productId", product.id.toString());
@@ -264,12 +324,9 @@ export default function ProductDetailPage() {
         body: formData,
         credentials: "include",
       });
+
       if (res.ok) {
-        toast.success(
-          bulkDiscount.hasDiscount
-            ? `${quantity} adet ürün sepete eklendi! 🎉 %${bulkDiscount.discountRate} toplu alım indirimi uygulandı!`
-            : `${quantity} adet ürün sepete eklendi!`,
-        );
+        toast.success(successMsg);
         window.dispatchEvent(new CustomEvent("cartUpdated"));
       } else {
         const error = await res.json();
@@ -279,6 +336,40 @@ export default function ProductDetailPage() {
       toast.error("Sepete ekleme hatası.");
     }
   };
+
+  // ── Favorilere Ekle/Çıkar ───────────────────────────────────────────────────
+
+  const handleToggleFavorite = async () => {
+    if (!product) return;
+    if (favoriteLoading) return;
+    setFavoriteLoading(true);
+    try {
+      const added = await toggleWishlist(productIdStr, {
+        productName: product.title,
+        productImage: product.mainImage,
+        price: product.price,
+      });
+
+      if (added) {
+        toast.success(`"${product.title}" favorilere eklendi`, {
+          description: !user
+            ? "Giriş yaptığınızda listanız hesabınıza aktarılacak."
+            : undefined,
+          duration: !user ? 4000 : 2000,
+        });
+      } else {
+        toast.success(`"${product.title}" favorilerden çıkarıldı`, {
+          duration: 2000,
+        });
+      }
+    } catch {
+      toast.error("Bir hata oluştu, tekrar deneyin.");
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
+
+  // ── Paylaş ──────────────────────────────────────────────────────────────────
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -294,11 +385,18 @@ export default function ProductDetailPage() {
     }
   };
 
+  // ── Render ───────────────────────────────────────────────────────────────────
+
   if (loading) return <ProductDetailSkeleton />;
   if (!product)
     return (
       <div className="h-screen flex items-center justify-center">
-        Ürün bulunamadı.
+        <div className="text-center space-y-4">
+          <p className="text-2xl font-bold text-slate-900">Ürün bulunamadı.</p>
+          <p className="text-slate-500 text-sm">
+            Bu ürün kaldırılmış veya mevcut değil olabilir.
+          </p>
+        </div>
       </div>
     );
 
@@ -317,7 +415,7 @@ export default function ProductDetailPage() {
     <div className="min-h-screen bg-slate-100 text-slate-900 font-sans selection:bg-orange-100 selection:text-orange-900">
       <div className="mx-auto px-6 pb-20 pt-4 md:pt-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          {/* Galeri */}
+          {/* ── Galeri ── */}
           <div className="lg:col-span-6 lg:sticky lg:top-20 lg:self-start lg:z-40">
             <ProductImageGallery
               images={product.images}
@@ -330,7 +428,7 @@ export default function ProductDetailPage() {
             />
           </div>
 
-          {/* Ürün Bilgileri */}
+          {/* ── Ürün Bilgileri ── */}
           <div className="lg:col-span-6 flex flex-col pt-2">
             <div className="space-y-8">
               <ProductInfo
@@ -349,6 +447,7 @@ export default function ProductDetailPage() {
                 inStock={product.stock.inStock}
                 lowStock={product.stock.lowStock}
                 stockQuantity={product.stock.quantity}
+                hasCustomImage={false}
                 selectedStock={selectedStock}
               />
 
@@ -367,6 +466,7 @@ export default function ProductDetailPage() {
                   otherColors={product.otherColors}
                 />
 
+                {/* Toplu Alım Fırsatı */}
                 {product.bulkDiscountQty !== null &&
                   product.bulkDiscountRate !== null &&
                   product.bulkDiscountQty > 0 &&
@@ -430,17 +530,14 @@ export default function ProductDetailPage() {
                     </div>
                   )}
 
+                {/* ProductActions */}
                 <ProductActions
                   quantity={quantity}
                   onQuantityChange={setQuantity}
                   onAddToCart={handleAddToCart}
-                  onToggleFavorite={() =>
-                    isFavorited(product.id)
-                      ? removeFavorite(product.id)
-                      : addFavorite(product.id)
-                  }
+                  onToggleFavorite={handleToggleFavorite}
                   onShare={handleShare}
-                  isFavorited={isFavorited(product.id)}
+                  isFavorited={favorited}
                   inStock={product.stock.inStock}
                   sizeStockAvailable={!selectedStock || selectedStock.stock > 0}
                 />
@@ -459,6 +556,7 @@ export default function ProductDetailPage() {
                       TL
                     </span>
                   </div>
+
                   {bulkDiscount.hasDiscount && (
                     <div className="flex justify-between text-sm bg-emerald-50 -mx-4 px-4 py-2">
                       <span className="text-emerald-700 font-semibold flex items-center gap-1">
@@ -480,6 +578,7 @@ export default function ProductDetailPage() {
                       </span>
                     </div>
                   )}
+
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-600">KDV (%10)</span>
                     <span className="font-bold text-slate-900">
@@ -490,6 +589,7 @@ export default function ProductDetailPage() {
                       TL
                     </span>
                   </div>
+
                   <div className="border-t border-slate-300 pt-2 flex justify-between">
                     <span className="text-base font-bold text-slate-900">
                       Toplam (KDV Dahil)
@@ -530,7 +630,9 @@ export default function ProductDetailPage() {
                         icon: <ShieldCheck size={16} />,
                         color: "orange",
                         label: "Sertifikalar",
-                        value: product.specifications.certifications.join(", "),
+                        value:
+                          product.specifications.certifications.join(", ") ||
+                          "—",
                       },
                       {
                         icon: <HardHat size={16} />,
@@ -559,17 +661,20 @@ export default function ProductDetailPage() {
                       </div>
                     ))}
                   </div>
-                  <div
-                    className="prose prose-slate max-w-none text-slate-600 text-[13px] leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: product.description }}
-                  />
+
+                  {product.description && (
+                    <div
+                      className="prose prose-slate max-w-none text-slate-600 text-[13px] leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: product.description }}
+                    />
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Meta İstatistikler */}
+        {/* ── Meta İstatistikler ── */}
         <div className="grid grid-cols-3 gap-3 mt-8">
           {[
             {
@@ -606,7 +711,7 @@ export default function ProductDetailPage() {
           ))}
         </div>
 
-        {/* Benzer Ürünler */}
+        {/* ── Benzer Ürünler ── */}
         {product.relatedProducts.length > 0 && (
           <ProductCarousel
             products={product.relatedProducts}
@@ -615,7 +720,7 @@ export default function ProductDetailPage() {
           />
         )}
 
-        {/* Markadan Diğer Ürünler */}
+        {/* ── Markadan Diğer Ürünler ── */}
         {product.brand && product.brandProducts.length > 0 && (
           <ProductCarousel
             products={product.brandProducts}
@@ -624,7 +729,7 @@ export default function ProductDetailPage() {
           />
         )}
 
-        {/* Sekmeler */}
+        {/* ── Sekmeler ── */}
         <div className="mt-12 pt-8 border-t border-slate-100">
           <ProductTabs
             productId={product.id}

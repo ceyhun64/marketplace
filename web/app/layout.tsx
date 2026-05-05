@@ -8,22 +8,25 @@ import ClientLayoutWrapper from "@/components/layout/ClientLayoutWrapper";
 const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-manrope",
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
+  preload: true,
 });
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   variable: "--font-cormorant",
-  weight: ["300", "400", "500", "600"],
+  weight: ["400", "500", "600"],
   display: "swap",
+  preload: false, // Aktif sayfalarda body font değil, isteğe bağlı yüklenir
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains",
-  weight: ["300", "400", "500"],
+  weight: ["400", "500"],
   display: "swap",
+  preload: false, // Sadece kod bloklarında kullanıldığından preload gerekmez
 });
 
 export const metadata: Metadata = {
