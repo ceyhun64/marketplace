@@ -7,23 +7,92 @@ import {
   CarouselItem,
   CarouselApi,
 } from "@/components/ui/carousel";
-import ProductCard from "@/components/modules/store/ProductCard";
+import { ProductCard } from "@/components/modules/store/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight, Activity } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import axiosApi from "@/lib/api";
+import type { Product } from "@/types/entities";
 
-interface ProductData {
-  id: number;
-  title: string;
-  price: number;
-  oldPrice: number | null;
-  discountPercentage?: number;
-  mainImage: string;
-  category: string;
-  subImage?: string;
-  brand?: string | null;
-  hasDiscount?: boolean;
-}
+const MOCK_PRODUCTS: Product[] = [
+  {
+    id: "00000000-0000-0000-0001-000000000001",
+    merchantId: "00000000-0000-0000-0000-000000000000",
+    merchantStoreName: "SpeedStore",
+    merchantSlug: "speedstore",
+    name: "Adidas Ultraboost 24",
+    description: "",
+    categoryId: "",
+    categoryName: "Ayakkabı",
+    images: ["https://placehold.co/400x400?text=Adidas+Ultraboost"],
+    tags: [],
+    price: 4299,
+    stock: 30,
+    publishToMarket: true,
+    publishToStore: true,
+    isApproved: true,
+    isDeleted: false,
+    createdAt: "",
+  },
+  {
+    id: "00000000-0000-0000-0001-000000000002",
+    merchantId: "00000000-0000-0000-0000-000000000000",
+    merchantStoreName: "RunTech",
+    merchantSlug: "runtech",
+    name: "Nike Air Zoom Pegasus",
+    description: "",
+    categoryId: "",
+    categoryName: "Ayakkabı",
+    images: ["https://placehold.co/400x400?text=Nike+Pegasus"],
+    tags: [],
+    price: 3799,
+    stock: 15,
+    publishToMarket: true,
+    publishToStore: true,
+    isApproved: true,
+    isDeleted: false,
+    createdAt: "",
+  },
+  {
+    id: "00000000-0000-0000-0001-000000000003",
+    merchantId: "00000000-0000-0000-0000-000000000000",
+    merchantStoreName: "ActiveWear",
+    merchantSlug: "activewear",
+    name: "Under Armour HOVR Phantom",
+    description: "",
+    categoryId: "",
+    categoryName: "Ayakkabı",
+    images: ["https://placehold.co/400x400?text=UA+HOVR"],
+    tags: [],
+    price: 3599,
+    stock: 22,
+    publishToMarket: true,
+    publishToStore: true,
+    isApproved: true,
+    isDeleted: false,
+    createdAt: "",
+  },
+  {
+    id: "00000000-0000-0000-0001-000000000004",
+    merchantId: "00000000-0000-0000-0000-000000000000",
+    merchantStoreName: "SportMax",
+    merchantSlug: "sportmax",
+    name: "New Balance Fresh Foam X",
+    description: "",
+    categoryId: "",
+    categoryName: "Ayakkabı",
+    images: ["https://placehold.co/400x400?text=New+Balance"],
+    tags: [],
+    price: 2999,
+    stock: 40,
+    publishToMarket: true,
+    publishToStore: true,
+    isApproved: true,
+    isDeleted: false,
+    createdAt: "",
+  },
+];
 
 const CarouselSkeleton = () => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 px-4">
@@ -37,41 +106,37 @@ const CarouselSkeleton = () => (
 );
 
 export default function ÖnerilenÜrünlerCarousel() {
-  const [api, setApi] = useState<CarouselApi>();
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
-  const [products, setProducts] = useState<ProductData[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const onSelect = useCallback(() => {
-    if (!api) return;
-    setCurrent(api.selectedScrollSnap());
-  }, [api]);
+    if (!carouselApi) return;
+    setCurrent(carouselApi.selectedScrollSnap());
+  }, [carouselApi]);
 
   useEffect(() => {
-    if (!api) return;
+    if (!carouselApi) return;
     onSelect();
-    api.on("select", onSelect);
+    carouselApi.on("select", onSelect);
     return () => {
-      api.off("select", onSelect);
+      carouselApi.off("select", onSelect);
     };
-  }, [api, onSelect]);
+  }, [carouselApi, onSelect]);
 
-  useEffect(() => {
-    async function fetchProducts() {
-      try {
-        const res = await fetch("/api/products");
-        const data = await res.json();
-        if (data.products) setProducts(data.products);
-      } catch (error) {
-        console.error("Hata:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchProducts();
-  }, []);
+  const { data: apiData, isLoading } = useQuery({
+    queryKey: ["recommended-products"],
+    queryFn: async () => {
+      const params = new URLSearchParams({ limit: "8", sort: "newest" });
+      const { data } = await axiosApi.get(`/api/products?${params}`);
+      return data;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
-  if (loading) {
+  const products: Product[] =
+    apiData?.items?.length > 0 ? apiData.items : MOCK_PRODUCTS;
+
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-12 md:py-20">
         <CarouselSkeleton />
@@ -82,9 +147,8 @@ export default function ÖnerilenÜrünlerCarousel() {
   return (
     <section className="bg-slate-50 py-8 md:py-16 border-t border-slate-100 overflow-hidden max-w-[1400px] mx-auto px-6">
       <div className="container">
-        {/* Header - Mobil ve Masaüstü Uyumlu Yeni Düzen */}
+        {/* Header */}
         <div className="flex flex-row items-center justify-between mb-8 md:mb-14 gap-4">
-          {/* Başlık Alanı - Mobilde alt alta kalmaya devam eder */}
           <div className="relative">
             <motion.div
               initial={{ opacity: 0, x: -10 }}
@@ -104,10 +168,9 @@ export default function ÖnerilenÜrünlerCarousel() {
             </h2>
           </div>
 
-          {/* Kontrol Butonları - Her zaman sağda ve başlıkla aynı hizada */}
           <div className="flex items-center gap-2 shrink-0">
             <button
-              onClick={() => api?.scrollPrev()}
+              onClick={() => carouselApi?.scrollPrev()}
               className="group rounded-sm flex items-center justify-center w-9 h-9 md:w-11 md:h-11 border border-slate-200 bg-white hover:bg-slate-950 transition-all duration-300 active:scale-95"
               aria-label="Geri"
             >
@@ -117,7 +180,7 @@ export default function ÖnerilenÜrünlerCarousel() {
               />
             </button>
             <button
-              onClick={() => api?.scrollNext()}
+              onClick={() => carouselApi?.scrollNext()}
               className="group rounded-sm flex items-center justify-center w-9 h-9 md:w-11 md:h-11 border border-slate-200 bg-white hover:bg-slate-950 transition-all duration-300 active:scale-95"
               aria-label="İleri"
             >
@@ -129,15 +192,15 @@ export default function ÖnerilenÜrünlerCarousel() {
           </div>
         </div>
 
-        {/* Carousel Alanı */}
+        {/* Carousel */}
         <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0">
           <Carousel
             opts={{
               align: "start",
               loop: true,
-              dragFree: true, // Mobilde daha akıcı kaydırma deneyimi
+              dragFree: true,
             }}
-            setApi={setApi}
+            setApi={setCarouselApi}
             className="w-full"
           >
             <CarouselContent className="-ml-2 md:-ml-4">
@@ -147,8 +210,6 @@ export default function ÖnerilenÜrünlerCarousel() {
                   className="pl-2 md:pl-4 basis-[85%] sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
                 >
                   <div className="h-full py-2">
-                    {" "}
-                    {/* Kart gölgeleri kesilmesin diye */}
                     <ProductCard product={product} />
                   </div>
                 </CarouselItem>

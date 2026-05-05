@@ -1,22 +1,60 @@
 import React, { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import ProductCard from "@/components/modules/store/ProductCard";
+import { ProductCard } from "@/components/modules/store/ProductCard";
+import type { Product } from "@/types/entities";
 
-interface Product {
-  id: number;
-  title: string;
+// Carousel'e dışarıdan geçirilen minimal ürün tipi
+// (productDetailPage'deki relatedProducts / brandProducts shape'i)
+export interface CarouselProduct {
+  id: number | string;
+  title?: string;
+  name?: string;
   price: number;
-  oldPrice: number | null;
-  mainImage: string;
-  category: string;
+  oldPrice?: number | null;
+  mainImage?: string;
+  images?: string[];
+  category?: string | { id: number; name: string };
   brand?: string | null;
-  hasDiscount: boolean;
+  hasDiscount?: boolean;
+  stock?: number;
+  merchantStoreName?: string;
+  merchantSlug?: string;
+  tags?: string[];
 }
 
 interface ProductCarouselProps {
-  products: Product[];
+  products: CarouselProduct[];
   title: string;
   icon: React.ReactNode;
+}
+
+/** CarouselProduct → tam Product shape'ine dönüştürür */
+function toProduct(p: CarouselProduct): Product {
+  return {
+    id: String(p.id),
+    merchantId: "",
+    merchantStoreName: p.merchantStoreName ?? "",
+    merchantSlug: p.merchantSlug ?? "",
+    name: p.name ?? p.title ?? "",
+    description: "",
+    categoryId: "",
+    categoryName:
+      typeof p.category === "string" ? p.category : (p.category?.name ?? ""),
+    images:
+      p.images && p.images.length > 0
+        ? p.images
+        : p.mainImage
+          ? [p.mainImage]
+          : [],
+    tags: p.tags ?? [],
+    price: p.price,
+    stock: p.stock ?? 1,
+    publishToMarket: true,
+    publishToStore: true,
+    isApproved: true,
+    isDeleted: false,
+    createdAt: "",
+  };
 }
 
 export default function ProductCarousel({
@@ -28,10 +66,8 @@ export default function ProductCarousel({
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollContainerRef.current) return;
-
     const container = scrollContainerRef.current;
     const scrollAmount = container.offsetWidth * 0.8;
-
     container.scrollBy({
       left: direction === "left" ? -scrollAmount : scrollAmount,
       behavior: "smooth",
@@ -88,7 +124,7 @@ export default function ProductCarousel({
               key={product.id}
               className="flex-none w-[calc(50%-8px)] md:w-[calc(25%-12px)] snap-start"
             >
-              <ProductCard product={product} />
+              <ProductCard product={toProduct(product)} />
             </div>
           ))}
         </div>
