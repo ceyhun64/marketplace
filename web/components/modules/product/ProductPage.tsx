@@ -15,6 +15,9 @@ import {
   Users,
   Percent,
   Heart,
+  Tag,
+  Store,
+  Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 import ProductTabs from "@/components/modules/product/productDetail/productTabs";
@@ -43,6 +46,18 @@ interface StockEntry {
   priceModifier: number;
 }
 
+/**
+ * ProductData — sistem mimarisindeki Product entity'si ile hizalanmış.
+ * Domain/Entities/Product.cs:
+ *   Id, MerchantId, Name, Description, CategoryId, Images, Tags,
+ *   Price, Stock, PublishToMarket, PublishToStore, IsApproved, IsDeleted
+ *
+ * MerchantProfile (brand bilgisi için):
+ *   StoreName, Slug, LogoUrl, CustomDomain
+ *
+ * Category (self-ref hiyerarşi):
+ *   Id, Name, Slug, ParentId → subcategory zinciri
+ */
 interface ProductData {
   id: string;
   title: string;
@@ -55,10 +70,20 @@ interface ProductData {
   mainImage: string;
   images: string[];
   videoUrl: string | null;
-  category: { id: number; name: string };
-  middleCategory: { id: number; name: string } | null;
-  subCategory: { id: number; name: string } | null;
-  brand: { id: number; name: string; image: string | null } | null;
+  // Category hierarchy — mimarideki self-ref Category tablosuna karşılık gelir
+  category: { id: number; name: string; slug?: string };
+  middleCategory: { id: number; name: string; slug?: string } | null;
+  subCategory: { id: number; name: string; slug?: string } | null;
+  // Tags — Product.Tags List<string>
+  tags: string[];
+  // Brand → MerchantProfile (StoreName, Slug, LogoUrl, CustomDomain)
+  brand: {
+    id: number;
+    name: string; // StoreName
+    slug?: string; // Merchant slug → /store/{slug}
+    image: string | null; // LogoUrl
+    customDomain?: string | null; // MerchantProfile.CustomDomain
+  } | null;
   color: { id: number; name: string; hexCode: string } | null;
   productGroupId: string | null;
   otherColors: Array<{
@@ -83,6 +108,11 @@ interface ProductData {
     user: { name: string; surname: string };
   }>;
   stock: { inStock: boolean; quantity: number; lowStock: boolean };
+  // Publish kanalları — mimarideki PublishToMarket / PublishToStore alanları
+  publishToMarket: boolean;
+  publishToStore: boolean;
+  // IsApproved — admin onayı
+  isApproved: boolean;
   shipping: {
     freeShipping: boolean;
     estimatedDelivery: string;
@@ -185,6 +215,92 @@ function addToGuestCart(
   }
 }
 
+// ── Channel Badges ────────────────────────────────────────────────────────────
+// PublishToMarket / PublishToStore / IsApproved görünürlük göstergesi
+
+function ChannelBadges({
+  publishToMarket,
+  publishToStore,
+  isApproved,
+}: {
+  publishToMarket: boolean;
+  publishToStore: boolean;
+  isApproved: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      {publishToMarket && (
+        <span
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border"
+          style={{
+            background: "rgba(200,16,46,0.07)",
+            borderColor: "rgba(200,16,46,0.18)",
+            color: "#c8102e",
+            fontFamily: "'JetBrains Mono', monospace",
+          }}
+        >
+          <Globe size={9} />
+          Marketplace
+        </span>
+      )}
+      {publishToStore && (
+        <span
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border"
+          style={{
+            background: "rgba(27,94,168,0.07)",
+            borderColor: "rgba(27,94,168,0.18)",
+            color: "#1b5ea8",
+            fontFamily: "'JetBrains Mono', monospace",
+          }}
+        >
+          <Store size={9} />
+          E-Mağaza
+        </span>
+      )}
+      {isApproved && (
+        <span
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border"
+          style={{
+            background: "rgba(13,122,78,0.07)",
+            borderColor: "rgba(13,122,78,0.18)",
+            color: "#0d7a4e",
+            fontFamily: "'JetBrains Mono', monospace",
+          }}
+        >
+          <BadgeCheck size={9} />
+          Onaylı
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ── Tag Chips ─────────────────────────────────────────────────────────────────
+// Product.Tags List<string> alanını render eder
+
+function TagChips({ tags }: { tags: string[] }) {
+  if (!tags || tags.length === 0) return null;
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      <Tag size={11} className="text-slate-400 shrink-0" />
+      {tags.map((tag) => (
+        <span
+          key={tag}
+          className="inline-block px-2 py-0.5 rounded-full text-[10px] font-medium tracking-wide border"
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            background: "#efeeec",
+            borderColor: "rgba(30,30,30,0.1)",
+            color: "#525252",
+          }}
+        >
+          {tag}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function ProductDetailPage() {
@@ -194,84 +310,119 @@ export default function ProductDetailPage() {
   const { user } = useAuth();
   const { isInWishlist, toggle: toggleWishlist } = useHybridWishlist();
 
-  // ── useProduct hook — backend'e doğrudan bağlanır (UUID string ile) ────────
+  // useProduct hook — GET /api/products/{id} endpoint'ine bağlanır
   const { data: rawProduct, isLoading: loading } = useProduct(productId);
 
-  // Backend response'unu ProductData shape'ine map ediyoruz.
-  // Backend Ok(new { data = product }) döndürüyor (success field yok)
-  // → axios interceptor unwrap YAPMAZ → rawProduct = { data: { id, name, ... } }
+  /**
+   * Backend response mapping:
+   * GET /api/products/{id} → { data: { id, name, description, price, stock,
+   *   images[], tags[], category, merchant, publishToMarket, publishToStore,
+   *   isApproved, ... } }
+   *
+   * Fiyat ve stok doğrudan Product tablosundan gelir (Offer yapısı yok).
+   * MerchantProfile: storeName, slug, logoUrl, customDomain
+   * Category: self-ref hiyerarşi (ana → orta → alt)
+   */
   const product = useMemo<ProductData | null>(() => {
     if (!rawProduct) return null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const r = (rawProduct as any)?.data ?? (rawProduct as any);
-    if (!r?.id) return null; // henüz yüklenmemiş ya da geçersiz
+    if (!r?.id) return null;
+
     return {
       id: r.id ?? productId,
       title: r.name ?? r.title ?? "",
       description: r.description ?? "",
       price: r.price ?? 0,
-      oldPrice: null,
-      discountPercentage: 0,
-      hasDiscount: false,
-      discountAmount: 0,
+      oldPrice: r.oldPrice ?? null,
+      discountPercentage: r.discountPercentage ?? 0,
+      hasDiscount: r.hasDiscount ?? false,
+      discountAmount: r.discountAmount ?? 0,
       mainImage: r.images?.[0] ?? r.mainImage ?? "",
       images:
         Array.isArray(r.images) && r.images.length > 0
           ? r.images
           : ["/placeholder.png"],
-      videoUrl: null,
+      videoUrl: r.videoUrl ?? null,
       category: {
-        id: 0,
+        id: r.category?.id ?? 0,
         name: r.category?.name ?? r.categoryName ?? "",
+        slug: r.category?.slug,
       },
-      middleCategory: null,
-      subCategory: null,
-      brand: r.merchant?.storeName
-        ? { id: 0, name: r.merchant.storeName, image: null }
+      middleCategory: r.middleCategory
+        ? {
+            id: r.middleCategory.id,
+            name: r.middleCategory.name,
+            slug: r.middleCategory.slug,
+          }
         : null,
-      color: null,
-      productGroupId: null,
-      otherColors: [],
-      rating: 0,
-      reviewCount: 0,
-      ratingDistribution: {},
-      reviews: [],
+      subCategory: r.subCategory
+        ? {
+            id: r.subCategory.id,
+            name: r.subCategory.name,
+            slug: r.subCategory.slug,
+          }
+        : null,
+      tags: Array.isArray(r.tags) ? r.tags : [],
+      brand: r.merchant?.storeName
+        ? {
+            id: r.merchant.id ?? 0,
+            name: r.merchant.storeName,
+            slug: r.merchant.slug,
+            image: r.merchant.logoUrl ?? null,
+            customDomain: r.merchant.customDomain ?? null,
+          }
+        : null,
+      color: r.color ?? null,
+      productGroupId: r.productGroupId ?? null,
+      otherColors: Array.isArray(r.otherColors) ? r.otherColors : [],
+      rating: r.rating ?? 0,
+      reviewCount: r.reviewCount ?? 0,
+      ratingDistribution: r.ratingDistribution ?? {},
+      reviews: Array.isArray(r.reviews) ? r.reviews : [],
       stock: {
         inStock: (r.stock ?? 0) > 0,
         quantity: r.stock ?? 0,
         lowStock: (r.stock ?? 0) > 0 && (r.stock ?? 0) < 10,
       },
+      publishToMarket: r.publishToMarket ?? false,
+      publishToStore: r.publishToStore ?? false,
+      isApproved: r.isApproved ?? false,
       shipping: {
-        freeShipping: false,
-        estimatedDelivery: "",
-        shippingCost: 0,
-        expressAvailable: false,
-        expressDelivery: "",
-        expressCost: 0,
+        freeShipping: r.shipping?.freeShipping ?? false,
+        estimatedDelivery: r.shipping?.estimatedDelivery ?? "",
+        shippingCost: r.shipping?.shippingCost ?? 0,
+        expressAvailable: r.shipping?.expressAvailable ?? false,
+        expressDelivery: r.shipping?.expressDelivery ?? "",
+        expressCost: r.shipping?.expressCost ?? 0,
       },
       specifications: {
-        weight: null,
-        dimensions: null,
-        material: null,
-        warranty: "—",
-        origin: "—",
-        certifications: [],
+        weight: r.specifications?.weight ?? null,
+        dimensions: r.specifications?.dimensions ?? null,
+        material: r.specifications?.material ?? null,
+        warranty: r.specifications?.warranty ?? "—",
+        origin: r.specifications?.origin ?? "—",
+        certifications: r.specifications?.certifications ?? [],
       },
-      relatedProducts: [],
-      brandProducts: [],
+      relatedProducts: Array.isArray(r.relatedProducts)
+        ? r.relatedProducts
+        : [],
+      brandProducts: Array.isArray(r.brandProducts) ? r.brandProducts : [],
       meta: {
-        views: 0,
-        favorites: 0,
-        purchaseCount: 0,
-        lastUpdated: r.updatedAt ?? r.createdAt ?? "",
+        views: r.meta?.views ?? 0,
+        favorites: r.meta?.favorites ?? 0,
+        purchaseCount: r.meta?.purchaseCount ?? 0,
+        lastUpdated: r.meta?.lastUpdated ?? r.updatedAt ?? r.createdAt ?? "",
       },
-      availableSizes: [],
+      availableSizes: Array.isArray(r.availableSizes) ? r.availableSizes : [],
       stockMatrix:
-        (r.stock ?? 0) > 0
-          ? [{ id: 0, sizeId: null, stock: r.stock, priceModifier: 0 }]
-          : [],
-      bulkDiscountQty: null,
-      bulkDiscountRate: null,
+        Array.isArray(r.stockMatrix) && r.stockMatrix.length > 0
+          ? r.stockMatrix
+          : (r.stock ?? 0) > 0
+            ? [{ id: 0, sizeId: null, stock: r.stock, priceModifier: 0 }]
+            : [],
+      bulkDiscountQty: r.bulkDiscountQty ?? null,
+      bulkDiscountRate: r.bulkDiscountRate ?? null,
     };
   }, [rawProduct, productId]);
 
@@ -336,7 +487,6 @@ export default function ProductDetailPage() {
       ? `${quantity} adet ürün sepete eklendi! 🎉 %${bulkDiscount.discountRate} toplu alım indirimi uygulandı!`
       : `${quantity} adet ürün sepete eklendi!`;
 
-    // Giriş yapmamış kullanıcı → localStorage sepeti
     if (!user) {
       addToGuestCart(
         product.id,
@@ -355,7 +505,6 @@ export default function ProductDetailPage() {
       return;
     }
 
-    // Giriş yapmış kullanıcı → API
     try {
       const formData = new FormData();
       formData.append("productId", product.id.toString());
@@ -433,10 +582,18 @@ export default function ProductDetailPage() {
   if (loading) return <ProductDetailSkeleton />;
   if (!product)
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div
+        className="h-screen flex items-center justify-center"
+        style={{ background: "#f7f6f4" }}
+      >
         <div className="text-center space-y-4">
-          <p className="text-2xl font-bold text-slate-900">Ürün bulunamadı.</p>
-          <p className="text-slate-500 text-sm">
+          <p
+            className="text-2xl font-bold"
+            style={{ color: "#1e1e1e", fontFamily: "'Manrope', sans-serif" }}
+          >
+            Ürün bulunamadı.
+          </p>
+          <p className="text-sm" style={{ color: "#9a9a9a" }}>
             Bu ürün kaldırılmış veya mevcut değil olabilir.
           </p>
         </div>
@@ -455,7 +612,22 @@ export default function ProductDetailPage() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 font-sans selection:bg-orange-100 selection:text-orange-900">
+    /*
+     * Tasarım sistemi: style_design.html v2.0
+     * Renkler : --red #c8102e | --charcoal #1e1e1e | --off-white #f7f6f4
+     * Fontlar : Manrope (body) | Cormorant Garamond (display) | JetBrains Mono (mono)
+     * Gölgeler: shadow-sm / shadow-md / shadow-red
+     * Radius  : radius-md 8px | radius-lg 14px
+     * Motion  : dur-fast 140ms | ease-out cubic-bezier(0.16,1,0.3,1)
+     */
+    <div
+      className="min-h-screen"
+      style={{
+        background: "#f7f6f4",
+        color: "#1e1e1e",
+        fontFamily: "'Manrope', sans-serif",
+      }}
+    >
       <div className="mx-auto px-6 pb-20 pt-4 md:pt-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* ── Galeri ── */}
@@ -474,6 +646,16 @@ export default function ProductDetailPage() {
           {/* ── Ürün Bilgileri ── */}
           <div className="lg:col-span-6 flex flex-col pt-2">
             <div className="space-y-8">
+              {/* Kanal etiketleri (PublishToMarket, PublishToStore, IsApproved) + Tags */}
+              <div className="space-y-3">
+                <ChannelBadges
+                  publishToMarket={product.publishToMarket}
+                  publishToStore={product.publishToStore}
+                  isApproved={product.isApproved}
+                />
+                <TagChips tags={product.tags} />
+              </div>
+
               <ProductInfo
                 id={product.id}
                 title={product.title}
@@ -515,34 +697,35 @@ export default function ProductDetailPage() {
                   product.bulkDiscountQty > 0 &&
                   product.bulkDiscountRate > 0 && (
                     <div
-                      className={`border p-4 rounded space-y-2 ${
-                        bulkDiscount.hasDiscount
-                          ? "bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200"
-                          : "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200"
-                      }`}
+                      className="p-4 space-y-2"
+                      style={{
+                        border: `1px solid ${bulkDiscount.hasDiscount ? "rgba(13,122,78,0.18)" : "rgba(27,94,168,0.18)"}`,
+                        background: bulkDiscount.hasDiscount
+                          ? "rgba(13,122,78,0.07)"
+                          : "rgba(27,94,168,0.07)",
+                        borderRadius: "14px",
+                      }}
                     >
-                      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
-                        <Percent
-                          size={14}
-                          className={
-                            bulkDiscount.hasDiscount
-                              ? "text-emerald-700"
-                              : "text-blue-700"
-                          }
-                        />
-                        <span
-                          className={
-                            bulkDiscount.hasDiscount
-                              ? "text-emerald-700"
-                              : "text-blue-700"
-                          }
-                        >
+                      <div
+                        className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
+                        style={{
+                          fontFamily: "'JetBrains Mono', monospace",
+                          color: bulkDiscount.hasDiscount
+                            ? "#0d7a4e"
+                            : "#1b5ea8",
+                        }}
+                      >
+                        <Percent size={14} />
+                        <span>
                           {bulkDiscount.hasDiscount
                             ? `🎉 Toplu Alım İndirimi Uygulandı! %${bulkDiscount.discountRate}`
                             : "Toplu Alım Fırsatı"}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-600 leading-relaxed">
+                      <p
+                        className="text-xs leading-relaxed"
+                        style={{ color: "#525252" }}
+                      >
                         {bulkDiscount.hasDiscount ? (
                           <>
                             Bu üründen {product.bulkDiscountQty} adet ve üzeri
@@ -561,7 +744,7 @@ export default function ProductDetailPage() {
                               <>
                                 {" "}
                                 Toplu alım için{" "}
-                                <strong className="text-blue-700">
+                                <strong style={{ color: "#1b5ea8" }}>
                                   {remainingForBulk} adet
                                 </strong>{" "}
                                 daha ekleyin.
@@ -585,13 +768,21 @@ export default function ProductDetailPage() {
                   sizeStockAvailable={!selectedStock || selectedStock.stock > 0}
                 />
 
-                {/* Fiyat Özeti */}
-                <div className="bg-slate-50 border border-slate-200 rounded p-4 space-y-2">
+                {/* Fiyat Özeti — style_design.html design tokens */}
+                <div
+                  className="p-4 space-y-2"
+                  style={{
+                    background: "#efeeec",
+                    border: "1px solid rgba(30,30,30,0.1)",
+                    borderRadius: "14px",
+                    boxShadow: "0 1px 2px rgba(30,30,30,0.05)",
+                  }}
+                >
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">
+                    <span style={{ color: "#747474" }}>
                       Ürün Fiyatı ({quantity} adet)
                     </span>
-                    <span className="font-bold text-slate-900">
+                    <span className="font-bold" style={{ color: "#1e1e1e" }}>
                       {subtotal.toLocaleString("tr-TR", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
@@ -601,12 +792,18 @@ export default function ProductDetailPage() {
                   </div>
 
                   {bulkDiscount.hasDiscount && (
-                    <div className="flex justify-between text-sm bg-emerald-50 -mx-4 px-4 py-2">
-                      <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                    <div
+                      className="flex justify-between text-sm -mx-4 px-4 py-2"
+                      style={{ background: "rgba(13,122,78,0.07)" }}
+                    >
+                      <span
+                        className="font-semibold flex items-center gap-1"
+                        style={{ color: "#0d7a4e" }}
+                      >
                         <Percent size={14} /> Toplu Alım İndirimi (%
                         {bulkDiscount.discountRate})
                       </span>
-                      <span className="font-bold text-emerald-700">
+                      <span className="font-bold" style={{ color: "#0d7a4e" }}>
                         -
                         {(
                           (product.price +
@@ -623,8 +820,8 @@ export default function ProductDetailPage() {
                   )}
 
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">KDV (%10)</span>
-                    <span className="font-bold text-slate-900">
+                    <span style={{ color: "#747474" }}>KDV (%10)</span>
+                    <span className="font-bold" style={{ color: "#1e1e1e" }}>
                       {vatAmount.toLocaleString("tr-TR", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
@@ -633,11 +830,20 @@ export default function ProductDetailPage() {
                     </span>
                   </div>
 
-                  <div className="border-t border-slate-300 pt-2 flex justify-between">
-                    <span className="text-base font-bold text-slate-900">
+                  <div
+                    className="pt-2 flex justify-between"
+                    style={{ borderTop: "1px solid rgba(30,30,30,0.18)" }}
+                  >
+                    <span
+                      className="text-base font-bold"
+                      style={{ color: "#1e1e1e" }}
+                    >
                       Toplam (KDV Dahil)
                     </span>
-                    <span className="text-md font-black text-orange-600">
+                    <span
+                      className="text-md font-black"
+                      style={{ color: "#c8102e" }}
+                    >
                       {totalWithVat.toLocaleString("tr-TR", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
@@ -650,28 +856,40 @@ export default function ProductDetailPage() {
 
               {/* Ürün Özellikleri */}
               <div className="flex">
-                <div className="space-y-4 pt-4 border-t border-slate-100 w-full">
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                    <Info size={14} className="text-orange-600" /> Ürün
+                <div
+                  className="space-y-4 pt-4 w-full"
+                  style={{ borderTop: "1px solid rgba(30,30,30,0.06)" }}
+                >
+                  <div
+                    className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em]"
+                    style={{ color: "#9a9a9a" }}
+                  >
+                    <Info size={14} style={{ color: "#c8102e" }} /> Ürün
                     Özellikleri
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       {
                         icon: <Award size={16} />,
-                        color: "blue",
+                        bg: "rgba(27,94,168,0.07)",
+                        border: "rgba(27,94,168,0.18)",
+                        color: "#1b5ea8",
                         label: "Garanti",
                         value: product.specifications.warranty,
                       },
                       {
                         icon: <BadgeCheck size={16} />,
-                        color: "emerald",
+                        bg: "rgba(13,122,78,0.07)",
+                        border: "rgba(13,122,78,0.18)",
+                        color: "#0d7a4e",
                         label: "Menşei",
                         value: product.specifications.origin,
                       },
                       {
                         icon: <ShieldCheck size={16} />,
-                        color: "orange",
+                        bg: "rgba(180,83,9,0.07)",
+                        border: "rgba(180,83,9,0.18)",
+                        color: "#b45309",
                         label: "Sertifikalar",
                         value:
                           product.specifications.certifications.join(", ") ||
@@ -679,25 +897,43 @@ export default function ProductDetailPage() {
                       },
                       {
                         icon: <HardHat size={16} />,
-                        color: "purple",
+                        bg: "rgba(200,16,46,0.07)",
+                        border: "rgba(200,16,46,0.18)",
+                        color: "#c8102e",
                         label: "İSG Uyumu",
                         value: "Onaylı",
                       },
-                    ].map(({ icon, color, label, value }) => (
+                    ].map(({ icon, bg, border, color, label, value }) => (
                       <div
                         key={label}
-                        className="p-3 bg-slate-50/50 border border-slate-100 flex items-center gap-3"
+                        className="p-3 flex items-center gap-3"
+                        style={{
+                          background: bg,
+                          border: `1px solid ${border}`,
+                          borderRadius: "8px",
+                        }}
                       >
                         <div
-                          className={`p-2 bg-${color}-100 text-${color}-600`}
+                          className="p-2"
+                          style={{
+                            background: bg,
+                            color,
+                            borderRadius: "4px",
+                          }}
                         >
                           {icon}
                         </div>
                         <div>
-                          <div className="text-xs font-bold text-slate-900">
+                          <div
+                            className="text-xs font-bold"
+                            style={{ color: "#1e1e1e" }}
+                          >
                             {label}
                           </div>
-                          <div className="text-[10px] text-slate-500">
+                          <div
+                            className="text-[10px]"
+                            style={{ color: "#9a9a9a" }}
+                          >
                             {value}
                           </div>
                         </div>
@@ -707,7 +943,8 @@ export default function ProductDetailPage() {
 
                   {product.description && (
                     <div
-                      className="prose prose-slate max-w-none text-slate-600 text-[13px] leading-relaxed"
+                      className="prose max-w-none text-[13px] leading-relaxed"
+                      style={{ color: "#747474" }}
                       dangerouslySetInnerHTML={{ __html: product.description }}
                     />
                   )}
@@ -722,32 +959,50 @@ export default function ProductDetailPage() {
           {[
             {
               icon: <Eye size={20} />,
-              color: "text-orange-600",
+              color: "#c8102e",
               value: product.meta.views,
               label: "Görüntülenme",
             },
             {
               icon: <Heart size={20} />,
-              color: "text-pink-600",
+              color: "#c8102e",
               value: product.meta.favorites,
               label: "Favori",
             },
             {
               icon: <ShoppingCart size={20} />,
-              color: "text-emerald-600",
+              color: "#0d7a4e",
               value: product.meta.purchaseCount,
               label: "Satıldı",
             },
           ].map(({ icon, color, value, label }) => (
             <div
               key={label}
-              className="bg-white border border-slate-100 p-4 rounded text-center"
+              className="p-4 text-center"
+              style={{
+                background: "#ffffff",
+                border: "1px solid rgba(30,30,30,0.1)",
+                borderRadius: "14px",
+                boxShadow:
+                  "0 1px 4px rgba(30,30,30,0.06), 0 1px 2px rgba(30,30,30,0.04)",
+              }}
             >
-              <div className={`flex items-center justify-center ${color} mb-2`}>
+              <div
+                className="flex items-center justify-center mb-2"
+                style={{ color }}
+              >
                 {icon}
               </div>
-              <div className="text-lg font-bold text-slate-900">{value}</div>
-              <div className="text-[7px] md:text-[10px] text-slate-500 uppercase tracking-wider">
+              <div className="text-lg font-bold" style={{ color: "#1e1e1e" }}>
+                {value}
+              </div>
+              <div
+                className="text-[7px] md:text-[10px] uppercase tracking-wider"
+                style={{
+                  color: "#9a9a9a",
+                  fontFamily: "'JetBrains Mono', monospace",
+                }}
+              >
                 {label}
               </div>
             </div>
@@ -759,7 +1014,7 @@ export default function ProductDetailPage() {
           <ProductCarousel
             products={product.relatedProducts}
             title="Benzer Ürünler"
-            icon={<TrendingUp size={20} className="text-orange-600" />}
+            icon={<TrendingUp size={20} style={{ color: "#c8102e" }} />}
           />
         )}
 
@@ -768,12 +1023,15 @@ export default function ProductDetailPage() {
           <ProductCarousel
             products={product.brandProducts}
             title={`${product.brand.name} Markalı Diğer Ürünler`}
-            icon={<Users size={20} className="text-orange-600" />}
+            icon={<Users size={20} style={{ color: "#c8102e" }} />}
           />
         )}
 
         {/* ── Sekmeler ── */}
-        <div className="mt-12 pt-8 border-t border-slate-100">
+        <div
+          className="mt-12 pt-8"
+          style={{ borderTop: "1px solid rgba(30,30,30,0.06)" }}
+        >
           <ProductTabs
             productId={product.id}
             productTitle={product.title}

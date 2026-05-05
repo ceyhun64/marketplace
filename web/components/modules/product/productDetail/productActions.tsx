@@ -56,7 +56,7 @@ export default function ProductActions({
             className={cn(
               "flex-1 h-12 rounded-sm text-[11px] font-bold uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-2",
               canAddToCart
-                ? "bg-slate-900 text-white hover:bg-orange-600"
+                ? "bg-red-900 text-white hover:bg-red-800"
                 : "bg-slate-200 text-slate-400 cursor-not-allowed",
             )}
           >
