@@ -64,6 +64,8 @@ function isMainHost(host: string): boolean {
     bare.endsWith(".test")
   )
     return true;
+  // Vercel preview/production URL'leri
+  if (bare.endsWith(".vercel.app")) return true;
   return false;
 }
 
