@@ -69,7 +69,7 @@ export default function ProductInfo({
             onMouseEnter={(e) => (e.currentTarget.style.color = "#c8102e")}
             onMouseLeave={(e) => (e.currentTarget.style.color = "#9a9a9a")}
           >
-            <ArrowLeft size={11} /> Koleksiyon
+            <ArrowLeft size={11} /> Collection
           </Link>
 
           {category && (
@@ -139,14 +139,14 @@ export default function ProductInfo({
             className="text-[10px] uppercase tracking-wider"
             style={{ color: "#c8102e" }}
           >
-            Ürün Detayı
+            Product Detail
           </span>
         </nav>
       </div>
 
       {/* Header */}
       <header className="space-y-4">
-        {/* Kategori + Marka + ID */}
+        {/* Category + Brand + ID */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span
@@ -193,7 +193,7 @@ export default function ProductInfo({
           )}
         </div>
 
-        {/* Başlık */}
+        {/* Title */}
         <h1
           className="text-2xl md:text-3xl font-extrabold leading-tight tracking-tight"
           style={{
@@ -208,7 +208,7 @@ export default function ProductInfo({
               className="ml-2 text-sm font-normal"
               style={{ color: "#c8102e" }}
             >
-              (Özelleştirilmiş)
+              (Customized)
             </span>
           )}
         </h1>
@@ -237,11 +237,11 @@ export default function ProductInfo({
             </span>
           </div>
           <span className="text-xs" style={{ color: "#9a9a9a" }}>
-            ({reviewCount} değerlendirme)
+            ({reviewCount} review{reviewCount !== 1 ? "s" : ""})
           </span>
         </div>
 
-        {/* Stok Durumu */}
+        {/* Stock Status */}
         <div className="flex items-center gap-2">
           {inStock ? (
             <span
@@ -258,10 +258,10 @@ export default function ProductInfo({
                 className="w-1.5 h-1.5 rounded-full"
                 style={{ background: "#0d7a4e" }}
               />
-              Stokta Var
+              In Stock
               {lowStock && (
                 <span style={{ color: "#b45309" }}>
-                  &nbsp;· Son {stockQuantity} adet
+                  &nbsp;· Only {stockQuantity} left
                 </span>
               )}
             </span>
@@ -280,13 +280,13 @@ export default function ProductInfo({
                 className="w-1.5 h-1.5 rounded-full"
                 style={{ background: "#c8102e" }}
               />
-              Stokta Yok
+              Out of Stock
             </span>
           )}
         </div>
       </header>
 
-      {/* Fiyat */}
+      {/* Price */}
       <div
         className="flex flex-col py-4"
         style={{
@@ -299,12 +299,12 @@ export default function ProductInfo({
             className="text-3xl font-black tracking-tighter"
             style={{ color: "#1e1e1e", fontFamily: "'Manrope', sans-serif" }}
           >
-            {currentPrice.toLocaleString("tr-TR")}
+            {currentPrice.toLocaleString("en-US")}
             <small
               className="text-sm ml-1"
               style={{ color: "#747474", fontWeight: 600 }}
             >
-              TL
+              USD
             </small>
           </span>
 
@@ -314,7 +314,7 @@ export default function ProductInfo({
                 className="text-lg line-through font-semibold"
                 style={{ color: "#9a9a9a" }}
               >
-                {oldPrice?.toLocaleString("tr-TR")} TL
+                {oldPrice?.toLocaleString("en-US")} USD
               </span>
               <span
                 className="px-2 py-1 text-xs font-bold"
@@ -325,7 +325,7 @@ export default function ProductInfo({
                   fontFamily: "'JetBrains Mono', monospace",
                 }}
               >
-                %{discountPercentage} İndirim
+                {discountPercentage}% OFF
               </span>
             </>
           )}
@@ -339,7 +339,7 @@ export default function ProductInfo({
               fontFamily: "'JetBrains Mono', monospace",
             }}
           >
-            Seçilen beden:{" "}
+            Selected size modifier:{" "}
             <span
               style={{
                 color: selectedStock.priceModifier > 0 ? "#b45309" : "#0d7a4e",
@@ -347,7 +347,7 @@ export default function ProductInfo({
               }}
             >
               {selectedStock.priceModifier > 0 ? "+" : ""}
-              {selectedStock.priceModifier.toLocaleString("tr-TR")} TL
+              {selectedStock.priceModifier.toLocaleString("en-US")} USD
             </span>
           </span>
         )}

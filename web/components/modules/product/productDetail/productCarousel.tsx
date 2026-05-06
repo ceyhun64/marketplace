@@ -80,7 +80,7 @@ export default function ProductCarousel({
       className="mt-12 pt-8"
       style={{ borderTop: "1px solid rgba(30,30,30,0.06)" }}
     >
-      {/* Başlık */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           {icon}
@@ -99,7 +99,7 @@ export default function ProductCarousel({
         <div className="flex gap-2">
           <button
             onClick={() => scroll("left")}
-            aria-label="Önceki"
+            aria-label="Previous"
             style={{
               width: 36,
               height: 36,
@@ -128,7 +128,7 @@ export default function ProductCarousel({
           </button>
           <button
             onClick={() => scroll("right")}
-            aria-label="Sonraki"
+            aria-label="Next"
             style={{
               width: 36,
               height: 36,
@@ -158,7 +158,7 @@ export default function ProductCarousel({
         </div>
       </div>
 
-      {/* Kaydırmalı Liste */}
+      {/* Scrollable List */}
       <div
         ref={scrollContainerRef}
         className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory"

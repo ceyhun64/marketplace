@@ -151,7 +151,7 @@ export default function ProductVariantSelector({
               >
                 <div
                   className="aspect-square overflow-hidden mb-1.5"
-                  style={{ borderRadius: "4px", background: "#f7f6f4" }}
+                  style={{ borderRadius: "4px", background: "#fafafa" }}
                 >
                   <img
                     src={colorOption.mainImage}
@@ -255,7 +255,7 @@ export default function ProductVariantSelector({
                   onMouseEnter={(e) => {
                     if (!isOutOfStock && !isSelected) {
                       e.currentTarget.style.borderColor = "rgba(30,30,30,0.32)";
-                      e.currentTarget.style.background = "#f7f6f4";
+                      e.currentTarget.style.background = "#fafafa";
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -289,7 +289,7 @@ export default function ProductVariantSelector({
         <div
           className="space-y-3 p-4"
           style={{
-            background: "#f7f6f4",
+            background: "#fafafa",
             border: "1px solid rgba(30,30,30,0.1)",
             borderRadius: "8px",
           }}

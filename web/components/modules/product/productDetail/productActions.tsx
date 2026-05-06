@@ -29,10 +29,10 @@ export default function ProductActions({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Miktar + Sepete Ekle */}
+      {/* Quantity + Add to Cart */}
       {quantity > 0 && (
         <div className="flex items-center gap-3">
-          {/* Adet Seçici */}
+          {/* Quantity Selector */}
           <div
             className="flex items-center gap-4 px-4 h-12"
             style={{
@@ -74,7 +74,7 @@ export default function ProductActions({
             </button>
           </div>
 
-          {/* Sepete Ekle */}
+          {/* Add to Cart */}
           <button
             onClick={onAddToCart}
             disabled={!canAddToCart}
@@ -108,12 +108,12 @@ export default function ProductActions({
             }}
           >
             <ShoppingCart size={14} />
-            {canAddToCart ? "Sepete Ekle" : "Stokta Yok"}
+            {canAddToCart ? "Add to Cart" : "Out of Stock"}
           </button>
         </div>
       )}
 
-      {/* Favori + Paylaş */}
+      {/* Wishlist + Share */}
       <div className="flex gap-3">
         <button
           onClick={onToggleFavorite}
@@ -128,7 +128,7 @@ export default function ProductActions({
           }}
           onMouseEnter={(e) => {
             if (!isFavorited) {
-              e.currentTarget.style.background = "#f7f6f4";
+              e.currentTarget.style.background = "#fafafa";
               e.currentTarget.style.borderColor = "rgba(30,30,30,0.32)";
               e.currentTarget.style.color = "#1e1e1e";
             }
@@ -146,7 +146,7 @@ export default function ProductActions({
             fill={isFavorited ? "#c8102e" : "none"}
             color={isFavorited ? "#c8102e" : "currentColor"}
           />
-          {isFavorited ? "Favorilerde" : "Favorilere Ekle"}
+          {isFavorited ? "Saved" : "Save to Wishlist"}
         </button>
 
         <button
