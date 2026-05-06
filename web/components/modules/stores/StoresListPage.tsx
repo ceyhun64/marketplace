@@ -15,13 +15,17 @@ function useStoreList() {
     queryKey: ["stores", "list"],
     queryFn: async () => {
       const { data } = await api.get<unknown>("/api/store/list");
-      // API may return a paged wrapper { items: [...] } or a plain array
+      // API returns { total, page, limit, stores: [...] }
       if (Array.isArray(data)) return data as MerchantProfile[];
       const paged = data as {
+        stores?: MerchantProfile[];
         items?: MerchantProfile[];
         data?: MerchantProfile[];
       };
-      return (paged.items ?? paged.data ?? []) as MerchantProfile[];
+      return (paged.stores ??
+        paged.items ??
+        paged.data ??
+        []) as MerchantProfile[];
     },
     staleTime: 1000 * 60 * 5,
   });

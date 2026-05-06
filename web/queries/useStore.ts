@@ -107,10 +107,18 @@ export function useStoreList(limit?: number) {
     queryKey: [...storeKeys.list(), limit],
     queryFn: async () => {
       const params = limit ? `?limit=${limit}` : "";
-      const { data } = await api.get<MerchantProfile[]>(
-        `/api/store/list${params}`,
-      );
-      return data;
+      const { data } = await api.get<unknown>(`/api/store/list${params}`);
+      // API returns { total, page, limit, stores: [...] }
+      if (Array.isArray(data)) return data as MerchantProfile[];
+      const paged = data as {
+        stores?: MerchantProfile[];
+        items?: MerchantProfile[];
+        data?: MerchantProfile[];
+      };
+      return (paged.stores ??
+        paged.items ??
+        paged.data ??
+        []) as MerchantProfile[];
     },
     staleTime: STALE_TIME.LONG,
   });
