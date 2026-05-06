@@ -10,78 +10,41 @@ import {
   Sparkles,
   Truck,
   ShoppingBasket,
+  BookOpen,
+  Dumbbell,
   ArrowRight,
   ArrowUpRight,
+  Tag,
 } from "lucide-react";
+import { useCategories } from "@/queries/useCategories";
+import type { Category } from "@/types/entities";
 
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  productCount: number;
-  icon: React.ReactNode;
+// Slug'a göre ikon eşlemesi — API'den gelen kategorilerle uyumlu
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  elektronik: <Cpu className="w-5 h-5" />,
+  giyim: <Shirt className="w-5 h-5" />,
+  "ev-yasam": <Home className="w-5 h-5" />,
+  spor: <Dumbbell className="w-5 h-5" />,
+  kitap: <BookOpen className="w-5 h-5" />,
+  kozmetik: <Sparkles className="w-5 h-5" />,
+  oyuncak: <Gamepad2 className="w-5 h-5" />,
+  grocery: <ShoppingBasket className="w-5 h-5" />,
+  baby: <Baby className="w-5 h-5" />,
+  logistics: <Truck className="w-5 h-5" />,
+};
+
+function getIcon(slug: string): React.ReactNode {
+  return CATEGORY_ICONS[slug] ?? <Tag className="w-5 h-5" />;
 }
 
-const MOCK_CATEGORIES: Category[] = [
-  {
-    id: "1",
-    name: "Electronics",
-    slug: "electronics",
-    productCount: 4200,
-    icon: <Cpu className="w-5 h-5" />,
-  },
-  {
-    id: "2",
-    name: "Fashion",
-    slug: "fashion",
-    productCount: 8900,
-    icon: <Shirt className="w-5 h-5" />,
-  },
-  {
-    id: "3",
-    name: "Home & Living",
-    slug: "home-living",
-    productCount: 3100,
-    icon: <Home className="w-5 h-5" />,
-  },
-  {
-    id: "4",
-    name: "Quick Grocery",
-    slug: "grocery",
-    productCount: 1500,
-    icon: <ShoppingBasket className="w-5 h-5" />,
-  },
-  {
-    id: "5",
-    name: "Cosmetics",
-    slug: "cosmetics",
-    productCount: 3800,
-    icon: <Sparkles className="w-5 h-5" />,
-  },
-  {
-    id: "6",
-    name: "Gaming & Hobbies",
-    slug: "gaming",
-    productCount: 1900,
-    icon: <Gamepad2 className="w-5 h-5" />,
-  },
-  {
-    id: "7",
-    name: "Baby & Kids",
-    slug: "baby",
-    productCount: 2700,
-    icon: <Baby className="w-5 h-5" />,
-  },
-  {
-    id: "8",
-    name: "Logistics",
-    slug: "logistics",
-    productCount: 120,
-    icon: <Truck className="w-5 h-5" />,
-  },
-];
+export default function CategoryGrid() {
+  const { data, isLoading } = useCategories();
 
-export default function CategoryGrid({ categories = MOCK_CATEGORIES }) {
+  // Yalnızca üst düzey kategorileri göster (parentId olmayan)
+  const categories: Category[] = Array.isArray(data)
+    ? data.filter((c: Category) => !c.parentId)
+    : [];
+
   return (
     <section className="py-20 lg:py-28">
       <div className="max-w-[1300px] mx-auto px-6 lg:px-8">
@@ -122,9 +85,21 @@ export default function CategoryGrid({ categories = MOCK_CATEGORIES }) {
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {categories.map((cat, index) => (
-            <CategoryCard key={cat.id} category={cat} index={index} />
-          ))}
+          {isLoading
+            ? Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="rounded-2xl bg-gray-100 animate-pulse h-44"
+                />
+              ))
+            : categories.map((cat, index) => (
+                <CategoryCard
+                  key={cat.id}
+                  category={cat}
+                  index={index}
+                  icon={getIcon(cat.slug)}
+                />
+              ))}
         </div>
       </div>
     </section>
@@ -134,13 +109,15 @@ export default function CategoryGrid({ categories = MOCK_CATEGORIES }) {
 function CategoryCard({
   category,
   index,
+  icon,
 }: {
   category: Category;
   index: number;
+  icon: React.ReactNode;
 }) {
   return (
     <Link
-      href={`/categories/${category.slug}`}
+      href={`/category/${category.slug}`}
       className="group relative bg-white border border-[rgba(51,51,51,0.08)] rounded-2xl p-8 block overflow-hidden
         transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[rgba(200,16,46,0.2)]"
       style={{ boxShadow: "0 1px 3px rgba(51,51,51,0.06)" }}
@@ -156,7 +133,7 @@ function CategoryCard({
           className="w-11 h-11 rounded-[10px] flex items-center justify-center"
           style={{ background: "var(--red-muted)", color: "var(--red)" }}
         >
-          {category.icon}
+          {icon}
         </div>
         <ArrowUpRight className="w-4 h-4 text-[var(--red)] opacity-40 group-hover:opacity-100 transition-opacity" />
       </div>
@@ -168,9 +145,11 @@ function CategoryCard({
         >
           {category.name}
         </h3>
-        <p className="font-mono text-[11px] text-[var(--charcoal-soft)] uppercase tracking-[0.08em]">
-          {category.productCount.toLocaleString("en-US")} items
-        </p>
+        {category.productCount != null && (
+          <p className="font-mono text-[11px] text-[var(--charcoal-soft)] uppercase tracking-[0.08em]">
+            {category.productCount.toLocaleString("en-US")} items
+          </p>
+        )}
       </div>
 
       {/* Decorative index number */}

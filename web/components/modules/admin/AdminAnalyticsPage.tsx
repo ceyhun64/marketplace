@@ -8,6 +8,8 @@ import {
   useAdminRevenue,
   useAdminFulfillmentStats,
 } from "@/queries/useAnalytics";
+import api from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
 import type { AnalyticsPeriod } from "@/types/api";
 
 const RevenueChart = dynamic(
@@ -107,10 +109,28 @@ export default function AdminAnalyticsPage() {
     siparis: d.orderCount ?? 0,
   }));
 
-  const sourceData = [
-    { name: "Marketplace", value: 68, color: "var(--chart-2)" },
-    { name: "E-Store", value: 32, color: "var(--chart-3)" },
-  ];
+  // Sipariş kaynak dağılımı — AdminOverview'den marketplace/estore siparişleri
+  const marketplaceOrders = (overview as any)?.marketplaceOrders ?? 0;
+  const eStoreOrders = (overview as any)?.eStoreOrders ?? 0;
+  const totalSourceOrders = marketplaceOrders + eStoreOrders;
+  const sourceData =
+    totalSourceOrders > 0
+      ? [
+          {
+            name: "Marketplace",
+            value: Math.round((marketplaceOrders / totalSourceOrders) * 100),
+            color: "var(--chart-2)",
+          },
+          {
+            name: "E-Store",
+            value: Math.round((eStoreOrders / totalSourceOrders) * 100),
+            color: "var(--chart-3)",
+          },
+        ]
+      : [
+          { name: "Marketplace", value: 0, color: "var(--chart-2)" },
+          { name: "E-Store", value: 0, color: "var(--chart-3)" },
+        ];
 
   return (
     <div className="space-y-8">

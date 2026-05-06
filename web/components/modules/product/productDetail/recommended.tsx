@@ -15,85 +15,6 @@ import { useQuery } from "@tanstack/react-query";
 import axiosApi from "@/lib/api";
 import type { Product } from "@/types/entities";
 
-const MOCK_PRODUCTS: Product[] = [
-  {
-    id: "00000000-0000-0000-0001-000000000001",
-    merchantId: "00000000-0000-0000-0000-000000000000",
-    merchantStoreName: "SpeedStore",
-    merchantSlug: "speedstore",
-    name: "Adidas Ultraboost 24",
-    description: "",
-    categoryId: "",
-    categoryName: "Ayakkabı",
-    images: ["https://placehold.co/400x400?text=Adidas+Ultraboost"],
-    tags: [],
-    price: 4299,
-    stock: 30,
-    publishToMarket: true,
-    publishToStore: true,
-    isApproved: true,
-    isDeleted: false,
-    createdAt: "",
-  },
-  {
-    id: "00000000-0000-0000-0001-000000000002",
-    merchantId: "00000000-0000-0000-0000-000000000000",
-    merchantStoreName: "RunTech",
-    merchantSlug: "runtech",
-    name: "Nike Air Zoom Pegasus",
-    description: "",
-    categoryId: "",
-    categoryName: "Ayakkabı",
-    images: ["https://placehold.co/400x400?text=Nike+Pegasus"],
-    tags: [],
-    price: 3799,
-    stock: 15,
-    publishToMarket: true,
-    publishToStore: true,
-    isApproved: true,
-    isDeleted: false,
-    createdAt: "",
-  },
-  {
-    id: "00000000-0000-0000-0001-000000000003",
-    merchantId: "00000000-0000-0000-0000-000000000000",
-    merchantStoreName: "ActiveWear",
-    merchantSlug: "activewear",
-    name: "Under Armour HOVR Phantom",
-    description: "",
-    categoryId: "",
-    categoryName: "Ayakkabı",
-    images: ["https://placehold.co/400x400?text=UA+HOVR"],
-    tags: [],
-    price: 3599,
-    stock: 22,
-    publishToMarket: true,
-    publishToStore: true,
-    isApproved: true,
-    isDeleted: false,
-    createdAt: "",
-  },
-  {
-    id: "00000000-0000-0000-0001-000000000004",
-    merchantId: "00000000-0000-0000-0000-000000000000",
-    merchantStoreName: "SportMax",
-    merchantSlug: "sportmax",
-    name: "New Balance Fresh Foam X",
-    description: "",
-    categoryId: "",
-    categoryName: "Ayakkabı",
-    images: ["https://placehold.co/400x400?text=New+Balance"],
-    tags: [],
-    price: 2999,
-    stock: 40,
-    publishToMarket: true,
-    publishToStore: true,
-    isApproved: true,
-    isDeleted: false,
-    createdAt: "",
-  },
-];
-
 const CarouselSkeleton = () => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 px-4">
     {[...Array(4)].map((_, i) => (
@@ -133,8 +54,30 @@ export default function ÖnerilenÜrünlerCarousel() {
     staleTime: 1000 * 60 * 5,
   });
 
-  const products: Product[] =
-    apiData?.items?.length > 0 ? apiData.items : MOCK_PRODUCTS;
+  const products: Product[] = Array.isArray(apiData?.items)
+    ? apiData.items.map(
+        (p: any): Product => ({
+          id: p.id,
+          merchantId: p.merchantId ?? "",
+          merchantStoreName: p.merchant?.storeName ?? p.merchantStoreName ?? "",
+          merchantSlug: p.merchant?.slug ?? p.merchantSlug ?? "",
+          name: p.name,
+          description: p.description ?? "",
+          categoryId: p.categoryId ?? "",
+          categoryName: p.category?.name ?? p.categoryName ?? "",
+          images: p.images ?? [],
+          tags: p.tags ?? [],
+          price: p.price,
+          stock: p.stock,
+          publishToMarket: p.publishToMarket ?? true,
+          publishToStore: p.publishToStore ?? true,
+          isApproved: p.isApproved ?? true,
+          isDeleted: p.isDeleted ?? false,
+          createdAt: p.createdAt ?? "",
+          updatedAt: p.updatedAt,
+        }),
+      )
+    : [];
 
   if (isLoading) {
     return (
@@ -143,6 +86,8 @@ export default function ÖnerilenÜrünlerCarousel() {
       </div>
     );
   }
+
+  if (products.length === 0) return null;
 
   return (
     <section className="bg-slate-50 py-8 md:py-16 border-t border-slate-100 overflow-hidden max-w-[1400px] mx-auto px-6">
@@ -245,9 +190,6 @@ export default function ÖnerilenÜrünlerCarousel() {
               </div>
             </div>
 
-            <div className="text-[10px] font-bold text-slate-800 uppercase tracking-[0.3em] bg-slate-100 px-4 py-2 rounded-full hidden md:block">
-              Saha Testleri Tamamlandı — v.2026
-            </div>
           </div>
         </div>
       </div>
