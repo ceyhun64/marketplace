@@ -36,7 +36,7 @@ export function ProductCard({
         className,
       )}
       style={{
-        borderRadius: "16px",
+        borderRadius: "6px",
         border: "1px solid rgba(51,51,51,0.08)",
         boxShadow: "0 1px 3px rgba(51,51,51,0.06)",
       }}
