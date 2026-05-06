@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { Star, CheckCircle, X, ArrowLeft, ChevronRight } from "lucide-react";
+import { Star, ArrowLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 interface StockEntry {
@@ -29,7 +29,7 @@ interface ProductInfoProps {
   lowStock: boolean;
   stockQuantity: number;
   hasCustomImage: boolean;
-  selectedStock: StockEntry | null; // stockMatrix'ten seçilen satır
+  selectedStock: StockEntry | null;
 }
 
 export default function ProductInfo({
@@ -55,30 +55,55 @@ export default function ProductInfo({
     <div className="space-y-6">
       {/* Breadcrumb */}
       <div className="hidden lg:block">
-        <nav className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+        <nav
+          className="flex items-center gap-2 flex-wrap"
+          style={{ fontFamily: "'JetBrains Mono', monospace" }}
+        >
           <Link
             href="/products"
-            className="hover:text-orange-600 transition-colors flex items-center gap-1"
+            className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider"
+            style={{
+              color: "#9a9a9a",
+              transition: "color 140ms cubic-bezier(0.16,1,0.3,1)",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#c8102e")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#9a9a9a")}
           >
-            <ArrowLeft size={12} /> Koleksiyon
+            <ArrowLeft size={11} /> Koleksiyon
           </Link>
 
           {category && (
             <>
-              <ChevronRight size={10} />
+              <ChevronRight size={9} style={{ color: "#9a9a9a" }} />
               <Link
                 href={`/products/category/${category.id}`}
-                className="hover:text-orange-600 transition-colors"
+                className="text-[10px] font-semibold uppercase tracking-wider"
+                style={{
+                  color: "#9a9a9a",
+                  transition: "color 140ms cubic-bezier(0.16,1,0.3,1)",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#c8102e")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "#9a9a9a")}
               >
                 {category.name}
               </Link>
 
               {middleCategory && (
                 <>
-                  <ChevronRight size={10} />
+                  <ChevronRight size={9} style={{ color: "#9a9a9a" }} />
                   <Link
                     href={`/products/category/${category.id}/${middleCategory.id}`}
-                    className="hover:text-orange-600 transition-colors"
+                    className="text-[10px] font-semibold uppercase tracking-wider"
+                    style={{
+                      color: "#9a9a9a",
+                      transition: "color 140ms cubic-bezier(0.16,1,0.3,1)",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.color = "#c8102e")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.color = "#9a9a9a")
+                    }
                   >
                     {middleCategory.name}
                   </Link>
@@ -87,10 +112,20 @@ export default function ProductInfo({
 
               {subCategory && (
                 <>
-                  <ChevronRight size={10} />
+                  <ChevronRight size={9} style={{ color: "#9a9a9a" }} />
                   <Link
                     href={`/products/category/${category.id}/${middleCategory?.id}/${subCategory.id}`}
-                    className="hover:text-orange-600 transition-colors"
+                    className="text-[10px] font-semibold uppercase tracking-wider"
+                    style={{
+                      color: "#9a9a9a",
+                      transition: "color 140ms cubic-bezier(0.16,1,0.3,1)",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.color = "#c8102e")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.color = "#9a9a9a")
+                    }
                   >
                     {subCategory.name}
                   </Link>
@@ -99,63 +134,109 @@ export default function ProductInfo({
             </>
           )}
 
-          <ChevronRight size={10} />
-          <span className="text-slate-300">Ürün Detayı</span>
+          <ChevronRight size={9} style={{ color: "#9a9a9a" }} />
+          <span
+            className="text-[10px] uppercase tracking-wider"
+            style={{ color: "#c8102e" }}
+          >
+            Ürün Detayı
+          </span>
         </nav>
       </div>
 
       {/* Header */}
-      <header className="space-y-3">
+      <header className="space-y-4">
+        {/* Kategori + Marka + ID */}
         <div className="flex items-center justify-between">
-          <div className="text-[9px] font-bold tracking-widest uppercase text-orange-600 flex items-center gap-2">
-            <span className="bg-orange-50 px-2 py-0.5 rounded text-orange-700">
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
+              style={{
+                background: "rgba(200,16,46,0.07)",
+                border: "1px solid rgba(200,16,46,0.18)",
+                color: "#c8102e",
+                borderRadius: "4px",
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
               {category.name}
             </span>
-            <span className="text-slate-300">ID: PRO-{id}</span>
+            <span
+              className="text-[10px]"
+              style={{
+                color: "#9a9a9a",
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
+              PRO-{id}
+            </span>
           </div>
+
           {brand && (
-            <div className="flex items-center gap-2 text-xs text-slate-600">
+            <div className="flex items-center gap-2">
               {brand.image && (
                 <Image
                   src={brand.image}
                   alt={brand.name}
-                  width={24}
-                  height={24}
+                  width={22}
+                  height={22}
                   className="object-contain"
                 />
               )}
-              <span className="font-semibold">{brand.name}</span>
+              <span
+                className="text-xs font-semibold"
+                style={{ color: "#525252" }}
+              >
+                {brand.name}
+              </span>
             </div>
           )}
         </div>
 
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 leading-tight">
+        {/* Başlık */}
+        <h1
+          className="text-2xl md:text-3xl font-extrabold leading-tight tracking-tight"
+          style={{
+            color: "#1e1e1e",
+            fontFamily: "'Manrope', sans-serif",
+            letterSpacing: "-0.02em",
+          }}
+        >
           {title}
           {hasCustomImage && (
-            <span className="ml-2 text-sm font-normal text-orange-600">
+            <span
+              className="ml-2 text-sm font-normal"
+              style={{ color: "#c8102e" }}
+            >
               (Özelleştirilmiş)
             </span>
           )}
         </h1>
 
         {/* Rating */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="flex text-orange-400">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <div className="flex">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  size={14}
-                  fill={i < Math.round(rating) ? "currentColor" : "none"}
-                  className={i < Math.round(rating) ? "" : "text-slate-300"}
+                  size={13}
+                  fill={i < Math.round(rating) ? "#c8102e" : "none"}
+                  color={i < Math.round(rating) ? "#c8102e" : "#e6e4e1"}
                 />
               ))}
             </div>
-            <span className="text-sm font-bold text-slate-900">
+            <span
+              className="text-sm font-bold"
+              style={{
+                color: "#1e1e1e",
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
               {rating.toFixed(1)}
             </span>
           </div>
-          <span className="text-xs text-slate-500">
+          <span className="text-xs" style={{ color: "#9a9a9a" }}>
             ({reviewCount} değerlendirme)
           </span>
         </div>
@@ -163,51 +244,111 @@ export default function ProductInfo({
         {/* Stok Durumu */}
         <div className="flex items-center gap-2">
           {inStock ? (
-            <>
-              <CheckCircle size={16} className="text-emerald-600" />
-              <span className="text-sm font-semibold text-emerald-600">
-                Stokta Var
-              </span>
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold"
+              style={{
+                background: "rgba(13,122,78,0.07)",
+                border: "1px solid rgba(13,122,78,0.18)",
+                color: "#0d7a4e",
+                borderRadius: "999px",
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: "#0d7a4e" }}
+              />
+              Stokta Var
               {lowStock && (
-                <span className="text-xs text-orange-600 ml-2">
-                  (Son {stockQuantity} adet!)
+                <span style={{ color: "#b45309" }}>
+                  &nbsp;· Son {stockQuantity} adet
                 </span>
               )}
-            </>
+            </span>
           ) : (
-            <>
-              <X size={16} className="text-red-600" />
-              <span className="text-sm font-semibold text-red-600">
-                Stokta Yok
-              </span>
-            </>
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold"
+              style={{
+                background: "rgba(200,16,46,0.07)",
+                border: "1px solid rgba(200,16,46,0.18)",
+                color: "#c8102e",
+                borderRadius: "999px",
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: "#c8102e" }}
+              />
+              Stokta Yok
+            </span>
           )}
         </div>
       </header>
 
       {/* Fiyat */}
-      <div className="flex flex-col border-t border-b border-slate-100 py-4">
+      <div
+        className="flex flex-col py-4"
+        style={{
+          borderTop: "1px solid rgba(30,30,30,0.06)",
+          borderBottom: "1px solid rgba(30,30,30,0.06)",
+        }}
+      >
         <div className="flex items-baseline gap-3">
-          <span className="text-3xl font-black tracking-tighter text-slate-900">
-            {currentPrice.toLocaleString("tr-TR")}{" "}
-            <small className="text-sm">TL</small>
+          <span
+            className="text-3xl font-black tracking-tighter"
+            style={{ color: "#1e1e1e", fontFamily: "'Manrope', sans-serif" }}
+          >
+            {currentPrice.toLocaleString("tr-TR")}
+            <small
+              className="text-sm ml-1"
+              style={{ color: "#747474", fontWeight: 600 }}
+            >
+              TL
+            </small>
           </span>
+
           {hasDiscount && (
             <>
-              <span className="text-lg text-slate-400 line-through font-semibold">
+              <span
+                className="text-lg line-through font-semibold"
+                style={{ color: "#9a9a9a" }}
+              >
                 {oldPrice?.toLocaleString("tr-TR")} TL
               </span>
-              <span className="bg-orange-600 text-white px-2 py-1 text-xs font-bold">
+              <span
+                className="px-2 py-1 text-xs font-bold"
+                style={{
+                  background: "#c8102e",
+                  color: "#ffffff",
+                  borderRadius: "4px",
+                  fontFamily: "'JetBrains Mono', monospace",
+                }}
+              >
                 %{discountPercentage} İndirim
               </span>
             </>
           )}
         </div>
-        {/* Seçilen beden fiyat farkı */}
+
         {selectedStock && selectedStock.priceModifier !== 0 && (
-          <span className="text-xs text-slate-500 mt-2">
-            Seçilen beden: {selectedStock.priceModifier > 0 ? "+" : ""}
-            {selectedStock.priceModifier} TL
+          <span
+            className="text-xs mt-2"
+            style={{
+              color: "#747474",
+              fontFamily: "'JetBrains Mono', monospace",
+            }}
+          >
+            Seçilen beden:{" "}
+            <span
+              style={{
+                color: selectedStock.priceModifier > 0 ? "#b45309" : "#0d7a4e",
+                fontWeight: 700,
+              }}
+            >
+              {selectedStock.priceModifier > 0 ? "+" : ""}
+              {selectedStock.priceModifier.toLocaleString("tr-TR")} TL
+            </span>
           </span>
         )}
       </div>

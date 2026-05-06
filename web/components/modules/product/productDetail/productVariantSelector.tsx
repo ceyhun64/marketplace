@@ -3,9 +3,7 @@
 import React from "react";
 import { Ruler, Palette } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
 
-// ---------- İNTERFACES ----------
 interface Size {
   id: number;
   value: string;
@@ -37,7 +35,6 @@ interface ProductVariantSelectorProps {
   selectedSizeId: number | null;
   selectedStock: StockEntry | null;
   onSizeChange: (sizeId: number) => void;
-  // Color selection props
   productGroupId: string | null;
   currentProductId: string;
   currentColor: { id: number; name: string; hexCode: string } | null;
@@ -61,7 +58,6 @@ export default function ProductVariantSelector({
 }: ProductVariantSelectorProps) {
   const router = useRouter();
 
-  // Her beden için stok bilgisini stockMatrix'ten çek
   const getSizeStock = (sizeId: number): number => {
     const entry = stockMatrix.find((s) => s.sizeId === sizeId);
     return entry?.stock ?? 0;
@@ -70,7 +66,6 @@ export default function ProductVariantSelector({
   const hasColorOptions = productGroupId && otherColors.length > 0;
   const hasSizeOptions = availableSizes.length > 0;
 
-  // Eğer ne renk ne de beden seçeneği yoksa hiçbir şey gösterme
   if (!hasColorOptions && !hasSizeOptions) return null;
 
   return (
@@ -79,19 +74,31 @@ export default function ProductVariantSelector({
       {hasColorOptions && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <Palette size={16} className="text-amber-600" />
-            <label className="text-sm font-bold text-slate-900">
-              Diğer Renk Seçenekleri
-            </label>
+            <Palette size={14} style={{ color: "#c8102e" }} />
+            <span
+              className="text-xs font-bold uppercase tracking-wider"
+              style={{ color: "#1e1e1e", fontFamily: "'Manrope', sans-serif" }}
+            >
+              Renk Seçenekleri
+            </span>
           </div>
 
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
             {/* Mevcut ürün */}
             <button
-              className="relative group border-2 border-slate-600 bg-purple-50 rounded-sm p-1.5 sm:p-2 cursor-default"
+              className="relative p-1.5"
               title={currentColor?.name || "Mevcut Renk"}
+              style={{
+                border: "2px solid #c8102e",
+                background: "rgba(200,16,46,0.07)",
+                borderRadius: "8px",
+                cursor: "default",
+              }}
             >
-              <div className="aspect-square rounded overflow-hidden bg-white mb-1 sm:mb-2">
+              <div
+                className="aspect-square overflow-hidden mb-1.5"
+                style={{ borderRadius: "4px", background: "#ffffff" }}
+              >
                 <img
                   src={currentMainImage}
                   alt={currentTitle}
@@ -101,10 +108,19 @@ export default function ProductVariantSelector({
               {currentColor && (
                 <div className="flex items-center gap-1 justify-center">
                   <div
-                    className="w-3 h-3 sm:w-4 sm:h-4 rounded-full border border-slate-300 flex-shrink-0"
-                    style={{ backgroundColor: currentColor.hexCode }}
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{
+                      backgroundColor: currentColor.hexCode,
+                      border: "1px solid rgba(30,30,30,0.1)",
+                    }}
                   />
-                  <span className="hidden sm:inline text-[10px] font-semibold text-purple-700 truncate">
+                  <span
+                    className="hidden sm:inline text-[9px] font-semibold truncate"
+                    style={{
+                      color: "#c8102e",
+                      fontFamily: "'JetBrains Mono', monospace",
+                    }}
+                  >
                     {currentColor.name}
                   </span>
                 </div>
@@ -116,31 +132,66 @@ export default function ProductVariantSelector({
               <button
                 key={colorOption.id}
                 onClick={() => router.push(`/products/${colorOption.id}`)}
-                className="relative group bg-white border-2 border-slate-200 hover:border-purple-400 rounded-sm p-1.5 sm:p-2 transition-all"
                 title={colorOption.color?.name || colorOption.title}
+                className="relative p-1.5 group"
+                style={{
+                  background: "#ffffff",
+                  border: "1.5px solid rgba(30,30,30,0.1)",
+                  borderRadius: "8px",
+                  transition: "all 140ms cubic-bezier(0.16,1,0.3,1)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(200,16,46,0.4)";
+                  e.currentTarget.style.background = "rgba(200,16,46,0.04)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(30,30,30,0.1)";
+                  e.currentTarget.style.background = "#ffffff";
+                }}
               >
-                <div className="aspect-square rounded overflow-hidden bg-white mb-1 sm:mb-2">
+                <div
+                  className="aspect-square overflow-hidden mb-1.5"
+                  style={{ borderRadius: "4px", background: "#f7f6f4" }}
+                >
                   <img
                     src={colorOption.mainImage}
                     alt={colorOption.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    className="w-full h-full object-cover"
+                    style={{
+                      transition: "transform 240ms cubic-bezier(0.16,1,0.3,1)",
+                    }}
                   />
                 </div>
                 {colorOption.color && (
                   <div className="flex items-center gap-1 justify-center">
                     <div
-                      className="w-3 h-3 sm:w-4 sm:h-4 rounded-full border border-slate-300 flex-shrink-0"
+                      className="w-3 h-3 rounded-full flex-shrink-0"
                       style={{
                         backgroundColor: colorOption.color.hexCode,
+                        border: "1px solid rgba(30,30,30,0.1)",
                       }}
                     />
-                    <span className="hidden sm:inline text-[10px] font-medium text-slate-600 truncate max-w-[60px]">
+                    <span
+                      className="hidden sm:inline text-[9px] font-medium truncate max-w-[60px]"
+                      style={{
+                        color: "#747474",
+                        fontFamily: "'JetBrains Mono', monospace",
+                      }}
+                    >
                       {colorOption.color.name}
                     </span>
                   </div>
                 )}
                 {colorOption.hasDiscount && (
-                  <div className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 bg-red-500 text-white text-[8px] font-bold px-1 sm:px-1.5 py-0.5 rounded">
+                  <div
+                    className="absolute top-1 right-1 text-[8px] font-bold px-1 py-0.5"
+                    style={{
+                      background: "#c8102e",
+                      color: "#ffffff",
+                      borderRadius: "4px",
+                      fontFamily: "'JetBrains Mono', monospace",
+                    }}
+                  >
                     -{colorOption.discountPercentage}%
                   </div>
                 )}
@@ -154,15 +205,18 @@ export default function ProductVariantSelector({
       {hasSizeOptions && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <Ruler size={16} className="text-indigo-600" />
-            <label className="text-sm font-bold text-slate-900">
+            <Ruler size={14} style={{ color: "#c8102e" }} />
+            <span
+              className="text-xs font-bold uppercase tracking-wider"
+              style={{ color: "#1e1e1e", fontFamily: "'Manrope', sans-serif" }}
+            >
               Beden Seçin
               {selectedSizeId && (
-                <span className="ml-2 text-indigo-600">
+                <span style={{ color: "#c8102e", marginLeft: 8 }}>
                   ({availableSizes.find((s) => s.id === selectedSizeId)?.value})
                 </span>
               )}
-            </label>
+            </span>
           </div>
 
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
@@ -176,19 +230,51 @@ export default function ProductVariantSelector({
                   key={size.id}
                   onClick={() => !isOutOfStock && onSizeChange(size.id)}
                   disabled={isOutOfStock}
-                  className={cn(
-                    "h-12 border-2 rounded-sm font-bold text-sm transition-all relative",
-                    isSelected
-                      ? "border-indigo-600 bg-indigo-50 text-indigo-700"
+                  className="h-12 font-bold text-sm relative"
+                  style={{
+                    border: isSelected
+                      ? "2px solid #c8102e"
                       : isOutOfStock
-                        ? "border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed"
-                        : "border-slate-200 bg-white hover:border-slate-400",
-                  )}
+                        ? "1.5px solid rgba(30,30,30,0.06)"
+                        : "1.5px solid rgba(30,30,30,0.18)",
+                    background: isSelected
+                      ? "rgba(200,16,46,0.07)"
+                      : isOutOfStock
+                        ? "#efeeec"
+                        : "#ffffff",
+                    color: isSelected
+                      ? "#c8102e"
+                      : isOutOfStock
+                        ? "#9a9a9a"
+                        : "#1e1e1e",
+                    borderRadius: "8px",
+                    cursor: isOutOfStock ? "not-allowed" : "pointer",
+                    transition: "all 140ms cubic-bezier(0.16,1,0.3,1)",
+                    fontFamily: "'Manrope', sans-serif",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isOutOfStock && !isSelected) {
+                      e.currentTarget.style.borderColor = "rgba(30,30,30,0.32)";
+                      e.currentTarget.style.background = "#f7f6f4";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isOutOfStock && !isSelected) {
+                      e.currentTarget.style.borderColor = "rgba(30,30,30,0.18)";
+                      e.currentTarget.style.background = "#ffffff";
+                    }
+                  }}
                 >
                   {size.value}
                   {isOutOfStock && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-full h-0.5 bg-red-400 rotate-45" />
+                    <div
+                      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                      style={{ borderRadius: "8px", overflow: "hidden" }}
+                    >
+                      <div
+                        className="w-full h-px rotate-45"
+                        style={{ background: "rgba(200,16,46,0.3)" }}
+                      />
                     </div>
                   )}
                 </button>
@@ -198,29 +284,52 @@ export default function ProductVariantSelector({
         </div>
       )}
 
-      {/* Seçili beden bilgisi */}
+      {/* Seçili Beden Bilgisi */}
       {selectedStock && selectedSizeId && (
-        <div className="bg-slate-50 border border-slate-200 rounded p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-700">
-              Seçili Beden:
+        <div
+          className="space-y-3 p-4"
+          style={{
+            background: "#f7f6f4",
+            border: "1px solid rgba(30,30,30,0.1)",
+            borderRadius: "8px",
+          }}
+        >
+          <div className="flex justify-between items-center">
+            <span
+              className="text-sm font-semibold"
+              style={{ color: "#525252" }}
+            >
+              Seçili Beden
             </span>
-            <span className="text-sm font-bold text-slate-900">
+            <span
+              className="text-sm font-bold"
+              style={{
+                color: "#1e1e1e",
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
               {availableSizes.find((s) => s.id === selectedSizeId)?.value}
             </span>
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-            <span className="text-sm text-slate-600">Stok Durumu:</span>
+          <div
+            className="flex justify-between items-center pt-2"
+            style={{ borderTop: "1px solid rgba(30,30,30,0.06)" }}
+          >
+            <span className="text-sm" style={{ color: "#747474" }}>
+              Stok
+            </span>
             <span
-              className={cn(
-                "text-sm font-bold",
-                selectedStock.stock > 10
-                  ? "text-emerald-600"
-                  : selectedStock.stock > 0
-                    ? "text-orange-600"
-                    : "text-red-600",
-              )}
+              className="text-sm font-bold"
+              style={{
+                color:
+                  selectedStock.stock > 10
+                    ? "#0d7a4e"
+                    : selectedStock.stock > 0
+                      ? "#b45309"
+                      : "#c8102e",
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
             >
               {selectedStock.stock > 0
                 ? `${selectedStock.stock} adet`
@@ -229,15 +338,20 @@ export default function ProductVariantSelector({
           </div>
 
           {selectedStock.priceModifier !== 0 && (
-            <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-              <span className="text-sm text-slate-600">Fiyat Farkı:</span>
+            <div
+              className="flex justify-between items-center pt-2"
+              style={{ borderTop: "1px solid rgba(30,30,30,0.06)" }}
+            >
+              <span className="text-sm" style={{ color: "#747474" }}>
+                Fiyat Farkı
+              </span>
               <span
-                className={cn(
-                  "text-sm font-bold",
-                  selectedStock.priceModifier > 0
-                    ? "text-orange-600"
-                    : "text-emerald-600",
-                )}
+                className="text-sm font-bold"
+                style={{
+                  color:
+                    selectedStock.priceModifier > 0 ? "#b45309" : "#0d7a4e",
+                  fontFamily: "'JetBrains Mono', monospace",
+                }}
               >
                 {selectedStock.priceModifier > 0 ? "+" : ""}
                 {selectedStock.priceModifier.toLocaleString("tr-TR")} TL
@@ -247,11 +361,21 @@ export default function ProductVariantSelector({
         </div>
       )}
 
-      {/* Beden seçimi beklendiğinde uyarı */}
+      {/* Beden Seçim Uyarısı */}
       {!selectedSizeId && hasSizeOptions && (
-        <div className="bg-amber-50 border border-amber-200 rounded p-3">
-          <p className="text-xs text-amber-800 font-medium">
-            ⚠️ Lütfen bir beden seçin
+        <div
+          className="p-3"
+          style={{
+            background: "rgba(180,83,9,0.07)",
+            border: "1px solid rgba(180,83,9,0.18)",
+            borderRadius: "8px",
+          }}
+        >
+          <p
+            className="text-xs font-medium"
+            style={{ color: "#b45309", fontFamily: "'Manrope', sans-serif" }}
+          >
+            Lütfen bir beden seçin
           </p>
         </div>
       )}

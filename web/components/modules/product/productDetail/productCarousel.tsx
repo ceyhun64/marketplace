@@ -3,8 +3,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ProductCard } from "@/components/modules/store/ProductCard";
 import type { Product } from "@/types/entities";
 
-// Carousel'e dışarıdan geçirilen minimal ürün tipi
-// (productDetailPage'deki relatedProducts / brandProducts shape'i)
 export interface CarouselProduct {
   id: number | string;
   title?: string;
@@ -28,7 +26,6 @@ interface ProductCarouselProps {
   icon: React.ReactNode;
 }
 
-/** CarouselProduct → tam Product shape'ine dönüştürür */
 function toProduct(p: CarouselProduct): Product {
   return {
     id: String(p.id),
@@ -67,9 +64,11 @@ export default function ProductCarousel({
   const scroll = (direction: "left" | "right") => {
     if (!scrollContainerRef.current) return;
     const container = scrollContainerRef.current;
-    const scrollAmount = container.offsetWidth * 0.8;
     container.scrollBy({
-      left: direction === "left" ? -scrollAmount : scrollAmount,
+      left:
+        direction === "left"
+          ? -container.offsetWidth * 0.8
+          : container.offsetWidth * 0.8,
       behavior: "smooth",
     });
   };
@@ -77,11 +76,22 @@ export default function ProductCarousel({
   if (products.length === 0) return null;
 
   return (
-    <div className="mt-12">
+    <div
+      className="mt-12 pt-8"
+      style={{ borderTop: "1px solid rgba(30,30,30,0.06)" }}
+    >
+      {/* Başlık */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           {icon}
-          <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">
+          <h2
+            className="text-lg font-extrabold uppercase tracking-tight"
+            style={{
+              color: "#1e1e1e",
+              fontFamily: "'Manrope', sans-serif",
+              letterSpacing: "-0.02em",
+            }}
+          >
             {title}
           </h2>
         </div>
@@ -89,45 +99,80 @@ export default function ProductCarousel({
         <div className="flex gap-2">
           <button
             onClick={() => scroll("left")}
-            className="p-2 rounded-full bg-white border border-slate-200 hover:border-orange-400 hover:bg-orange-50 transition-all group"
             aria-label="Önceki"
+            style={{
+              width: 36,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#ffffff",
+              border: "1.5px solid rgba(30,30,30,0.18)",
+              borderRadius: "8px",
+              color: "#747474",
+              transition: "all 140ms cubic-bezier(0.16,1,0.3,1)",
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "#c8102e";
+              e.currentTarget.style.color = "#c8102e";
+              e.currentTarget.style.background = "rgba(200,16,46,0.07)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "rgba(30,30,30,0.18)";
+              e.currentTarget.style.color = "#747474";
+              e.currentTarget.style.background = "#ffffff";
+            }}
           >
-            <ChevronLeft
-              size={20}
-              className="text-slate-600 group-hover:text-orange-600 transition-colors"
-            />
+            <ChevronLeft size={18} />
           </button>
           <button
             onClick={() => scroll("right")}
-            className="p-2 rounded-full bg-white border border-slate-200 hover:border-orange-400 hover:bg-orange-50 transition-all group"
             aria-label="Sonraki"
+            style={{
+              width: 36,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#ffffff",
+              border: "1.5px solid rgba(30,30,30,0.18)",
+              borderRadius: "8px",
+              color: "#747474",
+              transition: "all 140ms cubic-bezier(0.16,1,0.3,1)",
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "#c8102e";
+              e.currentTarget.style.color = "#c8102e";
+              e.currentTarget.style.background = "rgba(200,16,46,0.07)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "rgba(30,30,30,0.18)";
+              e.currentTarget.style.color = "#747474";
+              e.currentTarget.style.background = "#ffffff";
+            }}
           >
-            <ChevronRight
-              size={20}
-              className="text-slate-600 group-hover:text-orange-600 transition-colors"
-            />
+            <ChevronRight size={18} />
           </button>
         </div>
       </div>
 
-      <div className="relative">
-        <div
-          ref={scrollContainerRef}
-          className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory"
-          style={{
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          }}
-        >
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="flex-none w-[calc(50%-8px)] md:w-[calc(25%-12px)] snap-start"
-            >
-              <ProductCard product={toProduct(product)} />
-            </div>
-          ))}
-        </div>
+      {/* Kaydırmalı Liste */}
+      <div
+        ref={scrollContainerRef}
+        className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
+        {products.map((product) => (
+          <div
+            key={product.id}
+            className="flex-none snap-start"
+            style={{ width: "calc(50% - 8px)" }}
+          >
+            <ProductCard product={toProduct(product)} />
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -563,7 +563,7 @@ export default function ProductDetailPage() {
     <div
       className="min-h-screen"
       style={{
-        background: "#f7f6f4",
+        background: "--off-white",
         color: "#1e1e1e",
         fontFamily: "'Manrope', sans-serif",
       }}
