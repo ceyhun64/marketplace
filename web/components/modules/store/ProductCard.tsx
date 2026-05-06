@@ -46,6 +46,7 @@ export function ProductCard({
         className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 z-10"
         style={{ background: "var(--red)" }}
       />
+      {/* ewlkdlkejd */}
 
       {/* Image */}
       <Link
