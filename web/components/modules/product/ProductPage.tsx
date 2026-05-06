@@ -20,13 +20,13 @@ import {
   Globe,
 } from "lucide-react";
 import { toast } from "sonner";
-import ProductTabs from "@/components/modules/product/productDetail/productTabs";
-import ProductDetailSkeleton from "@/components/modules/product/productDetail/productDetailSkeleton";
-import ProductImageGallery from "@/components/modules/product/productDetail/productImageGallery";
-import ProductInfo from "@/components/modules/product/productDetail/productInfo";
-import ProductVariantSelector from "@/components/modules/product/productDetail/productVariantSelector";
-import ProductActions from "@/components/modules/product/productDetail/productActions";
-import ProductCarousel from "@/components/modules/product/productDetail/productCarousel";
+import ProductTabs from "@/components/modules/product/productDetail/ProductTabs";
+import ProductDetailSkeleton from "@/components/modules/product/productDetail/ProductDetailSkeleton";
+import ProductImageGallery from "@/components/modules/product/productDetail/ProductImageGallery";
+import ProductInfo from "@/components/modules/product/productDetail/ProductInfo";
+import ProductVariantSelector from "@/components/modules/product/productDetail/ProductVariantSelector";
+import ProductActions from "@/components/modules/product/productDetail/ProductActions";
+import ProductCarousel from "@/components/modules/product/productDetail/ProductCarousel";
 import { useHybridWishlist } from "@/hooks/use-hybrid-wishlist";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";

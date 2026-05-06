@@ -11,6 +11,7 @@ import {
   CreditCard,
   MessageSquare,
   BadgeCheck,
+  Loader2,
 } from "lucide-react";
 import {
   Dialog,
@@ -24,12 +25,12 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 
 interface Comment {
-  id: number;
+  id: string;
   rating: number;
   title?: string;
   comment?: string;
   createdAt: string;
-  user?: { id: number; name: string; surname: string };
+  customerName?: string;
 }
 
 interface ProductTabsProps {
@@ -50,12 +51,13 @@ export default function ProductTabs({
   >("info");
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
   const [title, setTitle] = useState("");
   const [commentText, setCommentText] = useState("");
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const { user: currentUser } = useAuth();
-  // State'lerin yanına ekle
   const [suggestion, setSuggestion] = useState("");
   const [isSending, setIsSending] = useState(false);
 
@@ -71,7 +73,7 @@ export default function ProductTabs({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          recipients: ["ispoolofficial@gmail.com"], // Mailin gideceği adres
+          recipients: ["ispoolofficial@gmail.com"],
           subject: `Yeni Ürün Önerisi: ${productTitle}`,
           message: suggestion,
         }),
@@ -79,7 +81,7 @@ export default function ProductTabs({
 
       if (response.ok) {
         toast.success("Öneriniz tasarım ekibimize başarıyla iletildi.");
-        setSuggestion(""); // Formu temizle
+        setSuggestion("");
       } else {
         throw new Error("Mail gönderilemedi");
       }
@@ -117,11 +119,48 @@ export default function ProductTabs({
     try {
       const { data } = await api.get(`/api/review/${productId}`);
       setComments(data ?? []);
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      if (error?.response?.status !== 404) {
+        console.error(error);
+      }
       setComments([]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (rating === 0) {
+      toast.error("Lütfen bir puan seçin.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await api.post("/api/review", {
+        productId,
+        rating,
+        title: title.trim() || null,
+        comment: commentText.trim() || null,
+      });
+      toast.success("Yorumunuz başarıyla yayınlandı.");
+      setIsReviewModalOpen(false);
+      setRating(0);
+      setHoverRating(0);
+      setTitle("");
+      setCommentText("");
+      fetchComments();
+    } catch (error: any) {
+      const msg = error?.response?.data?.message;
+      if (error?.response?.status === 409) {
+        toast.error(msg ?? "Bu ürün için zaten yorum yaptınız.");
+      } else if (error?.response?.status === 401) {
+        toast.error("Yorum yapabilmek için giriş yapmalısınız.");
+      } else {
+        toast.error(msg ?? "Bir hata oluştu, tekrar deneyin.");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -257,54 +296,68 @@ export default function ProductTabs({
                 </button>
               )}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              {comments.length > 0 ? (
-                comments.map((comment) => (
-                  <div
-                    key={comment.id}
-                    className="p-5 md:p-6 bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            size={10}
-                            className={cn(
-                              i < comment.rating
-                                ? "fill-orange-500 text-orange-500"
-                                : "text-slate-200",
-                            )}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">
-                        {new Date(comment.createdAt).toLocaleDateString(
-                          "tr-TR",
-                        )}
-                      </span>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                        <div className="w-6 h-6 bg-slate-100 flex items-center justify-center text-[8px] shrink-0">
-                          {comment.user?.name[0]}
+
+            {isLoading ? (
+              <div className="flex justify-center items-center py-16">
+                <Loader2 className="animate-spin text-orange-500" size={28} />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                {comments.length > 0 ? (
+                  comments.map((comment) => (
+                    <div
+                      key={comment.id}
+                      className="p-5 md:p-6 bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              size={10}
+                              className={cn(
+                                i < comment.rating
+                                  ? "fill-orange-500 text-orange-500"
+                                  : "text-slate-200",
+                              )}
+                            />
+                          ))}
                         </div>
-                        <span className="truncate">
-                          {comment.user?.name} {comment.user?.surname}
+                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">
+                          {new Date(comment.createdAt).toLocaleDateString(
+                            "tr-TR",
+                          )}
                         </span>
                       </div>
-                      <p className="text-sm text-slate-600 leading-relaxed font-medium italic">
-                        "{comment.comment}"
-                      </p>
+                      <div className="space-y-3">
+                        <div className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                          <div className="w-6 h-6 bg-slate-100 flex items-center justify-center text-[8px] shrink-0">
+                            {comment.customerName?.[0] ?? "?"}
+                          </div>
+                          <span className="truncate">
+                            {comment.customerName ?? "Anonim"}
+                          </span>
+                        </div>
+                        {comment.title && (
+                          <p className="text-[11px] font-bold text-slate-800">
+                            {comment.title}
+                          </p>
+                        )}
+                        {comment.comment && (
+                          <p className="text-sm text-slate-600 leading-relaxed font-medium italic">
+                            "{comment.comment}"
+                          </p>
+                        )}
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-12 text-slate-400 text-sm italic">
+                    Henüz yorum yapılmamış. İlk yorumu siz yapın!
                   </div>
-                ))
-              ) : (
-                <div className="col-span-full text-center py-12 text-slate-400 text-sm italic">
-                  Henüz yorum yapılmamış. İlk yorumu siz yapın!
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -323,6 +376,7 @@ export default function ProductTabs({
                         src={bank.logo}
                         alt={bank.name}
                         fill
+                        sizes="80px"
                         className="object-contain object-left"
                       />
                     </div>
@@ -415,8 +469,17 @@ export default function ProductTabs({
                 isSending && "opacity-50 cursor-not-allowed",
               )}
             >
-              {isSending ? "Gönderiliyor..." : "Öneriyi Gönder"}
-              {!isSending && <ArrowRight size={16} />}
+              {isSending ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  Gönderiliyor...
+                </>
+              ) : (
+                <>
+                  Öneriyi Gönder
+                  <ArrowRight size={16} />
+                </>
+              )}
             </button>
           </div>
         )}
@@ -434,57 +497,81 @@ export default function ProductTabs({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 mt-6">
+            {/* Yıldız Seçimi */}
             <div className="flex justify-center gap-2">
               {[1, 2, 3, 4, 5].map((n) => (
                 <button
                   key={n}
                   onClick={() => setRating(n)}
+                  onMouseEnter={() => setHoverRating(n)}
+                  onMouseLeave={() => setHoverRating(0)}
                   className="transition-transform active:scale-90"
+                  disabled={isSubmitting}
                 >
                   <Star
-                    size={24}
+                    size={28}
                     className={cn(
                       "transition-colors",
-                      n <= rating
+                      n <= (hoverRating || rating)
                         ? "fill-orange-500 text-orange-500"
-                        : "text-slate-100",
+                        : "text-slate-200",
                     )}
                   />
                 </button>
               ))}
             </div>
+            {rating > 0 && (
+              <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest -mt-2">
+                {["", "Çok Kötü", "Kötü", "Orta", "İyi", "Mükemmel"][rating]}
+              </p>
+            )}
+
             <div className="space-y-4">
               <div className="space-y-1">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                  Konu Başlığı
+                  Konu Başlığı{" "}
+                  <span className="text-slate-300">(İsteğe bağlı)</span>
                 </label>
                 <input
                   placeholder="Örn: Pantolon Dayanıklılığı"
                   className="w-full bg-slate-50 border border-slate-100 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-1 ring-orange-200 transition-all"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-1">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                  Yorumunuz
+                  Yorumunuz{" "}
+                  <span className="text-slate-300">(İsteğe bağlı)</span>
                 </label>
                 <textarea
                   placeholder="Ürün çalışma ortamınızda nasıl bir performans gösterdi?"
                   className="w-full bg-slate-50 border border-slate-100 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-1 ring-orange-200 transition-all min-h-[100px] resize-none"
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
+
             <button
-              onClick={() => {
-                toast.success("Raporunuz başarıyla iletildi.");
-                setIsReviewModalOpen(false);
-              }}
-              className="w-full bg-orange-600 text-white py-4 text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-lg shadow-orange-100"
+              onClick={handleSubmitReview}
+              disabled={isSubmitting || rating === 0}
+              className={cn(
+                "w-full bg-orange-600 text-white py-4 text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-slate-900 transition-all shadow-lg shadow-orange-100",
+                (isSubmitting || rating === 0) &&
+                  "opacity-50 cursor-not-allowed",
+              )}
             >
-              Yorumu Yayınla
+              {isSubmitting ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  Gönderiliyor...
+                </>
+              ) : (
+                "Yorumu Yayınla"
+              )}
             </button>
           </div>
         </DialogContent>

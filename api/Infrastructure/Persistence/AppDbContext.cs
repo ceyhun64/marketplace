@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<AccountingEntry> AccountingEntries => Set<AccountingEntry>();
     public DbSet<Plugin> Plugins => Set<Plugin>();
+    public DbSet<Review> Reviews => Set<Review>();
     public DbSet<MerchantPlugin> MerchantPlugins => Set<MerchantPlugin>();
     public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
 
@@ -168,6 +169,24 @@ public class AppDbContext : DbContext
             .HasForeignKey(s => s.CourierId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
+        // ── Review → Product (N:1) ────────────────────────────────────────────────
+        modelBuilder
+            .Entity<Review>()
+            .HasOne(r => r.Product)
+            .WithMany()
+            .HasForeignKey(r => r.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ── Review → Customer/User (N:1) ─────────────────────────────────────────
+        modelBuilder
+            .Entity<Review>()
+            .HasOne(r => r.Customer)
+            .WithMany()
+            .HasForeignKey(r => r.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ── Bir kullanıcı aynı ürüne yalnızca bir yorum yapabilir ────────────────
+        modelBuilder.Entity<Review>().HasIndex(r => new { r.CustomerId, r.ProductId }).IsUnique();
 
         // ── Courier → User (1:1) ─────────────────────────────────────────────
         modelBuilder
@@ -207,17 +226,20 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);
 
         // ── WishlistItem ──────────────────────────────────────────────────────
-        modelBuilder.Entity<WishlistItem>()
+        modelBuilder
+            .Entity<WishlistItem>()
             .HasIndex(w => new { w.CustomerId, w.ProductId })
             .IsUnique();
 
-        modelBuilder.Entity<WishlistItem>()
+        modelBuilder
+            .Entity<WishlistItem>()
             .HasOne(w => w.Customer)
             .WithMany()
             .HasForeignKey(w => w.CustomerId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<WishlistItem>()
+        modelBuilder
+            .Entity<WishlistItem>()
             .HasOne(w => w.Product)
             .WithMany()
             .HasForeignKey(w => w.ProductId)

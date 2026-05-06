@@ -4,7 +4,7 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { ShieldCheck, Play, Pause, Maximize2, Minimize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CustomImageZoom } from "./imageZoom";
+import { CustomImageZoom } from "./ImageZoom";
 
 interface ProductImageGalleryProps {
   images: string[];
