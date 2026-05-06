@@ -21,20 +21,20 @@ public static class DataSeeder
 
     private static readonly string[] StoreLogos =
     [
-        "/store/store1.webp",
-        "/store/store2.webp",
-        "/store/store3.webp",
-        "/store/store4.webp",
-        "/store/store5.webp",
+        "/merchants/merchant1.webp",
+        "/merchants/merchant2.webp",
+        "/merchants/merchant3.webp",
+        "/merchants/merchant4.webp",
+        "/merchants/merchant5.webp",
     ];
 
     private static readonly string[] StoreBanners =
     [
-        "/store/store2.webp",
-        "/store/store3.webp",
-        "/store/store4.webp",
-        "/store/store5.webp",
-        "/store/store1.webp",
+        "/merchants/merchant2.webp",
+        "/merchants/merchant3.webp",
+        "/merchants/merchant4.webp",
+        "/merchants/merchant5.webp",
+        "/merchants/merchant1.webp",
     ];
 
     public static async Task SeedAsync(AppDbContext db)
@@ -378,7 +378,20 @@ public static class DataSeeder
                     UserId = mUser.Id,
                     StoreName = store,
                     Slug = slug,
-                    Description = $"{store} — Türkiye'nin güvenilir alışveriş noktası.",
+                    Description = slug switch
+                    {
+                        "techstore-turkiye" =>
+                            "TechStore Türkiye, 2018'den bu yana en güncel akıllı telefon, laptop, tablet ve aksesuar ürünlerini uygun fiyatlarla sunmaktadır. Yetkili servis desteği ve 2 yıl garantiyle güvenli alışveriş.",
+                        "moda-dunyasi" =>
+                            "Moda Dünyası, Türkiye'nin önde gelen ulusal ve uluslararası moda markalarını tek çatı altında toplayan bir butik mağazadır. Erkek, kadın ve çocuk giyiminde en yeni koleksiyonlar her sezon güncellenmektedir.",
+                        "ev-dekor" =>
+                            "Ev & Dekor, evinizi dönüştürecek mutfak aletleri, mobilya ve dekorasyon ürünlerini kaliteli ve garantili şekilde sunar. Yaşam alanlarınıza Skandinav estetiği ve modern dokunuşlar katıyoruz.",
+                        "spor-world" =>
+                            "Spor World, amatörden profesyonele her seviyede sporcunun ihtiyaç duyduğu ekipman ve giyimi sağlar. Koşu, bisiklet, tenis, yüzme ve daha fazlası için binlerce ürün seçeneği.",
+                        "kitap-center" =>
+                            "Kitap Center, kişisel gelişim, roman, tarih ve bilim kurgu kategorilerinde Türkçe ve yabancı dil kitapları sunan çevrimiçi kitabevimizdir. Hızlı kargo ve özenli paketleme garantisiyle kitap tutkunlarının adresi.",
+                        _ => $"{store} — Türkiye'nin güvenilir alışveriş noktası.",
+                    },
                     Address = address,
                     City = city,
                     Country = "TR",
@@ -1277,6 +1290,23 @@ public static class DataSeeder
     // ── Yardımcı: Product oluştur ─────────────────────────────────────────────
     private static int _productImageIndex = 0;
 
+    // Her ürüne 2-3 görsel atamak için önceden tanımlanmış kombinasyonlar
+    private static readonly string[][] ProductImageSets =
+    [
+        ["/products/product1.webp", "/products/product2.webp", "/products/product3.webp"],
+        ["/products/product2.webp", "/products/product3.webp", "/products/product4.webp"],
+        ["/products/product3.webp", "/products/product4.webp", "/products/product5.webp"],
+        ["/products/product4.webp", "/products/product5.webp", "/products/product6.webp"],
+        ["/products/product5.webp", "/products/product6.webp", "/products/product1.webp"],
+        ["/products/product6.webp", "/products/product1.webp", "/products/product2.webp"],
+        ["/products/product1.webp", "/products/product4.webp"],
+        ["/products/product2.webp", "/products/product5.webp"],
+        ["/products/product3.webp", "/products/product6.webp"],
+        ["/products/product4.webp", "/products/product1.webp"],
+        ["/products/product5.webp", "/products/product2.webp"],
+        ["/products/product6.webp", "/products/product3.webp"],
+    ];
+
     private static Product MakeProduct(
         Guid merchantId,
         Guid categoryId,
@@ -1287,8 +1317,8 @@ public static class DataSeeder
         string[] tags
     )
     {
-        // Her ürüne sıralı olarak web/public/products klasöründen bir görsel ata
-        var image = ProductImages[_productImageIndex % ProductImages.Length];
+        // Her ürüne döngüsel olarak farklı görsel kombinasyonu ata
+        var imageSet = ProductImageSets[_productImageIndex % ProductImageSets.Length];
         _productImageIndex++;
 
         var slug = name.ToLower().Replace(" ", "-").Replace("\"", "");
@@ -1300,7 +1330,7 @@ public static class DataSeeder
             Name = name,
             Description = desc,
             ShortDescription = desc.Length > 80 ? desc[..80] + "…" : desc,
-            Images = [image],
+            Images = [.. imageSet],
             Tags = [.. tags],
             Price = price,
             Stock = stock,
