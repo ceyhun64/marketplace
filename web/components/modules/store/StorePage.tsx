@@ -10,7 +10,7 @@ interface StorePageProps {
   params: Promise<{ slug: string }>;
 }
 
-interface StorProfile {
+interface StoreProfile {
   id: string;
   storeName: string;
   slug: string;
@@ -43,7 +43,8 @@ export async function generateMetadata({
 }: StorePageProps): Promise<Metadata> {
   const params = await paramsPromise;
   try {
-    const store = (await serverFetch.store(params.slug)) as StorProfile;
+    const store = (await serverFetch.store(params.slug)) as StoreProfile | null;
+    if (!store) return { title: "Store Not Found" };
     return {
       title: `${store.storeName} | Store`,
       description:
@@ -59,30 +60,30 @@ export async function generateMetadata({
   }
 }
 
-export default async function StorePage({ params: paramsPromise }: StorePageProps) {
+export default async function StorePage({
+  params: paramsPromise,
+}: StorePageProps) {
   const params = await paramsPromise;
-  let store: StorProfile;
-  let offers: StoreOffer[];
 
-  try {
-    [store, offers] = await Promise.all([
-      serverFetch.store(params.slug) as Promise<StorProfile>,
-      serverFetch.storeProducts(params.slug) as Promise<StoreOffer[]>,
-    ]);
-  } catch {
+  const [store, offers] = await Promise.all([
+    serverFetch.store(params.slug) as Promise<StoreProfile | null>,
+    serverFetch.storeProducts(params.slug) as Promise<StoreOffer[] | null>,
+  ]);
+
+  if (!store) {
     notFound();
   }
 
+  const safeOffers: StoreOffer[] = Array.isArray(offers) ? offers : [];
+
   return (
     <>
-    <Navbar />
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen" style={{ background: "#fafafa" }}>
         <StoreHeader store={store} />
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <StoreProductGrid storeSlug={params.slug} offers={offers} />
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <StoreProductGrid storeSlug={params.slug} offers={safeOffers} />
         </div>
       </div>
-      <Footer />
     </>
   );
 }
