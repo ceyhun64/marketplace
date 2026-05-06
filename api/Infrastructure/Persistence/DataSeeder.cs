@@ -8,6 +8,35 @@ public static class DataSeeder
 {
     private static readonly Random Rng = new(42);
 
+    // Web sunucusunun /public klasöründen servis edilen ürün ve mağaza görselleri
+    private static readonly string[] ProductImages =
+    [
+        "/products/product1.webp",
+        "/products/product2.webp",
+        "/products/product3.webp",
+        "/products/product4.webp",
+        "/products/product5.webp",
+        "/products/product6.webp",
+    ];
+
+    private static readonly string[] StoreLogos =
+    [
+        "/store/store1.webp",
+        "/store/store2.webp",
+        "/store/store3.webp",
+        "/store/store4.webp",
+        "/store/store5.webp",
+    ];
+
+    private static readonly string[] StoreBanners =
+    [
+        "/store/store2.webp",
+        "/store/store3.webp",
+        "/store/store4.webp",
+        "/store/store5.webp",
+        "/store/store1.webp",
+    ];
+
     public static async Task SeedAsync(AppDbContext db)
     {
         // ── 1. Admin ──────────────────────────────────────────────────────────
@@ -309,6 +338,7 @@ public static class DataSeeder
             };
 
             merchants = new List<MerchantProfile>();
+            int merchantIdx = 0;
             foreach (
                 var (
                     email,
@@ -355,10 +385,13 @@ public static class DataSeeder
                     Latitude = lat,
                     Longitude = lon,
                     HandlingHours = hours,
+                    LogoUrl = StoreLogos[merchantIdx % StoreLogos.Length],
+                    BannerUrl = StoreBanners[merchantIdx % StoreBanners.Length],
                     IsActive = true,
                     CreatedAt = mUser.CreatedAt,
                     UpdatedAt = DateTime.UtcNow,
                 };
+                merchantIdx++;
                 db.MerchantProfiles.Add(profile);
                 await db.SaveChangesAsync();
 
@@ -1242,6 +1275,8 @@ public static class DataSeeder
     }
 
     // ── Yardımcı: Product oluştur ─────────────────────────────────────────────
+    private static int _productImageIndex = 0;
+
     private static Product MakeProduct(
         Guid merchantId,
         Guid categoryId,
@@ -1252,6 +1287,10 @@ public static class DataSeeder
         string[] tags
     )
     {
+        // Her ürüne sıralı olarak web/public/products klasöründen bir görsel ata
+        var image = ProductImages[_productImageIndex % ProductImages.Length];
+        _productImageIndex++;
+
         var slug = name.ToLower().Replace(" ", "-").Replace("\"", "");
         return new Product
         {
@@ -1261,7 +1300,7 @@ public static class DataSeeder
             Name = name,
             Description = desc,
             ShortDescription = desc.Length > 80 ? desc[..80] + "…" : desc,
-            Images = [$"https://placehold.co/400x400?text={Uri.EscapeDataString(name)}"],
+            Images = [image],
             Tags = [.. tags],
             Price = price,
             Stock = stock,
