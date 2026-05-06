@@ -43,7 +43,7 @@ export default function CartPage() {
   const [couponApplied, setCouponApplied] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
-  // Giriş yapılmamışsa login sayfasına yönlendir
+  // Redirect to login if not authenticated
   const handleCheckout = () => {
     if (!user) {
       router.push("/auth/login?redirect=/checkout");
@@ -677,14 +677,17 @@ export default function CartPage() {
                   (e.currentTarget.style.background = "var(--charcoal)")
                 }
               >
-                {user ? "Siparişi Tamamla" : "Giriş Yap & Sipariş Ver"}
+                {user ? "Complete Order" : "Sign In & Place Order"}
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              {/* Misafir bilgi notu */}
+              {/* Guest info note */}
               {!user && (
-                <p className="mt-3 text-center font-mono text-[10px]" style={{ color: "var(--charcoal-soft)" }}>
-                  Sepetiniz giriş yapana kadar bu cihazda saklanır.
+                <p
+                  className="mt-3 text-center font-mono text-[10px]"
+                  style={{ color: "var(--charcoal-soft)" }}
+                >
+                  Your cart will be saved on this device until you sign in.
                 </p>
               )}
 
