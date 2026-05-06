@@ -561,16 +561,16 @@ export default function ProductDetailPage() {
      * Motion  : dur-fast 140ms | ease-out cubic-bezier(0.16,1,0.3,1)
      */
     <div
-      className="min-h-screen flex items-center justify-start"
+      className="min-h-screen w-full"
       style={{
         maxWidth: 1300,
         background: "#fafafa",
         color: "#1e1e1e",
         fontFamily: "'Manrope', sans-serif",
-        margin: "0 auto", // 1300px genişlikte sayfayı ortalamak için
+        margin: "0 auto",
       }}
     >
-      <div className="mx-auto pb-20 pt-4 md:pt-8">
+      <div className="w-full pb-20 pt-4 md:pt-8 px-4 md:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* ── Gallery ── */}
           <div className="lg:col-span-6 lg:sticky lg:top-20 lg:self-start lg:z-40">

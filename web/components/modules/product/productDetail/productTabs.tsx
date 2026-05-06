@@ -200,7 +200,7 @@ export default function ProductTabs({
   ];
 
   return (
-    <section className="mt-12 md:mt-24 max-w-6xl mx-auto px-0 sm:px-6 overflow-hidden">
+    <section className="mt-12 md:mt-24 w-full max-w-6xl mx-auto px-0 sm:px-2">
       {/* MOBILE-FRIENDLY SCROLLABLE NAVIGATION */}
       <nav
         className="flex items-center justify-start lg:justify-center mb-8 md:mb-12 overflow-x-auto scrollbar-hide"
