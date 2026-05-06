@@ -152,10 +152,15 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const cartCount = useCartCount();
 
+  const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -339,7 +344,7 @@ export default function Navbar() {
                   }}
                 >
                   <ShoppingBag className="w-[17px] h-[17px]" strokeWidth={2} />
-                  {cartCount > 0 && (
+                  {mounted && cartCount > 0 && (
                     <span
                       className="absolute top-1 right-1 w-3.5 h-3.5 text-[8px] font-bold rounded-full flex items-center justify-center"
                       style={{
