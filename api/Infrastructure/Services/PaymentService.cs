@@ -415,7 +415,7 @@ public class PaymentService : IPaymentService
         order.IsPaid = true;
         order.PaidAt = DateTime.UtcNow;
         order.PaymentId = paymentIntentId;
-        order.Status = OrderStatus.Pending;
+        order.Status = OrderStatus.PaymentConfirmed;
         order.UpdatedAt = DateTime.UtcNow;
 
         // Shipment oluştur

@@ -51,10 +51,22 @@ public class CreateProductCommandHandler
         else
         {
             var merchant = await _db.MerchantProfiles
+                .Include(m => m.Subscription)
                 .FirstOrDefaultAsync(m => m.UserId == _currentUser.UserId, cancellationToken);
             if (merchant is null)
                 throw new InvalidOperationException("Merchant profili bulunamadı.");
             merchantId = merchant.Id;
+
+            // Marketplace yayını için Pro veya Enterprise aboneliği gereklidir
+            if (request.PublishToMarket)
+            {
+                var hasPro = merchant.Subscription != null
+                    && merchant.Subscription.IsActive
+                    && (merchant.Subscription.Plan == PlanType.Pro || merchant.Subscription.Plan == PlanType.Enterprise);
+
+                if (!hasPro)
+                    throw new InvalidOperationException("Marketplace'e ürün yayınlamak için Pro veya Enterprise aboneliği gereklidir.");
+            }
         }
 
         var product = new Product
