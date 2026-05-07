@@ -21,12 +21,22 @@ function useBestsellers() {
   });
 }
 
-const CATEGORIES = [
-  { key: "all", label: "All Categories" },
-  { key: "electronics", label: "Electronics" },
-  { key: "fashion", label: "Fashion" },
-  { key: "home", label: "Home & Living" },
-  { key: "sports", label: "Sports" },
+const STATS = [
+  {
+    icon: <Flame className="w-4 h-4" />,
+    label: "Trending Now",
+    value: "48 products",
+  },
+  {
+    icon: <Star className="w-4 h-4" />,
+    label: "Top Rated",
+    value: "4.8+ stars",
+  },
+  {
+    icon: <TrendingUp className="w-4 h-4" />,
+    label: "Sales Growth",
+    value: "+32% this week",
+  },
 ];
 
 function SkeletonGrid() {
@@ -78,23 +88,7 @@ export default function BestsellersPage() {
 
           {/* Stats row */}
           <div className="flex flex-wrap gap-6">
-            {[
-              {
-                icon: <Flame className="w-4 h-4" />,
-                label: "Trending Now",
-                value: "48 products",
-              },
-              {
-                icon: <Star className="w-4 h-4" />,
-                label: "Top Rated",
-                value: "4.8+ stars",
-              },
-              {
-                icon: <TrendingUp className="w-4 h-4" />,
-                label: "Sales Growth",
-                value: "+32% this week",
-              },
-            ].map((stat) => (
+            {STATS.map((stat) => (
               <div key={stat.label} className="flex items-center gap-3">
                 <div
                   className="w-9 h-9 rounded-[10px] flex items-center justify-center"
@@ -171,10 +165,10 @@ export default function BestsellersPage() {
                     </div>
                     <div className="p-5">
                       <Link
-                        href={`/store/${product.merchant?.slug}`}
+                        href={`/store/${product.merchantSlug}`}
                         className="font-mono text-[10px] uppercase tracking-wider text-[var(--red)] hover:underline"
                       >
-                        {product.merchant?.storeName}
+                        {product.merchantStoreName}
                       </Link>
                       <h3 className="font-bold text-[var(--charcoal)] mt-1 mb-3 leading-tight">
                         {product.name}
