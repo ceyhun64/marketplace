@@ -443,41 +443,44 @@ public static class DataSeeder
 
         // ── 5. Kuryeler ───────────────────────────────────────────────────────
         List<Courier> couriers;
-        if (!await db.Users.AnyAsync(u => u.Role == UserRole.Courier))
+        
+        var courierData = new[]
         {
-            var courierData = new[]
-            {
-                (
-                    "courier1@marketplace.com",
-                    "Kadir",
-                    "Polat",
-                    "Motorcycle",
-                    "34ABC123",
-                    41.015,
-                    28.979
-                ),
-                ("courier2@marketplace.com", "Serkan", "Güneş", "Car", "06XYZ456", 39.920, 32.854),
-                (
-                    "courier3@marketplace.com",
-                    "Burak",
-                    "Aydın",
-                    "Bicycle",
-                    "35QWE789",
-                    38.430,
-                    27.140
-                ),
-                (
-                    "courier4@marketplace.com",
-                    "Emre",
-                    "Taş",
-                    "Motorcycle",
-                    "16DEF012",
-                    40.195,
-                    29.058
-                ),
-            };
-            couriers = new List<Courier>();
-            foreach (var (email, first, last, vehicle, plate, lat, lon) in courierData)
+            (
+                "courier1@marketplace.com",
+                "Kadir",
+                "Polat",
+                "Motorcycle",
+                "34ABC123",
+                41.015,
+                28.979
+            ),
+            ("courier2@marketplace.com", "Serkan", "Güneş", "Car", "06XYZ456", 39.920, 32.854),
+            (
+                "courier3@marketplace.com",
+                "Burak",
+                "Aydın",
+                "Bicycle",
+                "35QWE789",
+                38.430,
+                27.140
+            ),
+            (
+                "courier4@marketplace.com",
+                "Emre",
+                "Taş",
+                "Motorcycle",
+                "16DEF012",
+                40.195,
+                29.058
+            ),
+        };
+
+        couriers = new List<Courier>();
+        foreach (var (email, first, last, vehicle, plate, lat, lon) in courierData)
+        {
+            var existingUser = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (existingUser == null)
             {
                 var cUser = new User
                 {
@@ -512,27 +515,52 @@ public static class DataSeeder
                 db.Couriers.Add(courier);
                 await db.SaveChangesAsync();
                 couriers.Add(courier);
+                Console.WriteLine($"✅ Kurye oluşturuldu: {email}");
             }
-            Console.WriteLine($"✅ {couriers.Count} kurye oluşturuldu.");
-        }
-        else
-        {
-            couriers = await db.Couriers.ToListAsync();
-
-            // Tüm courier kullanıcılarının şifresini seed şifresiyle senkronize et
-            var courierUsers = await db.Users.Where(u => u.Role == UserRole.Courier).ToListAsync();
-            foreach (var cu in courierUsers)
+            else
             {
-                if (!BCrypt.Net.BCrypt.Verify("Courier123!", cu.PasswordHash))
+                // Mevcut courier kullanıcısının şifresini ve durumunu senkronize et
+                if (!BCrypt.Net.BCrypt.Verify("Courier123!", existingUser.PasswordHash))
                 {
-                    cu.PasswordHash = BCrypt.Net.BCrypt.HashPassword("Courier123!");
-                    cu.AccountStatus = AccountStatus.Active;
-                    cu.IsVerified = true;
-                    cu.UpdatedAt = DateTime.UtcNow;
-                    Console.WriteLine($"🔑 Courier şifresi güncellendi: {cu.Email}");
+                    existingUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword("Courier123!");
+                    existingUser.AccountStatus = AccountStatus.Active;
+                    existingUser.IsVerified = true;
+                    existingUser.UpdatedAt = DateTime.UtcNow;
+                    await db.SaveChangesAsync();
+                    Console.WriteLine($"🔑 Courier şifresi güncellendi: {email}");
+                }
+                // Courier kaydı yoksa oluştur
+                var existingCourier = await db.Couriers.FirstOrDefaultAsync(c => c.UserId == existingUser.Id);
+                if (existingCourier == null)
+                {
+                    var courier = new Courier
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = existingUser.Id,
+                        VehicleType = vehicle,
+                        PlateNumber = plate,
+                        IsActive = true,
+                        IsAvailable = Rng.Next(0, 2) == 1,
+                        CurrentLatitude = lat,
+                        CurrentLongitude = lon,
+                        LastLocationUpdate = DateTime.UtcNow.AddMinutes(-Rng.Next(5, 120)),
+                        CreatedAt = existingUser.CreatedAt,
+                    };
+                    db.Couriers.Add(courier);
+                    await db.SaveChangesAsync();
+                    couriers.Add(courier);
+                    Console.WriteLine($"✅ Kurye profili oluşturuldu: {email}");
+                }
+                else
+                {
+                    couriers.Add(existingCourier);
                 }
             }
-            await db.SaveChangesAsync();
+        }
+        
+        if (!couriers.Any())
+        {
+            couriers = await db.Couriers.ToListAsync();
         }
 
         // ── 6. Ürünler ────────────────────────────────────────────────────────

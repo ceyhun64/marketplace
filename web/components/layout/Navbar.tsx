@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   LogOut,
   X,
+  Menu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -156,6 +157,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -323,10 +325,10 @@ export default function Navbar() {
               </div>
 
               {/* Wishlist & Cart */}
-              <div className="hidden sm:flex items-center gap-0.5">
+              <div className="flex items-center gap-0.5">
                 <Link
                   href="/wishlist"
-                  className="p-2 rounded-lg transition-all"
+                  className="hidden sm:block p-2 rounded-lg transition-all"
                   style={{
                     color: "var(--charcoal-soft)",
                     textDecoration: "none",
@@ -358,6 +360,21 @@ export default function Navbar() {
                     </span>
                   )}
                 </Link>
+
+                {/* Mobile Hamburger */}
+                <button
+                  type="button"
+                  className="lg:hidden p-2 rounded-lg transition-all"
+                  style={{ color: "var(--charcoal-soft)" }}
+                  onClick={() => setMobileMenuOpen((v) => !v)}
+                  aria-label="Menu"
+                >
+                  {mobileMenuOpen ? (
+                    <X className="w-[17px] h-[17px]" strokeWidth={2} />
+                  ) : (
+                    <Menu className="w-[17px] h-[17px]" strokeWidth={2} />
+                  )}
+                </button>
               </div>
 
               {/* Auth */}
@@ -507,6 +524,110 @@ export default function Navbar() {
           </div>
         </div>
       </header>
+
+      {/* Mobile Navigation Menu */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed top-0 left-0 right-0 z-40 pointer-events-auto"
+          style={{ paddingTop: scrolled ? "5.5rem" : "6.5rem" }}
+        >
+          <div
+            className="mx-5 rounded-2xl overflow-hidden"
+            style={{
+              background: "rgba(255,255,255,0.98)",
+              backdropFilter: "blur(16px)",
+              border: "1px solid var(--border-light)",
+              boxShadow: "var(--shadow-lg)",
+            }}
+          >
+            <nav className="flex flex-col p-3">
+              {PUBLIC_NAV.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.9375rem",
+                    fontWeight: pathname === link.href ? 600 : 500,
+                    color:
+                      pathname === link.href
+                        ? "var(--charcoal)"
+                        : "var(--charcoal-soft)",
+                    padding: "0.75rem 1rem",
+                    borderRadius: "0.75rem",
+                    background:
+                      pathname === link.href
+                        ? "var(--off-white-2)"
+                        : "transparent",
+                    textDecoration: "none",
+                    display: "block",
+                  }}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <div
+                style={{
+                  height: "1px",
+                  background: "var(--border-light)",
+                  margin: "0.5rem 0",
+                }}
+              />
+              <Link
+                href="/wishlist"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "0.9375rem",
+                  fontWeight: 500,
+                  color: "var(--charcoal-soft)",
+                  padding: "0.75rem 1rem",
+                  borderRadius: "0.75rem",
+                  textDecoration: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                }}
+              >
+                <Heart className="w-4 h-4" strokeWidth={2} />
+                Wishlist
+              </Link>
+              <Link
+                href="/cart"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "0.9375rem",
+                  fontWeight: 500,
+                  color: "var(--charcoal-soft)",
+                  padding: "0.75rem 1rem",
+                  borderRadius: "0.75rem",
+                  textDecoration: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                }}
+              >
+                <ShoppingBag className="w-4 h-4" strokeWidth={2} />
+                Cart
+                {mounted && cartCount > 0 && (
+                  <span
+                    className="w-5 h-5 text-[10px] font-bold rounded-full flex items-center justify-center"
+                    style={{
+                      background: "var(--red)",
+                      color: "white",
+                      fontFamily: "var(--font-mono)",
+                    }}
+                  >
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+            </nav>
+          </div>
+        </div>
+      )}
 
       {/* Spacer */}
       <div

@@ -34,17 +34,24 @@ async function CategoryProducts({
   if (searchParams.subcategory)
     params.set("subcategory", searchParams.subcategory);
 
+  // API /api/categories/{slug} endpoint'i { category, SubCategories, products } formatında döndürür
   const [categoryData, productsData] = await Promise.all([
-    fetchISR<{ data: any }>(`/categories/${slug}`),
+    fetchISR<{ category: any; SubCategories: any[]; products: any[] }>(`/api/categories/${slug}`),
     fetchISR<{ data: any[] }>(
-      `/products?category=${slug}&${params.toString()}`,
+      `/api/products?category=${slug}&${params.toString()}`,
     ),
   ]);
 
-  if (!categoryData?.data) notFound();
+  if (!categoryData?.category) notFound();
 
-  const category = categoryData.data;
-  const rawProducts = productsData?.data || [];
+  const category = {
+    ...categoryData.category,
+    subCategories: categoryData.SubCategories || [],
+    parent: categoryData.category.parent || null,
+  };
+  // Kategori endpoint'inden gelen ürünleri kullan, ayrıca products endpoint de denenebilir
+  const apiProducts = categoryData.products || [];
+  const rawProducts = apiProducts.length > 0 ? apiProducts : (productsData?.data || []);
   const subcategories = category.subCategories || [];
 
   // API verisini Product tipine normalize et
@@ -230,8 +237,8 @@ export default async function CategoryPage({
 
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
-  const data = await fetchISR<{ data: any }>(`/categories/${slug}`);
-  const category = data?.data;
+  const data = await fetchISR<{ category: any }>(`/api/categories/${slug}`);
+  const category = data?.category;
   return {
     title: category ? `${category.name} — Marketplace` : "Category",
     description: `Explore ${category?.name || "Category"} products`,
