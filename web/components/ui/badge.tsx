@@ -1,29 +1,32 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Slot } from "radix-ui";
-
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2.5 py-0.5 text-xs font-medium whitespace-nowrap transition-all duration-150 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
+  "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[var(--radius-pill)] font-mono text-xs font-medium tracking-[0.04em] border whitespace-nowrap transition-all duration-150 [&>svg]:pointer-events-none [&>svg]:size-3",
   {
     variants: {
       variant: {
         default:
-          "bg-primary/10 text-primary border-primary/20 [a]:hover:bg-primary/15",
+          "bg-[var(--red-muted)] text-[var(--red)] border-[var(--red-subtle)]",
         secondary:
-          "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
+          "bg-[rgba(30,30,30,0.07)] text-[var(--charcoal)] border-[rgba(30,30,30,0.14)]",
         destructive:
-          "bg-destructive/10 text-destructive border-destructive/20 focus-visible:ring-destructive/20 dark:bg-destructive/20 [a]:hover:bg-destructive/15",
-        outline: "border-border text-foreground [a]:hover:bg-muted",
+          "bg-[var(--danger-bg)] text-[var(--danger)] border-[var(--danger-border)]",
+        outline:
+          "bg-transparent text-[var(--charcoal-mid)] border-[var(--border-mid)]",
         ghost:
-          "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-transparent text-[var(--charcoal-mid)] border-transparent hover:bg-[var(--off-white-2)]",
+        link: "text-[var(--red)] underline-offset-4 hover:underline border-transparent",
         success:
           "bg-[var(--success-bg)] text-[var(--success)] border-[var(--success-border)]",
         warning:
           "bg-[var(--warning-bg)] text-[var(--warning)] border-[var(--warning-border)]",
         info: "bg-[var(--info-bg)] text-[var(--info)] border-[var(--info-border)]",
+        dark: "bg-[var(--charcoal)] text-[var(--off-white)] border-[var(--charcoal)]",
+        neutral:
+          "bg-[rgba(30,30,30,0.07)] text-[var(--charcoal-mid)] border-[var(--border-light)]",
       },
     },
     defaultVariants: {
