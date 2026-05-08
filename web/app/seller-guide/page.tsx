@@ -1,13 +1,12 @@
-export const metadata = {
+import SellerGuidePage from "@/components/modules/seller-guide/SellerGuidePage";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
   title: "Seller Guide — Marketplace",
-  description: "How to sell on Marketplace.",
+  description:
+    "Learn how to sell on Marketplace — from applying for a merchant account to listing products, fulfilling orders, and growing your store.",
 };
 
-export default function Page() {
-  return (
-    <main className="container mx-auto px-4 py-16 min-h-[60vh] flex flex-col items-center justify-center text-center">
-      <h1 className="text-3xl font-bold mb-4">Seller Guide</h1>
-      <p className="text-muted-foreground max-w-md">This page is coming soon.</p>
-    </main>
-  );
+export default function SellerGuideRoute() {
+  return <SellerGuidePage />;
 }

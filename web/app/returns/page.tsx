@@ -1,13 +1,12 @@
-export const metadata = {
-  title: "Returns — Marketplace",
-  description: "Return and refund policy.",
+import ReturnsPage from "@/components/modules/returns/ReturnsPage";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Returns & Refunds — Marketplace",
+  description:
+    "Our return and refund policy. Learn how to return an item, what's eligible, and how quickly you'll receive your refund.",
 };
 
-export default function Page() {
-  return (
-    <main className="container mx-auto px-4 py-16 min-h-[60vh] flex flex-col items-center justify-center text-center">
-      <h1 className="text-3xl font-bold mb-4">Returns & Refunds</h1>
-      <p className="text-muted-foreground max-w-md">This page is coming soon.</p>
-    </main>
-  );
+export default function ReturnsRoute() {
+  return <ReturnsPage />;
 }

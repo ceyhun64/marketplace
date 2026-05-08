@@ -1,13 +1,12 @@
-export const metadata = {
+import SubscriptionPlansPage from "@/components/modules/subscription/SubscriptionPlansPage";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
   title: "Subscription Plans — Marketplace",
-  description: "Choose a plan for your store.",
+  description:
+    "Compare Basic, Pro, and Enterprise merchant plans. Start free, unlock the public marketplace, custom domains, and advanced analytics.",
 };
 
-export default function Page() {
-  return (
-    <main className="container mx-auto px-4 py-16 min-h-[60vh] flex flex-col items-center justify-center text-center">
-      <h1 className="text-3xl font-bold mb-4">Subscription Plans</h1>
-      <p className="text-muted-foreground max-w-md">This page is coming soon.</p>
-    </main>
-  );
+export default function SubscriptionPlansRoute() {
+  return <SubscriptionPlansPage />;
 }
