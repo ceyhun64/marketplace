@@ -720,3 +720,33 @@
 .phone-input-root:focus-within .PhoneInputCountry {
   border-color: hsl(var(--primary));
 }
+
+/* ── Radix / shadcn scrollbar-shift fix ────────────────────────────────────────
+   Radix UI (DropdownMenu, Dialog, Sheet, Select …) dropdown/modal açıldığında
+   body'ye  overflow:hidden  ve  padding-right: var(--removed-body-scroll-bar-size)
+   ekler. Bu sayfa içeriğini sola itmez ama  position:fixed  elementler
+   (Navbar gibi) scrollbar genişliği kadar kayar.
+
+   Çözüm:
+   1. body'nin padding-right'ı scrollbar genişliğini absorbe eder (Radix zaten ekliyor).
+   2. Fixed header'a aynı CSS değişkenini iletiyoruz.
+   3. scrollbar-gutter: stable → sayfa scroll edilebilir olmasa bile scrollbar
+      alanını rezerve eder; modal açılıp kapanırken layout titremez.
+──────────────────────────────────────────────────────────────────────────────── */
+
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Radix, body'ye inline style olarak padding-right ekler.
+   Bunu tutarlı kılmak için transition ekliyoruz. */
+body {
+  transition: padding-right 0ms;
+}
+
+/* Fixed navbar: Radix'in eklediği --removed-body-scroll-bar-size değişkenini
+   padding-right olarak yansıt; böylece scrollbar kaybolunca navbar da aynı
+   miktarda sağa kayar ve layout titremez. */
+[data-fixed-header] {
+  padding-right: var(--removed-body-scroll-bar-size, 0px);
+}
