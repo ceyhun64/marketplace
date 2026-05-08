@@ -12,6 +12,7 @@ const FOOTER_LINKS = {
       { label: "Deals & Campaigns", href: "/deals" },
       { label: "New Arrivals", href: "/new" },
       { label: "Best Sellers", href: "/bestsellers" },
+      { label: "Compare Products", href: "/compare" },
     ],
   },
   sellers: {
@@ -22,6 +23,7 @@ const FOOTER_LINKS = {
       { label: "Subscription Plans", href: "/subscriptions/plans" },
       { label: "Plugin Marketplace", href: "/plugins" },
       { label: "Seller Guide", href: "/seller-guide" },
+      { label: "Blog & Resources", href: "/blog" },
     ],
   },
   support: {
@@ -32,6 +34,15 @@ const FOOTER_LINKS = {
       { label: "Returns & Exchanges", href: "/returns" },
       { label: "Contact Us", href: "/contact" },
       { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
+    ],
+  },
+  company: {
+    title: "Company",
+    links: [
+      { label: "About Us", href: "/about" },
+      { label: "Notifications", href: "/notifications" },
+      { label: "Site Map", href: "/sitemap-page" },
     ],
   },
 };
@@ -69,7 +80,7 @@ export default function Footer() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1.5fr 1fr 1fr 1fr",
+            gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr",
             gap: "3rem",
           }}
           className="lg:grid-cols-4 grid-cols-1"
@@ -390,10 +401,14 @@ export default function Footer() {
           © {currentYear} BAZR Studio. All rights reserved.
         </p>
         <div style={{ display: "flex", gap: "1.5rem" }}>
-          {["Privacy", "Terms", "Cookies"].map((item) => (
+          {[
+            { label: "Privacy", href: "/privacy" },
+            { label: "Terms", href: "/terms" },
+            { label: "Site Map", href: "/sitemap-page" },
+          ].map((item) => (
             <Link
-              key={item}
-              href="#"
+              key={item.label}
+              href={item.href}
               style={{
                 fontFamily: "var(--font-mono)",
                 fontSize: "0.6875rem",
@@ -403,7 +418,7 @@ export default function Footer() {
                 transition: "color var(--duration-fast) var(--ease-out)",
               }}
             >
-              {item}
+              {item.label}
             </Link>
           ))}
         </div>
