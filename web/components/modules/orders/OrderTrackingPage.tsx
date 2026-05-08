@@ -105,7 +105,7 @@ export default function TrackingPage() {
           .build() as typeof connection;
 
         await connection!.start();
-        await connection!.invoke("JoinShipmentGroup", data.trackingNumber);
+        await connection!.invoke("JoinShipmentGroup", data!.trackingNumber);
         setLiveConnected(true);
         connectionRef.current = connection;
       } catch {
@@ -190,17 +190,18 @@ export default function TrackingPage() {
                   Your Order Has Been Delivered
                 </p>
                 <p className="text-sm text-green-700 mt-0.5">
-                  {data.events?.[0]?.timestamp
-                    ? new Date(data.events[0].timestamp).toLocaleDateString(
-                        "tr-TR",
-                        {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        },
-                      )
+                  {(data.actualDeliveredAt ??
+                  data.events?.[data.events.length - 1]?.createdAt)
+                    ? new Date(
+                        data.actualDeliveredAt ??
+                          data.events[data.events.length - 1].createdAt,
+                      ).toLocaleDateString("tr-TR", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
                     : ""}
                 </p>
               </div>
@@ -210,32 +211,26 @@ export default function TrackingPage() {
                   Estimated Delivery
                 </p>
                 <p className="text-2xl font-bold">
-                  {data.estimatedDelivery
-                    ? new Date(data.estimatedDelivery).toLocaleDateString(
+                  {data.estimatedDeliveryEnd
+                    ? new Date(data.estimatedDeliveryEnd).toLocaleDateString(
                         "tr-TR",
                         { weekday: "long", day: "numeric", month: "long" },
                       )
                     : "—"}
                 </p>
                 <div className="flex gap-3 mt-3 pt-3 border-t border-white/10">
-                  <div>
-                    <p className="text-xs text-gray-400">Shipping</p>
-                    <p className="text-sm font-medium">
-                      {data.shippingRate === "EXPRESS"
-                        ? "⚡ Express"
-                        : "📦 Standard"}
-                    </p>
-                  </div>
                   {data.courierName && (
                     <div>
                       <p className="text-xs text-gray-400">Courier</p>
                       <p className="text-sm font-medium">{data.courierName}</p>
                     </div>
                   )}
-                  <div>
-                    <p className="text-xs text-gray-400">Recipient</p>
-                    <p className="text-sm font-medium">{data.recipientName}</p>
-                  </div>
+                  {data.courierPhone && (
+                    <div>
+                      <p className="text-xs text-gray-400">Phone</p>
+                      <p className="text-sm font-medium">{data.courierPhone}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -317,7 +312,7 @@ export default function TrackingPage() {
                     )}
                   </div>
                   <p className="text-xs text-gray-400 font-mono whitespace-nowrap flex-shrink-0">
-                    {new Date(event.timestamp).toLocaleString("tr-TR", {
+                    {new Date(event.createdAt).toLocaleString("tr-TR", {
                       day: "2-digit",
                       month: "2-digit",
                       hour: "2-digit",
@@ -330,13 +325,17 @@ export default function TrackingPage() {
           </div>
         )}
 
-        {/* Delivery address */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <p className="text-xs text-gray-400 uppercase tracking-widest mb-2 font-mono">
-            Delivery Address
-          </p>
-          <p className="text-sm text-gray-700">{data.deliveryAddress}</p>
-        </div>
+        {/* Last known location */}
+        {data.events?.some((e) => e.location) && (
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <p className="text-xs text-gray-400 uppercase tracking-widest mb-2 font-mono">
+              Last Known Location
+            </p>
+            <p className="text-sm text-gray-700">
+              {[...data.events].reverse().find((e) => e.location)?.location}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
