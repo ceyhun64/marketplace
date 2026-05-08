@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Bell,
@@ -14,6 +14,9 @@ import {
   CheckCheck,
   Trash2,
 } from "lucide-react";
+import { useMyOrders } from "@/queries/useOrders";
+import { ORDER_STATUS_LABELS } from "@/types/enums";
+import type { Order } from "@/types/entities";
 
 type NotifType = "order" | "deal" | "store" | "shipping" | "review" | "system";
 
@@ -39,86 +42,86 @@ const TYPE_META: Record<
   system: { icon: Bell, bg: "rgba(51,51,51,0.06)", color: "var(--charcoal-soft)" },
 };
 
-const INITIAL_NOTIFS: Notification[] = [
-  {
-    id: 1,
-    type: "shipping",
-    title: "Your order is out for delivery",
-    message: "Order #MKT-2048 is with the courier and expected today by 18:00.",
-    time: "Just now",
-    read: false,
-    link: "/orders/2048/tracking",
-  },
-  {
-    id: 2,
-    type: "deal",
-    title: "Flash sale: Up to 40% off Electronics",
-    message: "Deals end in 6 hours. Shop from your wishlist now.",
-    time: "2 hours ago",
-    read: false,
-    link: "/deals",
-  },
-  {
-    id: 3,
-    type: "order",
-    title: "Order confirmed",
-    message: "Order #MKT-2047 has been confirmed by the merchant. Processing will begin shortly.",
-    time: "Yesterday",
-    read: false,
-    link: "/orders/2047",
-  },
-  {
-    id: 4,
-    type: "store",
-    title: "New products from TechHub Store",
-    message: "A store you follow has added 8 new products in the Electronics category.",
-    time: "2 days ago",
-    read: true,
-    link: "/store/techhub",
-  },
-  {
-    id: 5,
-    type: "review",
-    title: "Rate your recent purchase",
-    message: "You received your order #MKT-2041 last week. Share your experience!",
-    time: "3 days ago",
-    read: true,
-    link: "/orders/2041",
-  },
-  {
-    id: 6,
-    type: "system",
-    title: "Security notice",
-    message: "A new login was detected from Istanbul, TR. If this wasn't you, please secure your account.",
-    time: "5 days ago",
-    read: true,
-    link: "/profile",
-  },
-  {
-    id: 7,
-    type: "deal",
-    title: "Price drop on your wishlist",
-    message: "A product you saved has dropped in price by 15%.",
-    time: "1 week ago",
-    read: true,
-    link: "/wishlist",
-  },
-  {
-    id: 8,
-    type: "shipping",
-    title: "Order #MKT-2038 delivered",
-    message: "Your package was delivered and signed for. Enjoy your order!",
-    time: "1 week ago",
-    read: true,
-    link: "/orders/2038",
-  },
-];
+function relativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 2) return "Just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "Yesterday";
+  return `${days} days ago`;
+}
 
-const FILTERS = ["All", "Unread", "Orders", "Deals", "Shipping"];
+function ordersToNotifications(orders: Order[]): Notification[] {
+  const notifs: Notification[] = [];
+  let id = 1;
+
+  for (const order of orders) {
+    const label = ORDER_STATUS_LABELS[order.status] ?? order.status;
+    const shortId = order.id.slice(0, 8).toUpperCase();
+
+    // Shipping/delivery events
+    if (["OutForDelivery", "InTransit", "PickedUp"].includes(order.status)) {
+      notifs.push({
+        id: id++,
+        type: "shipping",
+        title: `${label}: Order #${shortId}`,
+        message: `Your order is currently in "${label}" status.`,
+        time: relativeTime(order.createdAt),
+        read: order.status === "PickedUp",
+        link: order.trackingNumber ? `/orders/${order.id}/tracking` : `/orders/${order.id}`,
+      });
+    } else if (order.status === "Delivered") {
+      notifs.push({
+        id: id++,
+        type: "review",
+        title: `Rate your purchase — #${shortId}`,
+        message: `Your order was delivered. Share your experience with the products!`,
+        time: relativeTime(order.createdAt),
+        read: true,
+        link: `/orders/${order.id}`,
+      });
+    } else if (["Pending", "PaymentConfirmed", "LabelGenerated", "CourierAssigned"].includes(order.status)) {
+      notifs.push({
+        id: id++,
+        type: "order",
+        title: `${label} — #${shortId}`,
+        message: `Your order of ₺${order.totalAmount.toLocaleString("tr-TR")} is ${label.toLowerCase()}.`,
+        time: relativeTime(order.createdAt),
+        read: order.status !== "Pending",
+        link: `/orders/${order.id}`,
+      });
+    } else if (["Cancelled", "Failed"].includes(order.status)) {
+      notifs.push({
+        id: id++,
+        type: "system",
+        title: `Order ${label} — #${shortId}`,
+        message: `Your order has been ${label.toLowerCase()}. Contact support if you have questions.`,
+        time: relativeTime(order.createdAt),
+        read: true,
+        link: `/orders/${order.id}`,
+      });
+    }
+  }
+
+  return notifs;
+}
+
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFS);
+  const { data: orders = [], isLoading } = useMyOrders();
+  const derivedNotifs = useMemo(() => ordersToNotifications(orders), [orders]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState("All");
+
+  // Sync derived notifications once orders are loaded
+  useMemo(() => {
+    if (derivedNotifs.length > 0) {
+      setNotifications(derivedNotifs);
+    }
+  }, [derivedNotifs]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -230,7 +233,15 @@ export default function NotificationsPage() {
 
         {/* Notifications list */}
         <div className="space-y-2">
-          {filtered.length === 0 && (
+          {isLoading && (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-20 rounded-2xl animate-pulse bg-white border border-black/5" />
+              ))}
+            </div>
+          )}
+
+          {!isLoading && filtered.length === 0 && (
             <div className="text-center py-20">
               <Bell
                 className="w-12 h-12 mx-auto mb-4"

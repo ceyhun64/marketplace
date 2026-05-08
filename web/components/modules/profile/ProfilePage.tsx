@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+import { useMe } from "@/queries/useMe";
+import { useEffect } from "react";
 
 type Tab = "info" | "password" | "addresses";
 
@@ -74,14 +76,22 @@ function StyledInput({
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
+  const { data: meData } = useMe();
   const [tab, setTab] = useState<Tab>("info");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [info, setInfo] = useState({
     name: user?.name ?? "",
     email: user?.email ?? "",
-    phone: "",
+    phone: meData?.phone ?? "",
   });
+  // Sync phone from API when meData loads
+  useEffect(() => {
+    if (meData?.phone) {
+      setInfo((prev) => ({ ...prev, phone: meData.phone ?? prev.phone }));
+    }
+  }, [meData?.phone]);
+
   const [passwords, setPasswords] = useState({
     current: "",
     next: "",
@@ -89,18 +99,8 @@ export default function ProfilePage() {
   });
   const [pwError, setPwError] = useState("");
   const [pwSaved, setPwSaved] = useState(false);
-  const [addresses] = useState<Address[]>([
-    {
-      id: "1",
-      title: "Home",
-      fullName: user?.name ?? "User",
-      phone: "0555 000 00 00",
-      city: "Istanbul",
-      district: "Kadikoy",
-      address: "123 Main St, Apt 5",
-      isDefault: true,
-    },
-  ]);
+  // Addresses are managed locally — backend address CRUD not yet implemented
+  const [addresses, setAddresses] = useState<Address[]>([]);
 
   async function saveInfo() {
     setSaving(true);
