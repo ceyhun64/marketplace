@@ -3,33 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Store, Search, MapPin, Package, Star } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import api from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import type { MerchantProfile } from "@/types/entities";
-
-// ── Query ─────────────────────────────────────────────────────────────────────
-function useStoreList() {
-  return useQuery({
-    queryKey: ["stores", "list"],
-    queryFn: async () => {
-      const { data } = await api.get<unknown>("/api/store/list");
-      // API returns { total, page, limit, stores: [...] }
-      if (Array.isArray(data)) return data as MerchantProfile[];
-      const paged = data as {
-        stores?: MerchantProfile[];
-        items?: MerchantProfile[];
-        data?: MerchantProfile[];
-      };
-      return (paged.stores ??
-        paged.items ??
-        paged.data ??
-        []) as MerchantProfile[];
-    },
-    staleTime: 1000 * 60 * 5,
-  });
-}
+import { useStoreList } from "@/queries/useStore";
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 function StoreCardSkeleton() {

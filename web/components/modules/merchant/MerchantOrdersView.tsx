@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import api from "@/lib/api";
+import { useMerchantIncomingOrders } from "@/queries/useOrders";
 import {
   Select,
   SelectContent,
@@ -12,50 +11,25 @@ import {
 } from "@/components/ui/select";
 import { Package, ShoppingCart, Clock, CheckCircle } from "lucide-react";
 import MerchantOrdersTable from "./MerchantOrdersTable";
+import type { OrderStatus } from "@/types/enums";
 
 export default function MerchantOrdersView() {
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["merchant-incoming-orders", statusFilter],
-    queryFn: async () => {
-      const res = await api.get("/api/orders/merchant/incoming", {
-        params: {
-          status: statusFilter === "all" ? undefined : statusFilter,
-          limit: 50,
-        },
-      });
-      const raw = res.data;
-      const normalizeStatus = (s: string) =>
-        s.replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase();
-      const items = (raw?.data ?? raw?.items ?? raw ?? []).map((o: any) => ({
-        ...o,
-        status: o.status ? normalizeStatus(o.status) : o.status,
-      }));
-      return { items, pagination: raw?.pagination };
-    },
-  });
+  const statusParam = statusFilter === "all" ? undefined : (statusFilter as OrderStatus);
 
-  // Fetch total counts per status for accurate stats (regardless of current filter)
-  const { data: allOrdersData } = useQuery({
-    queryKey: ["merchant-incoming-orders-all-stats"],
-    queryFn: async () => {
-      const res = await api.get("/api/orders/merchant/incoming", {
-        params: { limit: 1 },
-      });
-      return res.data?.pagination?.total ?? 0;
-    },
-  });
+  const { data: filteredOrders = [], isLoading } = useMerchantIncomingOrders(statusParam);
+  const { data: allOrders = [] } = useMerchantIncomingOrders(); // for stats
 
-  const orders = Array.isArray(data?.items) ? data.items : [];
-  const paginationTotal = data?.pagination?.total ?? orders.length;
+  const orders = filteredOrders;
+  const paginationTotal = orders.length;
 
   const stats = {
-    total: statusFilter === "all" ? paginationTotal : (allOrdersData ?? paginationTotal),
-    pending: orders.filter((o: any) =>
+    total: statusFilter === "all" ? paginationTotal : allOrders.length,
+    pending: allOrders.filter((o: any) =>
       ["PENDING", "PAYMENT_CONFIRMED"].includes(o.status),
     ).length,
-    processing: orders.filter((o: any) =>
+    processing: allOrders.filter((o: any) =>
       [
         "LABEL_GENERATED",
         "COURIER_ASSIGNED",
@@ -63,7 +37,7 @@ export default function MerchantOrdersView() {
         "IN_TRANSIT",
       ].includes(o.status),
     ).length,
-    delivered: orders.filter((o: any) => o.status === "DELIVERED").length,
+    delivered: allOrders.filter((o: any) => o.status === "DELIVERED").length,
   };
 
   return (

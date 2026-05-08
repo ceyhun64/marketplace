@@ -3,55 +3,28 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import api from "@/lib/api";
+import { useProducts } from "@/queries/useProducts";
 import { ProductCard } from "@/components/modules/store/ProductCard";
 import type { Product } from "@/types/entities";
 
 const TABS = [
-  { value: "featured", label: "Featured" },
-  { value: "bestsellers", label: "Best Sellers" },
-  { value: "new", label: "New Arrivals" },
-  { value: "deals", label: "Deals" },
+  { value: "featured", label: "Featured", sort: "newest" },
+  { value: "bestsellers", label: "Best Sellers", sort: "bestsellers" },
+  { value: "new", label: "New Arrivals", sort: "newest" },
+  { value: "deals", label: "Deals", sort: "price_asc" },
 ];
 
 export default function FeaturedProducts() {
   const [activeTab, setActiveTab] = useState("featured");
 
-  const { data: apiData, isLoading } = useQuery({
-    queryKey: ["featured-products", activeTab],
-    queryFn: async () => {
-      const params = new URLSearchParams({ limit: "8", sort: "newest" });
-      const { data } = await api.get(`/api/products?${params}`);
-      return data;
-    },
-    staleTime: 1000 * 60 * 5,
+  const activeSort = TABS.find((t) => t.value === activeTab)?.sort ?? "newest";
+
+  const { data: apiData, isLoading } = useProducts({
+    limit: 8,
+    sort: activeSort,
   });
 
-  const products: Product[] = Array.isArray(apiData?.items)
-    ? apiData.items.map(
-        (p: any): Product => ({
-          id: p.id,
-          merchantId: p.merchantId ?? "",
-          merchantStoreName: p.merchant?.storeName ?? p.merchantStoreName ?? "",
-          merchantSlug: p.merchant?.slug ?? p.merchantSlug ?? "",
-          name: p.name,
-          description: p.description ?? "",
-          categoryId: p.categoryId ?? "",
-          categoryName: p.category?.name ?? p.categoryName ?? "",
-          images: p.images ?? [],
-          tags: p.tags ?? [],
-          price: p.price,
-          stock: p.stock,
-          publishToMarket: p.publishToMarket ?? true,
-          publishToStore: p.publishToStore ?? true,
-          isApproved: p.isApproved ?? true,
-          isDeleted: p.isDeleted ?? false,
-          createdAt: p.createdAt ?? "",
-          updatedAt: p.updatedAt,
-        }),
-      )
-    : [];
+  const products: Product[] = apiData?.items ?? [];
 
   return (
     <section className="py-20 lg:py-24">

@@ -1,18 +1,11 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import api from "@/lib/api";
+import { useMerchantProfile } from "@/queries/useMerchant";
 import { Skeleton } from "@/components/ui/skeleton";
 import StoreSettingsForm from "./StoreSettingsForm";
 
 export default function MerchantStoreSettingsView() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["merchant-profile"],
-    queryFn: async () => {
-      const res = await api.get("/api/merchants/profile");
-      return res.data;
-    },
-  });
+  const { data, isLoading } = useMerchantProfile();
 
   if (isLoading) {
     return (
