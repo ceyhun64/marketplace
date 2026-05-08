@@ -51,9 +51,6 @@ jobs:
         working-directory: ./api
         run: dotnet build --no-restore --configuration Release
 
-      - name: Install dotnet-ef tool
-        run: dotnet tool install --global dotnet-ef
-
       - name: Run migrations (test DB)
         working-directory: ./api
         env:
@@ -155,101 +152,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   # ─────────────────────────────────────────
-  # JOB 4: Staging Deploy (PR preview)
-  # ─────────────────────────────────────────
-  staging:
-    name: Staging Deploy (Vercel Preview + Railway)
-    runs-on: ubuntu-latest
-    needs: [build-api, build-web]
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: web/package-lock.json
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Deploy to Vercel Preview
-        working-directory: ./web
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
-          vercel build --token=$VERCEL_TOKEN
-          PREVIEW_URL=$(vercel deploy --prebuilt --token=$VERCEL_TOKEN)
-          echo "VERCEL_PREVIEW_URL=$PREVIEW_URL" >> $GITHUB_ENV
-          echo "✅ Vercel preview: $PREVIEW_URL"
-
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Deploy API to Railway Staging
-        working-directory: ./api
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_STAGING_TOKEN }}
-        run: |
-          railway up --service marketplace-api-staging --detach
-          echo "✅ Railway staging API deployed"
-
-      - name: Comment PR with preview URLs
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const previewUrl = process.env.VERCEL_PREVIEW_URL || 'N/A';
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `## 🚀 Staging Preview\n\n| Servis | URL |\n|--------|-----|\n| 🌐 Frontend (Vercel) | ${previewUrl} |\n| ⚙️ API (Railway) | ${{ secrets.RAILWAY_STAGING_URL }}/health |\n\n> Commit: \`${context.sha.substring(0,7)}\``
-            });
-
-  # ─────────────────────────────────────────
-  # JOB 5: Vercel Production Deploy (sadece main) ← YENİ
-  # ─────────────────────────────────────────
-  deploy-vercel:
-    name: Deploy to Vercel Production
-    runs-on: ubuntu-latest
-    needs: [build-web]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: web/package-lock.json
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Deploy to Vercel Production
-        working-directory: ./web
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          vercel pull --yes --environment=production --token=$VERCEL_TOKEN
-          vercel build --prod --token=$VERCEL_TOKEN
-          vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
-          echo "✅ Vercel production deploy tamamlandı"
-
-  # ─────────────────────────────────────────
-  # JOB 6: Deploy to VPS (sadece main)
+  # JOB 4: Deploy to VPS (sadece main)
   # ─────────────────────────────────────────
   deploy:
     name: Deploy to VPS
@@ -270,16 +173,27 @@ jobs:
           port: 22
           script: |
             set -e
+
             cd /opt/marketplace
+
+            # GitHub Container Registry'den yeni image'ları çek
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
             docker pull ${{ env.IMAGE_API }}:${{ github.sha }}
             docker pull ${{ env.IMAGE_WEB }}:${{ github.sha }}
+
+            # .env.prod'daki IMAGE tag'lerini güncelle
             sed -i "s|API_IMAGE=.*|API_IMAGE=${{ env.IMAGE_API }}:${{ github.sha }}|" .env.prod
             sed -i "s|WEB_IMAGE=.*|WEB_IMAGE=${{ env.IMAGE_WEB }}:${{ github.sha }}|" .env.prod
+
+            # Zero-downtime rolling restart
             docker compose -f docker-compose.prod.yml up -d --no-deps api
             sleep 10
             docker compose -f docker-compose.prod.yml up -d --no-deps web
+
+            # Eski image'ları temizle
             docker image prune -f
+
             echo "✅ Deploy tamamlandı: ${{ github.sha }}"
 
       - name: Health check
@@ -290,16 +204,13 @@ jobs:
             || (echo "❌ Health check başarısız!" && exit 1)
 
   # ─────────────────────────────────────────
-  # JOB 7: Bildirim (başarısız olursa)
+  # JOB 5: Bildirim (başarısız olursa)
   # ─────────────────────────────────────────
   notify-failure:
     name: Notify on Failure
     runs-on: ubuntu-latest
-    needs: [build-api, build-web, docker, staging, deploy-vercel, deploy]
+    needs: [build-api, build-web, docker, deploy]
     if: failure() && github.ref == 'refs/heads/main'
-
-    permissions:
-      issues: write
 
     steps:
       - name: Send failure notification
