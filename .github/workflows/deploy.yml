@@ -51,6 +51,9 @@ jobs:
         working-directory: ./api
         run: dotnet build --no-restore --configuration Release
 
+      - name: Install dotnet-ef tool
+        run: dotnet tool install --global dotnet-ef
+
       - name: Run migrations (test DB)
         working-directory: ./api
         env:
@@ -275,6 +278,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-api, build-web, docker, staging, deploy]
     if: failure() && github.ref == 'refs/heads/main'
+
+    permissions:
+      issues: write
 
     steps:
       - name: Send failure notification
