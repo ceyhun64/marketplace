@@ -5,6 +5,8 @@ using api.Infrastructure.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -32,10 +34,18 @@ public class AdminStoreSetupTests : IDisposable
 
         _db = new AppDbContext(options);
 
-        // AdminController, ICurrentUserService bağımlılığı olan bir constructor'a sahip.
-        // Setup endpoint bu bağımlılığı kullanmaz; mock yeterlidir.
+        // AdminController tüm bağımlılıklarını alır; Setup endpoint bunları kullanmaz.
         var currentUser = new Mock<ICurrentUserService>();
-        _controller = new AdminController(_db, currentUser.Object);
+        var notification = new Mock<INotificationService>();
+        var config = new Mock<IConfiguration>();
+        var logger = new Mock<ILogger<AdminController>>();
+        _controller = new AdminController(
+            _db,
+            currentUser.Object,
+            notification.Object,
+            config.Object,
+            logger.Object
+        );
     }
 
     // ─────────────────────────────────────────────────────────────────────────
