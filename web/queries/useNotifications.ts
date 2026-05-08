@@ -5,7 +5,13 @@ import { useMyOrders } from "@/queries/useOrders";
 import { ORDER_STATUS_LABELS } from "@/types/enums";
 import type { Order } from "@/types/entities";
 
-export type NotifType = "order" | "deal" | "store" | "shipping" | "review" | "system";
+export type NotifType =
+  | "order"
+  | "deal"
+  | "store"
+  | "shipping"
+  | "review"
+  | "system";
 
 export interface Notification {
   id: number;
@@ -36,18 +42,24 @@ export function ordersToNotifications(orders: Order[]): Notification[] {
   for (const order of orders) {
     const label = ORDER_STATUS_LABELS[order.status] ?? order.status;
     const shortId = order.id.slice(0, 8).toUpperCase();
+    // trackingNumber Order'da yok — shipment üzerinden gelir
+    const trackingLink = order.shipment?.trackingNumber
+      ? `/orders/${order.id}/tracking`
+      : `/orders/${order.id}`;
 
-    if (["OutForDelivery", "InTransit", "PickedUp"].includes(order.status)) {
+    if (
+      ["OUT_FOR_DELIVERY", "IN_TRANSIT", "PICKED_UP"].includes(order.status)
+    ) {
       notifs.push({
         id: id++,
         type: "shipping",
         title: `${label}: Order #${shortId}`,
         message: `Your order is currently in "${label}" status.`,
         time: relativeTime(order.createdAt),
-        read: order.status === "PickedUp",
-        link: order.trackingNumber ? `/orders/${order.id}/tracking` : `/orders/${order.id}`,
+        read: order.status === "PICKED_UP",
+        link: trackingLink,
       });
-    } else if (order.status === "Delivered") {
+    } else if (order.status === "DELIVERED") {
       notifs.push({
         id: id++,
         type: "review",
@@ -58,7 +70,12 @@ export function ordersToNotifications(orders: Order[]): Notification[] {
         link: `/orders/${order.id}`,
       });
     } else if (
-      ["Pending", "PaymentConfirmed", "LabelGenerated", "CourierAssigned"].includes(order.status)
+      [
+        "PENDING",
+        "PAYMENT_CONFIRMED",
+        "LABEL_GENERATED",
+        "COURIER_ASSIGNED",
+      ].includes(order.status)
     ) {
       notifs.push({
         id: id++,
@@ -66,10 +83,10 @@ export function ordersToNotifications(orders: Order[]): Notification[] {
         title: `${label} — #${shortId}`,
         message: `Your order of ₺${order.totalAmount.toLocaleString("tr-TR")} is ${label.toLowerCase()}.`,
         time: relativeTime(order.createdAt),
-        read: order.status !== "Pending",
+        read: order.status !== "PENDING",
         link: `/orders/${order.id}`,
       });
-    } else if (["Cancelled", "Failed"].includes(order.status)) {
+    } else if (["CANCELLED", "FAILED"].includes(order.status)) {
       notifs.push({
         id: id++,
         type: "system",
