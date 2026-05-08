@@ -14,6 +14,12 @@ import {
   LogOut,
   X,
   Menu,
+  Bell,
+  ShoppingCart,
+  Truck,
+  Star,
+  Tag,
+  Store,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -26,6 +32,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth as useAuthStore } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
+import { useNotifications } from "@/queries/useNotifications";
+import type { NotifType, Notification } from "@/queries/useNotifications";
 
 type UserRole = "customer" | "merchant" | "admin" | "courier";
 
@@ -144,6 +152,189 @@ function AvatarCircle({ user }: { user: CurrentUser }) {
     >
       <User size={16} strokeWidth={2.5} />
     </div>
+  );
+}
+
+const NOTIF_META: Record<NotifType, { icon: React.ElementType; bg: string; color: string }> = {
+  order: { icon: ShoppingCart, bg: "rgba(200,16,46,0.08)", color: "var(--red)" },
+  deal: { icon: Tag, bg: "rgba(234,179,8,0.08)", color: "#ca8a04" },
+  store: { icon: Store, bg: "rgba(59,130,246,0.08)", color: "#2563eb" },
+  shipping: { icon: Truck, bg: "rgba(34,197,94,0.08)", color: "#16a34a" },
+  review: { icon: Star, bg: "rgba(168,85,247,0.08)", color: "#7c3aed" },
+  system: { icon: Bell, bg: "rgba(51,51,51,0.06)", color: "var(--charcoal-soft)" },
+};
+
+function NotificationDropdown() {
+  const { notifications, unreadCount, isLoading, markRead, markAllRead } = useNotifications();
+  const preview = notifications.slice(0, 5);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className="relative p-2 rounded-lg transition-all"
+          style={{ color: "var(--charcoal-soft)", background: "transparent" }}
+          aria-label="Notifications"
+        >
+          <Bell className="w-[17px] h-[17px]" strokeWidth={2} />
+          {unreadCount > 0 && (
+            <span
+              className="absolute top-1 right-1 min-w-[14px] h-3.5 px-0.5 text-[8px] font-bold rounded-full flex items-center justify-center"
+              style={{
+                background: "var(--red)",
+                color: "white",
+                fontFamily: "var(--font-mono)",
+                border: "2px solid var(--off-white)",
+              }}
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent
+        align="end"
+        sideOffset={12}
+        className="w-80 p-0 rounded-2xl overflow-hidden animate-in fade-in zoom-in-95"
+        style={{
+          background: "var(--white)",
+          border: "1px solid var(--border-light)",
+          boxShadow: "var(--shadow-lg)",
+        }}
+      >
+        {/* Header */}
+        <div
+          className="flex items-center justify-between px-4 py-3 border-b"
+          style={{ borderColor: "var(--border-light)" }}
+        >
+          <div className="flex items-center gap-2">
+            <Bell className="w-4 h-4" style={{ color: "var(--charcoal)" }} />
+            <span
+              className="text-sm font-semibold"
+              style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
+            >
+              Notifications
+            </span>
+            {unreadCount > 0 && (
+              <span
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                style={{
+                  background: "var(--red)",
+                  color: "white",
+                  fontFamily: "var(--font-mono)",
+                }}
+              >
+                {unreadCount}
+              </span>
+            )}
+          </div>
+          {unreadCount > 0 && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                markAllRead();
+              }}
+              className="text-[11px] font-semibold transition-colors"
+              style={{ color: "var(--red)", fontFamily: "var(--font-body)" }}
+            >
+              Mark all read
+            </button>
+          )}
+        </div>
+
+        {/* Notification list */}
+        <div className="max-h-[360px] overflow-y-auto">
+          {isLoading && (
+            <div className="py-8 flex flex-col items-center gap-2">
+              <div className="w-6 h-6 rounded-full border-2 border-gray-200 border-t-red-500 animate-spin" />
+              <p className="text-xs" style={{ color: "var(--charcoal-mist)" }}>Loading…</p>
+            </div>
+          )}
+
+          {!isLoading && preview.length === 0 && (
+            <div className="py-10 flex flex-col items-center gap-2">
+              <Bell className="w-8 h-8" style={{ color: "rgba(51,51,51,0.15)" }} />
+              <p
+                className="text-xs"
+                style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
+              >
+                No notifications yet
+              </p>
+            </div>
+          )}
+
+          {preview.map((notif) => {
+            const meta = NOTIF_META[notif.type];
+            const Icon = meta.icon;
+            return (
+              <div
+                key={notif.id}
+                className="flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50"
+                style={{
+                  borderBottom: "1px solid rgba(51,51,51,0.04)",
+                  background: notif.read ? "transparent" : "rgba(200,16,46,0.02)",
+                }}
+                onClick={() => {
+                  markRead(notif.id);
+                  if (notif.link) window.location.href = notif.link;
+                }}
+              >
+                <div className="relative flex-shrink-0 mt-0.5">
+                  <div
+                    className="w-8 h-8 rounded-xl flex items-center justify-center"
+                    style={{ background: meta.bg }}
+                  >
+                    <Icon className="w-3.5 h-3.5" style={{ color: meta.color }} />
+                  </div>
+                  {!notif.read && (
+                    <div
+                      className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-white"
+                      style={{ background: "var(--red)" }}
+                    />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p
+                    className="text-xs font-semibold leading-snug truncate"
+                    style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
+                  >
+                    {notif.title}
+                  </p>
+                  <p
+                    className="text-[11px] leading-relaxed mt-0.5 line-clamp-2"
+                    style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
+                  >
+                    {notif.message}
+                  </p>
+                </div>
+                <span
+                  className="text-[10px] flex-shrink-0 mt-0.5"
+                  style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-body)" }}
+                >
+                  {notif.time}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div
+          className="border-t"
+          style={{ borderColor: "var(--border-light)" }}
+        >
+          <a
+            href="/notifications"
+            className="flex items-center justify-center w-full py-3 text-xs font-semibold transition-colors hover:bg-gray-50"
+            style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
+          >
+            View all notifications →
+          </a>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -324,7 +515,7 @@ export default function Navbar() {
                 )}
               </div>
 
-              {/* Wishlist & Cart */}
+              {/* Wishlist, Notifications & Cart */}
               <div className="flex items-center gap-0.5">
                 <Link
                   href="/wishlist"
@@ -336,6 +527,9 @@ export default function Navbar() {
                 >
                   <Heart className="w-[17px] h-[17px]" strokeWidth={2} />
                 </Link>
+
+                {/* Notification bell — only for logged-in users */}
+                {user && <NotificationDropdown />}
 
                 <Link
                   href="/cart"

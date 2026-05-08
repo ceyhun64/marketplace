@@ -1,34 +1,22 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   Bell,
-  Package,
-  Tag,
-  Store,
   ShoppingCart,
   Truck,
   Star,
+  Tag,
+  Store,
   Settings,
   CheckCheck,
   Trash2,
 } from "lucide-react";
-import { useMyOrders } from "@/queries/useOrders";
-import { ORDER_STATUS_LABELS } from "@/types/enums";
-import type { Order } from "@/types/entities";
-
-type NotifType = "order" | "deal" | "store" | "shipping" | "review" | "system";
-
-interface Notification {
-  id: number;
-  type: NotifType;
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-  link?: string;
-}
+import {
+  useNotifications,
+  type NotifType,
+} from "@/queries/useNotifications";
 
 const TYPE_META: Record<
   NotifType,
@@ -42,88 +30,12 @@ const TYPE_META: Record<
   system: { icon: Bell, bg: "rgba(51,51,51,0.06)", color: "var(--charcoal-soft)" },
 };
 
-function relativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 2) return "Just now";
-  if (mins < 60) return `${mins} min ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-  const days = Math.floor(hours / 24);
-  if (days === 1) return "Yesterday";
-  return `${days} days ago`;
-}
-
-function ordersToNotifications(orders: Order[]): Notification[] {
-  const notifs: Notification[] = [];
-  let id = 1;
-
-  for (const order of orders) {
-    const label = ORDER_STATUS_LABELS[order.status] ?? order.status;
-    const shortId = order.id.slice(0, 8).toUpperCase();
-
-    // Shipping/delivery events
-    if (["OutForDelivery", "InTransit", "PickedUp"].includes(order.status)) {
-      notifs.push({
-        id: id++,
-        type: "shipping",
-        title: `${label}: Order #${shortId}`,
-        message: `Your order is currently in "${label}" status.`,
-        time: relativeTime(order.createdAt),
-        read: order.status === "PickedUp",
-        link: order.trackingNumber ? `/orders/${order.id}/tracking` : `/orders/${order.id}`,
-      });
-    } else if (order.status === "Delivered") {
-      notifs.push({
-        id: id++,
-        type: "review",
-        title: `Rate your purchase — #${shortId}`,
-        message: `Your order was delivered. Share your experience with the products!`,
-        time: relativeTime(order.createdAt),
-        read: true,
-        link: `/orders/${order.id}`,
-      });
-    } else if (["Pending", "PaymentConfirmed", "LabelGenerated", "CourierAssigned"].includes(order.status)) {
-      notifs.push({
-        id: id++,
-        type: "order",
-        title: `${label} — #${shortId}`,
-        message: `Your order of ₺${order.totalAmount.toLocaleString("tr-TR")} is ${label.toLowerCase()}.`,
-        time: relativeTime(order.createdAt),
-        read: order.status !== "Pending",
-        link: `/orders/${order.id}`,
-      });
-    } else if (["Cancelled", "Failed"].includes(order.status)) {
-      notifs.push({
-        id: id++,
-        type: "system",
-        title: `Order ${label} — #${shortId}`,
-        message: `Your order has been ${label.toLowerCase()}. Contact support if you have questions.`,
-        time: relativeTime(order.createdAt),
-        read: true,
-        link: `/orders/${order.id}`,
-      });
-    }
-  }
-
-  return notifs;
-}
-
+const FILTERS = ["All", "Unread", "Orders", "Shipping", "Deals"];
 
 export default function NotificationsPage() {
-  const { data: orders = [], isLoading } = useMyOrders();
-  const derivedNotifs = useMemo(() => ordersToNotifications(orders), [orders]);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const { notifications, unreadCount, isLoading, markRead, markAllRead, deleteNotif } =
+    useNotifications();
   const [filter, setFilter] = useState("All");
-
-  // Sync derived notifications once orders are loaded
-  useMemo(() => {
-    if (derivedNotifs.length > 0) {
-      setNotifications(derivedNotifs);
-    }
-  }, [derivedNotifs]);
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const filtered = notifications.filter((n) => {
     if (filter === "Unread") return !n.read;
@@ -132,17 +44,6 @@ export default function NotificationsPage() {
     if (filter === "Shipping") return n.type === "shipping";
     return true;
   });
-
-  const markAllRead = () =>
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-
-  const markRead = (id: number) =>
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-
-  const deleteNotif = (id: number) =>
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
