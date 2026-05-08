@@ -736,6 +736,33 @@
 
 html {
   scrollbar-gutter: stable;
+  color-scheme: light;
+}
+
+/* ── Custom scrollbar ────────────────────────────────────────────── */
+html::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+html::-webkit-scrollbar-track {
+  background: var(--off-white);
+}
+html::-webkit-scrollbar-thumb {
+  background: var(--charcoal);
+  border-radius: var(--radius-pill);
+  border: 3px solid var(--off-white);
+}
+html::-webkit-scrollbar-thumb:hover {
+  background: var(--charcoal-2);
+}
+html::-webkit-scrollbar-corner {
+  background: var(--off-white);
+}
+
+/* Firefox */
+html {
+  scrollbar-color: var(--charcoal) var(--off-white);
+  scrollbar-width: thin;
 }
 
 /* Radix, body'ye inline style olarak padding-right ekler.

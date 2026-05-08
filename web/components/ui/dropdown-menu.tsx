@@ -6,9 +6,10 @@ import { cn } from "@/lib/utils";
 import { CheckIcon, ChevronRightIcon } from "lucide-react";
 
 function DropdownMenu({
+  modal = false,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
-  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
+  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" modal={modal} {...props} />;
 }
 
 function DropdownMenuPortal({
@@ -78,7 +79,7 @@ function DropdownMenuItem({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "group/dropdown-menu-item relative flex cursor-default items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium outline-hidden select-none transition-colors duration-[var(--dur-fast)]",
+        "group/dropdown-menu-item relative flex cursor-pointer items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium outline-hidden select-none transition-colors duration-[var(--dur-fast)]",
         "focus:bg-[var(--off-white-2)] focus:text-[var(--charcoal)]",
         "data-[highlighted]:bg-[var(--red-muted)] data-[highlighted]:text-[var(--red)]",
         "data-inset:pl-9.5",
@@ -106,7 +107,7 @@ function DropdownMenuCheckboxItem({
       data-slot="dropdown-menu-checkbox-item"
       data-inset={inset}
       className={cn(
-        "relative flex cursor-default items-center gap-2.5 rounded-[var(--radius-md)] py-2 pr-8 pl-3 text-sm font-medium outline-hidden select-none transition-colors duration-[var(--dur-fast)]",
+        "relative flex cursor-pointer items-center gap-2.5 rounded-[var(--radius-md)] py-2 pr-8 pl-3 text-sm font-medium outline-hidden select-none transition-colors duration-[var(--dur-fast)]",
         "focus:bg-[var(--off-white-2)] data-[highlighted]:bg-[var(--red-muted)] data-[highlighted]:text-[var(--red)]",
         "data-inset:pl-9.5 data-disabled:pointer-events-none data-disabled:opacity-50",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -152,7 +153,7 @@ function DropdownMenuRadioItem({
       data-slot="dropdown-menu-radio-item"
       data-inset={inset}
       className={cn(
-        "relative flex cursor-default items-center gap-2.5 rounded-[var(--radius-md)] py-2 pr-8 pl-3 text-sm font-medium outline-hidden select-none transition-colors duration-[var(--dur-fast)]",
+        "relative flex cursor-pointer items-center gap-2.5 rounded-[var(--radius-md)] py-2 pr-8 pl-3 text-sm font-medium outline-hidden select-none transition-colors duration-[var(--dur-fast)]",
         "focus:bg-[var(--off-white-2)] data-[highlighted]:bg-[var(--red-muted)] data-[highlighted]:text-[var(--red)]",
         "data-inset:pl-9.5 data-disabled:pointer-events-none data-disabled:opacity-50",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -241,7 +242,7 @@ function DropdownMenuSubTrigger({
       data-slot="dropdown-menu-sub-trigger"
       data-inset={inset}
       className={cn(
-        "flex cursor-default items-center gap-2 rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium outline-hidden select-none transition-colors duration-[var(--dur-fast)]",
+        "flex cursor-pointer items-center gap-2 rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium outline-hidden select-none transition-colors duration-[var(--dur-fast)]",
         "focus:bg-[var(--off-white-2)] data-open:bg-[var(--off-white-2)]",
         "data-inset:pl-9.5",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
