@@ -29,10 +29,12 @@ const FOOTER_LINKS = {
   support: {
     title: "Support",
     links: [
+      { label: "Help Center", href: "/help-center" },
       { label: "FAQ", href: "/faq" },
       { label: "Order Tracking", href: "/track" },
       { label: "Returns & Exchanges", href: "/returns" },
       { label: "Contact Us", href: "/contact" },
+      { label: "Gift Cards", href: "/gift-cards" },
       { label: "Privacy Policy", href: "/privacy" },
       { label: "Terms of Service", href: "/terms" },
     ],
