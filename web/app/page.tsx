@@ -5,6 +5,10 @@ import FeaturedProducts from "@/components/modules/home/FeaturedProducts";
 import FeaturedStores from "@/components/modules/home/FeaturedStores";
 import BecomeSeller from "@/components/modules/home/BecomeSeller";
 import HowItWorks from "@/components/modules/home/HowItWorks";
+import FlashSale from "@/components/modules/home/FlashSale";
+import TrustBadges from "@/components/modules/home/TrustBadges";
+import NewsletterSection from "@/components/modules/home/NewsletterSection";
+import RecentlyViewed from "@/components/modules/home/RecentlyViewed";
 
 export const metadata = {
   title: "Marketplace — Thousands of Sellers, One Platform",
@@ -20,22 +24,35 @@ export const metadata = {
 export default async function HomePage() {
   return (
     <main>
-      {/* 1. Hero — Modern arama ve görsel anlatım */}
+      {/* 1. Flash Sale — Zaman kısıtlı indirimler */}
+      <FlashSale />
+
+      {/* 2. Hero — Modern arama ve görsel anlatım */}
       <HeroSection />
 
-      {/* 2. Kategoriler */}
+      {/* 3. Güven Rozetleri — Trust signals */}
+      <TrustBadges />
+
+      {/* 4. Kategoriler */}
       <CategoryGrid />
 
-      {/* 3. Öne Çıkan Ürünler */}
+      {/* 5. Öne Çıkan Ürünler */}
       <FeaturedProducts />
 
-      {/* 4. Öne Çıkan Storelar */}
+      {/* 6. Son Görüntülenenler — Personalization */}
+      <RecentlyViewed />
+
+      {/* 7. Öne Çıkan Storelar */}
       <FeaturedStores />
 
-      {/* 5. Satıcı Ol CTA */}
+      {/* 8. Satıcı Ol CTA */}
       <BecomeSeller />
-      {/* 6. Nasıl Çalışır? */}
+
+      {/* 9. Nasıl Çalışır? */}
       <HowItWorks />
+
+      {/* 10. Newsletter — Email acquisition */}
+      <NewsletterSection />
     </main>
   );
 }

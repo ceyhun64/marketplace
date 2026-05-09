@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProduct } from "@/queries/useProducts";
+import { trackProductView } from "@/components/modules/home/RecentlyViewed";
 import {
   Info,
   Eye,
@@ -379,6 +380,18 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [selectedSizeId, setSelectedSizeId] = useState<number | null>(null);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+
+  // Track recently viewed
+  useEffect(() => {
+    if (!product) return;
+    trackProductView({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      images: product.images,
+      merchantStoreName: product.merchantStoreName,
+    });
+  }, [product?.id]);
 
   // ── Stock Matrix ────────────────────────────────────────────────────────────
 

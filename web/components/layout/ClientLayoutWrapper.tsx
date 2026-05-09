@@ -3,6 +3,10 @@
 import { usePathname } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import AnnouncementBar from "@/components/layout/AnnouncementBar";
+import CookieConsent from "@/components/layout/CookieConsent";
+import SocialProof from "@/components/layout/SocialProof";
+import BackToTop from "@/components/layout/BackToTop";
 
 const HIDDEN_PATHS = [
   "/admin",
@@ -27,11 +31,17 @@ export default function ClientLayoutWrapper({
 
   return (
     <>
+      {!shouldHideLayout && <AnnouncementBar />}
       {!shouldHideLayout && <Navbar />}
 
       {children}
 
       {!shouldHideLayout && <Footer />}
+
+      {/* Global overlays — shown everywhere */}
+      <CookieConsent />
+      <SocialProof />
+      <BackToTop />
     </>
   );
 }
