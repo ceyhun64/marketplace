@@ -155,17 +155,29 @@ function AvatarCircle({ user }: { user: CurrentUser }) {
   );
 }
 
-const NOTIF_META: Record<NotifType, { icon: React.ElementType; bg: string; color: string }> = {
-  order: { icon: ShoppingCart, bg: "rgba(200,16,46,0.08)", color: "var(--red)" },
+const NOTIF_META: Record<
+  NotifType,
+  { icon: React.ElementType; bg: string; color: string }
+> = {
+  order: {
+    icon: ShoppingCart,
+    bg: "rgba(200,16,46,0.08)",
+    color: "var(--red)",
+  },
   deal: { icon: Tag, bg: "rgba(234,179,8,0.08)", color: "#ca8a04" },
   store: { icon: Store, bg: "rgba(59,130,246,0.08)", color: "#2563eb" },
   shipping: { icon: Truck, bg: "rgba(34,197,94,0.08)", color: "#16a34a" },
   review: { icon: Star, bg: "rgba(168,85,247,0.08)", color: "#7c3aed" },
-  system: { icon: Bell, bg: "rgba(51,51,51,0.06)", color: "var(--charcoal-soft)" },
+  system: {
+    icon: Bell,
+    bg: "rgba(51,51,51,0.06)",
+    color: "var(--charcoal-soft)",
+  },
 };
 
 function NotificationDropdown() {
-  const { notifications, unreadCount, isLoading, markRead, markAllRead } = useNotifications();
+  const { notifications, unreadCount, isLoading, markRead, markAllRead } =
+    useNotifications();
   const preview = notifications.slice(0, 5);
 
   return (
@@ -213,7 +225,10 @@ function NotificationDropdown() {
             <Bell className="w-4 h-4" style={{ color: "var(--charcoal)" }} />
             <span
               className="text-sm font-semibold"
-              style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
+              style={{
+                color: "var(--charcoal)",
+                fontFamily: "var(--font-body)",
+              }}
             >
               Notifications
             </span>
@@ -249,16 +264,24 @@ function NotificationDropdown() {
           {isLoading && (
             <div className="py-8 flex flex-col items-center gap-2">
               <div className="w-6 h-6 rounded-full border-2 border-gray-200 border-t-red-500 animate-spin" />
-              <p className="text-xs" style={{ color: "var(--charcoal-mist)" }}>Loading…</p>
+              <p className="text-xs" style={{ color: "var(--charcoal-mist)" }}>
+                Loading…
+              </p>
             </div>
           )}
 
           {!isLoading && preview.length === 0 && (
             <div className="py-10 flex flex-col items-center gap-2">
-              <Bell className="w-8 h-8" style={{ color: "rgba(51,51,51,0.15)" }} />
+              <Bell
+                className="w-8 h-8"
+                style={{ color: "rgba(51,51,51,0.15)" }}
+              />
               <p
                 className="text-xs"
-                style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
+                style={{
+                  color: "var(--charcoal-soft)",
+                  fontFamily: "var(--font-body)",
+                }}
               >
                 No notifications yet
               </p>
@@ -274,7 +297,9 @@ function NotificationDropdown() {
                 className="flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50"
                 style={{
                   borderBottom: "1px solid rgba(51,51,51,0.04)",
-                  background: notif.read ? "transparent" : "rgba(200,16,46,0.02)",
+                  background: notif.read
+                    ? "transparent"
+                    : "rgba(200,16,46,0.02)",
                 }}
                 onClick={() => {
                   markRead(notif.id);
@@ -286,7 +311,10 @@ function NotificationDropdown() {
                     className="w-8 h-8 rounded-xl flex items-center justify-center"
                     style={{ background: meta.bg }}
                   >
-                    <Icon className="w-3.5 h-3.5" style={{ color: meta.color }} />
+                    <Icon
+                      className="w-3.5 h-3.5"
+                      style={{ color: meta.color }}
+                    />
                   </div>
                   {!notif.read && (
                     <div
@@ -298,20 +326,29 @@ function NotificationDropdown() {
                 <div className="flex-1 min-w-0">
                   <p
                     className="text-xs font-semibold leading-snug truncate"
-                    style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
+                    style={{
+                      color: "var(--charcoal)",
+                      fontFamily: "var(--font-body)",
+                    }}
                   >
                     {notif.title}
                   </p>
                   <p
                     className="text-[11px] leading-relaxed mt-0.5 line-clamp-2"
-                    style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
+                    style={{
+                      color: "var(--charcoal-soft)",
+                      fontFamily: "var(--font-body)",
+                    }}
                   >
                     {notif.message}
                   </p>
                 </div>
                 <span
                   className="text-[10px] flex-shrink-0 mt-0.5"
-                  style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-body)" }}
+                  style={{
+                    color: "var(--charcoal-mist)",
+                    fontFamily: "var(--font-body)",
+                  }}
                 >
                   {notif.time}
                 </span>
@@ -328,7 +365,10 @@ function NotificationDropdown() {
           <a
             href="/notifications"
             className="flex items-center justify-center w-full py-3 text-xs font-semibold transition-colors hover:bg-gray-50"
-            style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
+            style={{
+              color: "var(--charcoal-soft)",
+              fontFamily: "var(--font-body)",
+            }}
           >
             View all notifications →
           </a>
@@ -349,7 +389,9 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [headerBottom, setHeaderBottom] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -359,6 +401,21 @@ export default function Navbar() {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const updateBottom = () => {
+      if (headerRef.current) {
+        setHeaderBottom(headerRef.current.getBoundingClientRect().bottom);
+      }
+    };
+    updateBottom();
+    window.addEventListener("scroll", updateBottom, { passive: true });
+    window.addEventListener("resize", updateBottom);
+    return () => {
+      window.removeEventListener("scroll", updateBottom);
+      window.removeEventListener("resize", updateBottom);
+    };
   }, []);
 
   useEffect(() => {
@@ -387,8 +444,9 @@ export default function Navbar() {
         ekler; globals.css bu değeri header'ın padding-right'ına uygular.
       */}
       <header
+        ref={headerRef}
         data-fixed-header
-        className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none"
+        className="flex flex-col items-center pointer-events-none"
         style={{ padding: "1rem 1.25rem" }}
       >
         <div
@@ -722,8 +780,8 @@ export default function Navbar() {
       {/* Mobile Navigation Menu */}
       {mobileMenuOpen && (
         <div
-          className="fixed top-0 left-0 right-0 z-40 pointer-events-auto"
-          style={{ paddingTop: scrolled ? "5.5rem" : "6.5rem" }}
+          className="fixed left-0 right-0 z-40 pointer-events-auto"
+          style={{ top: headerBottom }}
         >
           <div
             className="mx-5 rounded-2xl overflow-hidden"
@@ -822,14 +880,6 @@ export default function Navbar() {
           </div>
         </div>
       )}
-
-      {/* Spacer */}
-      <div
-        style={{
-          height: scrolled ? "5.5rem" : "6.5rem",
-          transition: "height var(--duration-base) var(--ease-out)",
-        }}
-      />
     </>
   );
 }

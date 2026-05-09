@@ -31,8 +31,12 @@ export default function ClientLayoutWrapper({
 
   return (
     <>
-      {!shouldHideLayout && <AnnouncementBar />}
-      {!shouldHideLayout && <Navbar />}
+      {!shouldHideLayout && (
+        <div className="sticky top-0 z-50">
+          <AnnouncementBar />
+          <Navbar />
+        </div>
+      )}
 
       {children}
 
