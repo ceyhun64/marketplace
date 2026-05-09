@@ -6,17 +6,17 @@ import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 const ANNOUNCEMENTS = [
   {
-    text: "🚚 Free shipping on orders over ₺500 — ",
+    text: "Free shipping on orders over ₺500 — ",
     cta: "Shop now",
     href: "/products",
   },
   {
-    text: "🎉 New sellers welcome! Start your store today — ",
+    text: "New sellers welcome! Start your store today — ",
     cta: "Apply now",
     href: "/auth/apply-merchant",
   },
   {
-    text: "🔥 Flash deals updated daily — ",
+    text: "Flash deals updated daily — ",
     cta: "See today's deals",
     href: "/deals",
   },

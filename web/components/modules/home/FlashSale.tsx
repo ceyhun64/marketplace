@@ -69,9 +69,17 @@ function Digit({ value, label }: { value: number; label: string }) {
 }
 
 const DEALS = [
-  { label: "Electronics", discount: "Up to 40% off", href: "/deals?cat=elektronik" },
+  {
+    label: "Electronics",
+    discount: "Up to 40% off",
+    href: "/deals?cat=elektronik",
+  },
   { label: "Fashion", discount: "Up to 55% off", href: "/deals?cat=giyim" },
-  { label: "Home & Living", discount: "Up to 30% off", href: "/deals?cat=ev-yasam" },
+  {
+    label: "Home & Living",
+    discount: "Up to 30% off",
+    href: "/deals?cat=ev-yasam",
+  },
 ];
 
 export default function FlashSale() {
@@ -79,7 +87,10 @@ export default function FlashSale() {
   const [active, setActive] = useState(0);
 
   useEffect(() => {
-    const id = setInterval(() => setActive((p) => (p + 1) % DEALS.length), 3500);
+    const id = setInterval(
+      () => setActive((p) => (p + 1) % DEALS.length),
+      3500,
+    );
     return () => clearInterval(id);
   }, []);
 
@@ -88,7 +99,8 @@ export default function FlashSale() {
   return (
     <section
       style={{
-        background: "linear-gradient(135deg, var(--charcoal) 0%, #2a0a12 50%, var(--red-dark) 100%)",
+        background:
+          "linear-gradient(135deg, var(--charcoal) 0%, #2a0a12 50%, var(--red-dark) 100%)",
         padding: "0",
         overflow: "hidden",
         position: "relative",
@@ -206,7 +218,9 @@ export default function FlashSale() {
           >
             Ends in
           </span>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem" }}>
+          <div
+            style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem" }}
+          >
             <Digit value={hours} label="hrs" />
             <span
               style={{
