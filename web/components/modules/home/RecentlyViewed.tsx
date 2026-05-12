@@ -73,9 +73,7 @@ export default function RecentlyViewed() {
 
   return (
     <section style={{ padding: "4rem 0", background: "var(--off-white-2)" }}>
-      <div
-        style={{ maxWidth: 1300, margin: "0 auto", padding: "0 2rem" }}
-      >
+      <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 2rem" }}>
         {/* Header */}
         <div
           style={{
@@ -85,7 +83,9 @@ export default function RecentlyViewed() {
             marginBottom: "2rem",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <div
+            style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
+          >
             <div
               style={{
                 width: 36,
@@ -188,7 +188,10 @@ export default function RecentlyViewed() {
               }}
               className="group hover:shadow-md hover:-translate-y-0.5"
             >
-              <Link href={`/product/${product.id}`} style={{ textDecoration: "none" }}>
+              <Link
+                href={`/product/${product.id}`}
+                style={{ textDecoration: "none" }}
+              >
                 {/* Image */}
                 <div
                   style={{
@@ -266,12 +269,13 @@ export default function RecentlyViewed() {
                 <button
                   onClick={() => {
                     cart.addItem({
-                      id: product.id,
-                      name: product.name,
-                      price: product.price,
-                      image: product.images?.[0],
+                      offerId: product.id,
+                      productId: product.id,
+                      productName: product.name,
+                      productImage: product.images?.[0],
                       merchantId: "",
                       stock: 99,
+                      price: product.price,
                     });
                     toast.success("Added to cart", { duration: 2000 });
                   }}
@@ -303,7 +307,11 @@ export default function RecentlyViewed() {
 
 // ── RecentlyViewedSection — inline section for product detail page ─────────────
 
-export function RecentlyViewedSection({ currentProductId }: { currentProductId: string }) {
+export function RecentlyViewedSection({
+  currentProductId,
+}: {
+  currentProductId: string;
+}) {
   const { items } = useRecentlyViewed();
   const cart = useCart();
 
@@ -314,7 +322,10 @@ export function RecentlyViewedSection({ currentProductId }: { currentProductId: 
     <section className="mt-12">
       <div
         className="flex items-center gap-3 mb-6"
-        style={{ borderTop: "1px solid rgba(30,30,30,0.06)", paddingTop: "2rem" }}
+        style={{
+          borderTop: "1px solid rgba(30,30,30,0.06)",
+          paddingTop: "2rem",
+        }}
       >
         <Clock size={18} style={{ color: "#c8102e" }} />
         <h2
@@ -369,7 +380,10 @@ export function RecentlyViewedSection({ currentProductId }: { currentProductId: 
               {product.merchantStoreName && (
                 <div
                   className="text-[9px] uppercase tracking-widest font-bold truncate"
-                  style={{ color: "#9a9a9a", fontFamily: "'JetBrains Mono', monospace" }}
+                  style={{
+                    color: "#9a9a9a",
+                    fontFamily: "'JetBrains Mono', monospace",
+                  }}
                 >
                   {product.merchantStoreName}
                 </div>
@@ -386,10 +400,7 @@ export function RecentlyViewedSection({ currentProductId }: { currentProductId: 
               >
                 {product.name}
               </div>
-              <div
-                className="text-sm font-black"
-                style={{ color: "#c8102e" }}
-              >
+              <div className="text-sm font-black" style={{ color: "#c8102e" }}>
                 {formatPrice(product.price)}
               </div>
             </div>
