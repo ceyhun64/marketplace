@@ -19,7 +19,18 @@ import {
   Tag,
   Store,
   Globe,
+  Truck,
+  Zap,
+  RotateCcw,
+  Lock,
+  Star,
+  GitCompare,
+  Clock,
+  Package,
+  CheckCircle2,
 } from "lucide-react";
+
+import { RecentlyViewedSection } from "@/components/modules/home/RecentlyViewed";
 import { toast } from "sonner";
 import ProductTabs from "@/components/modules/product/productDetail/ProductTabs";
 import ProductDetailSkeleton from "@/components/modules/product/productDetail/ProductDetailSkeleton";
@@ -31,6 +42,452 @@ import ProductCarousel from "@/components/modules/product/productDetail/ProductC
 import { useHybridWishlist } from "@/hooks/use-hybrid-wishlist";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface Size {
+  id: number;
+  value: string;
+  type: string;
+  sortOrder: number;
+}
+
+interface StockEntry {
+  id: number;
+  sizeId: number | null;
+  stock: number;
+  priceModifier: number;
+}
+
+interface ProductData {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  oldPrice: number | null;
+  discountPercentage: number;
+  hasDiscount: boolean;
+  discountAmount: number;
+  mainImage: string;
+  images: string[];
+  videoUrl: string | null;
+  category: { id: number; name: string; slug?: string };
+  middleCategory: { id: number; name: string; slug?: string } | null;
+  subCategory: { id: number; name: string; slug?: string } | null;
+  tags: string[];
+  brand: {
+    id: number;
+    name: string;
+    slug?: string;
+    image: string | null;
+    customDomain?: string | null;
+  } | null;
+  color: { id: number; name: string; hexCode: string } | null;
+  productGroupId: string | null;
+  otherColors: Array<{
+    id: number;
+    title: string;
+    price: number;
+    oldPrice: number | null;
+    mainImage: string;
+    color: { id: number; name: string; hexCode: string } | null;
+    hasDiscount: boolean;
+    discountPercentage: number;
+  }>;
+  rating: number;
+  reviewCount: number;
+  ratingDistribution: { [key: number]: number };
+  reviews: Array<{
+    id: number;
+    rating: number;
+    title: string | null;
+    comment: string | null;
+    createdAt: string;
+    user: { name: string; surname: string };
+  }>;
+  stock: { inStock: boolean; quantity: number; lowStock: boolean };
+  publishToMarket: boolean;
+  publishToStore: boolean;
+  isApproved: boolean;
+  shipping: {
+    freeShipping: boolean;
+    estimatedDelivery: string;
+    shippingCost: number;
+    expressAvailable: boolean;
+    expressDelivery: string;
+    expressCost: number;
+  };
+  specifications: {
+    weight: string | null;
+    dimensions: string | null;
+    material: string | null;
+    warranty: string;
+    origin: string;
+    certifications: string[];
+  };
+  relatedProducts: Array<{
+    id: number;
+    title: string;
+    price: number;
+    oldPrice: number | null;
+    mainImage: string;
+    category: string;
+    brand: string | null;
+    hasDiscount: boolean;
+  }>;
+  brandProducts: Array<{
+    id: number;
+    title: string;
+    price: number;
+    oldPrice: number | null;
+    mainImage: string;
+    category: string;
+    hasDiscount: boolean;
+  }>;
+  meta: {
+    views: number;
+    favorites: number;
+    purchaseCount: number;
+    lastUpdated: string;
+  };
+  availableSizes: Size[];
+  stockMatrix: StockEntry[];
+  bulkDiscountQty: number | null;
+  bulkDiscountRate: number | null;
+}
+
+
+
+
+
+// ── Shipping Info Section ─────────────────────────────────────────────────────
+
+function ShippingSection({ shipping }: { shipping: ProductData["shipping"] }) {
+  return (
+    <div
+      className="space-y-3 p-4"
+      style={{
+        background: "#ffffff",
+        border: "1px solid rgba(30,30,30,0.1)",
+        borderRadius: "14px",
+        boxShadow: "0 1px 4px rgba(30,30,30,0.06)",
+      }}
+    >
+      <div
+        className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2"
+        style={{ color: "#9a9a9a", fontFamily: "'JetBrains Mono', monospace" }}
+      >
+        <Truck size={13} style={{ color: "#c8102e" }} />
+        Delivery &amp; Shipping
+      </div>
+
+      {/* Standard Shipping */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div
+            className="p-2 rounded-md"
+            style={{ background: "rgba(13,122,78,0.07)" }}
+          >
+            <Package size={15} style={{ color: "#0d7a4e" }} />
+          </div>
+          <div>
+            <div className="text-xs font-bold" style={{ color: "#1e1e1e" }}>
+              {shipping.freeShipping
+                ? "Free Standard Shipping"
+                : "Standard Shipping"}
+            </div>
+            <div
+              className="text-[10px]"
+              style={{
+                color: "#9a9a9a",
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
+              {shipping.estimatedDelivery}
+            </div>
+          </div>
+        </div>
+        <span
+          className="text-xs font-bold"
+          style={{ color: shipping.freeShipping ? "#0d7a4e" : "#1e1e1e" }}
+        >
+          {shipping.freeShipping
+            ? "FREE"
+            : `${shipping.shippingCost.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD`}
+        </span>
+      </div>
+
+      {/* Express Shipping */}
+      {shipping.expressAvailable && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div
+              className="p-2 rounded-md"
+              style={{ background: "rgba(200,16,46,0.07)" }}
+            >
+              <Zap size={15} style={{ color: "#c8102e" }} />
+            </div>
+            <div>
+              <div className="text-xs font-bold" style={{ color: "#1e1e1e" }}>
+                Express Shipping
+              </div>
+              <div
+                className="text-[10px]"
+                style={{
+                  color: "#9a9a9a",
+                  fontFamily: "'JetBrains Mono', monospace",
+                }}
+              >
+                {shipping.expressDelivery}
+              </div>
+            </div>
+          </div>
+          <span className="text-xs font-bold" style={{ color: "#1e1e1e" }}>
+            {shipping.expressCost.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+            })}{" "}
+            USD
+          </span>
+        </div>
+      )}
+
+      {/* Free shipping threshold notice */}
+      {!shipping.freeShipping && (
+        <div
+          className="flex items-center gap-2 pt-2"
+          style={{ borderTop: "1px dashed rgba(30,30,30,0.1)" }}
+        >
+          <CheckCircle2 size={12} style={{ color: "#0d7a4e" }} />
+          <span className="text-[10px]" style={{ color: "#747474" }}>
+            Add more to get{" "}
+            <strong style={{ color: "#0d7a4e" }}>FREE shipping</strong> on
+            orders over 500 USD
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Trust Badges ──────────────────────────────────────────────────────────────
+
+function TrustBadges() {
+  const badges = [
+    {
+      icon: <Lock size={16} />,
+      color: "#0d7a4e",
+      bg: "rgba(13,122,78,0.07)",
+      border: "rgba(13,122,78,0.18)",
+      label: "Secure Payment",
+      sub: "256-bit SSL",
+    },
+    {
+      icon: <RotateCcw size={16} />,
+      color: "#1b5ea8",
+      bg: "rgba(27,94,168,0.07)",
+      border: "rgba(27,94,168,0.18)",
+      label: "Easy Returns",
+      sub: "30-day policy",
+    },
+    {
+      icon: <CheckCircle2 size={16} />,
+      color: "#c8102e",
+      bg: "rgba(200,16,46,0.07)",
+      border: "rgba(200,16,46,0.18)",
+      label: "Genuine Product",
+      sub: "100% authentic",
+    },
+    {
+      icon: <Clock size={16} />,
+      color: "#b45309",
+      bg: "rgba(180,83,9,0.07)",
+      border: "rgba(180,83,9,0.18)",
+      label: "24/7 Support",
+      sub: "Always available",
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {badges.map(({ icon, color, bg, border, label, sub }) => (
+        <div
+          key={label}
+          className="flex items-center gap-3 p-3"
+          style={{
+            background: bg,
+            border: `1px solid ${border}`,
+            borderRadius: "10px",
+          }}
+        >
+          <div style={{ color }}>{icon}</div>
+          <div>
+            <div className="text-[11px] font-bold" style={{ color: "#1e1e1e" }}>
+              {label}
+            </div>
+            <div
+              className="text-[9px] uppercase tracking-wide"
+              style={{
+                color: "#9a9a9a",
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
+              {sub}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Rating Distribution Bar ───────────────────────────────────────────────────
+
+function RatingBar({
+  rating,
+  reviewCount,
+  ratingDistribution,
+}: {
+  rating: number;
+  reviewCount: number;
+  ratingDistribution: { [key: number]: number };
+}) {
+  if (reviewCount === 0) return null;
+  return (
+    <div
+      className="p-4 space-y-3"
+      style={{
+        background: "#ffffff",
+        border: "1px solid rgba(30,30,30,0.1)",
+        borderRadius: "14px",
+        boxShadow: "0 1px 4px rgba(30,30,30,0.06)",
+      }}
+    >
+      <div className="flex items-center gap-4">
+        <div>
+          <span
+            className="text-4xl font-black"
+            style={{ color: "#1e1e1e", fontFamily: "'Manrope', sans-serif" }}
+          >
+            {rating.toFixed(1)}
+          </span>
+          <div className="flex mt-1">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                size={12}
+                fill={i < Math.round(rating) ? "#c8102e" : "none"}
+                color={i < Math.round(rating) ? "#c8102e" : "#e6e4e1"}
+              />
+            ))}
+          </div>
+          <div
+            className="text-[9px] mt-1 uppercase tracking-wider"
+            style={{
+              color: "#9a9a9a",
+              fontFamily: "'JetBrains Mono', monospace",
+            }}
+          >
+            {reviewCount} review{reviewCount !== 1 ? "s" : ""}
+          </div>
+        </div>
+        <div className="flex-1 space-y-1.5">
+          {[5, 4, 3, 2, 1].map((star) => {
+            const count = ratingDistribution[star] ?? 0;
+            const pct = reviewCount > 0 ? (count / reviewCount) * 100 : 0;
+            return (
+              <div key={star} className="flex items-center gap-2">
+                <span
+                  className="text-[9px] w-4 text-right shrink-0"
+                  style={{
+                    color: "#9a9a9a",
+                    fontFamily: "'JetBrains Mono', monospace",
+                  }}
+                >
+                  {star}
+                </span>
+                <Star
+                  size={8}
+                  fill="#c8102e"
+                  color="#c8102e"
+                  className="shrink-0"
+                />
+                <div
+                  className="flex-1 rounded-full overflow-hidden"
+                  style={{ height: 4, background: "#efeeec" }}
+                >
+                  <div
+                    style={{
+                      width: `${pct}%`,
+                      height: "100%",
+                      background: "#c8102e",
+                      borderRadius: 9999,
+                      transition: "width 0.6s ease",
+                    }}
+                  />
+                </div>
+                <span
+                  className="text-[9px] w-5 shrink-0"
+                  style={{
+                    color: "#9a9a9a",
+                    fontFamily: "'JetBrains Mono', monospace",
+                  }}
+                >
+                  {count}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Compare Hook ──────────────────────────────────────────────────────────────
+
+const COMPARE_KEY = "bazr_compare";
+
+function useCompare(productId: string) {
+  const [inCompare, setInCompare] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(COMPARE_KEY);
+      const ids: string[] = raw ? JSON.parse(raw) : [];
+      setInCompare(ids.includes(productId));
+    } catch {}
+  }, [productId]);
+
+  const toggleCompare = (productTitle: string) => {
+    try {
+      const raw = localStorage.getItem(COMPARE_KEY);
+      let ids: string[] = raw ? JSON.parse(raw) : [];
+      if (ids.includes(productId)) {
+        ids = ids.filter((id) => id !== productId);
+        setInCompare(false);
+        toast.success(`"${productTitle}" removed from compare list`);
+      } else {
+        if (ids.length >= 4) {
+          toast.error("You can compare up to 4 products at a time.");
+          return;
+        }
+        ids = [...ids, productId];
+        setInCompare(true);
+        toast.success(`"${productTitle}" added to compare list`, {
+          action: {
+            label: "Compare Now",
+            onClick: () => (window.location.href = "/compare"),
+          },
+        });
+      }
+      localStorage.setItem(COMPARE_KEY, JSON.stringify(ids));
+    } catch {}
+  };
+
+  return { inCompare, toggleCompare };
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Clock, ArrowRight, X } from "lucide-react";
+import Image from "next/image";
+import { Clock, ArrowRight, X, ShoppingBag } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { toast } from "sonner";
 
@@ -295,6 +296,105 @@ export default function RecentlyViewed() {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+// ── RecentlyViewedSection — inline section for product detail page ─────────────
+
+export function RecentlyViewedSection({ currentProductId }: { currentProductId: string }) {
+  const { items } = useRecentlyViewed();
+  const cart = useCart();
+
+  const filtered = items.filter((p) => p.id !== currentProductId).slice(0, 4);
+  if (filtered.length === 0) return null;
+
+  return (
+    <section className="mt-12">
+      <div
+        className="flex items-center gap-3 mb-6"
+        style={{ borderTop: "1px solid rgba(30,30,30,0.06)", paddingTop: "2rem" }}
+      >
+        <Clock size={18} style={{ color: "#c8102e" }} />
+        <h2
+          className="text-base font-black uppercase tracking-tighter"
+          style={{ color: "#1e1e1e", fontFamily: "'Manrope', sans-serif" }}
+        >
+          Recently Viewed
+        </h2>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {filtered.map((product) => (
+          <Link
+            key={product.id}
+            href={`/product/${product.id}`}
+            className="group block"
+            style={{
+              background: "#ffffff",
+              border: "1px solid rgba(30,30,30,0.1)",
+              borderRadius: "14px",
+              overflow: "hidden",
+              boxShadow: "0 1px 4px rgba(30,30,30,0.06)",
+              transition: "box-shadow 140ms cubic-bezier(0.16,1,0.3,1)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.boxShadow =
+                "0 4px 16px rgba(30,30,30,0.1)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.boxShadow =
+                "0 1px 4px rgba(30,30,30,0.06)";
+            }}
+          >
+            <div
+              className="relative w-full"
+              style={{ aspectRatio: "1/1", background: "#f5f5f5" }}
+            >
+              {product.images?.[0] ? (
+                <Image
+                  src={product.images[0]}
+                  alt={product.name}
+                  fill
+                  sizes="200px"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <ShoppingBag size={28} style={{ color: "#e6e4e1" }} />
+                </div>
+              )}
+            </div>
+            <div className="p-3 space-y-1">
+              {product.merchantStoreName && (
+                <div
+                  className="text-[9px] uppercase tracking-widest font-bold truncate"
+                  style={{ color: "#9a9a9a", fontFamily: "'JetBrains Mono', monospace" }}
+                >
+                  {product.merchantStoreName}
+                </div>
+              )}
+              <div
+                className="text-xs font-bold leading-snug"
+                style={{
+                  color: "#1e1e1e",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                {product.name}
+              </div>
+              <div
+                className="text-sm font-black"
+                style={{ color: "#c8102e" }}
+              >
+                {formatPrice(product.price)}
+              </div>
+            </div>
+          </Link>
+        ))}
       </div>
     </section>
   );

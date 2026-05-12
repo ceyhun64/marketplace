@@ -1,7 +1,14 @@
 "use client";
 
 import React from "react";
-import { Heart, Minus, Plus, Share2, ShoppingCart } from "lucide-react";
+import {
+  Heart,
+  Minus,
+  Plus,
+  Share2,
+  ShoppingCart,
+  GitCompare,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ProductActionsProps {
