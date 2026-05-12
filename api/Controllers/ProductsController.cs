@@ -33,7 +33,7 @@ public class ProductsController : ControllerBase
     {
         var query = _db
             .Products.Include(p => p.Category)
-                .ThenInclude(c => c != null ? c.Parent : null)
+                .ThenInclude(c => c!.Parent)
             .Include(p => p.Merchant)
             .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && p.Stock > 0)
             .AsQueryable();
@@ -125,7 +125,7 @@ public class ProductsController : ControllerBase
     {
         var product = await _db
             .Products.Include(p => p.Category)
-                .ThenInclude(c => c != null ? c.Parent : null)
+                .ThenInclude(c => c!.Parent)
             .Include(p => p.Merchant)
             .Where(p => p.Id == id && !p.IsDeleted)
             .FirstOrDefaultAsync();
@@ -134,8 +134,8 @@ public class ProductsController : ControllerBase
             return NotFound(new { message = "Ürün bulunamadı." });
 
         // ── Reviews & Rating ────────────────────────────────────────────────
-        var reviews = await _db.Reviews
-            .Where(r => r.ProductId == id)
+        var reviews = await _db
+            .Reviews.Where(r => r.ProductId == id)
             .Include(r => r.Customer)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
@@ -147,28 +147,33 @@ public class ProductsController : ControllerBase
             .GroupBy(r => r.Rating)
             .ToDictionary(g => g.Key, g => g.Count());
 
-        var reviewDtos = reviews.Take(20).Select(r => new
-        {
-            r.Id,
-            r.Rating,
-            r.Title,
-            r.Comment,
-            r.CreatedAt,
-            CustomerName = r.Customer != null
-                ? r.Customer.FirstName + " " + r.Customer.LastName.Substring(0, 1) + "."
-                : "Anonymous",
-        }).ToList();
+        var reviewDtos = reviews
+            .Take(20)
+            .Select(r => new
+            {
+                r.Id,
+                r.Rating,
+                r.Title,
+                r.Comment,
+                r.CreatedAt,
+                CustomerName = r.Customer != null
+                    ? r.Customer.FirstName + " " + r.Customer.LastName.Substring(0, 1) + "."
+                    : "Anonymous",
+            })
+            .ToList();
 
         // ── Related Products (same category, different product) ──────────────
-        var relatedProducts = await _db.Products
-            .Include(p => p.Merchant)
+        var relatedProducts = await _db
+            .Products.Include(p => p.Merchant)
             .Include(p => p.Category)
-            .Where(p => p.CategoryId == product.CategoryId
-                     && p.Id != id
-                     && !p.IsDeleted
-                     && p.IsApproved
-                     && p.PublishToMarket
-                     && p.Stock > 0)
+            .Where(p =>
+                p.CategoryId == product.CategoryId
+                && p.Id != id
+                && !p.IsDeleted
+                && p.IsApproved
+                && p.PublishToMarket
+                && p.Stock > 0
+            )
             .OrderByDescending(p => p.CreatedAt)
             .Take(8)
             .Select(p => new
@@ -186,14 +191,16 @@ public class ProductsController : ControllerBase
             .ToListAsync();
 
         // ── Brand Products (same merchant, different product) ─────────────────
-        var brandProducts = await _db.Products
-            .Include(p => p.Category)
-            .Where(p => p.MerchantId == product.MerchantId
-                     && p.Id != id
-                     && !p.IsDeleted
-                     && p.IsApproved
-                     && p.PublishToMarket
-                     && p.Stock > 0)
+        var brandProducts = await _db
+            .Products.Include(p => p.Category)
+            .Where(p =>
+                p.MerchantId == product.MerchantId
+                && p.Id != id
+                && !p.IsDeleted
+                && p.IsApproved
+                && p.PublishToMarket
+                && p.Stock > 0
+            )
             .OrderByDescending(p => p.CreatedAt)
             .Take(8)
             .Select(p => new
@@ -211,8 +218,7 @@ public class ProductsController : ControllerBase
 
         // ── Meta Stats (views = wishlist count × 10 heuristic, favorites, purchases) ──
         var favoritesCount = await _db.WishlistItems.CountAsync(w => w.ProductId == id);
-        var purchaseCount = await _db.OrderItems
-            .CountAsync(i => i.ProductId == id);
+        var purchaseCount = await _db.OrderItems.CountAsync(i => i.ProductId == id);
 
         // ── Shipping info (from merchant handling hours + product price) ──────
         var freeShipping = product.Price >= 500m;
@@ -230,28 +236,65 @@ public class ProductsController : ControllerBase
         {
             if (category.Parent != null)
             {
-                subCategory = new { category.Id, category.Name, category.Slug };
-                var parent = await _db.Categories
-                    .Include(c => c.Parent)
+                subCategory = new
+                {
+                    category.Id,
+                    category.Name,
+                    category.Slug,
+                };
+                var parent = await _db
+                    .Categories.Include(c => c.Parent)
                     .FirstOrDefaultAsync(c => c.Id == category.ParentId);
                 if (parent?.Parent != null)
                 {
-                    middleCategory = new { parent.Id, parent.Name, parent.Slug };
+                    middleCategory = new
+                    {
+                        parent.Id,
+                        parent.Name,
+                        parent.Slug,
+                    };
                     var grandParent = await _db.Categories.FindAsync(parent.ParentId);
-                    mainCategory = grandParent != null
-                        ? new { grandParent.Id, grandParent.Name, grandParent.Slug }
-                        : new { parent.Parent.Id, parent.Parent.Name, parent.Parent.Slug };
+                    mainCategory =
+                        grandParent != null
+                            ? new
+                            {
+                                grandParent.Id,
+                                grandParent.Name,
+                                grandParent.Slug,
+                            }
+                            : new
+                            {
+                                parent.Parent.Id,
+                                parent.Parent.Name,
+                                parent.Parent.Slug,
+                            };
                 }
                 else
                 {
-                    mainCategory = parent != null
-                        ? new { parent.Id, parent.Name, parent.Slug }
-                        : new { category.Id, category.Name, category.Slug };
+                    mainCategory =
+                        parent != null
+                            ? new
+                            {
+                                parent.Id,
+                                parent.Name,
+                                parent.Slug,
+                            }
+                            : new
+                            {
+                                category.Id,
+                                category.Name,
+                                category.Slug,
+                            };
                 }
             }
             else
             {
-                mainCategory = new { category.Id, category.Name, category.Slug };
+                mainCategory = new
+                {
+                    category.Id,
+                    category.Name,
+                    category.Slug,
+                };
             }
         }
 
@@ -326,7 +369,16 @@ public class ProductsController : ControllerBase
             },
             // Sizes & Stock Matrix (no sizes in current model — use null size entry)
             AvailableSizes = Array.Empty<object>(),
-            StockMatrix = new[] { new { Id = 0, SizeId = (int?)null, Stock = product.Stock, PriceModifier = 0m } },
+            StockMatrix = new[]
+            {
+                new
+                {
+                    Id = 0,
+                    SizeId = (int?)null,
+                    Stock = product.Stock,
+                    PriceModifier = 0m,
+                },
+            },
             BulkDiscountQty = (int?)null,
             BulkDiscountRate = (decimal?)null,
             // Color
@@ -356,10 +408,14 @@ public class ProductsController : ControllerBase
 
     /// <summary>Ürün buy-box — en iyi fiyatlı aktif teklif</summary>
     [HttpGet("{id:guid}/buybox")]
-    public async Task<IActionResult> GetBuyBox(Guid id, [FromQuery] decimal? customerLat = null, [FromQuery] decimal? customerLng = null)
+    public async Task<IActionResult> GetBuyBox(
+        Guid id,
+        [FromQuery] decimal? customerLat = null,
+        [FromQuery] decimal? customerLng = null
+    )
     {
-        var product = await _db.Products
-            .Include(p => p.Merchant)
+        var product = await _db
+            .Products.Include(p => p.Merchant)
             .Where(p => p.Id == id && !p.IsDeleted && p.IsApproved && p.Stock > 0)
             .Select(p => new
             {
@@ -384,10 +440,14 @@ public class ProductsController : ControllerBase
 
     /// <summary>Ürün teklifleri — tüm satıcılar</summary>
     [HttpGet("{id:guid}/offers")]
-    public async Task<IActionResult> GetOffers(Guid id, [FromQuery] decimal? customerLat = null, [FromQuery] decimal? customerLng = null)
+    public async Task<IActionResult> GetOffers(
+        Guid id,
+        [FromQuery] decimal? customerLat = null,
+        [FromQuery] decimal? customerLng = null
+    )
     {
-        var offers = await _db.Products
-            .Include(p => p.Merchant)
+        var offers = await _db
+            .Products.Include(p => p.Merchant)
             .Where(p => p.Id == id && !p.IsDeleted && p.IsApproved && p.Stock > 0)
             .Select(p => new
             {
@@ -423,7 +483,7 @@ public class ProductsController : ControllerBase
     {
         var query = _db
             .Products.Include(p => p.Category)
-                .ThenInclude(c => c != null ? c.Parent : null)
+                .ThenInclude(c => c!.Parent)
             .Include(p => p.Merchant)
             .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && p.Stock > 0)
             .AsQueryable();
@@ -644,8 +704,8 @@ public class ProductsController : ControllerBase
         else
         {
             // Merchant: kendi profilini bul
-            var merchant = await _db.MerchantProfiles
-                .Include(m => m.Subscription)
+            var merchant = await _db
+                .MerchantProfiles.Include(m => m.Subscription)
                 .FirstOrDefaultAsync(m => m.UserId == Guid.Parse(userIdClaim!));
             if (merchant == null)
                 return Forbid();
@@ -656,8 +716,11 @@ public class ProductsController : ControllerBase
             {
                 var plan = merchant.Subscription?.Plan ?? api.Domain.Enums.PlanType.Basic;
                 if (plan == api.Domain.Enums.PlanType.Basic)
-                    return BadRequest(new ApiResponse<string>(
-                        "Marketplace'e ürün yayınlamak için Pro veya Enterprise planı gereklidir."));
+                    return BadRequest(
+                        new ApiResponse<string>(
+                            "Marketplace'e ürün yayınlamak için Pro veya Enterprise planı gereklidir."
+                        )
+                    );
             }
         }
 
@@ -754,8 +817,8 @@ public class ProductsController : ControllerBase
         // Merchant sadece kendi ürününü güncelleyebilir
         if (userRole == "Merchant")
         {
-            var merchant = await _db.MerchantProfiles
-                .Include(m => m.Subscription)
+            var merchant = await _db
+                .MerchantProfiles.Include(m => m.Subscription)
                 .FirstOrDefaultAsync(m => m.UserId == Guid.Parse(userIdClaim!));
             if (merchant == null || product.MerchantId != merchant.Id)
                 return Forbid();
@@ -765,34 +828,51 @@ public class ProductsController : ControllerBase
             {
                 var plan = merchant.Subscription?.Plan ?? api.Domain.Enums.PlanType.Basic;
                 if (plan == api.Domain.Enums.PlanType.Basic)
-                    return BadRequest(new ApiResponse<string>(
-                        "Marketplace'e ürün yayınlamak için Pro veya Enterprise planı gereklidir."));
+                    return BadRequest(
+                        new ApiResponse<string>(
+                            "Marketplace'e ürün yayınlamak için Pro veya Enterprise planı gereklidir."
+                        )
+                    );
             }
         }
 
-        if (dto.Name != null) product.Name = dto.Name.Trim();
-        if (dto.Description != null) product.Description = dto.Description.Trim();
-        if (dto.ShortDescription != null) product.ShortDescription = dto.ShortDescription.Trim();
-        if (dto.CategoryId.HasValue) product.CategoryId = dto.CategoryId.Value;
-        if (dto.Images != null) product.Images = dto.Images;
-        if (dto.Tags != null) product.Tags = dto.Tags;
-        if (dto.Price.HasValue) product.Price = dto.Price.Value;
-        if (dto.Stock.HasValue) product.Stock = dto.Stock.Value;
-        if (dto.PublishToMarket.HasValue) product.PublishToMarket = dto.PublishToMarket.Value;
-        if (dto.PublishToStore.HasValue) product.PublishToStore = dto.PublishToStore.Value;
+        if (dto.Name != null)
+            product.Name = dto.Name.Trim();
+        if (dto.Description != null)
+            product.Description = dto.Description.Trim();
+        if (dto.ShortDescription != null)
+            product.ShortDescription = dto.ShortDescription.Trim();
+        if (dto.CategoryId.HasValue)
+            product.CategoryId = dto.CategoryId.Value;
+        if (dto.Images != null)
+            product.Images = dto.Images;
+        if (dto.Tags != null)
+            product.Tags = dto.Tags;
+        if (dto.Price.HasValue)
+            product.Price = dto.Price.Value;
+        if (dto.Stock.HasValue)
+            product.Stock = dto.Stock.Value;
+        if (dto.PublishToMarket.HasValue)
+            product.PublishToMarket = dto.PublishToMarket.Value;
+        if (dto.PublishToStore.HasValue)
+            product.PublishToStore = dto.PublishToStore.Value;
         product.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
-        return Ok(new ApiResponse<object>(new
-        {
-            product.Id,
-            product.Name,
-            product.Price,
-            product.Stock,
-            product.IsApproved,
-            product.PublishToMarket,
-            product.PublishToStore,
-        }));
+        return Ok(
+            new ApiResponse<object>(
+                new
+                {
+                    product.Id,
+                    product.Name,
+                    product.Price,
+                    product.Stock,
+                    product.IsApproved,
+                    product.PublishToMarket,
+                    product.PublishToStore,
+                }
+            )
+        );
     }
 
     /// <summary>Ürün soft-delete</summary>
@@ -814,8 +894,8 @@ public class ProductsController : ControllerBase
     [HttpGet("tags")]
     public async Task<IActionResult> GetAllTags()
     {
-        var tags = await _db.Products
-            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved)
+        var tags = await _db
+            .Products.Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved)
             .SelectMany(p => p.Tags)
             .Distinct()
             .OrderBy(t => t)
@@ -840,4 +920,3 @@ public class ProductsController : ControllerBase
         return Ok(new { message = "Ürün reddedildi.", reason = dto.Reason });
     }
 }
-
