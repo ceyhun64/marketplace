@@ -5,28 +5,39 @@ import Link from "next/link";
 import { Zap, ArrowRight, Clock } from "lucide-react";
 
 // Flash sale bitiş zamanı — deployment'ta env var'a taşınabilir
-const FLASH_SALE_END = (() => {
+function getFlashSaleEnd() {
   const d = new Date();
   d.setHours(23, 59, 59, 999);
   return d;
-})();
+}
 
-function useCountdown(target: Date) {
-  const calc = () => {
-    const diff = Math.max(0, target.getTime() - Date.now());
-    return {
-      hours: Math.floor(diff / 3_600_000),
-      minutes: Math.floor((diff % 3_600_000) / 60_000),
-      seconds: Math.floor((diff % 60_000) / 1_000),
-      done: diff === 0,
-    };
-  };
-  const [time, setTime] = useState(calc);
+type Countdown = {
+  hours: number;
+  minutes: number;
+  seconds: number;
+  done: boolean;
+};
+
+function useCountdown(): Countdown {
+  const [time, setTime] = useState<Countdown | null>(null);
+
   useEffect(() => {
+    const target = getFlashSaleEnd();
+    const calc = (): Countdown => {
+      const diff = Math.max(0, target.getTime() - Date.now());
+      return {
+        hours: Math.floor(diff / 3_600_000),
+        minutes: Math.floor((diff % 3_600_000) / 60_000),
+        seconds: Math.floor((diff % 60_000) / 1_000),
+        done: diff === 0,
+      };
+    };
+    setTime(calc());
     const id = setInterval(() => setTime(calc()), 1_000);
     return () => clearInterval(id);
   }, []);
-  return time;
+
+  return time ?? { hours: 0, minutes: 0, seconds: 0, done: false };
 }
 
 function Digit({ value, label }: { value: number; label: string }) {
@@ -83,7 +94,7 @@ const DEALS = [
 ];
 
 export default function FlashSale() {
-  const { hours, minutes, seconds, done } = useCountdown(FLASH_SALE_END);
+  const { hours, minutes, seconds, done } = useCountdown();
   const [active, setActive] = useState(0);
 
   useEffect(() => {
