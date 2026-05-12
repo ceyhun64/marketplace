@@ -70,9 +70,7 @@ export default async function StorePage({
     serverFetch.storeProducts(params.slug) as Promise<StoreOffer[] | null>,
   ]);
 
-  if (!store) {
-    notFound();
-  }
+  if (!store) return notFound();
 
   const safeOffers: StoreOffer[] = Array.isArray(offers) ? offers : [];
 

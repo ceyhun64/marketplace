@@ -119,8 +119,8 @@ export default async function StoreCategoryPage({
     getProducts(slug, cat, sp),
   ]);
 
-  if (!store) notFound();
-  if (!category) notFound();
+  if (!store) return notFound();
+  if (!category) return notFound();
 
   const { items: products, totalCount } = productsData;
 

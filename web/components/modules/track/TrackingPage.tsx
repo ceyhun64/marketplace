@@ -53,7 +53,7 @@ async function TrackingContent({ trackingNo }: { trackingNo: string }) {
     `/fulfillment/events/${trackingNo}`,
   );
 
-  if (!data?.data) notFound();
+  if (!data?.data) return notFound();
 
   const shipment = data.data;
   const currentIndex = getStatusIndex(shipment.status as ShipmentStatus);

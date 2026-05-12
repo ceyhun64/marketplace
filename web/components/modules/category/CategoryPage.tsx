@@ -45,12 +45,12 @@ async function CategoryProducts({
   if (!categoryData?.category) notFound();
 
   const category = {
-    ...categoryData.category,
-    subCategories: categoryData.SubCategories || [],
-    parent: categoryData.category.parent || null,
+    ...categoryData!.category,
+    subCategories: categoryData!.SubCategories || [],
+    parent: categoryData!.category.parent || null,
   };
   // Kategori endpoint'inden gelen ürünleri kullan, ayrıca products endpoint de denenebilir
-  const apiProducts = categoryData.products || [];
+  const apiProducts = categoryData!.products || [];
   const rawProducts = apiProducts.length > 0 ? apiProducts : (productsData?.data || []);
   const subcategories = category.subCategories || [];
 

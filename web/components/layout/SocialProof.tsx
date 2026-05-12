@@ -86,7 +86,7 @@ const COLOR_MAP: Record<SocialEvent["type"], { bg: string; icon: string }> = {
 export default function SocialProof() {
   const [events, setEvents] = useState<SocialEvent[]>([]);
   const [visible, setVisible] = useState<string | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const queueRef = useRef<SocialEvent[]>([]);
 
   const showNext = () => {

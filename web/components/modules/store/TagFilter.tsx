@@ -147,13 +147,14 @@ export function TagFilter({
             max={maxPrice}
             step={50}
             value={[value.minPrice ?? 0, value.maxPrice ?? maxPrice]}
-            onValueChange={([min, max]) =>
+            onValueChange={(vals: number[]) => {
+              const [min, max] = vals;
               onChange({
                 ...value,
                 minPrice: min > 0 ? min : undefined,
                 maxPrice: max < maxPrice ? max : undefined,
-              })
-            }
+              });
+            }}
           />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>₺{(value.minPrice ?? 0).toLocaleString("tr-TR")}</span>
