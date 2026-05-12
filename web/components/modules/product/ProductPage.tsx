@@ -156,10 +156,6 @@ interface ProductData {
   bulkDiscountRate: number | null;
 }
 
-
-
-
-
 // ── Shipping Info Section ─────────────────────────────────────────────────────
 
 function ShippingSection({ shipping }: { shipping: ProductData["shipping"] }) {
@@ -843,10 +839,10 @@ export default function ProductDetailPage() {
     if (!product) return;
     trackProductView({
       id: product.id,
-      name: product.name,
+      name: product.title,
       price: product.price,
       images: product.images,
-      merchantStoreName: product.merchantStoreName,
+      merchantStoreName: product.brand?.name,
     });
   }, [product?.id]);
 
