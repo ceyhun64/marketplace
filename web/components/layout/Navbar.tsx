@@ -20,6 +20,7 @@ import {
   Star,
   Tag,
   Store,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -65,8 +66,17 @@ function useCartCount(): number {
 
 const PUBLIC_NAV = [
   { label: "Categories", href: "/categories" },
+  { label: "Products", href: "/products" },
   { label: "Stores", href: "/stores" },
+  { label: "Brands", href: "/brands" },
   { label: "Deals", href: "/deals" },
+  { label: "Flash Sale", href: "/flash-sale", highlight: true },
+];
+
+const SECONDARY_NAV = [
+  { label: "New Arrivals", href: "/new" },
+  { label: "Bestsellers", href: "/bestsellers" },
+  { label: "Compare", href: "/compare" },
 ];
 
 const DASHBOARD_HREF: Record<UserRole, string> = {
@@ -490,11 +500,12 @@ export default function Navbar() {
                     fontFamily: "var(--font-body)",
                     fontSize: "0.8125rem",
                     fontWeight: pathname === link.href ? 600 : 500,
-                    color:
-                      pathname === link.href
+                    color: link.highlight
+                      ? "var(--red)"
+                      : pathname === link.href
                         ? "var(--charcoal)"
                         : "var(--charcoal-soft)",
-                    padding: "0.5rem 1rem",
+                    padding: "0.5rem 0.875rem",
                     borderRadius: "0.5rem",
                     background:
                       pathname === link.href
@@ -504,9 +515,13 @@ export default function Navbar() {
                     transition:
                       "color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out)",
                     letterSpacing: "0.01em",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.3rem",
                   }}
                   className="hover:text-[var(--charcoal)]"
                 >
+                  {link.highlight && <Zap className="w-3 h-3" />}
                   {link.label}
                 </Link>
               ))}
@@ -802,8 +817,9 @@ export default function Navbar() {
                     fontFamily: "var(--font-body)",
                     fontSize: "0.9375rem",
                     fontWeight: pathname === link.href ? 600 : 500,
-                    color:
-                      pathname === link.href
+                    color: link.highlight
+                      ? "var(--red)"
+                      : pathname === link.href
                         ? "var(--charcoal)"
                         : "var(--charcoal-soft)",
                     padding: "0.75rem 1rem",
@@ -813,12 +829,44 @@ export default function Navbar() {
                         ? "var(--off-white-2)"
                         : "transparent",
                     textDecoration: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  {link.highlight && <Zap className="w-4 h-4" />}
+                  {link.label}
+                </Link>
+              ))}
+
+              {/* Secondary links */}
+              <div
+                style={{
+                  height: "1px",
+                  background: "var(--border-light)",
+                  margin: "0.5rem 0",
+                }}
+              />
+              {SECONDARY_NAV.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.875rem",
+                    fontWeight: 500,
+                    color: "var(--charcoal-soft)",
+                    padding: "0.625rem 1rem",
+                    borderRadius: "0.75rem",
+                    textDecoration: "none",
                     display: "block",
                   }}
                 >
                   {link.label}
                 </Link>
               ))}
+
               <div
                 style={{
                   height: "1px",
