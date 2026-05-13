@@ -360,7 +360,8 @@ export default function HeroSection() {
                   >
                     ₺72,499
                   </div>
-                  <button
+                  <Link
+                    href="/flash-sale"
                     style={{
                       background: "transparent",
                       border: "1.5px solid var(--border-mid)",
@@ -371,12 +372,14 @@ export default function HeroSection() {
                       fontWeight: 600,
                       color: "var(--charcoal)",
                       cursor: "pointer",
+                      textDecoration: "none",
+                      display: "inline-block",
                       transition:
                         "border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out)",
                     }}
                   >
                     View Details
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -466,7 +469,8 @@ export default function HeroSection() {
             </div>
 
             {/* Store card */}
-            <div
+            <Link
+              href="/auth/apply-merchant"
               className="animate-float"
               style={{
                 position: "absolute",
@@ -480,6 +484,8 @@ export default function HeroSection() {
                 boxShadow: "var(--shadow-md)",
                 transform: "rotate(-2deg)",
                 animationDelay: "1.5s",
+                textDecoration: "none",
+                display: "block",
               }}
             >
               <div
@@ -529,7 +535,7 @@ export default function HeroSection() {
                 </div>
                 <ChevronRight size={14} color="var(--border-mid)" />
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       </div>
