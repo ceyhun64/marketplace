@@ -32,8 +32,11 @@ export function useMe() {
 export function useUpdateMe() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: { name?: string; email?: string; phone?: string }) =>
-      api.put("/api/auth/me", body),
+    mutationFn: (body: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+    }) => api.put("/api/auth/me", body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: meKeys.all });
     },

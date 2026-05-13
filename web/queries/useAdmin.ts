@@ -7,19 +7,38 @@ import type { MerchantProfile, Product, Order, User } from "@/types/entities";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface AdminOverviewStats {
+  totalGmv: number;
   totalMerchants: number;
   totalOrders: number;
-  totalRevenue: number;
-  totalProducts: number;
-  pendingApprovals: number;
-  activeShipments: number;
+  totalCustomers: number;
+  fulfillmentSuccessRate: number;
+  averageDeliveryHours: number;
+  pendingProductApprovals: number;
+  activeCourierCount: number;
+  todayOrderCount: number;
+  // Backward-compat aliases
+  totalRevenue?: number;
+  pendingApprovals?: number;
+  activeShipments?: number;
+  totalProducts?: number;
 }
 
 export interface AdminRevenueReport {
   period: string;
-  totalRevenue: number;
-  totalOrders: number;
-  byMerchant: {
+  rows: {
+    merchantId: string;
+    storeName: string;
+    revenue: number;
+    orderCount: number;
+  }[];
+  chartData: {
+    date: string;
+    revenue: number;
+    orderCount: number;
+    label: string;
+  }[];
+  // Backward-compat
+  byMerchant?: {
     merchantId: string;
     storeName: string;
     revenue: number;
@@ -32,7 +51,18 @@ export interface FulfillmentPerformance {
   successRate: number;
   failedCount: number;
   totalDelivered: number;
-  byCourier: {
+  totalShipments: number;
+  delayRate: number;
+  activeCourierCount: number;
+  pendingAssignCount: number;
+  courierPerformance: {
+    courierId: string;
+    courierName: string;
+    deliveredCount: number;
+    averageDeliveryHours: number;
+  }[];
+  // Backward-compat alias
+  byCourier?: {
     courierId: string;
     fullName: string;
     deliveries: number;
@@ -79,11 +109,22 @@ export function useAdminMerchants(filters?: {
       if (filters?.page) params.set("page", String(filters.page));
       if (filters?.limit) params.set("limit", String(filters.limit));
       if (filters?.search) params.set("search", filters.search);
+      // API isActive bekliyor (isSuspended'ın tersi)
       if (filters?.isSuspended !== undefined)
-        params.set("isSuspended", String(filters.isSuspended));
+        params.set("isActive", String(!filters.isSuspended));
       const { data } = await api.get<PaginatedResponse<MerchantProfile>>(
         `/api/admin/merchants?${params}`,
       );
+      // API { total, page, limit, items } döndürüyor → normalize
+      const raw = data as any;
+      if (raw.total !== undefined && raw.totalCount === undefined) {
+        return {
+          items: raw.items ?? [],
+          totalCount: raw.total,
+          page: raw.page ?? 1,
+          limit: raw.limit ?? 20,
+        } as PaginatedResponse<MerchantProfile>;
+      }
       return data;
     },
   });
@@ -154,6 +195,16 @@ export function useAdminOrders(filters?: {
       const { data } = await api.get<PaginatedResponse<Order>>(
         `/api/orders/admin/all?${params}`,
       );
+      // API { data: orders[], pagination: { page, limit, total, pages } } döndürüyor
+      const raw = data as any;
+      if (raw?.pagination !== undefined) {
+        return {
+          items: raw.data ?? [],
+          totalCount: raw.pagination?.total ?? 0,
+          page: raw.pagination?.page ?? 1,
+          limit: raw.pagination?.limit ?? 20,
+        } as PaginatedResponse<Order>;
+      }
       return data;
     },
   });
@@ -277,6 +328,16 @@ export function useAdminUsers(filters?: {
       const { data } = await api.get<PaginatedResponse<User>>(
         `/api/admin/users?${params}`,
       );
+      // API { total, page, limit, items } döndürüyor
+      const raw = data as any;
+      if (raw?.total !== undefined && raw?.totalCount === undefined) {
+        return {
+          items: raw.items ?? [],
+          totalCount: raw.total,
+          page: raw.page ?? 1,
+          limit: raw.limit ?? 20,
+        } as PaginatedResponse<User>;
+      }
       return data;
     },
   });

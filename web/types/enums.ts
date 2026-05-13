@@ -29,15 +29,15 @@ export type OrderStatus =
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   PENDING: "Beklemede",
-  PAYMENT_CONFIRMED: "Payment Confirmed",
-  LABEL_GENERATED: "Label Generated",
-  COURIER_ASSIGNED: "Courier Assigned",
-  PICKED_UP: "Picked Up by Courier",
-  IN_TRANSIT: "In Transit",
-  OUT_FOR_DELIVERY: "Out for Delivery",
-  DELIVERED: "Delivered",
-  FAILED: "Failed",
-  CANCELLED: "Cancel Edildi",
+  PAYMENT_CONFIRMED: "Ödeme Onaylandı",
+  LABEL_GENERATED: "Etiket Oluşturuldu",
+  COURIER_ASSIGNED: "Kurye Atandı",
+  PICKED_UP: "Kurye Teslim Aldı",
+  IN_TRANSIT: "Yolda",
+  OUT_FOR_DELIVERY: "Dağıtımda",
+  DELIVERED: "Teslim Edildi",
+  FAILED: "Başarısız",
+  CANCELLED: "İptal Edildi",
 };
 
 export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
@@ -77,13 +77,13 @@ export type ShipmentStatus =
 
 export const SHIPMENT_STATUS_LABELS: Record<ShipmentStatus, string> = {
   PENDING: "Beklemede",
-  LABEL_GENERATED: "Label Generated",
-  COURIER_ASSIGNED: "Courier Assigned",
-  PICKED_UP: "Picked Up by Courier",
-  IN_TRANSIT: "In Transit",
-  OUT_FOR_DELIVERY: "Out for Delivery",
-  DELIVERED: "Delivered",
-  FAILED: "Failed",
+  LABEL_GENERATED: "Etiket Oluşturuldu",
+  COURIER_ASSIGNED: "Kurye Atandı",
+  PICKED_UP: "Kurye Teslim Aldı",
+  IN_TRANSIT: "Yolda",
+  OUT_FOR_DELIVERY: "Dağıtımda",
+  DELIVERED: "Teslim Edildi",
+  FAILED: "Başarısız",
 };
 
 export const SHIPMENT_STATUS_COLORS: Record<ShipmentStatus, string> = {

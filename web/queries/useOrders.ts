@@ -106,7 +106,9 @@ export function useMerchantIncomingOrders(status?: OrderStatus) {
     queryKey: orderKeys.merchantIncoming(status),
     queryFn: async () => {
       const params = status ? `?status=${status}` : "";
-      const { data } = await api.get<Order[]>(`/api/merchants/orders${params}`);
+      const { data } = await api.get<Order[]>(
+        `/api/orders/merchant/incoming${params}`,
+      );
       return data;
     },
   });
@@ -115,8 +117,7 @@ export function useMerchantIncomingOrders(status?: OrderStatus) {
 export function usePackOrder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (orderId: string) =>
-      api.patch(`/api/merchants/orders/${orderId}/pack`),
+    mutationFn: (orderId: string) => api.patch(`/api/orders/${orderId}/pack`),
     onSuccess: (_, orderId) => {
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(orderId) });
       queryClient.invalidateQueries({ queryKey: orderKeys.merchantIncoming() });
@@ -143,6 +144,22 @@ export function useAdminOrders(filters?: {
       const { data } = await api.get<PaginatedOrders>(
         `/api/orders/admin/all?${params}`,
       );
+      // API returns { data: orders[], pagination: { page, limit, total, pages } }
+      // Normalize to PaginatedOrders: { items, totalCount, page, limit }
+      const raw = data as unknown as {
+        data?: Order[];
+        pagination?: { page: number; limit: number; total: number };
+        items?: Order[];
+        totalCount?: number;
+      };
+      if (raw.data !== undefined) {
+        return {
+          items: raw.data,
+          totalCount: raw.pagination?.total ?? 0,
+          page: raw.pagination?.page ?? 1,
+          limit: raw.pagination?.limit ?? 20,
+        } as PaginatedOrders;
+      }
       return data;
     },
   });

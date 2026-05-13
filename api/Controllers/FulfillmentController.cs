@@ -283,13 +283,36 @@ public class FulfillmentController(
             rate
         );
 
+        var now = DateTime.UtcNow;
+        var handlingHours = merchant.HandlingHours;
+
+        double avgSpeedKmH = rate == ShippingRate.Express ? 80.0 : 50.0;
+        double bufferMultiplier = rate == ShippingRate.Express ? 1.0 : 1.2;
+        double transitHoursDouble = (distanceKm / avgSpeedKmH) * bufferMultiplier;
+        int transitHoursInt = (int)Math.Ceiling(transitHoursDouble);
+
+        var pickupStart = now.AddHours(handlingHours);
+        var pickupEnd = pickupStart.AddHours(rate == ShippingRate.Express ? 2 : 4);
+        var deliveryStart = pickupStart.AddHours(transitHoursInt);
+        var deliveryEnd = pickupEnd.AddHours(transitHoursInt);
+
+        decimal shippingCost = rate == ShippingRate.Express ? 49.9m : 19.9m;
+
         return Ok(
-            new EtaResponseDto
+            new
             {
-                EstimatedHours = estimatedHours,
-                EstimatedDeliveryDate = DateTime.UtcNow.AddHours(estimatedHours),
-                DistanceKm = Math.Round(distanceKm, 2),
-                ShippingRate = shippingRate,
+                shippingRate = rate.ToString().ToUpper(),
+                estimatedPickupStart = pickupStart,
+                estimatedPickupEnd = pickupEnd,
+                estimatedDeliveryStart = deliveryStart,
+                estimatedDeliveryEnd = deliveryEnd,
+                distanceKm = Math.Round(distanceKm, 2),
+                transitHours = transitHoursInt,
+                handlingHours,
+                shippingCost,
+                // Backward compat alanları
+                estimatedHours = estimatedHours,
+                estimatedDeliveryDate = now.AddHours(estimatedHours),
             }
         );
     }

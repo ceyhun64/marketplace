@@ -60,8 +60,8 @@ export function useEta(params: Partial<EtaRequest>) {
       const searchParams = new URLSearchParams({
         merchantId: params.merchantId!,
         shippingRate: params.shippingRate!,
-        destinationLat: String(params.destinationLat),
-        destinationLng: String(params.destinationLng),
+        destLat: String(params.destinationLat),
+        destLng: String(params.destinationLng),
       });
       const { data } = await api.get<EtaResponse>(
         `/api/fulfillment/calculate-eta?${searchParams}`,

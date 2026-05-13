@@ -53,6 +53,15 @@ export interface EtaResult {
   distanceKm: number;
   handlingHours: number;
   transitHours: number;
+  // Yeni alanlar (calculate-eta genişletilmiş response)
+  shippingRate?: string;
+  estimatedPickupStart?: string;
+  estimatedPickupEnd?: string;
+  estimatedDeliveryStart?: string;
+  estimatedDeliveryEnd?: string;
+  shippingCost?: number;
+  estimatedHours?: number;
+  estimatedDeliveryDate?: string;
 }
 
 // ── Queries ────────────────────────────────────────────────────────────────

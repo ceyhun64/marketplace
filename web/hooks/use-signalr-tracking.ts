@@ -10,11 +10,15 @@ import type { ShipmentStatus } from "@/types/enums";
 
 export interface TrackingUpdate {
   shipmentId: string;
-  trackingNumber: string;
+  trackingNumber?: string;
   status: ShipmentStatus;
   note?: string;
   location?: string;
   updatedAt: string;
+  // API şu alanları da gönderebilir:
+  previousStatus?: ShipmentStatus;
+  newStatus?: ShipmentStatus;
+  timestamp?: string;
 }
 
 export type ConnectionStatus =
@@ -65,9 +69,27 @@ export function useSignalRTracking({
 
     // ── Event Handlers ─────────────────────────────────────────────────────
 
-    connection.on("ShipmentStatusUpdated", (update: TrackingUpdate) => {
+    connection.on("ShipmentStatusUpdated", (raw: Record<string, unknown>) => {
+      const shipmentId = String(raw.shipmentId ?? "");
       // Sadece dinlediğimiz shipment'ları işle
-      if (!shipmentIds.includes(update.shipmentId)) return;
+      if (!shipmentIds.includes(shipmentId)) return;
+
+      // API { shipmentId, previousStatus, newStatus, note, timestamp } gönderiyor
+      // TrackingUpdate shape'e normalize et
+      const update: TrackingUpdate = {
+        shipmentId,
+        trackingNumber: raw.trackingNumber as string | undefined,
+        status: (raw.newStatus ?? raw.status) as ShipmentStatus,
+        note: raw.note as string | undefined,
+        location: raw.location as string | undefined,
+        updatedAt: (raw.timestamp ??
+          raw.updatedAt ??
+          new Date().toISOString()) as string,
+        previousStatus: raw.previousStatus as ShipmentStatus | undefined,
+        newStatus: raw.newStatus as ShipmentStatus | undefined,
+        timestamp: raw.timestamp as string | undefined,
+      };
+
       setLastUpdate(update);
       onUpdate?.(update);
     });

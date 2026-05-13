@@ -39,16 +39,22 @@ public class MerchantsController : ControllerBase
             new
             {
                 merchant.Id,
+                merchant.UserId,
                 merchant.StoreName,
                 merchant.Slug,
                 merchant.LogoUrl,
                 merchant.BannerUrl,
+                merchant.Description,
                 merchant.CustomDomain,
+                DomainVerified = merchant.DomainVerified,
                 merchant.Latitude,
                 merchant.Longitude,
                 merchant.HandlingHours,
                 merchant.IsActive,
+                IsSuspended = !merchant.IsActive,
                 merchant.CreatedAt,
+                SubscriptionPlan = merchant.Subscription?.Plan.ToString() ?? "BASIC",
+                SubscriptionId = merchant.Subscription?.Id,
                 User = new { merchant.User.Email },
                 Subscription = merchant.Subscription == null
                     ? null
@@ -65,8 +71,8 @@ public class MerchantsController : ControllerBase
     [HttpPut("profile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
     {
-        var merchant = await _db.MerchantProfiles
-            .Include(m => m.Subscription)
+        var merchant = await _db
+            .MerchantProfiles.Include(m => m.Subscription)
             .FirstOrDefaultAsync(m => m.UserId == _currentUser.UserId);
 
         if (merchant == null)
@@ -75,39 +81,51 @@ public class MerchantsController : ControllerBase
         // Logo / banner yükleme için Pro veya Enterprise plan gereklidir
         if ((dto.LogoUrl != null || dto.BannerUrl != null))
         {
-            var hasPro = merchant.Subscription != null
+            var hasPro =
+                merchant.Subscription != null
                 && merchant.Subscription.IsActive
                 && merchant.Subscription.ExpiresAt > DateTime.UtcNow
                 && merchant.Subscription.Plan != PlanType.Basic;
 
             if (!hasPro)
-                return BadRequest(new
-                {
-                    message = "Logo ve banner yüklemek için Pro veya Enterprise plan gereklidir.",
-                    requiredPlan = "Pro"
-                });
+                return BadRequest(
+                    new
+                    {
+                        message = "Logo ve banner yüklemek için Pro veya Enterprise plan gereklidir.",
+                        requiredPlan = "Pro",
+                    }
+                );
         }
 
-        if (dto.StoreName != null) merchant.StoreName = dto.StoreName;
-        if (dto.Description != null) merchant.Description = dto.Description;
-        if (dto.Latitude.HasValue) merchant.Latitude = dto.Latitude.Value;
-        if (dto.Longitude.HasValue) merchant.Longitude = dto.Longitude.Value;
-        if (dto.HandlingHours.HasValue) merchant.HandlingHours = dto.HandlingHours.Value;
-        if (dto.LogoUrl != null) merchant.LogoUrl = dto.LogoUrl;
-        if (dto.BannerUrl != null) merchant.BannerUrl = dto.BannerUrl;
+        if (dto.StoreName != null)
+            merchant.StoreName = dto.StoreName;
+        if (dto.Description != null)
+            merchant.Description = dto.Description;
+        if (dto.Latitude.HasValue)
+            merchant.Latitude = dto.Latitude.Value;
+        if (dto.Longitude.HasValue)
+            merchant.Longitude = dto.Longitude.Value;
+        if (dto.HandlingHours.HasValue)
+            merchant.HandlingHours = dto.HandlingHours.Value;
+        if (dto.LogoUrl != null)
+            merchant.LogoUrl = dto.LogoUrl;
+        if (dto.BannerUrl != null)
+            merchant.BannerUrl = dto.BannerUrl;
         merchant.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
-        return Ok(new
-        {
-            merchant.Id,
-            merchant.StoreName,
-            merchant.Description,
-            merchant.LogoUrl,
-            merchant.BannerUrl,
-            merchant.HandlingHours,
-            message = "Profil güncellendi."
-        });
+        return Ok(
+            new
+            {
+                merchant.Id,
+                merchant.StoreName,
+                merchant.Description,
+                merchant.LogoUrl,
+                merchant.BannerUrl,
+                merchant.HandlingHours,
+                message = "Profil güncellendi.",
+            }
+        );
     }
 
     // ── CATALOGUE (Products) ──────────────────────────────────────────────────
@@ -125,8 +143,7 @@ public class MerchantsController : ControllerBase
             return NotFound(new { message = "Merchant profili bulunamadı." });
 
         // Base query (all products, no publish filters) for aggregate stats
-        var allProductsQuery = _db.Products
-            .Where(p => p.MerchantId == merchant.Id && !p.IsDeleted);
+        var allProductsQuery = _db.Products.Where(p => p.MerchantId == merchant.Id && !p.IsDeleted);
 
         var statsOnMarket = await allProductsQuery.CountAsync(p => p.PublishToMarket);
         var statsOnStore = await allProductsQuery.CountAsync(p => p.PublishToStore);
@@ -190,8 +207,8 @@ public class MerchantsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var merchant = await _db.MerchantProfiles
-            .Include(m => m.Subscription)
+        var merchant = await _db
+            .MerchantProfiles.Include(m => m.Subscription)
             .FirstOrDefaultAsync(m => m.UserId == _currentUser.UserId);
 
         if (merchant == null)
@@ -204,7 +221,8 @@ public class MerchantsController : ControllerBase
         // ── Abonelik planına göre ürün limiti kontrolü ────────────────────────
         var subscription = merchant.Subscription;
         var plan = subscription?.Plan ?? PlanType.Basic;
-        var isActiveSub = subscription != null
+        var isActiveSub =
+            subscription != null
             && subscription.IsActive
             && subscription.ExpiresAt > DateTime.UtcNow;
 
@@ -213,22 +231,25 @@ public class MerchantsController : ControllerBase
             PlanType.Basic => 50,
             PlanType.Pro => 500,
             PlanType.Enterprise => null, // Sınırsız
-            _ => 50
+            _ => 50,
         };
 
         if (productLimit.HasValue)
         {
             var currentProductCount = await _db.Products.CountAsync(p =>
-                p.MerchantId == merchant.Id && !p.IsDeleted);
+                p.MerchantId == merchant.Id && !p.IsDeleted
+            );
 
             if (currentProductCount >= productLimit.Value)
-                return BadRequest(new
-                {
-                    message = $"Mevcut planınızda ({plan}) en fazla {productLimit} ürün ekleyebilirsiniz. Daha fazlası için planınızı yükseltin.",
-                    currentCount = currentProductCount,
-                    limit = productLimit.Value,
-                    requiredPlan = plan == PlanType.Basic ? "Pro" : "Enterprise"
-                });
+                return BadRequest(
+                    new
+                    {
+                        message = $"Mevcut planınızda ({plan}) en fazla {productLimit} ürün ekleyebilirsiniz. Daha fazlası için planınızı yükseltin.",
+                        currentCount = currentProductCount,
+                        limit = productLimit.Value,
+                        requiredPlan = plan == PlanType.Basic ? "Pro" : "Enterprise",
+                    }
+                );
         }
 
         // ── Marketplace yayını için Pro gerekiyor ─────────────────────────────
@@ -237,11 +258,13 @@ public class MerchantsController : ControllerBase
             var hasProOrAbove = isActiveSub && plan != PlanType.Basic;
 
             if (!hasProOrAbove)
-                return BadRequest(new
-                {
-                    message = "Marketplace'e yayınlamak için Pro veya Enterprise plan gereklidir.",
-                    requiredPlan = "Pro"
-                });
+                return BadRequest(
+                    new
+                    {
+                        message = "Marketplace'e yayınlamak için Pro veya Enterprise plan gereklidir.",
+                        requiredPlan = "Pro",
+                    }
+                );
         }
 
         var product = new Product
@@ -315,8 +338,8 @@ public class MerchantsController : ControllerBase
     [HttpPatch("catalogue/{id:guid}/publish")]
     public async Task<IActionResult> TogglePublish(Guid id, [FromBody] PublishToggleDto dto)
     {
-        var merchant = await _db.MerchantProfiles
-            .Include(m => m.Subscription)
+        var merchant = await _db
+            .MerchantProfiles.Include(m => m.Subscription)
             .FirstOrDefaultAsync(m => m.UserId == _currentUser.UserId);
 
         if (merchant == null)
@@ -332,18 +355,21 @@ public class MerchantsController : ControllerBase
         // Marketplace toggle için abonelik kontrolü (Basic plan yayınlayamaz)
         if (dto.PublishToMarket == true && !product.PublishToMarket)
         {
-            var hasPro = merchant.Subscription != null
+            var hasPro =
+                merchant.Subscription != null
                 && merchant.Subscription.IsActive
                 && merchant.Subscription.ExpiresAt > DateTime.UtcNow
                 && merchant.Subscription.Plan != PlanType.Basic;
 
             if (!hasPro)
-                return BadRequest(new
-                {
-                    message = "Marketplace'e yayınlamak için Pro veya Enterprise plan gereklidir.",
-                    requiredPlan = "Pro",
-                    currentPlan = merchant.Subscription?.Plan.ToString() ?? "Basic"
-                });
+                return BadRequest(
+                    new
+                    {
+                        message = "Marketplace'e yayınlamak için Pro veya Enterprise plan gereklidir.",
+                        requiredPlan = "Pro",
+                        currentPlan = merchant.Subscription?.Plan.ToString() ?? "Basic",
+                    }
+                );
         }
 
         if (dto.PublishToMarket.HasValue)
@@ -353,13 +379,15 @@ public class MerchantsController : ControllerBase
         product.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
-        return Ok(new
-        {
-            product.Id,
-            product.PublishToMarket,
-            product.PublishToStore,
-            message = "Yayın durumu güncellendi."
-        });
+        return Ok(
+            new
+            {
+                product.Id,
+                product.PublishToMarket,
+                product.PublishToStore,
+                message = "Yayın durumu güncellendi.",
+            }
+        );
     }
 
     [HttpDelete("catalogue/{id:guid}")]
@@ -555,8 +583,8 @@ public class MerchantsController : ControllerBase
         if (merchant == null)
             return NotFound();
 
-        var query = _db.Invoices
-            .Include(i => i.Order)
+        var query = _db
+            .Invoices.Include(i => i.Order)
             .Where(i => i.MerchantId == merchant.Id)
             .AsQueryable();
 
@@ -568,7 +596,7 @@ public class MerchantsController : ControllerBase
                 "week" => DateTime.UtcNow.AddDays(-7),
                 "month" => DateTime.UtcNow.AddDays(-30),
                 "year" => DateTime.UtcNow.AddDays(-365),
-                _ => DateTime.MinValue
+                _ => DateTime.MinValue,
             };
             if (since != DateTime.MinValue)
                 query = query.Where(i => i.IssuedAt >= since);
@@ -602,14 +630,16 @@ public class MerchantsController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(new
-        {
-            total,
-            totalRevenue,
-            page,
-            limit,
-            invoices
-        });
+        return Ok(
+            new
+            {
+                total,
+                totalRevenue,
+                page,
+                limit,
+                invoices,
+            }
+        );
     }
 
     // ── GET /merchants/invoices/{id}/download — Merchant: fatura PDF indir ───
@@ -620,8 +650,9 @@ public class MerchantsController : ControllerBase
         if (merchant == null)
             return NotFound();
 
-        var invoice = await _db.Invoices
-            .FirstOrDefaultAsync(i => i.Id == id && i.MerchantId == merchant.Id);
+        var invoice = await _db.Invoices.FirstOrDefaultAsync(i =>
+            i.Id == id && i.MerchantId == merchant.Id
+        );
 
         if (invoice == null)
             return NotFound(new { message = "Fatura bulunamadı." });
@@ -630,12 +661,14 @@ public class MerchantsController : ControllerBase
             return NotFound(new { message = "Fatura PDF'i henüz oluşturulmadı." });
 
         // Cloudinary URL'i döndür (frontend redirect ile indirir)
-        return Ok(new
-        {
-            invoiceNumber = invoice.InvoiceNumber,
-            pdfUrl = invoice.PdfUrl,
-            issuedAt = invoice.IssuedAt
-        });
+        return Ok(
+            new
+            {
+                invoiceNumber = invoice.InvoiceNumber,
+                pdfUrl = invoice.PdfUrl,
+                issuedAt = invoice.IssuedAt,
+            }
+        );
     }
 
     private async Task<MerchantProfile?> GetCurrentMerchantAsync() =>

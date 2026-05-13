@@ -73,7 +73,26 @@ export const useAuth = create<AuthState>()(
           if (!role) throw new Error("Token'da rol bulunamadı");
 
           const meRes = await api.get("/api/auth/me");
-          set({ user: meRes.data, isLoading: false });
+          // API UserInfoResponse: { id, email, firstName, lastName, phone, role, isVerified, merchantId }
+          // AuthUser: { id, email, name, role, merchantId }
+          const u = meRes.data as {
+            id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            role: string;
+            merchantId?: string;
+          };
+          set({
+            user: {
+              id: u.id,
+              email: u.email,
+              name: `${u.firstName} ${u.lastName}`.trim(),
+              role: u.role as AuthUser["role"],
+              merchantId: u.merchantId,
+            },
+            isLoading: false,
+          });
 
           // ✅ Giriş başarılı → guest favori listesini sunucuya aktar
           // Hata olsa bile sessizce geç (arka planda çalışır)

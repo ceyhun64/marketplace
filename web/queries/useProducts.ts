@@ -90,7 +90,19 @@ export function useProducts(filters: ProductFilters = {}) {
       const { data } = await api.get<ProductsResponse>(
         `/api/products?${params}`,
       );
-      return data;
+      // Backend { total, items, page, limit } → normalize to ProductsResponse shape
+      const raw = data as unknown as Record<string, unknown>;
+      const totalCount =
+        (raw.totalCount as number) ?? (raw.total as number) ?? 0;
+      const limit = (raw.limit as number) ?? filters.limit ?? 20;
+      return {
+        ...raw,
+        items: (raw.items as Product[]) ?? [],
+        totalCount,
+        page: (raw.page as number) ?? filters.page ?? 1,
+        limit,
+        totalPages: Math.ceil(totalCount / limit),
+      } as ProductsResponse;
     },
     staleTime: 1000 * 60,
   });
@@ -132,7 +144,18 @@ export function useSearchProducts(q: string, filters?: ProductFilters) {
       const { data } = await api.get<ProductsResponse>(
         `/api/products/search?${params}`,
       );
-      return data;
+      const raw = data as unknown as Record<string, unknown>;
+      const totalCount =
+        (raw.totalCount as number) ?? (raw.total as number) ?? 0;
+      const limit = (raw.limit as number) ?? 20;
+      return {
+        ...raw,
+        items: (raw.items as Product[]) ?? [],
+        totalCount,
+        page: (raw.page as number) ?? 1,
+        limit,
+        totalPages: Math.ceil(totalCount / limit),
+      } as ProductsResponse;
     },
     enabled: q.trim().length > 1,
     staleTime: 1000 * 30,
@@ -186,11 +209,18 @@ export function useMerchantProducts(filters?: ProductFilters) {
       const { data } = await api.get<ProductsResponse>(
         `/api/merchants/catalogue?${params}`,
       );
-      // Backend returns { total, items } — normalize to { totalCount, items }
+      // Backend { total, totalCount, page, limit, items, stats } döndürüyor
+      const raw = data as any;
+      const totalCount = raw.totalCount ?? raw.total ?? 0;
+      const limit = raw.limit ?? filters?.limit ?? 20;
       return {
-        ...data,
-        totalCount: (data as any).totalCount ?? (data as any).total ?? 0,
-        items: (data as any).items ?? [],
+        ...raw,
+        items: raw.items ?? [],
+        totalCount,
+        page: raw.page ?? filters?.page ?? 1,
+        limit,
+        totalPages: Math.ceil(totalCount / limit),
+        stats: raw.stats,
       } as ProductsResponse;
     },
   });

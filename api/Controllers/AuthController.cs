@@ -122,12 +122,20 @@ public class AuthController : ControllerBase
 
         // Merchant başvurusu henüz onaylanmamışsa girişe izin verme
         if (user.AccountStatus == AccountStatus.PendingApproval)
-            return Unauthorized(new MessageResponse(
-                "Hesabınız henüz onaylanmadı. Lütfen yönetici onayını bekleyin.", false));
+            return Unauthorized(
+                new MessageResponse(
+                    "Hesabınız henüz onaylanmadı. Lütfen yönetici onayını bekleyin.",
+                    false
+                )
+            );
 
         if (user.AccountStatus == AccountStatus.Rejected)
-            return Unauthorized(new MessageResponse(
-                $"Başvurunuz reddedildi. Detay: {user.RejectionReason ?? "Belirtilmedi"}", false));
+            return Unauthorized(
+                new MessageResponse(
+                    $"Başvurunuz reddedildi. Detay: {user.RejectionReason ?? "Belirtilmedi"}",
+                    false
+                )
+            );
 
         if (user.AccountStatus == AccountStatus.Suspended)
             return Unauthorized(new MessageResponse("Hesabınız askıya alınmıştır.", false));
@@ -157,12 +165,17 @@ public class AuthController : ControllerBase
         if (user is null)
             return Unauthorized(new MessageResponse("Geçersiz veya süresi dolmuş token.", false));
 
-        var accessToken = _tokenService.GenerateAccessToken(user);
-        var expiresAt = DateTime.UtcNow.AddMinutes(
-            int.TryParse(_config["JWT_EXPIRES_MINUTES"], out var m) ? m : 15
-        );
+        var (accessToken, newRefreshToken, expiresAt) = await IssueTokens(user);
 
-        return Ok(new RefreshTokenResponse(accessToken, expiresAt));
+        // Frontend { accessToken, refreshToken } bekliyor — her ikisini dön
+        return Ok(
+            new
+            {
+                accessToken,
+                refreshToken = newRefreshToken,
+                expiresAt,
+            }
+        );
     }
 
     // ── POST /api/auth/logout ─────────────────────────────────────────────────
@@ -197,6 +210,31 @@ public class AuthController : ControllerBase
         if (user is null)
             return NotFound();
 
+        return Ok(MapUserInfo(user));
+    }
+
+    // ── PUT /api/auth/me — Profil güncelleme ─────────────────────────────────
+    /// <summary>Kullanıcı kendi adını ve telefonunu güncelleyebilir.</summary>
+    [HttpPut("me")]
+    [Authorize]
+    public async Task<IActionResult> UpdateMe([FromBody] UpdateMeRequest req)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u =>
+            u.Id == _currentUser.UserId && !u.IsDeleted
+        );
+
+        if (user is null)
+            return NotFound();
+
+        if (!string.IsNullOrWhiteSpace(req.FirstName))
+            user.FirstName = req.FirstName.Trim();
+        if (!string.IsNullOrWhiteSpace(req.LastName))
+            user.LastName = req.LastName.Trim();
+        if (req.Phone is not null)
+            user.Phone = req.Phone.Trim();
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
         return Ok(MapUserInfo(user));
     }
 
@@ -335,34 +373,38 @@ public class AuthController : ControllerBase
 
         var user = new User
         {
-            Email       = req.Email.ToLower().Trim(),
-            FirstName   = req.FirstName.Trim(),
-            LastName    = req.LastName.Trim(),
-            Phone       = req.Phone?.Trim(),
+            Email = req.Email.ToLower().Trim(),
+            FirstName = req.FirstName.Trim(),
+            LastName = req.LastName.Trim(),
+            Phone = req.Phone?.Trim(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
-            Role          = UserRole.Merchant,
-            AccountStatus = AccountStatus.PendingApproval,   // ← onay bekliyor
-            IsVerified    = false,
+            Role = UserRole.Merchant,
+            AccountStatus = AccountStatus.PendingApproval, // ← onay bekliyor
+            IsVerified = false,
             VerificationToken = Guid.NewGuid().ToString("N"),
         };
 
         var merchant = new MerchantProfile
         {
-            UserId       = user.Id,
-            StoreName    = req.StoreName.Trim(),
-            Slug         = req.Slug.ToLower().Trim(),
-            Description  = req.Description?.Trim(),
-            Latitude     = req.Latitude,
-            Longitude    = req.Longitude,
+            UserId = user.Id,
+            StoreName = req.StoreName.Trim(),
+            Slug = req.Slug.ToLower().Trim(),
+            Description = req.Description?.Trim(),
+            Latitude = req.Latitude,
+            Longitude = req.Longitude,
             HandlingHours = req.HandlingHours,
-            IsActive     = false,   // admin onaylayana kadar pasif
+            IsActive = false, // admin onaylayana kadar pasif
         };
 
         _db.Users.Add(user);
         _db.MerchantProfiles.Add(merchant);
         await _db.SaveChangesAsync();
 
-        _logger.LogInformation("Yeni merchant başvurusu: {Email} / Mağaza: {Store}", user.Email, merchant.StoreName);
+        _logger.LogInformation(
+            "Yeni merchant başvurusu: {Email} / Mağaza: {Store}",
+            user.Email,
+            merchant.StoreName
+        );
 
         // Admin'e bildirim e-postası (arka planda)
         var adminEmail = _config["ADMIN_EMAIL"];
@@ -395,9 +437,12 @@ public class AuthController : ControllerBase
             });
         }
 
-        return StatusCode(201, new MessageResponse(
-            "Başvurunuz alındı. Yönetici onayından sonra hesabınız aktifleştirilecektir."
-        ));
+        return StatusCode(
+            201,
+            new MessageResponse(
+                "Başvurunuz alındı. Yönetici onayından sonra hesabınız aktifleştirilecektir."
+            )
+        );
     }
 
     // ── POST /api/auth/verify-email ───────────────────────────────────────────
