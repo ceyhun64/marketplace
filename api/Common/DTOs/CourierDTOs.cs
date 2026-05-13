@@ -4,14 +4,22 @@ public class CourierDto
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
-    // Frontend expects "name" (not "fullName")
-    public string Name { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
+    // Alias for frontend compatibility
+    public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
-    // Frontend expects "phone" (not "phoneNumber")
     public string? Phone { get; set; }
+    // Alias for frontend compatibility
     public string? PhoneNumber { get; set; }
+    public string? VehicleType { get; set; }
+    public string? VehiclePlate { get; set; }
     public bool IsActive { get; set; }
+    // Web interface uses "isAvailable"
+    public bool IsAvailable { get; set; }
+    // Web interface uses currentLatitude / currentLongitude
+    public double? CurrentLatitude { get; set; }
+    public double? CurrentLongitude { get; set; }
+    // Legacy aliases
     public double? CurrentLat { get; set; }
     public double? CurrentLng { get; set; }
     public int ActiveShipmentCount { get; set; }

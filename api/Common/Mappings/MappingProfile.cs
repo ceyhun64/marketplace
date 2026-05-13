@@ -52,16 +52,26 @@ public class MappingProfile : Profile
                     )
             )
             .ForMember(
-                d => d.History,
+                d => d.Events,
                 o => o.MapFrom(s => s.StatusHistory.OrderByDescending(h => h.ChangedAt))
-            );
+            )
+            .ForMember(d => d.UpdatedAt, o => o.MapFrom(s => s.UpdatedAt));
 
         CreateMap<ShipmentStatusHistory, ShipmentStatusHistoryDto>()
             .ForMember(d => d.Status, o => o.MapFrom(s => ToUpperSnakeCase(s.Status.ToString())))
+            .ForMember(d => d.CreatedAt, o => o.MapFrom(s => s.ChangedAt))
             .ForMember(d => d.ChangedAt, o => o.MapFrom(s => s.ChangedAt));
 
         CreateMap<Courier, CourierDto>()
-            .ForMember(d => d.Email, o => o.MapFrom(s => s.User != null ? s.User.Email : null));
+            .ForMember(d => d.Email, o => o.MapFrom(s => s.User != null ? s.User.Email : null))
+            .ForMember(d => d.FullName, o => o.MapFrom(s => s.User != null ? $"{s.User.FirstName} {s.User.LastName}".Trim() : string.Empty))
+            .ForMember(d => d.Name, o => o.MapFrom(s => s.User != null ? $"{s.User.FirstName} {s.User.LastName}".Trim() : string.Empty))
+            .ForMember(d => d.Phone, o => o.MapFrom(s => s.User != null ? s.User.Phone : null))
+            .ForMember(d => d.PhoneNumber, o => o.MapFrom(s => s.User != null ? s.User.Phone : null))
+            .ForMember(d => d.VehiclePlate, o => o.MapFrom(s => s.PlateNumber))
+            .ForMember(d => d.CurrentLat, o => o.MapFrom(s => s.CurrentLatitude))
+            .ForMember(d => d.CurrentLng, o => o.MapFrom(s => s.CurrentLongitude))
+            .ForMember(d => d.CreatedAt, o => o.MapFrom(s => s.User != null ? s.User.CreatedAt : s.CreatedAt));
 
         CreateMap<Subscription, SubscriptionDto>();
 

@@ -166,8 +166,10 @@ export function usePlugins() {
   return useQuery({
     queryKey: pluginKeys.list(),
     queryFn: async () => {
-      const { data } = await api.get<Plugin[]>("/api/plugins");
-      return data;
+      const { data } = await api.get<any>("/api/plugins");
+      // API returns GetPluginsResult { Items, Total, Page, TotalPages }
+      const raw = data?.items ?? data?.Items ?? data;
+      return (Array.isArray(raw) ? raw : []) as Plugin[];
     },
     staleTime: STALE_TIME.LONG,
   });

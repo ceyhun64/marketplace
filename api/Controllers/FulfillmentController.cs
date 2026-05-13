@@ -366,20 +366,33 @@ public class FulfillmentController(
                 s.Courier != null
                     ? $"{s.Courier.User?.FirstName} {s.Courier.User?.LastName}".Trim()
                     : null,
+            CourierPhone = s.Courier?.User?.Phone,
+            CourierVehicle = s.Courier?.VehicleType,
             Status = s.Status.ToString(),
             TrackingNumber = s.TrackingNumber,
             EstimatedDelivery = s.EstimatedDelivery,
+            // Delivery window derived from EstimatedDelivery
+            EstimatedPickupStart = s.EstimatedDelivery.AddDays(-1).AddHours(-2),
+            EstimatedPickupEnd = s.EstimatedDelivery.AddDays(-1),
+            EstimatedDeliveryStart = s.EstimatedDelivery.AddHours(-4),
+            EstimatedDeliveryEnd = s.EstimatedDelivery,
+            ActualDeliveredAt = s.Status == api.Domain.Enums.ShipmentStatus.Delivered ? s.UpdatedAt : null,
             LabelUrl = s.LabelUrl,
             ShippingRate = s.Order != null ? s.Order.ShippingRate.ToString() : string.Empty,
-            History = s
+            Events = s
                 .StatusHistory.OrderByDescending(h => h.ChangedAt)
                 .Select(h => new ShipmentStatusHistoryDto
                 {
+                    Id = h.Id,
+                    ShipmentId = h.ShipmentId,
                     Status = h.Status.ToString(),
                     Note = h.Note,
+                    Location = h.Location,
+                    CreatedAt = h.ChangedAt,
                     ChangedAt = h.ChangedAt,
                 })
                 .ToList(),
             CreatedAt = s.CreatedAt,
+            UpdatedAt = s.UpdatedAt,
         };
 }

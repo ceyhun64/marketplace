@@ -194,17 +194,22 @@ public class OrdersController(
                 TrackingNumber = shipment.TrackingNumber,
                 ShipmentStatus = shipment.Status.ToString(),
                 EstimatedDelivery = shipment.EstimatedDelivery,
+                LabelUrl = shipment.LabelUrl,
                 CourierName =
                     shipment.Courier?.User != null
                         ? $"{shipment.Courier.User.FirstName} {shipment.Courier.User.LastName}".Trim()
                         : null,
                 CourierPhone = shipment.Courier?.User?.Phone,
-                StatusHistory = shipment
+                History = shipment
                     .StatusHistory.OrderByDescending(h => h.ChangedAt)
                     .Select(h => new ShipmentStatusHistoryDto
                     {
+                        Id = h.Id,
+                        ShipmentId = h.ShipmentId,
                         Status = h.Status.ToString(),
                         Note = h.Note,
+                        Location = h.Location,
+                        CreatedAt = h.ChangedAt,
                         ChangedAt = h.ChangedAt,
                     })
                     .ToList(),
@@ -401,6 +406,7 @@ public class OrdersController(
             CustomerName = order.Customer != null
                 ? $"{order.Customer.FirstName} {order.Customer.LastName}".Trim()
                 : order.RecipientName,
+            MerchantId = order.Items.FirstOrDefault()?.MerchantId,
             MerchantStoreName = order.Items.FirstOrDefault()?.Product?.Merchant?.StoreName ?? string.Empty,
             Source = order.Source.ToString(),
             Status = order.Status.ToString(),

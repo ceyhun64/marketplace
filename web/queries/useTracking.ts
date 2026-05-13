@@ -29,9 +29,14 @@ export interface Shipment {
 }
 
 export interface ShipmentStatusHistory {
+  id?: string;
+  shipmentId?: string;
   status: string;
   note?: string;
-  timestamp: string;
+  location?: string;
+  createdAt: string;
+  /** @deprecated use createdAt */
+  timestamp?: string;
 }
 
 export interface TrackingDetail {

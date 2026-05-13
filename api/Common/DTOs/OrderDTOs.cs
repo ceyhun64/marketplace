@@ -5,6 +5,7 @@ public class OrderDto
     public Guid Id { get; set; }
     public Guid CustomerId { get; set; }
     public string CustomerName { get; set; } = string.Empty;
+    public Guid? MerchantId { get; set; }
     public string MerchantStoreName { get; set; } = string.Empty;
     public string Source { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
@@ -109,8 +110,9 @@ public class OrderTrackingDto
     public string? TrackingNumber { get; set; }
     public string? ShipmentStatus { get; set; }
     public DateTime? EstimatedDelivery { get; set; }
-    public string? LabelUrl { get; set; } // ✅ eklendi
+    public string? LabelUrl { get; set; }
     public string? CourierName { get; set; }
     public string? CourierPhone { get; set; }
-    public List<ShipmentStatusHistoryDto> StatusHistory { get; set; } = new(); // ✅ güncellendi
+    // "history" matches web TrackingDetail.history
+    public List<ShipmentStatusHistoryDto> History { get; set; } = new();
 }

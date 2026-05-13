@@ -47,8 +47,13 @@ export function useMyOrders(status?: OrderStatus) {
     queryKey: orderKeys.myOrders(status),
     queryFn: async () => {
       const params = status ? `?status=${status}` : "";
-      const { data } = await api.get<Order[]>(`/api/orders${params}`);
-      return data;
+      const { data } = await api.get<any>(`/api/orders${params}`);
+      // API returns { data: orders[], pagination: { page, limit, total, pages } }
+      const raw = data ?? {};
+      const items: Order[] = Array.isArray(raw)
+        ? raw
+        : (raw.data ?? raw.items ?? raw.orders ?? []);
+      return items;
     },
   });
 }
@@ -68,8 +73,30 @@ export function useOrderTracking(id: string) {
   return useQuery({
     queryKey: orderKeys.tracking(id),
     queryFn: async () => {
-      const { data } = await api.get<Shipment>(`/api/orders/${id}/tracking`);
-      return data;
+      const { data } = await api.get(`/api/orders/${id}/tracking`);
+      // API returns OrderTrackingDto — normalize to match OrderTrackingPage field access
+      const raw = data ?? {};
+      return {
+        orderId: raw.orderId as string,
+        orderStatus: raw.orderStatus as string,
+        trackingNumber: raw.trackingNumber as string | undefined,
+        // Page uses "status" — API returns "shipmentStatus"
+        status: (raw.shipmentStatus ?? raw.status) as string | undefined,
+        estimatedDelivery: raw.estimatedDelivery as string | undefined,
+        estimatedDeliveryEnd: raw.estimatedDelivery as string | undefined,
+        labelUrl: raw.labelUrl as string | undefined,
+        courierName: raw.courierName as string | undefined,
+        courierPhone: raw.courierPhone as string | undefined,
+        // Page uses "events" — API returns "history"
+        events: (raw.history ?? raw.events ?? []) as Array<{
+          id?: string;
+          status: string;
+          note?: string;
+          location?: string;
+          createdAt: string;
+        }>,
+        actualDeliveredAt: raw.actualDeliveredAt as string | undefined,
+      };
     },
     enabled: !!id,
     // SignalR yokken polling fallback — 30 saniye
@@ -106,10 +133,15 @@ export function useMerchantIncomingOrders(status?: OrderStatus) {
     queryKey: orderKeys.merchantIncoming(status),
     queryFn: async () => {
       const params = status ? `?status=${status}` : "";
-      const { data } = await api.get<Order[]>(
+      const { data } = await api.get<any>(
         `/api/orders/merchant/incoming${params}`,
       );
-      return data;
+      // API returns { data: orders[], pagination: { page, limit, total, pages } }
+      const raw = data ?? {};
+      const items: Order[] = Array.isArray(raw)
+        ? raw
+        : (raw.data ?? raw.items ?? raw.orders ?? []);
+      return items;
     },
   });
 }

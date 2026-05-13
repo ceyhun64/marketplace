@@ -68,3 +68,9 @@ public sealed record UserInfoResponse(
 public sealed record RefreshTokenResponse(string AccessToken, DateTime ExpiresAt);
 
 public sealed record MessageResponse(string Message, bool Success = true);
+
+public sealed record UpdateMeRequest(
+    string? FirstName,
+    string? LastName,
+    string? Phone
+);

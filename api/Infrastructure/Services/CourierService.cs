@@ -30,7 +30,12 @@ public class CourierService : ICourierService
             FullName = $"{c.User.FirstName} {c.User.LastName}".Trim(),
             Phone = c.User.Phone,
             PhoneNumber = c.User.Phone,
+            VehicleType = c.VehicleType,
+            VehiclePlate = c.PlateNumber,
             IsActive = c.IsActive,
+            IsAvailable = c.IsAvailable,
+            CurrentLatitude = c.CurrentLatitude,
+            CurrentLongitude = c.CurrentLongitude,
             CurrentLat = c.CurrentLatitude,
             CurrentLng = c.CurrentLongitude,
             ActiveShipmentCount = c.Shipments.Count(s =>
@@ -54,15 +59,25 @@ public class CourierService : ICourierService
         return new CourierDto
         {
             Id = c.Id,
+            UserId = c.UserId,
             Email = c.User.Email,
+            Name = $"{c.User.FirstName} {c.User.LastName}".Trim(),
             FullName = $"{c.User.FirstName} {c.User.LastName}".Trim(),
+            Phone = c.User.Phone,
             PhoneNumber = c.User.Phone,
+            VehicleType = c.VehicleType,
+            VehiclePlate = c.PlateNumber,
             IsActive = c.IsActive,
+            IsAvailable = c.IsAvailable,
+            CurrentLatitude = c.CurrentLatitude,
+            CurrentLongitude = c.CurrentLongitude,
             CurrentLat = c.CurrentLatitude,
             CurrentLng = c.CurrentLongitude,
             ActiveShipmentCount = c.Shipments.Count(s =>
                 s.Status != ShipmentStatus.Delivered && s.Status != ShipmentStatus.Failed
             ),
+            TotalDelivered = c.Shipments.Count(s => s.Status == ShipmentStatus.Delivered),
+            CreatedAt = c.User.CreatedAt,
         };
     }
 
@@ -102,10 +117,17 @@ public class CourierService : ICourierService
             new CourierDto
             {
                 Id = courier.Id,
+                UserId = courier.UserId,
                 Email = user.Email,
+                Name = $"{user.FirstName} {user.LastName}".Trim(),
                 FullName = $"{user.FirstName} {user.LastName}".Trim(),
+                Phone = user.Phone,
                 PhoneNumber = user.Phone,
+                VehicleType = courier.VehicleType,
+                VehiclePlate = courier.PlateNumber,
                 IsActive = courier.IsActive,
+                IsAvailable = courier.IsAvailable,
+                CreatedAt = user.CreatedAt,
             }
         );
     }
@@ -136,10 +158,21 @@ public class CourierService : ICourierService
             new CourierDto
             {
                 Id = courier.Id,
+                UserId = courier.UserId,
                 Email = courier.User.Email,
+                Name = $"{courier.User.FirstName} {courier.User.LastName}".Trim(),
                 FullName = $"{courier.User.FirstName} {courier.User.LastName}".Trim(),
+                Phone = courier.User.Phone,
                 PhoneNumber = courier.User.Phone,
+                VehicleType = courier.VehicleType,
+                VehiclePlate = courier.PlateNumber,
                 IsActive = courier.IsActive,
+                IsAvailable = courier.IsAvailable,
+                CurrentLatitude = courier.CurrentLatitude,
+                CurrentLongitude = courier.CurrentLongitude,
+                CurrentLat = courier.CurrentLatitude,
+                CurrentLng = courier.CurrentLongitude,
+                CreatedAt = courier.User.CreatedAt,
             }
         );
     }
