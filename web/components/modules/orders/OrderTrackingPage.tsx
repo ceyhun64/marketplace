@@ -141,7 +141,7 @@ export default function TrackingPage() {
     );
   }
 
-  const currentStep = getStepIndex(data.status);
+  const currentStep = getStepIndex((data.status ?? "PENDING") as ShipmentStatus);
   const isFailed = data.status === "FAILED";
   const isDelivered = data.status === "DELIVERED";
 

@@ -60,7 +60,7 @@ public class GetCourierShipmentsQueryHandler
             TrackingNumber = s.TrackingNumber,
             EstimatedDelivery = s.EstimatedDelivery,
             LabelUrl = s.LabelUrl,
-            History = s
+            Events = s
                 .StatusHistory.OrderByDescending(h => h.ChangedAt)
                 .Select(h => new ShipmentStatusHistoryDto
                 {

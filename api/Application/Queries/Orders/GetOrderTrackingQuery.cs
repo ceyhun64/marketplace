@@ -55,7 +55,7 @@ public class GetOrderTrackingQueryHandler
                         ? $"{s.Courier.User.FirstName} {s.Courier.User.LastName}".Trim()
                         : null,
                 CourierPhone = s?.Courier?.User?.Phone,
-                StatusHistory =
+                History =
                     s?.StatusHistory.OrderByDescending(h => h.ChangedAt)
                         .Select(h => new ShipmentStatusHistoryDto
                         {
