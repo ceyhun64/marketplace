@@ -424,7 +424,6 @@ export default function BrandsPage() {
                 borderBottom: `2px solid ${activeCategory === cat ? "var(--red)" : "transparent"}`,
                 background: "transparent",
                 border: "none",
-                borderBottom: `2px solid ${activeCategory === cat ? "var(--red)" : "transparent"}`,
                 color:
                   activeCategory === cat
                     ? "var(--red)"
