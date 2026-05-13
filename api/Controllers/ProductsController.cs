@@ -919,4 +919,142 @@ public class ProductsController : ControllerBase
         await _db.SaveChangesAsync();
         return Ok(new { message = "Ürün reddedildi.", reason = dto.Reason });
     }
+
+    // ── GET /api/products/{id}/seller-info — Seller Card ─────────────────────
+    /// <summary>Ürünün satıcı/mağaza bilgileri (Seller Card için)</summary>
+    [HttpGet("{id:guid}/seller-info")]
+    public async Task<IActionResult> GetSellerInfo(Guid id)
+    {
+        var product = await _db
+            .Products.Include(p => p.Merchant)
+                .ThenInclude(m => m.Subscription)
+            .Where(p => p.Id == id && !p.IsDeleted)
+            .FirstOrDefaultAsync();
+
+        if (product == null)
+            return NotFound(new { message = "Ürün bulunamadı." });
+
+        var merchant = product.Merchant;
+
+        // Toplam ürün sayısı
+        var productCount = await _db.Products.CountAsync(p =>
+            p.MerchantId == merchant.Id && !p.IsDeleted && p.IsApproved && p.PublishToMarket
+        );
+
+        // Toplam satış sayısı
+        var totalSales = await _db
+            .OrderItems.Where(oi => oi.Product.MerchantId == merchant.Id)
+            .CountAsync();
+
+        // Ortalama puan (tüm ürünler üzerinden)
+        var allReviews = await _db
+            .Reviews.Where(r => r.Product.MerchantId == merchant.Id)
+            .ToListAsync();
+
+        var avgRating = allReviews.Count > 0 ? allReviews.Average(r => r.Rating) : 0.0;
+        var reviewCount = allReviews.Count;
+
+        // Mağaza aktiflik süresi
+        var memberSinceDays = (int)(DateTime.UtcNow - merchant.CreatedAt).TotalDays;
+        var memberSinceMonths = memberSinceDays / 30;
+
+        return Ok(
+            new
+            {
+                Id = merchant.Id,
+                StoreName = merchant.StoreName,
+                Slug = merchant.Slug,
+                LogoUrl = merchant.LogoUrl,
+                Description = merchant.Description,
+                City = merchant.City,
+                Country = merchant.Country,
+                IsActive = merchant.IsActive,
+                HandlingHours = merchant.HandlingHours,
+                ProductCount = productCount,
+                TotalSales = totalSales,
+                AvgRating = Math.Round(avgRating, 1),
+                ReviewCount = reviewCount,
+                MemberSinceMonths = memberSinceMonths,
+                MemberSinceDays = memberSinceDays,
+                Plan = merchant.Subscription?.Plan.ToString() ?? "Basic",
+            }
+        );
+    }
+
+    // ── GET /api/products/{id}/frequently-bought-together ────────────────────
+    /// <summary>Bu ürünü alanlar şunu da aldı (co-purchase logic)</summary>
+    [HttpGet("{id:guid}/frequently-bought-together")]
+    public async Task<IActionResult> GetFrequentlyBoughtTogether(Guid id)
+    {
+        // Aynı siparişlerde bu ürünle birlikte geçen ürünleri bul
+        var orderIdsWithProduct = await _db
+            .OrderItems.Where(oi => oi.ProductId == id)
+            .Select(oi => oi.OrderId)
+            .Distinct()
+            .ToListAsync();
+
+        if (!orderIdsWithProduct.Any())
+        {
+            // Sipariş yoksa kategori bazlı öneri döndür
+            var product = await _db
+                .Products.Include(p => p.Category)
+                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
+
+            if (product == null)
+                return NotFound();
+
+            var fallback = await _db
+                .Products.Include(p => p.Category)
+                .Where(p =>
+                    p.CategoryId == product.CategoryId
+                    && p.Id != id
+                    && !p.IsDeleted
+                    && p.IsApproved
+                    && p.PublishToMarket
+                    && p.Stock > 0
+                )
+                .OrderByDescending(p => p.CreatedAt)
+                .Take(4)
+                .Select(p => new
+                {
+                    p.Id,
+                    Title = p.Name,
+                    p.Price,
+                    MainImage = p.Images.Count > 0 ? p.Images[0] : null,
+                    Category = p.Category != null ? p.Category.Name : "",
+                })
+                .ToListAsync();
+
+            return Ok(fallback);
+        }
+
+        var coProducts = await _db
+            .OrderItems.Where(oi => orderIdsWithProduct.Contains(oi.OrderId) && oi.ProductId != id)
+            .GroupBy(oi => oi.ProductId)
+            .OrderByDescending(g => g.Count())
+            .Take(4)
+            .Select(g => g.Key)
+            .ToListAsync();
+
+        var result = await _db
+            .Products.Include(p => p.Category)
+            .Where(p =>
+                coProducts.Contains(p.Id)
+                && !p.IsDeleted
+                && p.IsApproved
+                && p.PublishToMarket
+                && p.Stock > 0
+            )
+            .Select(p => new
+            {
+                p.Id,
+                Title = p.Name,
+                p.Price,
+                MainImage = p.Images.Count > 0 ? p.Images[0] : null,
+                Category = p.Category != null ? p.Category.Name : "",
+            })
+            .ToListAsync();
+
+        return Ok(result);
+    }
 }

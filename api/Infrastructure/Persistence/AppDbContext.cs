@@ -24,6 +24,7 @@ public class AppDbContext : DbContext
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<MerchantPlugin> MerchantPlugins => Set<MerchantPlugin>();
     public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
+    public DbSet<ProductQuestion> ProductQuestions => Set<ProductQuestion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -224,6 +225,31 @@ public class AppDbContext : DbContext
 
         // ── Soft-delete filtresi ──────────────────────────────────────────────
         modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);
+
+        // ── ProductQuestion → Product (N:1) ───────────────────────────────────
+        modelBuilder
+            .Entity<ProductQuestion>()
+            .HasOne(q => q.Product)
+            .WithMany()
+            .HasForeignKey(q => q.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ── ProductQuestion → Customer/User (N:1) ────────────────────────────
+        modelBuilder
+            .Entity<ProductQuestion>()
+            .HasOne(q => q.Customer)
+            .WithMany()
+            .HasForeignKey(q => q.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ── ProductQuestion → MerchantProfile (answerer, nullable) ──────────
+        modelBuilder
+            .Entity<ProductQuestion>()
+            .HasOne(q => q.AnsweredByMerchant)
+            .WithMany()
+            .HasForeignKey(q => q.AnsweredByMerchantId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // ── WishlistItem ──────────────────────────────────────────────────────
         modelBuilder
