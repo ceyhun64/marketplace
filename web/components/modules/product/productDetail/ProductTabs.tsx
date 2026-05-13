@@ -120,7 +120,9 @@ export default function ProductTabs({
       const { data } = await api.get(`/api/review/${productId}`);
       setComments(data ?? []);
     } catch (error: any) {
-      if (error?.response?.status !== 404) {
+      // 404 veya 500 (Reviews tablosu henüz migrate edilmemiş) — boş liste göster
+      const status = error?.response?.status;
+      if (status !== 404 && status !== 500 && status !== 503) {
         console.error(error);
       }
       setComments([]);

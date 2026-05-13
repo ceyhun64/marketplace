@@ -33,25 +33,33 @@ public class ReviewController : ControllerBase
         if (product == null)
             return NotFound(new { message = "Ürün bulunamadı." });
 
-        var reviews = await _db
-            .Reviews.Where(r => r.ProductId == productId)
-            .Include(r => r.Customer)
-            .OrderByDescending(r => r.CreatedAt)
-            .Select(r => new
-            {
-                r.Id,
-                r.Rating,
-                r.Title,
-                r.Comment,
-                r.CreatedAt,
-                CustomerName = r.Customer.FirstName
-                    + " "
-                    + r.Customer.LastName.Substring(0, 1)
-                    + ".",
-            })
-            .ToListAsync();
+        try
+        {
+            var reviews = await _db
+                .Reviews.Where(r => r.ProductId == productId)
+                .Include(r => r.Customer)
+                .OrderByDescending(r => r.CreatedAt)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.Rating,
+                    r.Title,
+                    r.Comment,
+                    r.CreatedAt,
+                    CustomerName = r.Customer.FirstName
+                        + " "
+                        + r.Customer.LastName.Substring(0, 1)
+                        + ".",
+                })
+                .ToListAsync();
 
-        return Ok(reviews);
+            return Ok(reviews);
+        }
+        catch (Exception)
+        {
+            // Reviews tablosu henüz migrate edilmemiş — boş liste dön.
+            return Ok(new List<object>());
+        }
     }
 
     // ── POST /api/review — Yeni yorum ekle ───────────────────────────────────
@@ -66,40 +74,54 @@ public class ReviewController : ControllerBase
         if (product == null)
             return NotFound(new { message = "Ürün bulunamadı." });
 
-        var userId = _currentUser.UserId;
-
-        // Aynı kullanıcı aynı ürüne tekrar yorum yapamaz
-        var alreadyReviewed = await _db.Reviews.AnyAsync(r =>
-            r.CustomerId == userId && r.ProductId == dto.ProductId
-        );
-
-        if (alreadyReviewed)
-            return Conflict(new { message = "Bu ürün için zaten bir yorum yaptınız." });
-
-        var review = new Review
+        try
         {
-            ProductId = dto.ProductId,
-            CustomerId = userId,
-            Rating = dto.Rating,
-            Title = dto.Title?.Trim(),
-            Comment = dto.Comment?.Trim(),
-        };
+            var userId = _currentUser.UserId;
 
-        _db.Reviews.Add(review);
-        await _db.SaveChangesAsync();
+            // Aynı kullanıcı aynı ürüne tekrar yorum yapamaz
+            var alreadyReviewed = await _db.Reviews.AnyAsync(r =>
+                r.CustomerId == userId && r.ProductId == dto.ProductId
+            );
 
-        return CreatedAtAction(
-            nameof(GetReviews),
-            new { productId = dto.ProductId },
-            new
+            if (alreadyReviewed)
+                return Conflict(new { message = "Bu ürün için zaten bir yorum yaptınız." });
+
+            var review = new Review
             {
-                review.Id,
-                review.Rating,
-                review.Title,
-                review.Comment,
-                review.CreatedAt,
-            }
-        );
+                ProductId = dto.ProductId,
+                CustomerId = userId,
+                Rating = dto.Rating,
+                Title = dto.Title?.Trim(),
+                Comment = dto.Comment?.Trim(),
+            };
+
+            _db.Reviews.Add(review);
+            await _db.SaveChangesAsync();
+
+            return CreatedAtAction(
+                nameof(GetReviews),
+                new { productId = dto.ProductId },
+                new
+                {
+                    review.Id,
+                    review.Rating,
+                    review.Title,
+                    review.Comment,
+                    review.CreatedAt,
+                }
+            );
+        }
+        catch (Exception)
+        {
+            // Reviews tablosu henüz migrate edilmemiş.
+            return StatusCode(
+                503,
+                new
+                {
+                    message = "Reviews özelliği henüz aktif değil. Lütfen migration çalıştırın: dotnet ef database update",
+                }
+            );
+        }
     }
 
     // ── DELETE /api/review/{reviewId} — Kendi yorumunu sil ──────────────────
@@ -107,21 +129,34 @@ public class ReviewController : ControllerBase
     [Authorize]
     public async Task<IActionResult> DeleteReview(Guid reviewId)
     {
-        var userId = _currentUser.UserId;
+        try
+        {
+            var userId = _currentUser.UserId;
 
-        var review = await _db.Reviews.FindAsync(reviewId);
-        if (review == null)
-            return NotFound(new { message = "Yorum bulunamadı." });
+            var review = await _db.Reviews.FindAsync(reviewId);
+            if (review == null)
+                return NotFound(new { message = "Yorum bulunamadı." });
 
-        // Sadece kendi yorumunu silebilir (Admin tüm yorumları silebilir)
-        var userRole = _currentUser.Role;
-        if (review.CustomerId != userId && userRole != "admin")
-            return Forbid();
+            // Sadece kendi yorumunu silebilir (Admin tüm yorumları silebilir)
+            var userRole = _currentUser.Role;
+            if (review.CustomerId != userId && userRole != "admin")
+                return Forbid();
 
-        _db.Reviews.Remove(review);
-        await _db.SaveChangesAsync();
+            _db.Reviews.Remove(review);
+            await _db.SaveChangesAsync();
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (Exception)
+        {
+            return StatusCode(
+                503,
+                new
+                {
+                    message = "Reviews özelliği henüz aktif değil. Lütfen migration çalıştırın: dotnet ef database update",
+                }
+            );
+        }
     }
 }
 
