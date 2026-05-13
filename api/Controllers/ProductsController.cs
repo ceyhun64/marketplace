@@ -134,33 +134,52 @@ public class ProductsController : ControllerBase
             return NotFound(new { message = "Ürün bulunamadı." });
 
         // ── Reviews & Rating ────────────────────────────────────────────────
-        var reviews = await _db
-            .Reviews.Where(r => r.ProductId == id)
-            .Include(r => r.Customer)
-            .OrderByDescending(r => r.CreatedAt)
-            .ToListAsync();
+        // Try-catch: Reviews tablosu migration uygulanmadan önce yoksa 500 vermez.
+        int reviewCount = 0;
+        double rating = 0.0;
+        Dictionary<int, int> ratingDistribution = new();
+        List<object> reviewDtos = new();
 
-        var reviewCount = reviews.Count;
-        var rating = reviewCount > 0 ? reviews.Average(r => r.Rating) : 0.0;
+        try
+        {
+            var reviews = await _db
+                .Reviews.Where(r => r.ProductId == id)
+                .Include(r => r.Customer)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
 
-        var ratingDistribution = reviews
-            .GroupBy(r => r.Rating)
-            .ToDictionary(g => g.Key, g => g.Count());
+            reviewCount = reviews.Count;
+            rating = reviewCount > 0 ? reviews.Average(r => r.Rating) : 0.0;
 
-        var reviewDtos = reviews
-            .Take(20)
-            .Select(r => new
-            {
-                r.Id,
-                r.Rating,
-                r.Title,
-                r.Comment,
-                r.CreatedAt,
-                CustomerName = r.Customer != null
-                    ? r.Customer.FirstName + " " + r.Customer.LastName.Substring(0, 1) + "."
-                    : "Anonymous",
-            })
-            .ToList();
+            ratingDistribution = reviews
+                .GroupBy(r => r.Rating)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            reviewDtos = reviews
+                .Take(20)
+                .Select(r =>
+                    (object)
+                        new
+                        {
+                            r.Id,
+                            r.Rating,
+                            r.Title,
+                            r.Comment,
+                            r.CreatedAt,
+                            CustomerName = r.Customer != null
+                                ? r.Customer.FirstName
+                                    + " "
+                                    + r.Customer.LastName.Substring(0, 1)
+                                    + "."
+                                : "Anonymous",
+                        }
+                )
+                .ToList();
+        }
+        catch (Exception)
+        {
+            // Reviews tablosu henüz migrate edilmemiş — boş dön, sayfa yine de açılır.
+        }
 
         // ── Related Products (same category, different product) ──────────────
         var relatedProducts = await _db
@@ -217,8 +236,17 @@ public class ProductsController : ControllerBase
             .ToListAsync();
 
         // ── Meta Stats (views = wishlist count × 10 heuristic, favorites, purchases) ──
-        var favoritesCount = await _db.WishlistItems.CountAsync(w => w.ProductId == id);
-        var purchaseCount = await _db.OrderItems.CountAsync(i => i.ProductId == id);
+        int favoritesCount = 0;
+        int purchaseCount = 0;
+        try
+        {
+            favoritesCount = await _db.WishlistItems.CountAsync(w => w.ProductId == id);
+            purchaseCount = await _db.OrderItems.CountAsync(i => i.ProductId == id);
+        }
+        catch (Exception)
+        {
+            // WishlistItems veya OrderItems henüz migrate edilmemiş olabilir.
+        }
 
         // ── Shipping info (from merchant handling hours + product price) ──────
         var freeShipping = product.Price >= 500m;
@@ -947,12 +975,20 @@ public class ProductsController : ControllerBase
             .CountAsync();
 
         // Ortalama puan (tüm ürünler üzerinden)
-        var allReviews = await _db
-            .Reviews.Where(r => r.Product.MerchantId == merchant.Id)
-            .ToListAsync();
-
-        var avgRating = allReviews.Count > 0 ? allReviews.Average(r => r.Rating) : 0.0;
-        var reviewCount = allReviews.Count;
+        double avgRating = 0.0;
+        int reviewCount = 0;
+        try
+        {
+            var allReviews = await _db
+                .Reviews.Where(r => r.Product.MerchantId == merchant.Id)
+                .ToListAsync();
+            avgRating = allReviews.Count > 0 ? allReviews.Average(r => r.Rating) : 0.0;
+            reviewCount = allReviews.Count;
+        }
+        catch (Exception)
+        {
+            // Reviews tablosu henüz migrate edilmemiş olabilir.
+        }
 
         // Mağaza aktiflik süresi
         var memberSinceDays = (int)(DateTime.UtcNow - merchant.CreatedAt).TotalDays;
