@@ -21,6 +21,10 @@ import {
   Tag,
   Store,
   Zap,
+  Wallet,
+  Gift,
+  Award,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -77,6 +81,9 @@ const SECONDARY_NAV = [
   { label: "New Arrivals", href: "/new" },
   { label: "Bestsellers", href: "/bestsellers" },
   { label: "Compare", href: "/compare" },
+  { label: "Loyalty", href: "/loyalty" },
+  { label: "Referral", href: "/referral" },
+  { label: "Gift Cards", href: "/gift-cards" },
 ];
 
 const DASHBOARD_HREF: Record<UserRole, string> = {
@@ -525,6 +532,63 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
+
+              {/* More dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.8125rem",
+                      fontWeight: 500,
+                      color: "var(--charcoal-soft)",
+                      padding: "0.5rem 0.875rem",
+                      borderRadius: "0.5rem",
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.25rem",
+                      letterSpacing: "0.01em",
+                      transition: "color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out)",
+                    }}
+                    className="hover:text-[var(--charcoal)] hover:bg-[var(--off-white-2)]"
+                  >
+                    More
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  sideOffset={8}
+                  className="w-44 p-1.5 rounded-xl animate-in fade-in zoom-in-95"
+                  style={{
+                    background: "var(--white)",
+                    border: "1px solid var(--border-light)",
+                    boxShadow: "var(--shadow-lg)",
+                  }}
+                >
+                  {SECONDARY_NAV.map((link) => (
+                    <DropdownMenuItem key={link.href} asChild>
+                      <Link
+                        href={link.href}
+                        className="flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-pointer"
+                        style={{
+                          fontSize: "0.75rem",
+                          fontFamily: "var(--font-body)",
+                          fontWeight: 500,
+                          color: "var(--charcoal-mid)",
+                          textDecoration: "none",
+                        }}
+                      >
+                        {link.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </nav>
 
             <div className="flex-1" />
@@ -701,6 +765,9 @@ export default function Navbar() {
                           icon: ClipboardList,
                           label: "Orders",
                         },
+                        { href: "/wallet", icon: Wallet, label: "Wallet" },
+                        { href: "/loyalty", icon: Award, label: "Loyalty" },
+                        { href: "/referral", icon: Users, label: "Referral" },
                       ].map(({ href, icon: Icon, label }) => (
                         <DropdownMenuItem key={href} asChild>
                           <Link
@@ -924,6 +991,33 @@ export default function Navbar() {
                   </span>
                 )}
               </Link>
+              {[
+                { href: "/wallet", icon: Wallet, label: "Wallet" },
+                { href: "/loyalty", icon: Award, label: "Loyalty" },
+                { href: "/referral", icon: Users, label: "Referral" },
+                { href: "/gift-cards", icon: Gift, label: "Gift Cards" },
+              ].map(({ href, icon: Icon, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.9375rem",
+                    fontWeight: 500,
+                    color: "var(--charcoal-soft)",
+                    padding: "0.75rem 1rem",
+                    borderRadius: "0.75rem",
+                    textDecoration: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                  }}
+                >
+                  <Icon className="w-4 h-4" strokeWidth={2} />
+                  {label}
+                </Link>
+              ))}
             </nav>
           </div>
         </div>

@@ -8,11 +8,26 @@ const FOOTER_LINKS = {
     title: "Discover",
     links: [
       { label: "All Categories", href: "/categories" },
+      { label: "All Products", href: "/products" },
       { label: "Featured Stores", href: "/stores" },
+      { label: "Brands", href: "/brands" },
       { label: "Deals & Campaigns", href: "/deals" },
+      { label: "Flash Sale", href: "/flash-sale" },
       { label: "New Arrivals", href: "/new" },
       { label: "Best Sellers", href: "/bestsellers" },
       { label: "Compare Products", href: "/compare" },
+    ],
+  },
+  account: {
+    title: "My Account",
+    links: [
+      { label: "My Profile", href: "/profile" },
+      { label: "My Orders", href: "/orders" },
+      { label: "Wishlist", href: "/wishlist" },
+      { label: "Shopping Cart", href: "/cart" },
+      { label: "Wallet", href: "/wallet" },
+      { label: "Loyalty Program", href: "/loyalty" },
+      { label: "Referral Program", href: "/referral" },
     ],
   },
   sellers: {
@@ -82,10 +97,10 @@ export default function Footer() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr",
-            gap: "3rem",
+            gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr 1fr",
+            gap: "2rem",
           }}
-          className="lg:grid-cols-4 grid-cols-1"
+          className="lg:grid-cols-5 grid-cols-1"
         >
           {/* Brand */}
           <div>
