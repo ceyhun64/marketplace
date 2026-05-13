@@ -18,7 +18,6 @@ const HIDDEN_PATHS = [
   "/unauthorized",
 ];
 
-
 export default function ClientLayoutWrapper({
   children,
 }: {
@@ -38,7 +37,7 @@ export default function ClientLayoutWrapper({
           <AnnouncementBar />
 
           {/* Sadece Navbar ve onu takip eden alanın sticky olması için */}
-          <div className="sticky top-0 z-50">
+          <div className="sticky top-0 z-50" data-navbar-wrapper>
             <Navbar />
           </div>
         </>

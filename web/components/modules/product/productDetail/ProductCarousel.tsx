@@ -168,7 +168,7 @@ export default function ProductCarousel({
           <div
             key={product.id}
             className="flex-none snap-start"
-            style={{ width: "calc(50% - 8px)" }}
+            style={{ width: "clamp(160px, calc(25% - 12px), 220px)" }}
           >
             <ProductCard product={toProduct(product)} />
           </div>
