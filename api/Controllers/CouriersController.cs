@@ -60,7 +60,7 @@ public class CouriersController : ControllerBase
         return CreatedAtAction(
             nameof(GetById),
             new { id = result.Data.Id },
-            new ApiResponse<CourierDto>(result.Data)
+            new ApiResponse<CourierDto>(result.Data!)
         );
     }
 
@@ -71,7 +71,7 @@ public class CouriersController : ControllerBase
         var result = await _courierService.UpdateAsync(id, request);
         if (!result.Success)
             return BadRequest(new ApiResponse<string>(result.Message));
-        return Ok(new ApiResponse<CourierDto>(result.Data));
+        return Ok(new ApiResponse<CourierDto>(result.Data!));
     }
 
     // PATCH /api/couriers/{id}/toggle-active — Admin

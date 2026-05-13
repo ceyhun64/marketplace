@@ -30,7 +30,7 @@ public class PaymentsController : ControllerBase
         var result = await _paymentService.InitiateCheckoutAsync(request);
         if (!result.Success)
             return BadRequest(new ApiResponse<string>(result.Message));
-        return Ok(new ApiResponse<PaymentCheckoutResponseDto>(result.Data));
+        return Ok(new ApiResponse<PaymentCheckoutResponseDto>(result.Data!));
     }
 
     // ── POST /api/payments/confirm — Customer ─────────────────────────────────

@@ -217,7 +217,7 @@ public class FulfillmentController(
         await fulfillmentService.TransitionStatusAsync(
             shipment,
             ShipmentStatus.PickedUp,
-            dto.Signature != null ? $"İmza alındı: {dto.Signature}" : "Teslim alındı"
+            dto?.Signature != null ? $"İmza alındı: {dto.Signature}" : "Teslim alındı"
         );
 
         return Ok(new { message = "Teslim alındı olarak işaretlendi." });
@@ -244,7 +244,7 @@ public class FulfillmentController(
         await fulfillmentService.TransitionStatusAsync(
             shipment,
             ShipmentStatus.Delivered,
-            dto.RecipientName != null ? $"Teslim alan: {dto.RecipientName}" : "Teslim edildi"
+            dto?.RecipientName != null ? $"Teslim alan: {dto.RecipientName}" : "Teslim edildi"
         );
 
         return Ok(new { message = "Teslim edildi olarak işaretlendi." });

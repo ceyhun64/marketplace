@@ -14,8 +14,7 @@ namespace api.Controllers;
 [Authorize]
 public class OrdersController(
     AppDbContext db,
-    ICurrentUserService currentUser,
-    IFulfillmentService fulfillmentService
+    ICurrentUserService currentUser
 ) : ControllerBase
 {
     // ─── CUSTOMER ──────────────────────────────────────────────
@@ -342,8 +341,6 @@ public class OrdersController(
     public async Task<IActionResult> PackOrder(Guid id)
     {
         var userId = currentUser.UserId;
-        if (userId == null)
-            return Forbid();
 
         var merchant = await db.MerchantProfiles.FirstOrDefaultAsync(m => m.UserId == userId);
         if (merchant == null)

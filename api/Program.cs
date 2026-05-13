@@ -139,7 +139,7 @@ try
             redisConn,
             options =>
             {
-                options.Configuration.ChannelPrefix = "marketplace";
+                options.Configuration.ChannelPrefix = RedisChannel.Literal("marketplace");
             }
         );
 

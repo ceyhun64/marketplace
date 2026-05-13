@@ -24,7 +24,11 @@ public class TrackingHub : Hub
     public async Task JoinShipmentGroup(string shipmentId)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, $"shipment-{shipmentId}");
-        _logger.LogDebug("Client {Id} joined shipment-{ShipmentId}", Context.ConnectionId, shipmentId);
+        _logger.LogDebug(
+            "Client {Id} joined shipment-{ShipmentId}",
+            Context.ConnectionId,
+            shipmentId
+        );
     }
 
     public async Task LeaveShipmentGroup(string shipmentId)

@@ -47,7 +47,7 @@ public class SubscriptionsController : ControllerBase
         var result = await _subscriptionService.SubscribeAsync(request);
         if (!result.Success)
             return BadRequest(new ApiResponse<string>(result.Message));
-        return Ok(new ApiResponse<SubscriptionDto>(result.Data));
+        return Ok(new ApiResponse<SubscriptionDto>(result.Data!));
     }
 
     // POST /api/subscriptions/upgrade — Merchant (alias for subscribe)
@@ -59,7 +59,7 @@ public class SubscriptionsController : ControllerBase
         var result = await _subscriptionService.SubscribeAsync(subscribeRequest);
         if (!result.Success)
             return BadRequest(new ApiResponse<string>(result.Message));
-        return Ok(new ApiResponse<SubscriptionDto>(result.Data));
+        return Ok(new ApiResponse<SubscriptionDto>(result.Data!));
     }
 
     // GET /api/subscriptions/current — Merchant
