@@ -39,6 +39,7 @@ import ProductInfo from "@/components/modules/product/productDetail/ProductInfo"
 import ProductVariantSelector from "@/components/modules/product/productDetail/ProductVariantSelector";
 import ProductActions from "@/components/modules/product/productDetail/ProductActions";
 import ProductCarousel from "@/components/modules/product/productDetail/ProductCarousel";
+import OtherSellers from "@/components/modules/product/productDetail/OtherSellers";
 import { useHybridWishlist } from "@/hooks/use-hybrid-wishlist";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
@@ -1429,6 +1430,14 @@ export default function ProductDetailPage() {
             </div>
           ))}
         </div>
+
+        {/* ── Other Sellers ── */}
+        <OtherSellers
+          productId={product.id}
+          productName={product.title}
+          productImage={product.mainImage}
+          currentMerchantSlug={product.brand?.slug}
+        />
 
         {/* ── Related Products ── */}
         {product.relatedProducts.length > 0 && (
