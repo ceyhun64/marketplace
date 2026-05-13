@@ -18,6 +18,7 @@ const HIDDEN_PATHS = [
   "/unauthorized",
 ];
 
+
 export default function ClientLayoutWrapper({
   children,
 }: {
@@ -32,17 +33,21 @@ export default function ClientLayoutWrapper({
   return (
     <>
       {!shouldHideLayout && (
-        <div className="sticky top-0 z-50">
+        <>
+          {/* AnnouncementBar artık sticky değil, normal akışta kalacak */}
           <AnnouncementBar />
-          <Navbar />
-        </div>
+
+          {/* Sadece Navbar ve onu takip eden alanın sticky olması için */}
+          <div className="sticky top-0 z-50">
+            <Navbar />
+          </div>
+        </>
       )}
 
       {children}
 
       {!shouldHideLayout && <Footer />}
 
-      {/* Global overlays — shown everywhere */}
       <CookieConsent />
       <SocialProof />
       <BackToTop />
