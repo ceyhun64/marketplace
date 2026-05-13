@@ -780,7 +780,19 @@ export default function ProductDetailPage() {
       rating: r.rating ?? 0,
       reviewCount: r.reviewCount ?? 0,
       ratingDistribution: r.ratingDistribution ?? {},
-      reviews: Array.isArray(r.reviews) ? r.reviews : [],
+      reviews: Array.isArray(r.reviews)
+        ? r.reviews.map((rev: any) => ({
+            id: rev.id,
+            rating: rev.rating,
+            title: rev.title ?? null,
+            comment: rev.comment ?? null,
+            createdAt: rev.createdAt,
+            user: rev.user ?? {
+              name: rev.customerName ?? "Anonymous",
+              surname: "",
+            },
+          }))
+        : [],
       stock: {
         inStock: (r.stock ?? 0) > 0,
         quantity: r.stock ?? 0,
