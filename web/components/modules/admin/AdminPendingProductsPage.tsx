@@ -183,9 +183,7 @@ export default function AdminPendingProductsPage() {
 
   const approveMutation = useMutation({
     mutationFn: async (productId: string) => {
-      const res = await api.patch(`/api/products/${productId}/approve`, {
-        approved: true,
-      });
+      const res = await api.patch(`/api/admin/products/${productId}/approve`);
       return res.data;
     },
     onSuccess: () => {
@@ -198,9 +196,7 @@ export default function AdminPendingProductsPage() {
 
   const rejectMutation = useMutation({
     mutationFn: async (productId: string) => {
-      const res = await api.patch(`/api/products/${productId}/approve`, {
-        approved: false,
-      });
+      const res = await api.patch(`/api/admin/products/${productId}/reject`);
       return res.data;
     },
     onSuccess: () => {

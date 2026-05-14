@@ -25,7 +25,8 @@ public class AdminController : ControllerBase
         ICurrentUserService currentUser,
         INotificationService notification,
         IConfiguration config,
-        ILogger<AdminController> logger)
+        ILogger<AdminController> logger
+    )
     {
         _db = db;
         _currentUser = currentUser;
@@ -54,9 +55,10 @@ public class AdminController : ControllerBase
         var totalUsers = await _db.Users.CountAsync();
         var pendingProducts = await _db.Products.CountAsync(p => !p.IsApproved && !p.IsDeleted);
         var pendingMerchants = await _db.Users.CountAsync(u =>
-            u.Role == UserRole.Merchant &&
-            u.AccountStatus == AccountStatus.PendingApproval &&
-            !u.IsDeleted);
+            u.Role == UserRole.Merchant
+            && u.AccountStatus == AccountStatus.PendingApproval
+            && !u.IsDeleted
+        );
         var activeShipments = await _db.Shipments.CountAsync(s =>
             s.Status != ShipmentStatus.Delivered && s.Status != ShipmentStatus.Failed
         );
@@ -66,10 +68,13 @@ public class AdminController : ControllerBase
             o.Status == OrderStatus.Pending || o.Status == OrderStatus.PaymentConfirmed
         );
         var totalShipments = await _db.Shipments.CountAsync();
-        var deliveredShipments = await _db.Shipments.CountAsync(s => s.Status == ShipmentStatus.Delivered);
-        var fulfillmentSuccessRate = totalShipments == 0
-            ? 0.0
-            : Math.Round((double)deliveredShipments / totalShipments * 100, 2);
+        var deliveredShipments = await _db.Shipments.CountAsync(s =>
+            s.Status == ShipmentStatus.Delivered
+        );
+        var fulfillmentSuccessRate =
+            totalShipments == 0
+                ? 0.0
+                : Math.Round((double)deliveredShipments / totalShipments * 100, 2);
 
         return Ok(
             new
@@ -104,12 +109,13 @@ public class AdminController : ControllerBase
     [HttpGet("merchants/pending")]
     public async Task<IActionResult> GetPendingMerchants()
     {
-        var pending = await _db.Users
-            .Include(u => u.MerchantProfile)
+        var pending = await _db
+            .Users.Include(u => u.MerchantProfile)
             .Where(u =>
-                u.Role == UserRole.Merchant &&
-                u.AccountStatus == AccountStatus.PendingApproval &&
-                !u.IsDeleted)
+                u.Role == UserRole.Merchant
+                && u.AccountStatus == AccountStatus.PendingApproval
+                && !u.IsDeleted
+            )
             .OrderBy(u => u.CreatedAt)
             .Select(u => new
             {
@@ -119,13 +125,15 @@ public class AdminController : ControllerBase
                 u.LastName,
                 u.Phone,
                 u.CreatedAt,
-                Store = u.MerchantProfile == null ? null : new
-                {
-                    u.MerchantProfile.Id,
-                    u.MerchantProfile.StoreName,
-                    u.MerchantProfile.Slug,
-                    u.MerchantProfile.Description,
-                }
+                Store = u.MerchantProfile == null
+                    ? null
+                    : new
+                    {
+                        u.MerchantProfile.Id,
+                        u.MerchantProfile.StoreName,
+                        u.MerchantProfile.Slug,
+                        u.MerchantProfile.Description,
+                    },
             })
             .ToListAsync();
 
@@ -136,8 +144,8 @@ public class AdminController : ControllerBase
     [HttpPost("merchants/{userId:guid}/approve")]
     public async Task<IActionResult> ApproveMerchant(Guid userId)
     {
-        var user = await _db.Users
-            .Include(u => u.MerchantProfile)
+        var user = await _db
+            .Users.Include(u => u.MerchantProfile)
             .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
 
         if (user is null)
@@ -147,15 +155,17 @@ public class AdminController : ControllerBase
             return BadRequest(new { message = "Bu kullanıcı merchant değil." });
 
         if (user.AccountStatus != AccountStatus.PendingApproval)
-            return BadRequest(new { message = $"Başvuru zaten işleme alınmış: {user.AccountStatus}" });
+            return BadRequest(
+                new { message = $"Başvuru zaten işleme alınmış: {user.AccountStatus}" }
+            );
 
         user.AccountStatus = AccountStatus.Active;
-        user.IsVerified    = true;
+        user.IsVerified = true;
 
         if (user.MerchantProfile is not null)
         {
-            user.MerchantProfile.IsActive   = true;
-            user.MerchantProfile.UpdatedAt  = DateTime.UtcNow;
+            user.MerchantProfile.IsActive = true;
+            user.MerchantProfile.UpdatedAt = DateTime.UtcNow;
         }
 
         user.UpdatedAt = DateTime.UtcNow;
@@ -193,33 +203,37 @@ public class AdminController : ControllerBase
 
     /// <summary>Merchant başvurusunu reddeder.</summary>
     [HttpPost("merchants/{userId:guid}/reject")]
-    public async Task<IActionResult> RejectMerchant(
-        Guid userId,
-        [FromBody] RejectMerchantDto dto)
+    public async Task<IActionResult> RejectMerchant(Guid userId, [FromBody] RejectMerchantDto dto)
     {
-        var user = await _db.Users
-            .Include(u => u.MerchantProfile)
+        var user = await _db
+            .Users.Include(u => u.MerchantProfile)
             .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
 
         if (user is null)
             return NotFound(new { message = "Kullanıcı bulunamadı." });
 
         if (user.AccountStatus != AccountStatus.PendingApproval)
-            return BadRequest(new { message = $"Başvuru zaten işleme alınmış: {user.AccountStatus}" });
+            return BadRequest(
+                new { message = $"Başvuru zaten işleme alınmış: {user.AccountStatus}" }
+            );
 
-        user.AccountStatus  = AccountStatus.Rejected;
+        user.AccountStatus = AccountStatus.Rejected;
         user.RejectionReason = dto.Reason;
-        user.UpdatedAt      = DateTime.UtcNow;
+        user.UpdatedAt = DateTime.UtcNow;
 
         if (user.MerchantProfile is not null)
         {
-            user.MerchantProfile.IsActive  = false;
+            user.MerchantProfile.IsActive = false;
             user.MerchantProfile.UpdatedAt = DateTime.UtcNow;
         }
 
         await _db.SaveChangesAsync();
 
-        _logger.LogInformation("Merchant başvurusu reddedildi: {Email} — {Reason}", user.Email, dto.Reason);
+        _logger.LogInformation(
+            "Merchant başvurusu reddedildi: {Email} — {Reason}",
+            user.Email,
+            dto.Reason
+        );
 
         // Başvuru sahibine red e-postası
         _ = Task.Run(async () =>
@@ -362,8 +376,8 @@ public class AdminController : ControllerBase
     [HttpPut("merchants/{id:guid}")]
     public async Task<IActionResult> UpdateMerchant(Guid id, [FromBody] UpdateMerchantDto dto)
     {
-        var merchant = await _db.MerchantProfiles
-            .Include(m => m.Subscription)
+        var merchant = await _db
+            .MerchantProfiles.Include(m => m.Subscription)
             .FirstOrDefaultAsync(m => m.Id == id);
         if (merchant == null)
             return NotFound();
@@ -375,8 +389,10 @@ public class AdminController : ControllerBase
         merchant.UpdatedAt = DateTime.UtcNow;
 
         // Plan değişikliği — Subscription tablosunu güncelle veya oluştur
-        if (!string.IsNullOrEmpty(dto.Plan) &&
-            Enum.TryParse<PlanType>(dto.Plan, ignoreCase: true, out var newPlan))
+        if (
+            !string.IsNullOrEmpty(dto.Plan)
+            && Enum.TryParse<PlanType>(dto.Plan, ignoreCase: true, out var newPlan)
+        )
         {
             if (merchant.Subscription is not null)
             {
@@ -503,22 +519,34 @@ public class AdminController : ControllerBase
     {
         var pending = await _db
             .Products.Include(p => p.Category)
+                .ThenInclude(c => c!.Parent)
             .Include(p => p.Merchant)
+                .ThenInclude(m => m.User)
             .Where(p => !p.IsApproved && !p.IsDeleted)
             .OrderByDescending(p => p.CreatedAt)
             .Select(p => new
             {
-                p.Id,
-                p.Name,
-                p.Images,
-                p.Price,
-                p.CreatedAt,
-                Category = p.Category == null ? null : p.Category.Name,
-                Merchant = new { p.Merchant.StoreName, p.Merchant.Slug },
+                id = p.Id,
+                name = p.Name,
+                description = p.Description,
+                images = p.Images,
+                tags = p.Tags,
+                price = p.Price,
+                createdAt = p.CreatedAt,
+                categoryName = p.Category == null
+                    ? ""
+                    : (p.Category.ParentId == null ? p.Category.Name : p.Category.Parent!.Name),
+                subcategoryName = p.Category == null
+                    ? (string?)null
+                    : (p.Category.ParentId == null ? (string?)null : p.Category.Name),
+                createdByName = p.Merchant.User == null
+                    ? ""
+                    : $"{p.Merchant.User.FirstName} {p.Merchant.User.LastName}".Trim(),
+                merchantStoreName = p.Merchant.StoreName,
             })
             .ToListAsync();
 
-        return Ok(pending);
+        return Ok(new { data = pending, total = pending.Count });
     }
 
     [HttpPatch("products/{id:guid}/approve")]
@@ -532,6 +560,20 @@ public class AdminController : ControllerBase
         product.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return Ok(new { message = "Ürün onaylandı.", product.Id });
+    }
+
+    [HttpPatch("products/{id:guid}/reject")]
+    public async Task<IActionResult> RejectProduct(Guid id, [FromBody] RejectProductAdminDto? dto)
+    {
+        var product = await _db.Products.FindAsync(id);
+        if (product == null || product.IsDeleted)
+            return NotFound();
+
+        // Ürünü onaylı olmayan şekilde işaretle (zaten IsApproved=false, sadece loglama/bildirim)
+        product.IsApproved = false;
+        product.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Ürün reddedildi.", product.Id });
     }
 
     // ── STORE SETUP ───────────────────────────────────────────────────────────
@@ -621,15 +663,17 @@ public class AdminController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int limit = 20,
         [FromQuery] string? search = null,
-        [FromQuery] string? role = null)
+        [FromQuery] string? role = null
+    )
     {
         var query = _db.Users.Where(u => !u.IsDeleted).AsQueryable();
 
         if (!string.IsNullOrEmpty(search))
             query = query.Where(u =>
-                EF.Functions.ILike(u.Email, $"%{search}%") ||
-                EF.Functions.ILike(u.FirstName, $"%{search}%") ||
-                EF.Functions.ILike(u.LastName, $"%{search}%"));
+                EF.Functions.ILike(u.Email, $"%{search}%")
+                || EF.Functions.ILike(u.FirstName, $"%{search}%")
+                || EF.Functions.ILike(u.LastName, $"%{search}%")
+            );
 
         if (!string.IsNullOrEmpty(role) && Enum.TryParse<UserRole>(role, true, out var parsedRole))
             query = query.Where(u => u.Role == parsedRole);
@@ -652,13 +696,23 @@ public class AdminController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(new { total, page, limit, items });
+        return Ok(
+            new
+            {
+                total,
+                page,
+                limit,
+                items,
+            }
+        );
     }
 }
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────
 
 public record RejectMerchantDto(string Reason);
+
+public record RejectProductAdminDto(string? Reason);
 
 public record CreateMerchantDto(
     string Email,

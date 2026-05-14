@@ -797,22 +797,34 @@ public class ProductsController : ControllerBase
     {
         var pending = await _db
             .Products.Include(p => p.Category)
+                .ThenInclude(c => c!.Parent)
             .Include(p => p.Merchant)
+                .ThenInclude(m => m.User)
             .Where(p => !p.IsDeleted && !p.IsApproved)
             .OrderByDescending(p => p.CreatedAt)
             .Select(p => new
             {
-                p.Id,
-                p.Name,
-                p.Images,
-                p.Price,
-                p.CreatedAt,
-                Category = p.Category == null ? null : p.Category.Name,
-                Merchant = new { p.Merchant.StoreName, p.Merchant.Slug },
+                id = p.Id,
+                name = p.Name,
+                description = p.Description,
+                images = p.Images,
+                tags = p.Tags,
+                price = p.Price,
+                createdAt = p.CreatedAt,
+                categoryName = p.Category == null
+                    ? ""
+                    : (p.Category.ParentId == null ? p.Category.Name : p.Category.Parent!.Name),
+                subcategoryName = p.Category == null
+                    ? (string?)null
+                    : (p.Category.ParentId == null ? (string?)null : p.Category.Name),
+                createdByName = p.Merchant.User == null
+                    ? ""
+                    : $"{p.Merchant.User.FirstName} {p.Merchant.User.LastName}".Trim(),
+                merchantStoreName = p.Merchant.StoreName,
             })
             .ToListAsync();
 
-        return Ok(pending);
+        return Ok(new { data = pending, total = pending.Count });
     }
 
     /// <summary>Ürün onayla</summary>
