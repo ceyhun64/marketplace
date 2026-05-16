@@ -9,6 +9,7 @@ import FlashSale from "@/components/modules/home/FlashSale";
 import TrustBadges from "@/components/modules/home/TrustBadges";
 import NewsletterSection from "@/components/modules/home/NewsletterSection";
 import RecentlyViewed from "@/components/modules/home/RecentlyViewed";
+import TestimonialsSection from "@/components/modules/home/TestimonialsSection";
 
 export const metadata = {
   title: "Marketplace — Thousands of Sellers, One Platform",
@@ -51,7 +52,10 @@ export default async function HomePage() {
       {/* 9. Nasıl Çalışır? */}
       <HowItWorks />
 
-      {/* 10. Newsletter — Email acquisition */}
+      {/* 10. Testimonials & Platform İstatistikleri — Social proof */}
+      <TestimonialsSection />
+
+      {/* 11. Newsletter — Email acquisition */}
       <NewsletterSection />
     </main>
   );
