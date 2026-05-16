@@ -7,6 +7,7 @@ const adminLinks = [
   { href: "/admin/orders", label: "Orders", icon: "shopping-cart" },
   { href: "/admin/fulfillment", label: "Fulfillment", icon: "truck" },
   { href: "/admin/couriers", label: "Couriers", icon: "user-check" },
+  { href: "/admin/users", label: "Users", icon: "users" },
   { href: "/admin/categories", label: "Categories", icon: "tag" },
   { href: "/admin/invoices", label: "Invoices", icon: "file-text" },
   { href: "/admin/plugins", label: "Plugin Marketplace", icon: "puzzle" },

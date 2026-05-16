@@ -21,14 +21,18 @@ import Link from "next/link";
 interface DashboardStats {
   totalOrders: number;
   pendingOrders: number;
+  ordersToday: number;
+  ordersThisMonth: number;
   totalMerchants: number;
   activeMerchants: number;
   totalRevenue: number;
+  revenueThisMonth: number;
   totalProducts: number;
   pendingProducts: number;
   pendingMerchants: number;
   fulfillmentSuccessRate: number;
   activeDeliveries: number;
+  totalUsers: number;
   recentOrders?: any[];
 }
 
@@ -41,14 +45,18 @@ export default function AdminDashboardPage() {
       return {
         totalOrders: d.orders?.totalOrders ?? d.totalOrders ?? 0,
         pendingOrders: d.orders?.pendingOrders ?? d.pendingOrders ?? 0,
+        ordersToday: d.orders?.ordersToday ?? d.ordersToday ?? 0,
+        ordersThisMonth: d.orders?.ordersThisMonth ?? d.ordersThisMonth ?? 0,
         totalMerchants: d.merchants?.totalMerchants ?? d.totalMerchants ?? 0,
         activeMerchants: d.merchants?.activeMerchants ?? d.activeMerchants ?? 0,
         totalRevenue: d.totalRevenue ?? d.revenue?.revenueThisMonth ?? 0,
+        revenueThisMonth: d.revenue?.revenueThisMonth ?? 0,
         totalProducts: d.totalProducts ?? 0,
         pendingProducts: d.pendingProducts ?? 0,
         pendingMerchants: d.pendingMerchants ?? 0,
         fulfillmentSuccessRate: d.fulfillmentSuccessRate ?? 0,
         activeDeliveries: d.activeShipments ?? d.activeDeliveries ?? 0,
+        totalUsers: d.totalUsers ?? 0,
         recentOrders: d.recentOrders,
       } as DashboardStats;
     },
@@ -74,6 +82,22 @@ export default function AdminDashboardPage() {
       href: "/admin/orders",
     },
     {
+      label: "Orders Today",
+      value: stats.ordersToday ?? 0,
+      icon: TrendingUp,
+      color: "text-cyan-600",
+      bg: "bg-cyan-50",
+      href: "/admin/orders",
+    },
+    {
+      label: "Orders This Month",
+      value: stats.ordersThisMonth ?? 0,
+      icon: ShoppingCart,
+      color: "text-indigo-600",
+      bg: "bg-indigo-50",
+      href: "/admin/orders",
+    },
+    {
       label: "Active Merchants",
       value: `${stats.activeMerchants ?? 0} / ${stats.totalMerchants ?? 0}`,
       icon: Users,
@@ -82,11 +106,27 @@ export default function AdminDashboardPage() {
       href: "/admin/merchants",
     },
     {
+      label: "Total Users",
+      value: stats.totalUsers ?? 0,
+      icon: Users,
+      color: "text-teal-600",
+      bg: "bg-teal-50",
+      href: "/admin/users",
+    },
+    {
       label: "Total Revenue",
       value: `₺${(stats.totalRevenue ?? 0).toLocaleString("en-US")}`,
       icon: DollarSign,
       color: "text-emerald-600",
       bg: "bg-emerald-50",
+      href: "/admin/analytics",
+    },
+    {
+      label: "This Month Revenue",
+      value: `₺${(stats.revenueThisMonth ?? 0).toLocaleString("en-US")}`,
+      icon: TrendingUp,
+      color: "text-green-600",
+      bg: "bg-green-50",
       href: "/admin/analytics",
     },
     {
@@ -114,32 +154,26 @@ export default function AdminDashboardPage() {
       href: "/admin/analytics",
     },
     {
-      label: "Pending Merchants",
-      value: stats.pendingMerchants ?? 0,
-      icon: Store,
-      color: "text-orange-600",
-      bg: "bg-orange-50",
-      href: "/admin/merchants?tab=pending",
-    },
-    {
       label: "Active Deliveries",
       value: stats.activeDeliveries ?? 0,
       icon: Truck,
       color: "text-indigo-600",
       bg: "bg-indigo-50",
-      href: "/admin/orders",
+      href: "/admin/fulfillment",
     },
   ];
 
   const quickLinks = [
-    { href: "/admin/merchants", label: "Add Merchant", icon: Users },
+    { href: "/admin/merchants", label: "Merchants", icon: Users },
     {
-      href: "/admin/products/pending",
+      href: "/admin/products",
       label: "Review Products",
       icon: Package,
     },
     { href: "/admin/categories", label: "Categories", icon: TrendingUp },
     { href: "/admin/couriers", label: "Couriers", icon: Truck },
+    { href: "/admin/users", label: "Users", icon: Store },
+    { href: "/admin/analytics", label: "Analytics", icon: TrendingUp },
   ];
 
   return (
@@ -155,7 +189,7 @@ export default function AdminDashboardPage() {
       {/* Stats Grid */}
       {isLoading ? (
         <div className="grid grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
               className="bg-white rounded-xl border border-gray-100 p-5"
@@ -192,7 +226,7 @@ export default function AdminDashboardPage() {
         <h2 className="text-sm font-semibold text-gray-900 mb-4">
           Quick Actions
         </h2>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-6 gap-3">
           {quickLinks.map((link) => (
             <Link key={link.href} href={link.href}>
               <div className="flex flex-col items-center justify-center p-4 border border-dashed border-gray-200 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all cursor-pointer gap-2">

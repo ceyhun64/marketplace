@@ -200,8 +200,17 @@ export default function AdminProductsPage() {
     onError: () => toast.error("Failed to delete product"),
   });
 
-  const allProducts: Product[] = productsData?.items || productsData || [];
-  const pendingProducts: Product[] = pendingData?.items || pendingData || [];
+  const toArray = (raw: any): Product[] => {
+    if (Array.isArray(raw)) return raw;
+    if (!raw) return [];
+    if (Array.isArray(raw.items)) return raw.items;
+    if (Array.isArray(raw.data)) return raw.data;
+    if (Array.isArray(raw.products)) return raw.products;
+    return [];
+  };
+
+  const allProducts: Product[] = toArray(productsData);
+  const pendingProducts: Product[] = toArray(pendingData);
   const categories: Category[] = categoriesData?.items || categoriesData || [];
   const merchants: Merchant[] = merchantsData?.items || merchantsData || [];
 
