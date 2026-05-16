@@ -1,7 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Trophy, TrendingUp, Star, ArrowRight, Flame, SlidersHorizontal, ChevronDown } from "lucide-react";
+import {
+  Trophy,
+  TrendingUp,
+  Star,
+  ArrowRight,
+  Flame,
+  SlidersHorizontal,
+  ChevronDown,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -49,7 +57,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "price_desc", label: "Price: High to Low" },
 ];
 
-
+function SkeletonGrid() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {Array.from({ length: 12 }).map((_, i) => (
@@ -80,7 +88,8 @@ export default function BestsellersPage() {
     return 0; // popular / rating: API-ordered
   });
 
-  const activeSortLabel = SORT_OPTIONS.find((o) => o.key === sort)?.label ?? "Sort";
+  const activeSortLabel =
+    SORT_OPTIONS.find((o) => o.key === sort)?.label ?? "Sort";
 
   return (
     <main className="min-h-screen">
@@ -139,90 +148,95 @@ export default function BestsellersPage() {
       {/* Content */}
       <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-10">
         {/* Top 3 podium */}
-        {!isLoading && !isError && sortedProducts && sortedProducts.length >= 3 && (
-          <div className="mb-12">
-            <div className="flex items-center gap-3 mb-6">
-              <span
-                className="inline-block w-6 h-px"
-                style={{ background: "var(--red)" }}
-              />
-              <span
-                className="font-mono text-[11px] tracking-[0.18em] uppercase"
-                style={{ color: "var(--charcoal-soft)" }}
-              >
-                Top 3 This Week
-              </span>
-            </div>
-            <div className="grid md:grid-cols-3 gap-4">
-              {sortedProducts.slice(0, 3).map((product, i) => {
-                const medals = ["🥇", "🥈", "🥉"];
-                const borders = [
-                  "border-yellow-400/40",
-                  "border-gray-300/40",
-                  "border-amber-600/40",
-                ];
-                return (
-                  <div
-                    key={product.id}
-                    className={`bg-white rounded-2xl overflow-hidden border-2 ${borders[i]} relative`}
-                    style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}
-                  >
-                    <div className="absolute top-3 left-3 z-10 text-2xl">
-                      {medals[i]}
-                    </div>
-                    <div className="aspect-[4/3] bg-gray-50 overflow-hidden">
-                      {product.images?.[0] ? (
-                        <img
-                          src={product.images[0]}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[var(--charcoal-mist)]">
-                          No image
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-5">
-                      <Link
-                        href={`/store/${product.merchantSlug}`}
-                        className="font-mono text-[10px] uppercase tracking-wider text-[var(--red)] hover:underline"
-                      >
-                        {product.merchantStoreName}
-                      </Link>
-                      <h3 className="font-bold text-[var(--charcoal)] mt-1 mb-3 leading-tight">
-                        {product.name}
-                      </h3>
-                      <div className="flex items-center justify-between">
-                        <span
-                          className="text-2xl font-bold text-[var(--charcoal)]"
-                          style={{ fontFamily: "var(--font-display)" }}
-                        >
-                          ₺{product.price.toFixed(2)}
-                        </span>
+        {!isLoading &&
+          !isError &&
+          sortedProducts &&
+          sortedProducts.length >= 3 && (
+            <div className="mb-12">
+              <div className="flex items-center gap-3 mb-6">
+                <span
+                  className="inline-block w-6 h-px"
+                  style={{ background: "var(--red)" }}
+                />
+                <span
+                  className="font-mono text-[11px] tracking-[0.18em] uppercase"
+                  style={{ color: "var(--charcoal-soft)" }}
+                >
+                  Top 3 This Week
+                </span>
+              </div>
+              <div className="grid md:grid-cols-3 gap-4">
+                {sortedProducts.slice(0, 3).map((product, i) => {
+                  const medals = ["🥇", "🥈", "🥉"];
+                  const borders = [
+                    "border-yellow-400/40",
+                    "border-gray-300/40",
+                    "border-amber-600/40",
+                  ];
+                  return (
+                    <div
+                      key={product.id}
+                      className={`bg-white rounded-2xl overflow-hidden border-2 ${borders[i]} relative`}
+                      style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}
+                    >
+                      <div className="absolute top-3 left-3 z-10 text-2xl">
+                        {medals[i]}
+                      </div>
+                      <div className="aspect-[4/3] bg-gray-50 overflow-hidden">
+                        {product.images?.[0] ? (
+                          <img
+                            src={product.images[0]}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[var(--charcoal-mist)]">
+                            No image
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-5">
                         <Link
-                          href={`/product/${product.id}`}
-                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all"
-                          style={{ background: "var(--charcoal)" }}
-                          onMouseEnter={(e) =>
-                            ((e.currentTarget as HTMLElement).style.background =
-                              "var(--red)")
-                          }
-                          onMouseLeave={(e) =>
-                            ((e.currentTarget as HTMLElement).style.background =
-                              "var(--charcoal)")
-                          }
+                          href={`/store/${product.merchantSlug}`}
+                          className="font-mono text-[10px] uppercase tracking-wider text-[var(--red)] hover:underline"
                         >
-                          View <ArrowRight className="w-3.5 h-3.5" />
+                          {product.merchantStoreName}
                         </Link>
+                        <h3 className="font-bold text-[var(--charcoal)] mt-1 mb-3 leading-tight">
+                          {product.name}
+                        </h3>
+                        <div className="flex items-center justify-between">
+                          <span
+                            className="text-2xl font-bold text-[var(--charcoal)]"
+                            style={{ fontFamily: "var(--font-display)" }}
+                          >
+                            ₺{product.price.toFixed(2)}
+                          </span>
+                          <Link
+                            href={`/product/${product.id}`}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all"
+                            style={{ background: "var(--charcoal)" }}
+                            onMouseEnter={(e) =>
+                              ((
+                                e.currentTarget as HTMLElement
+                              ).style.background = "var(--red)")
+                            }
+                            onMouseLeave={(e) =>
+                              ((
+                                e.currentTarget as HTMLElement
+                              ).style.background = "var(--charcoal)")
+                            }
+                          >
+                            View <ArrowRight className="w-3.5 h-3.5" />
+                          </Link>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* All products */}
         <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
@@ -247,14 +261,19 @@ export default function BestsellersPage() {
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
               {activeSortLabel}
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${sortOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform ${sortOpen ? "rotate-180" : ""}`}
+              />
             </button>
             {sortOpen && (
               <div className="absolute right-0 top-full mt-1 bg-white rounded-xl border border-black/10 shadow-lg z-20 min-w-[190px] overflow-hidden">
                 {SORT_OPTIONS.map((opt) => (
                   <button
                     key={opt.key}
-                    onClick={() => { setSort(opt.key); setSortOpen(false); }}
+                    onClick={() => {
+                      setSort(opt.key);
+                      setSortOpen(false);
+                    }}
                     className={`w-full text-left px-4 py-2.5 text-[13px] hover:bg-[var(--off-white)] transition-colors ${sort === opt.key ? "font-bold text-[var(--red)]" : "text-[var(--charcoal)]"}`}
                   >
                     {opt.label}
@@ -279,45 +298,51 @@ export default function BestsellersPage() {
           </div>
         )}
 
-        {!isLoading && !isError && sortedProducts && sortedProducts.length === 0 && (
-          <div className="text-center py-20">
-            <Trophy
-              className="w-12 h-12 mx-auto mb-4"
-              style={{ color: "rgba(51,51,51,0.15)" }}
-            />
-            <h2 className="text-xl font-bold text-[var(--charcoal)] mb-2">
-              No bestsellers yet
-            </h2>
-            <p className="text-[var(--charcoal-soft)] mb-6">
-              Check back soon — rankings update weekly.
-            </p>
-            <Link
-              href="/products"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white"
-              style={{ background: "var(--charcoal)" }}
-            >
-              Browse All Products <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        )}
+        {!isLoading &&
+          !isError &&
+          sortedProducts &&
+          sortedProducts.length === 0 && (
+            <div className="text-center py-20">
+              <Trophy
+                className="w-12 h-12 mx-auto mb-4"
+                style={{ color: "rgba(51,51,51,0.15)" }}
+              />
+              <h2 className="text-xl font-bold text-[var(--charcoal)] mb-2">
+                No bestsellers yet
+              </h2>
+              <p className="text-[var(--charcoal-soft)] mb-6">
+                Check back soon — rankings update weekly.
+              </p>
+              <Link
+                href="/products"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white"
+                style={{ background: "var(--charcoal)" }}
+              >
+                Browse All Products <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          )}
 
-        {!isLoading && !isError && sortedProducts && sortedProducts.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {sortedProducts.map((product, i) => (
-              <div key={product.id} className="relative">
-                {i < 10 && (
-                  <div
-                    className="absolute top-3 left-3 z-10 w-7 h-7 rounded-full flex items-center justify-center font-mono text-[11px] font-bold text-white"
-                    style={{ background: "var(--red)" }}
-                  >
-                    {i + 1}
-                  </div>
-                )}
-                <ProductCard product={product} />
-              </div>
-            ))}
-          </div>
-        )}
+        {!isLoading &&
+          !isError &&
+          sortedProducts &&
+          sortedProducts.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {sortedProducts.map((product, i) => (
+                <div key={product.id} className="relative">
+                  {i < 10 && (
+                    <div
+                      className="absolute top-3 left-3 z-10 w-7 h-7 rounded-full flex items-center justify-center font-mono text-[11px] font-bold text-white"
+                      style={{ background: "var(--red)" }}
+                    >
+                      {i + 1}
+                    </div>
+                  )}
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          )}
       </div>
     </main>
   );
