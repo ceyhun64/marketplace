@@ -1,15 +1,17 @@
-export const metadata = {
+import TrackPage from "@/components/modules/track/TrackPage";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
   title: "Track Your Order — Marketplace",
-  description: "Track the status of your order in real time.",
+  description:
+    "Enter your tracking number to see real-time delivery status of your BAZR Marketplace order.",
+  openGraph: {
+    title: "Track Your Order — BAZR Marketplace",
+    description: "Real-time order tracking for BAZR Marketplace shipments.",
+    type: "website",
+  },
 };
 
 export default function TrackRoute() {
-  return (
-    <main className="container mx-auto px-4 py-16 min-h-[60vh] flex flex-col items-center justify-center text-center">
-      <h1 className="text-3xl font-bold mb-4">Track Your Order</h1>
-      <p className="text-muted-foreground max-w-md">
-        Enter your tracking number to see the status of your order.
-      </p>
-    </main>
-  );
+  return <TrackPage />;
 }

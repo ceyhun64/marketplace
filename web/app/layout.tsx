@@ -18,7 +18,7 @@ const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
   weight: ["400", "500", "600"],
   display: "swap",
-  preload: false, // Aktif sayfalarda body font değil, isteğe bağlı yüklenir
+  preload: false,
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -26,12 +26,33 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains",
   weight: ["400", "500"],
   display: "swap",
-  preload: false, // Sadece kod bloklarında kullanıldığından preload gerekmez
+  preload: false,
 });
 
 export const metadata: Metadata = {
   title: { default: "BAZR — Marketplace & Fulfillment", template: "%s | BAZR" },
-  description: "Multi-tenant marketplace with integrated courier fulfillment.",
+  description:
+    "Multi-tenant marketplace with integrated courier fulfillment. Shop thousands of products from verified sellers.",
+  metadataBase: new URL("https://bazr.com"),
+  openGraph: {
+    title: "BAZR — Marketplace & Fulfillment",
+    description:
+      "Multi-tenant marketplace with integrated courier fulfillment. Shop thousands of products from verified sellers.",
+    type: "website",
+    siteName: "BAZR Marketplace",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BAZR — Marketplace & Fulfillment",
+    description:
+      "Shop thousands of products from verified sellers on BAZR Marketplace.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
 };
 
 export default function RootLayout({
