@@ -1,227 +1,674 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import {
   RotateCcw,
   PackageX,
   Clock,
   CreditCard,
-  AlertTriangle,
   CheckCircle2,
-  HelpCircle,
+  ChevronDown,
+  ArrowRight,
+  Truck,
+  ShieldCheck,
+  MessageSquare,
+  AlertCircle,
+  Package,
+  RefreshCw,
 } from "lucide-react";
 
 const RETURN_STEPS = [
   {
     number: "01",
-    title: "Contact Us Within 14 Days",
-    desc: "Submit a return request from your Orders page or contact our support team within 14 calendar days of receiving your order. Include your order number and reason for return.",
+    icon: Package,
+    title: "Create Return Request",
+    desc: "Select the relevant order from the My Orders page, click the 'Return Request' button and state the reason for return. Must be done within 14 calendar days from the delivery date.",
+    time: "~2 mins",
   },
   {
     number: "02",
-    title: "Return Approval",
-    desc: "Our team reviews your request within 1–2 business days. Once approved, you'll receive a prepaid shipping label by email (eligible orders only).",
+    icon: CheckCircle2,
+    title: "Approval & Label",
+    desc: "Our support team will review your request within 1–2 business days. Once approved, a prepaid shipping label will be sent to your email address.",
+    time: "1–2 business days",
   },
   {
     number: "03",
-    title: "Ship the Item Back",
-    desc: "Securely package the item in its original packaging where possible and drop it off at any authorised shipping point. Keep your tracking number.",
+    icon: Truck,
+    title: "Ship the Item",
+    desc: "Pack the product securely in its original packaging. Attach the label and drop it off at an authorized shipping point. Keep the tracking number.",
+    time: "Up to you",
   },
   {
     number: "04",
-    title: "Refund Processed",
-    desc: "Once we receive and inspect the returned item (typically 2–3 business days), your refund is issued to the original payment method within 5–7 business days.",
+    icon: CreditCard,
+    title: "Return Received & Inspection",
+    desc: "Once the product reaches our warehouse, it is inspected within 2–3 business days. If there are no issues, the refund process is initiated.",
+    time: "2–3 business days",
+  },
+  {
+    number: "05",
+    icon: RefreshCw,
+    title: "Refund",
+    desc: "The approved refund amount will be credited back to the original payment method within 5–7 business days. A notification email will be sent.",
+    time: "5–7 business days",
   },
 ];
 
 const ELIGIBLE = [
-  "Item arrived damaged or defective",
-  "Incorrect item received (wrong product or size)",
-  "Item significantly different from the product description",
-  "Item not received within 10 business days of dispatch",
+  "Damaged or defective product",
+  "Incorrect item/size shipped",
+  "Product significantly different from description",
+  "Not delivered despite 10 business days passing since shipment",
 ];
 
 const NOT_ELIGIBLE = [
-  "Items returned after the 14-day window",
-  "Items showing signs of use, wear, or damage caused by the customer",
+  "Returns requested after the 14-day window",
+  "Customer-inflicted wear, tear, or damage",
   "Digital products, downloadable content, and gift cards",
-  "Perishable goods and personalised / custom-made items",
-  "Items without original packaging where packaging is required for hygiene",
+  "Perishable goods and customized/made-to-order products",
+  "Products with opened original packaging due to hygiene reasons",
 ];
 
-const FAQ = [
+const FAQS = [
   {
-    q: "How long does a refund take?",
-    a: "After your return is received and inspected (2–3 business days), your refund is processed within 5–7 business days to your original payment method. Bank processing times may add 1–3 additional days depending on your provider.",
+    q: "When will I receive my refund?",
+    a: "Once the returned item reaches our warehouse, it is inspected within 2–3 business days. After approval, the refund process is initiated and will reflect on your payment method within 5–7 business days depending on your provider. Bank processing times may add an extra 1–3 business days.",
   },
   {
     q: "Can I exchange an item instead of returning it?",
-    a: "At this time we process returns as refunds only. To get a different item, place a new order after your refund is confirmed.",
+    a: "Currently, returns are only processed as monetary refunds. If you wish to purchase a different item, you can place a new order after your return is approved.",
   },
   {
-    q: "What if my item arrived damaged?",
-    a: "Please take photos of the damaged item and packaging immediately. Contact us within 14 days with the photos and your order number. Damaged items are eligible for a full refund or re-shipment at no cost to you.",
+    q: "My item arrived damaged, what should I do?",
+    a: "Take photos of the damaged product and its packaging immediately. Contact us within 14 days with your order number and the photos. A full refund or free replacement will be provided for damaged items.",
   },
   {
-    q: "Who pays for return shipping?",
-    a: "If the return is due to our error (damaged, defective, or wrong item), we provide a prepaid return shipping label. For change-of-mind returns, return shipping costs are the customer's responsibility.",
+    q: "Who covers the return shipping cost?",
+    a: "If the error is on our end (damaged, defective, or incorrect product), we provide a prepaid return label. For returns due to a change of mind, the shipping cost belongs to the buyer.",
   },
   {
-    q: "I ordered from an independent merchant store. Who handles my return?",
-    a: "All returns are processed centrally through our platform regardless of which store you ordered from. Contact us and we'll coordinate with the merchant on your behalf.",
+    q: "I ordered from an independent store, how do I make a return?",
+    a: "Regardless of which store you ordered from, all returns are processed centrally through the platform. Contact us, and we will handle the coordination with the respective seller.",
+  },
+  {
+    q: "What happens if my return is rejected?",
+    a: "In case of rejection, we will notify you via email and explain the reason. If you wish to contest our decision, you can contact our support team; we review each case individually.",
   },
 ];
 
 export default function ReturnsPage() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
   return (
-    <main className="container mx-auto px-4 py-16 max-w-3xl">
+    <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
       {/* Hero */}
-      <div className="text-center mb-14">
-        <span className="inline-block text-xs font-mono tracking-widest uppercase text-muted-foreground mb-3">
-          Customer Support
-        </span>
-        <h1 className="text-4xl font-bold mb-4">Returns &amp; Refunds</h1>
-        <p className="text-muted-foreground max-w-xl mx-auto text-base leading-relaxed">
-          We want you to be completely satisfied with every purchase. If
-          something isn't right, we'll make it right — here's how our return and
-          refund process works.
-        </p>
+      <div
+        className="relative overflow-hidden py-16 px-4"
+        style={{ background: "var(--charcoal)" }}
+      >
+        <div
+          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(200,16,46,0.10) 0%, transparent 70%)",
+            transform: "translate(30%, -30%)",
+          }}
+        />
+        <div className="max-w-[1300px] mx-auto relative z-10">
+          <div className="inline-flex items-center gap-2 mb-5">
+            <RotateCcw className="w-4 h-4" style={{ color: "var(--red)" }} />
+            <span
+              className="font-mono text-[10px] uppercase tracking-[3px]"
+              style={{ color: "var(--charcoal-soft)" }}
+            >
+              Customer Support
+            </span>
+          </div>
+          <h1
+            className="text-[40px] lg:text-[64px] text-white leading-tight mb-4 max-w-2xl"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Returns & <span style={{ color: "var(--red)" }}>Refunds</span>
+          </h1>
+          <p
+            className="text-base max-w-xl leading-relaxed mb-8"
+            style={{
+              color: "var(--charcoal-soft)",
+              fontFamily: "var(--font-body)",
+            }}
+          >
+            We want you to be fully satisfied with every purchase. If there is a
+            problem, we will take care of it.
+          </p>
+          <div className="flex flex-wrap gap-6">
+            {[
+              { icon: Clock, label: "14-Day Return Window" },
+              {
+                icon: ShieldCheck,
+                label: "Free Return Label (If It's Our Fault)",
+              },
+              { icon: CreditCard, label: "5–7 Business Days Refund" },
+            ].map(({ icon: Icon, label }) => (
+              <div key={label} className="flex items-center gap-2">
+                <Icon
+                  className="w-4 h-4 flex-shrink-0"
+                  style={{ color: "var(--red)" }}
+                />
+                <span
+                  className="text-sm"
+                  style={{
+                    color: "rgba(255,255,255,0.75)",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Return Window Banner */}
-      <div className="flex items-center gap-4 bg-blue-50 border border-blue-200 rounded-2xl px-6 py-4 mb-12">
-        <Clock className="w-8 h-8 text-blue-500 flex-shrink-0" />
+      {/* Info banner */}
+      <div
+        className="mx-4 lg:mx-auto max-w-[1300px] -mt-6 relative z-10 rounded-2xl px-6 py-4 flex items-center gap-4"
+        style={{
+          background: "var(--info-bg)",
+          border: "1.5px solid var(--info-border)",
+          boxShadow: "var(--shadow-md)",
+        }}
+      >
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{
+            background: "var(--info-bg)",
+            border: "1px solid var(--info-border)",
+          }}
+        >
+          <Clock className="w-5 h-5" style={{ color: "var(--info)" }} />
+        </div>
         <div>
-          <p className="font-bold text-blue-900">14-Day Return Window</p>
-          <p className="text-sm text-blue-700">
-            You have 14 calendar days from the date of delivery to initiate a
-            return.
+          <p
+            className="font-bold text-sm"
+            style={{ color: "var(--info)", fontFamily: "var(--font-body)" }}
+          >
+            14-Day Return Window
+          </p>
+          <p
+            className="text-sm"
+            style={{
+              color: "var(--charcoal-soft)",
+              fontFamily: "var(--font-body)",
+            }}
+          >
+            You can request a return within 14 calendar days from the delivery
+            date.
           </p>
         </div>
       </div>
 
-      {/* How It Works */}
-      <section className="mb-14">
-        <h2 className="text-xl font-bold mb-6">How Returns Work</h2>
-        <div className="space-y-4">
-          {RETURN_STEPS.map((step) => (
-            <div
-              key={step.number}
-              className="flex gap-4 rounded-2xl border border-border bg-card p-5"
+      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-16 space-y-20">
+        {/* Timeline */}
+        <section>
+          <div className="mb-10">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <div className="w-1 h-4" style={{ background: "var(--red)" }} />
+              <span
+                className="font-mono text-[10px] uppercase tracking-[3px]"
+                style={{ color: "var(--charcoal-mist)" }}
+              >
+                Process
+              </span>
+            </div>
+            <h2
+              className="text-[28px] lg:text-[36px] leading-tight"
+              style={{
+                fontFamily: "var(--font-display)",
+                color: "var(--charcoal)",
+              }}
             >
-              <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gray-900 text-white flex items-center justify-center font-mono text-xs font-bold">
-                {step.number}
+              How Does It Work?
+            </h2>
+          </div>
+          <div className="relative">
+            <div
+              className="absolute left-[28px] top-10 bottom-10 w-px hidden lg:block"
+              style={{ background: "var(--border-light)" }}
+            />
+            <div className="space-y-4">
+              {RETURN_STEPS.map((step, i) => {
+                const Icon = step.icon;
+                const isLast = i === RETURN_STEPS.length - 1;
+                return (
+                  <div key={step.number} className="flex gap-6 items-start">
+                    <div className="flex-shrink-0 relative z-10">
+                      <div
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                        style={{
+                          background: isLast ? "var(--red)" : "var(--white)",
+                          border: `1.5px solid ${isLast ? "var(--red)" : "var(--border-light)"}`,
+                          boxShadow: isLast
+                            ? "var(--shadow-red)"
+                            : "var(--shadow-sm)",
+                        }}
+                      >
+                        <Icon
+                          className="w-5 h-5"
+                          style={{
+                            color: isLast ? "white" : "var(--charcoal-soft)",
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div
+                      className="flex-1 rounded-2xl p-5"
+                      style={{
+                        background: "var(--white)",
+                        border: "1px solid var(--border-light)",
+                        boxShadow: "var(--shadow-xs)",
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <span
+                            className="font-mono text-xs font-bold"
+                            style={{ color: "var(--charcoal-mist)" }}
+                          >
+                            {step.number}
+                          </span>
+                          <h3
+                            className="font-bold text-[0.9375rem]"
+                            style={{
+                              color: "var(--charcoal)",
+                              fontFamily: "var(--font-body)",
+                            }}
+                          >
+                            {step.title}
+                          </h3>
+                        </div>
+                        <span
+                          className="text-xs px-2.5 py-1 rounded-full"
+                          style={{
+                            background: "var(--off-white-2)",
+                            color: "var(--charcoal-mist)",
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "0.6875rem",
+                          }}
+                        >
+                          {step.time}
+                        </span>
+                      </div>
+                      <p
+                        className="text-sm leading-relaxed"
+                        style={{
+                          color: "var(--charcoal-soft)",
+                          fontFamily: "var(--font-body)",
+                        }}
+                      >
+                        {step.desc}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Eligible / Not Eligible */}
+        <section>
+          <div className="mb-8">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <div className="w-1 h-4" style={{ background: "var(--red)" }} />
+              <span
+                className="font-mono text-[10px] uppercase tracking-[3px]"
+                style={{ color: "var(--charcoal-mist)" }}
+              >
+                Eligibility
+              </span>
+            </div>
+            <h2
+              className="text-[28px] lg:text-[36px] leading-tight"
+              style={{
+                fontFamily: "var(--font-display)",
+                color: "var(--charcoal)",
+              }}
+            >
+              What Can Be Returned?
+            </h2>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div
+              className="rounded-2xl p-6"
+              style={{
+                background: "var(--success-bg)",
+                border: "1.5px solid var(--success-border)",
+              }}
+            >
+              <div className="flex items-center gap-2 mb-5">
+                <CheckCircle2
+                  className="w-5 h-5 flex-shrink-0"
+                  style={{ color: "var(--success)" }}
+                />
+                <h3
+                  className="font-bold text-sm"
+                  style={{
+                    color: "var(--success)",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  Eligible Items
+                </h3>
               </div>
-              <div>
-                <p className="font-semibold mb-1">{step.title}</p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {step.desc}
+              <ul className="space-y-3">
+                {ELIGIBLE.map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <span
+                      className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 text-white text-[10px] font-bold"
+                      style={{ background: "var(--success)" }}
+                    >
+                      ✓
+                    </span>
+                    <span
+                      className="text-sm leading-snug"
+                      style={{
+                        color: "var(--charcoal)",
+                        fontFamily: "var(--font-body)",
+                      }}
+                    >
+                      {item}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div
+              className="rounded-2xl p-6"
+              style={{
+                background: "var(--danger-bg)",
+                border: "1.5px solid var(--danger-border)",
+              }}
+            >
+              <div className="flex items-center gap-2 mb-5">
+                <PackageX
+                  className="w-5 h-5 flex-shrink-0"
+                  style={{ color: "var(--red)" }}
+                />
+                <h3
+                  className="font-bold text-sm"
+                  style={{
+                    color: "var(--red)",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  Non-Eligible Items
+                </h3>
+              </div>
+              <ul className="space-y-3">
+                {NOT_ELIGIBLE.map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <span
+                      className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 text-white text-[10px] font-bold"
+                      style={{ background: "var(--red)" }}
+                    >
+                      ✗
+                    </span>
+                    <span
+                      className="text-sm leading-snug"
+                      style={{
+                        color: "var(--charcoal)",
+                        fontFamily: "var(--font-body)",
+                      }}
+                    >
+                      {item}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Refund methods */}
+        <section>
+          <div className="mb-8">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <div className="w-1 h-4" style={{ background: "var(--red)" }} />
+              <span
+                className="font-mono text-[10px] uppercase tracking-[3px]"
+                style={{ color: "var(--charcoal-mist)" }}
+              >
+                Refund
+              </span>
+            </div>
+            <h2
+              className="text-[28px] lg:text-[36px] leading-tight"
+              style={{
+                fontFamily: "var(--font-display)",
+                color: "var(--charcoal)",
+              }}
+            >
+              Refund Methods
+            </h2>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-5">
+            {[
+              {
+                icon: CreditCard,
+                title: "Credit / Debit Card",
+                desc: "Refunded to the card used for payment within 5–7 business days.",
+                badge: "Most Common",
+              },
+              {
+                icon: RefreshCw,
+                title: "Wallet Credit",
+                desc: "Instantly loaded to your BAZR wallet, ready to use for your next purchases.",
+                badge: "Fastest",
+              },
+              {
+                icon: ShieldCheck,
+                title: "Bank Transfer",
+                desc: "If paid via IBAN, refund will be made to the same account within 5–10 business days.",
+                badge: null,
+              },
+            ].map(({ icon: Icon, title, desc, badge }) => (
+              <div
+                key={title}
+                className="rounded-2xl p-5"
+                style={{
+                  background: "var(--white)",
+                  border: "1px solid var(--border-light)",
+                  boxShadow: "var(--shadow-sm)",
+                }}
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: "var(--red-muted)" }}
+                  >
+                    <Icon className="w-5 h-5" style={{ color: "var(--red)" }} />
+                  </div>
+                  {badge && (
+                    <span
+                      className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full"
+                      style={{
+                        background: "var(--red-muted)",
+                        color: "var(--red)",
+                        fontFamily: "var(--font-mono)",
+                      }}
+                    >
+                      {badge}
+                    </span>
+                  )}
+                </div>
+                <h3
+                  className="font-bold text-sm mb-2"
+                  style={{
+                    color: "var(--charcoal)",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  {title}
+                </h3>
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{
+                    color: "var(--charcoal-soft)",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  {desc}
                 </p>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Eligible / Not Eligible */}
-      <section className="mb-14">
-        <h2 className="text-xl font-bold mb-6">What Can Be Returned?</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div className="rounded-2xl border border-green-200 bg-green-50 p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
-              <h3 className="font-semibold text-green-800">Eligible Returns</h3>
-            </div>
-            <ul className="space-y-2">
-              {ELIGIBLE.map((item) => (
-                <li
-                  key={item}
-                  className="flex items-start gap-2 text-sm text-green-900"
-                >
-                  <span className="mt-0.5 text-green-500 font-bold text-xs">
-                    ✓
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
+            ))}
           </div>
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <PackageX className="w-5 h-5 text-red-500" />
-              <h3 className="font-semibold text-red-800">Not Eligible</h3>
+        </section>
+
+        {/* FAQ Accordion */}
+        <section>
+          <div className="mb-8">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <div className="w-1 h-4" style={{ background: "var(--red)" }} />
+              <span
+                className="font-mono text-[10px] uppercase tracking-[3px]"
+                style={{ color: "var(--charcoal-mist)" }}
+              >
+                FAQ
+              </span>
             </div>
-            <ul className="space-y-2">
-              {NOT_ELIGIBLE.map((item) => (
-                <li
-                  key={item}
-                  className="flex items-start gap-2 text-sm text-red-900"
-                >
-                  <span className="mt-0.5 text-red-400 font-bold text-xs">
-                    ✗
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* Refund Info */}
-      <section className="mb-14">
-        <div className="rounded-2xl border border-border bg-card p-6 flex gap-4">
-          <CreditCard className="w-7 h-7 text-muted-foreground flex-shrink-0 mt-0.5" />
-          <div>
-            <h3 className="font-semibold mb-2">Refund Method &amp; Timing</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              All approved refunds are issued to the{" "}
-              <strong className="text-foreground">
-                original payment method
-              </strong>{" "}
-              used at checkout (credit/debit card via Stripe). You'll receive a
-              confirmation email once the refund is initiated. Please allow 5–7
-              business days for the refund to appear, plus any additional
-              processing time from your bank or card issuer.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="mb-14">
-        <h2 className="text-xl font-bold mb-6">Frequently Asked Questions</h2>
-        <div className="space-y-4">
-          {FAQ.map((item) => (
-            <div
-              key={item.q}
-              className="rounded-xl border border-border p-5 bg-card"
+            <h2
+              className="text-[28px] lg:text-[36px] leading-tight"
+              style={{
+                fontFamily: "var(--font-display)",
+                color: "var(--charcoal)",
+              }}
             >
-              <div className="flex items-start gap-2 mb-2">
-                <HelpCircle className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <p className="font-semibold text-sm">{item.q}</p>
+              Frequently Asked Questions
+            </h2>
+          </div>
+          <div className="space-y-2">
+            {FAQS.map((item, i) => (
+              <div
+                key={i}
+                className="rounded-2xl overflow-hidden"
+                style={{
+                  background: "var(--white)",
+                  border: `1.5px solid ${openFaq === i ? "var(--red)" : "var(--border-light)"}`,
+                  boxShadow:
+                    openFaq === i ? "var(--shadow-md)" : "var(--shadow-xs)",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <button
+                  className="w-full flex items-center justify-between p-5 text-left"
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                >
+                  <span
+                    className="font-semibold text-sm pr-4"
+                    style={{
+                      color: "var(--charcoal)",
+                      fontFamily: "var(--font-body)",
+                    }}
+                  >
+                    {item.q}
+                  </span>
+                  <ChevronDown
+                    className="w-4 h-4 flex-shrink-0 transition-transform"
+                    style={{
+                      color:
+                        openFaq === i ? "var(--red)" : "var(--charcoal-mist)",
+                      transform:
+                        openFaq === i ? "rotate(180deg)" : "rotate(0deg)",
+                    }}
+                  />
+                </button>
+                {openFaq === i && (
+                  <div
+                    className="px-5 pb-5"
+                    style={{ borderTop: "1px solid var(--border-subtle)" }}
+                  >
+                    <p
+                      className="text-sm leading-relaxed pt-4"
+                      style={{
+                        color: "var(--charcoal-soft)",
+                        fontFamily: "var(--font-body)",
+                      }}
+                    >
+                      {item.a}
+                    </p>
+                  </div>
+                )}
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed pl-6">
-                {item.a}
+            ))}
+          </div>
+        </section>
+
+        {/* Support CTA */}
+        <section
+          className="rounded-2xl p-8 lg:p-10"
+          style={{ background: "var(--charcoal)" }}
+        >
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <AlertCircle
+                  className="w-5 h-5"
+                  style={{ color: "var(--red)" }}
+                />
+                <span
+                  className="font-mono text-[10px] uppercase tracking-[3px]"
+                  style={{ color: "var(--charcoal-soft)" }}
+                >
+                  Need Any Help?
+                </span>
+              </div>
+              <h3
+                className="text-[24px] lg:text-[32px] text-white mb-2"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                We Are Here for You
+              </h3>
+              <p
+                className="text-sm"
+                style={{
+                  color: "var(--charcoal-soft)",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                Our support team is ready to guide you step by step. Average
+                response time:{" "}
+                <strong style={{ color: "white" }}>2 hours</strong>
               </p>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Contact CTA */}
-      <div className="rounded-2xl bg-gray-900 text-white p-7 text-center">
-        <AlertTriangle className="w-8 h-8 mx-auto mb-3 text-yellow-400" />
-        <h3 className="text-lg font-bold mb-2">Need Help With a Return?</h3>
-        <p className="text-sm text-gray-400 mb-5 max-w-sm mx-auto">
-          Our support team is here to help. Reach out and we'll guide you
-          through the process.
-        </p>
-        <Link
-          href="/contact"
-          className="inline-flex items-center gap-2 bg-white text-gray-900 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-100 transition-colors"
-        >
-          <RotateCcw className="w-4 h-4" />
-          Contact Support
-        </Link>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm text-white"
+                style={{
+                  background: "var(--red)",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                <MessageSquare className="w-4 h-4" />
+                Open Support Ticket
+              </Link>
+              <Link
+                href="/orders"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm"
+                style={{
+                  background: "rgba(255,255,255,0.07)",
+                  color: "rgba(255,255,255,0.8)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                Go to My Orders <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
   );
