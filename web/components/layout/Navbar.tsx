@@ -25,6 +25,8 @@ import {
   Gift,
   Award,
   Users,
+  MapPin,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -81,6 +83,7 @@ const SECONDARY_NAV = [
   { label: "New Arrivals", href: "/new-arrivals" },
   { label: "Bestsellers", href: "/bestsellers" },
   { label: "Compare", href: "/compare" },
+  { label: "Track Order", href: "/track" },
   { label: "Loyalty", href: "/loyalty" },
   { label: "Referral", href: "/referral" },
   { label: "Gift Cards", href: "/gift-cards" },
@@ -552,7 +555,8 @@ export default function Navbar() {
                       alignItems: "center",
                       gap: "0.25rem",
                       letterSpacing: "0.01em",
-                      transition: "color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out)",
+                      transition:
+                        "color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out)",
                     }}
                     className="hover:text-[var(--charcoal)] hover:bg-[var(--off-white-2)]"
                   >
@@ -765,9 +769,15 @@ export default function Navbar() {
                           icon: ClipboardList,
                           label: "Orders",
                         },
+                        { href: "/track", icon: MapPin, label: "Track Order" },
                         { href: "/wallet", icon: Wallet, label: "Wallet" },
                         { href: "/loyalty", icon: Award, label: "Loyalty" },
                         { href: "/referral", icon: Users, label: "Referral" },
+                        {
+                          href: "/help-center",
+                          icon: HelpCircle,
+                          label: "Help Center",
+                        },
                       ].map(({ href, icon: Icon, label }) => (
                         <DropdownMenuItem key={href} asChild>
                           <Link
@@ -996,6 +1006,12 @@ export default function Navbar() {
                 { href: "/loyalty", icon: Award, label: "Loyalty" },
                 { href: "/referral", icon: Users, label: "Referral" },
                 { href: "/gift-cards", icon: Gift, label: "Gift Cards" },
+                { href: "/track", icon: MapPin, label: "Track Order" },
+                {
+                  href: "/help-center",
+                  icon: HelpCircle,
+                  label: "Help Center",
+                },
               ].map(({ href, icon: Icon, label }) => (
                 <Link
                   key={href}
@@ -1025,4 +1041,3 @@ export default function Navbar() {
     </>
   );
 }
-
