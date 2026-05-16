@@ -924,7 +924,7 @@ export default function SearchPage() {
     >
       {/* Categories */}
       <FilterSection title="Kategoriler">
-        <ul style={{ listStyle: "none", padding: 0, margin: 0, space: 1 }}>
+        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           <li>
             <button
               onClick={() => navigate({ category: "", page: undefined })}
