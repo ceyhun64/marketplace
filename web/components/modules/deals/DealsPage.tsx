@@ -34,7 +34,7 @@ function useDealsProducts() {
 }
 
 type Filter = "all" | "lowstock" | "new";
-type SortKey = "default" | "price_asc" | "price_desc" | "discount";
+type SortKey = "default" | "price_asc" | "price_desc";
 
 const FILTERS: { key: Filter; label: string; icon: React.ReactNode }[] = [
   { key: "all", label: "All Deals", icon: <Tag className="w-3.5 h-3.5" /> },
@@ -52,7 +52,6 @@ const FILTERS: { key: Filter; label: string; icon: React.ReactNode }[] = [
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "default", label: "Featured" },
-  { key: "discount", label: "Biggest Discount" },
   { key: "price_asc", label: "Price: Low to High" },
   { key: "price_desc", label: "Price: High to Low" },
 ];
@@ -75,17 +74,13 @@ export default function DealsPage() {
     .sort((a, b) => {
       if (sort === "price_asc") return a.price - b.price;
       if (sort === "price_desc") return b.price - a.price;
-      if (sort === "discount") {
-        const da = a.originalPrice ? a.originalPrice - a.price : 0;
-        const db = b.originalPrice ? b.originalPrice - b.price : 0;
-        return db - da;
-      }
       return 0;
     });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const activeSortLabel = SORT_OPTIONS.find((o) => o.key === sort)?.label ?? "Sort";
+  const activeSortLabel =
+    SORT_OPTIONS.find((o) => o.key === sort)?.label ?? "Sort";
 
   const handleFilterChange = (f: Filter) => {
     setActiveFilter(f);
@@ -102,7 +97,10 @@ export default function DealsPage() {
         <div className="max-w-[1300px] mx-auto relative z-10">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 mb-5 text-[12px] text-[var(--charcoal-soft)]">
-            <Link href="/" className="flex items-center gap-1 hover:text-white transition-colors">
+            <Link
+              href="/"
+              className="flex items-center gap-1 hover:text-white transition-colors"
+            >
               <Home className="w-3 h-3" />
               Home
             </Link>
@@ -215,14 +213,20 @@ export default function DealsPage() {
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5" />
                   {activeSortLabel}
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${sortOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform ${sortOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
                 {sortOpen && (
                   <div className="absolute right-0 top-full mt-1 bg-white rounded-xl border border-black/10 shadow-lg z-20 min-w-[200px] overflow-hidden">
                     {SORT_OPTIONS.map((opt) => (
                       <button
                         key={opt.key}
-                        onClick={() => { setSort(opt.key); setSortOpen(false); setPage(1); }}
+                        onClick={() => {
+                          setSort(opt.key);
+                          setSortOpen(false);
+                          setPage(1);
+                        }}
                         className={`w-full text-left px-4 py-2.5 text-[13px] hover:bg-[var(--off-white)] transition-colors ${sort === opt.key ? "font-bold text-[var(--red)]" : "text-[var(--charcoal)]"}`}
                       >
                         {opt.label}
