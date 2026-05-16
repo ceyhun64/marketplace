@@ -18,7 +18,7 @@ const TESTIMONIALS = [
     avatar: "AK",
     rating: 5,
     product: "Electronics",
-    text: "Sipariş verdiğim gün kapıma geldi. Ürün tam açıklandığı gibiydi ve fiyatlar gerçekten rekabetçi. Artık tüm alışverişimi buradan yapıyorum.",
+    text: "It arrived at my doorstep the very same day I ordered. The product was exactly as described and the prices are truly competitive. I do all my shopping here now.",
   },
   {
     id: 2,
@@ -27,7 +27,7 @@ const TESTIMONIALS = [
     avatar: "MD",
     rating: 5,
     product: "Seller",
-    text: "Platformun satıcı paneli inanılmaz kullanışlı. İlk ayımda 200'den fazla sipariş aldım. Destek ekibi her sorunda anında yardımcı oluyor.",
+    text: "The platform's seller dashboard is incredibly user-friendly. I received over 200 orders in my first month. The support team helps instantly with any issue.",
   },
   {
     id: 3,
@@ -36,7 +36,7 @@ const TESTIMONIALS = [
     avatar: "ZA",
     rating: 5,
     product: "Fashion",
-    text: "30 günlük iade garantisi sayesinde çekinmeden alışveriş yapıyorum. Gönderiler hızlı, paketleme özenli. Beklentilerimin çok üzerinde!",
+    text: "Thanks to the 30-day money-back guarantee, I shop without any hesitation. Shipping is fast, packaging is meticulous. Way above my expectations!",
   },
   {
     id: 4,
@@ -45,7 +45,7 @@ const TESTIMONIALS = [
     avatar: "CY",
     rating: 5,
     product: "Home & Living",
-    text: "Kargo takip sistemi harika. Siparişim nerede, ne zaman gelir — her şeyi anlık görüyorum. Böyle şeffaf bir platform aramıştım.",
+    text: "The order tracking system is amazing. Where is my order, when will it arrive — I can see everything instantly. This is exactly the kind of transparent platform I was looking for.",
   },
   {
     id: 5,
@@ -54,7 +54,7 @@ const TESTIMONIALS = [
     avatar: "SÖ",
     rating: 5,
     product: "Seller",
-    text: "Mağazamı açmak sadece birkaç dakika sürdü. Ürün onayları hızlı, komisyon oranları adil. Satışlarım 3 ayda 4 katına çıktı.",
+    text: "Opening my store took only a few minutes. Product approvals are fast, commission rates are fair. My sales quadrupled in just 3 months.",
   },
   {
     id: 6,
@@ -63,7 +63,7 @@ const TESTIMONIALS = [
     avatar: "BÇ",
     rating: 5,
     product: "Electronics",
-    text: "Fiyat karşılaştırma özelliği sayesinde en ucuz ürünü buluyorum. Güvenli ödeme sistemi ile hiç endişe etmiyorum.",
+    text: "Thanks to the price comparison feature, I can find the cheapest product. I never worry with the secure payment system.",
   },
 ];
 
@@ -270,7 +270,7 @@ export default function TestimonialsSection() {
               maxWidth: 480,
             }}
           >
-            Alıcılar ve satıcılar deneyimlerini paylaşıyor.
+            Buyers and sellers share their experiences.
           </p>
         </div>
 
