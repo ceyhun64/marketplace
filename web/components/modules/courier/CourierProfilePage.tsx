@@ -1,6 +1,9 @@
 "use client";
 
-import { useMyCourierProfile, useToggleCourierAvailability } from "@/queries/useCouriers";
+import {
+  useMyCourierProfile,
+  useToggleCourierAvailability,
+} from "@/queries/useCouriers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
@@ -17,16 +20,7 @@ import {
   ToggleRight,
   Wifi,
   WifiOff,
-  Car,
-  Bike,
 } from "lucide-react";
-
-function VehicleIcon({ type }: { type: string }) {
-  const t = type?.toLowerCase();
-  if (t === "car") return <Car className="w-5 h-5" />;
-  if (t === "bicycle") return <Bike className="w-5 h-5" />;
-  return <Truck className="w-5 h-5" />;
-}
 
 export default function CourierProfilePage() {
   const { data: profile, isLoading } = useMyCourierProfile();
@@ -38,7 +32,7 @@ export default function CourierProfilePage() {
       toast.success(
         profile?.isAvailable
           ? "Çevrimdışı olarak işaretlendiniz"
-          : "Çevrimiçi olarak işaretlendiniz"
+          : "Çevrimiçi olarak işaretlendiniz",
       );
     } catch {
       toast.error("Durum güncellenemedi");
@@ -135,7 +129,9 @@ export default function CourierProfilePage() {
               )}
             </button>
             <span className="text-[10px] text-white/30">
-              {toggleAvailability.isPending ? "Güncelleniyor..." : "Durumu değiştir"}
+              {toggleAvailability.isPending
+                ? "Güncelleniyor..."
+                : "Durumu değiştir"}
             </span>
           </div>
         </div>
@@ -146,15 +142,16 @@ export default function CourierProfilePage() {
             { icon: Mail, label: "E-posta", value: profile.email },
             { icon: Phone, label: "Telefon", value: profile.phone ?? "—" },
             {
-              icon: VehicleIcon,
+              icon: Truck,
               label: "Araç Tipi",
-              value: profile.vehicleType === "Motorcycle"
-                ? "🏍️ Motosiklet"
-                : profile.vehicleType === "Car"
-                ? "🚗 Otomobil"
-                : profile.vehicleType === "Bicycle"
-                ? "🚲 Bisiklet"
-                : profile.vehicleType,
+              value:
+                profile.vehicleType === "Motorcycle"
+                  ? "🏍️ Motosiklet"
+                  : profile.vehicleType === "Car"
+                    ? "🚗 Otomobil"
+                    : profile.vehicleType === "Bicycle"
+                      ? "🚲 Bisiklet"
+                      : profile.vehicleType,
             },
             {
               icon: Truck,
@@ -265,7 +262,8 @@ export default function CourierProfilePage() {
           <div className="flex items-center gap-3 text-gray-400">
             <WifiOff className="w-4 h-4" />
             <p className="text-sm">
-              Konum bilgisi yok — kargo detay sayfasından konum yayını başlatabilirsiniz
+              Konum bilgisi yok — kargo detay sayfasından konum yayını
+              başlatabilirsiniz
             </p>
           </div>
         )}
