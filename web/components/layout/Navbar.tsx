@@ -78,7 +78,7 @@ const PUBLIC_NAV = [
 ];
 
 const SECONDARY_NAV = [
-  { label: "New Arrivals", href: "/new" },
+  { label: "New Arrivals", href: "/new-arrivals" },
   { label: "Bestsellers", href: "/bestsellers" },
   { label: "Compare", href: "/compare" },
   { label: "Loyalty", href: "/loyalty" },
