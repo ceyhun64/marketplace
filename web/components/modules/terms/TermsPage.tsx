@@ -1,248 +1,247 @@
 "use client";
 
-import { useState } from "react";
-import { FileText, ChevronDown } from "lucide-react";
+// components/modules/terms/TermsPage.tsx
+import Link from "next/link";
+import { FileText, ChevronRight } from "lucide-react";
 
-const LAST_UPDATED = "1 May 2026";
+const LAST_UPDATED = "1 January 2025";
 
 const SECTIONS = [
   {
     id: "acceptance",
     title: "1. Acceptance of Terms",
-    content: `By accessing or using Marketplace ("the Platform"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not access or use the Platform.
-
-These Terms apply to all visitors, users, merchants, and others who access or use the Platform. By creating an account or completing a transaction, you confirm that you are at least 18 years of age (or the age of legal majority in your jurisdiction) and have the legal capacity to enter into binding agreements.`,
+    content: `By accessing or using BAZR Marketplace ("Platform"), you agree to be bound by these Terms of Service. If you do not agree to all of these terms, you may not use the Platform. We reserve the right to modify these terms at any time; your continued use of the Platform following any changes constitutes acceptance of those changes.`,
+  },
+  {
+    id: "eligibility",
+    title: "2. Eligibility",
+    content: `You must be at least 18 years old to use this Platform. By registering an account, you represent and warrant that you meet this requirement and that all information you provide is accurate, current, and complete. Accounts registered on behalf of a legal entity must be authorised by that entity.`,
   },
   {
     id: "accounts",
-    title: "2. Accounts & Registration",
-    content: `To access certain features of the Platform, you must register for an account. You agree to:
-
-• Provide accurate, current, and complete information during registration
-• Maintain and promptly update your account information
-• Keep your password confidential and not share access with third parties
-• Accept responsibility for all activities that occur under your account
-• Notify us immediately of any unauthorised use of your account
-
-We reserve the right to suspend or terminate accounts that violate these Terms, contain false information, or are inactive for extended periods.`,
+    title: "3. Accounts & Security",
+    content: `You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account. Notify us immediately at security@marketplace.example.com if you suspect any unauthorised use of your account. We will not be liable for any loss resulting from unauthorised use of your credentials.`,
   },
   {
-    id: "buying",
-    title: "3. Buying on the Platform",
-    content: `When you place an order through the Platform, you are entering into a contract with the individual merchant, not with Marketplace. Marketplace acts as an intermediary facilitating the transaction.
-
-Order acceptance occurs when the merchant confirms your order. Until that point, orders may be cancelled by either party. Payment is processed at checkout and held in escrow until order fulfilment is confirmed.
-
-Buyers are responsible for providing accurate delivery information. Marketplace is not liable for failed deliveries resulting from incorrect addresses.`,
+    id: "buyers",
+    title: "4. Buyer Obligations",
+    content: `As a buyer, you agree to: (a) provide accurate shipping and payment information; (b) pay for items you purchase promptly; (c) not engage in fraudulent chargebacks or disputes without legitimate cause; (d) use the Platform's dispute resolution process before contacting your payment provider; (e) treat sellers respectfully in all communications.`,
   },
   {
-    id: "selling",
-    title: "4. Selling on the Platform",
-    content: `Merchants must be approved before listing products. By selling on the Platform, you agree to:
-
-• List only products you are legally permitted to sell
-• Provide accurate product descriptions, images, and stock levels
-• Fulfil orders within the stated processing times
-• Respond to customer enquiries within 48 hours
-• Honour your stated return and refund policies
-• Comply with all applicable consumer protection laws
-
-Marketplace charges a commission on each sale as specified in your subscription agreement. Commission rates are subject to change with 30 days' notice.`,
+    id: "sellers",
+    title: "5. Seller Obligations",
+    content: `Registered merchants agree to: (a) list only products they have the right to sell; (b) accurately describe all products, including any defects or limitations; (c) fulfil orders within stated processing times; (d) comply with all applicable laws, including consumer protection and tax regulations; (e) maintain a return policy at least as generous as ours; (f) not artificially inflate ratings or reviews.`,
   },
   {
     id: "prohibited",
-    title: "5. Prohibited Content & Conduct",
-    content: `The following are strictly prohibited on the Platform:
-
-• Counterfeit, replica, or unauthorised goods
-• Hazardous, illegal, or regulated items without proper authorisation
-• Adult content, weapons, or controlled substances
-• Misleading product descriptions or fraudulent listings
-• Harassment, abuse, or threatening behaviour toward other users
-• Manipulation of reviews, ratings, or search rankings
-• Scraping, data mining, or automated access without permission
-• Any activity that disrupts or interferes with the Platform
-
-Violations may result in immediate account suspension, removal of listings, and where appropriate, referral to law enforcement.`,
+    title: "6. Prohibited Content & Conduct",
+    content: `The following are strictly prohibited on the Platform: counterfeit or infringing goods; hazardous, illegal, or regulated items (weapons, controlled substances, etc.); adult content; spam or unsolicited communications; price manipulation or collusion; scraping or automated data collection without written consent; any activity that disrupts or damages Platform infrastructure.`,
   },
   {
     id: "payments",
-    title: "6. Payments & Fees",
-    content: `All prices on the Platform are displayed in Turkish Lira (TRY) unless stated otherwise. Marketplace uses secure third-party payment processors and does not store raw card data.
-
-Merchant payouts are processed weekly (every Monday) for completed orders from the previous week, after the applicable return window has closed. Payouts are subject to any outstanding fees or chargebacks.
-
-Buyers may be eligible for refunds in accordance with our Returns Policy. Chargebacks initiated outside of our dispute resolution process may result in account restrictions.`,
+    title: "7. Payments & Fees",
+    content: `All prices are displayed in Turkish Lira (₺) and include applicable VAT unless stated otherwise. Platform commission rates are defined in your merchant agreement and may vary by category and subscription tier. Payouts to merchants are processed weekly, subject to the return window period. We reserve the right to hold funds if fraud or policy violations are suspected.`,
   },
   {
-    id: "intellectual-property",
-    title: "7. Intellectual Property",
-    content: `All content on the Platform — including logos, design, software, and text — is owned by or licensed to Marketplace and protected by applicable intellectual property laws.
-
-By uploading content (product images, descriptions, store branding), you grant Marketplace a non-exclusive, worldwide, royalty-free licence to display and use that content for the operation and promotion of the Platform.
-
-You represent that you own or have the right to use any content you upload, and that it does not infringe any third-party rights.`,
+    id: "returns",
+    title: "8. Returns & Refunds",
+    content: `Our standard return window is 14 days from the date of delivery. Items must be in original, unused condition with all original packaging. Certain categories — including perishables, digital goods, personal hygiene products, and custom-made items — are not eligible for return. Refund timelines and processes are detailed in our Returns & Refunds Policy.`,
+  },
+  {
+    id: "ip",
+    title: "9. Intellectual Property",
+    content: `All Platform content — including logos, design, software, and documentation — is owned by BAZR and protected by applicable intellectual property laws. You may not reproduce, distribute, or create derivative works without written permission. By listing products, sellers grant BAZR a non-exclusive, royalty-free licence to display product images and descriptions for the purpose of operating the Platform.`,
+  },
+  {
+    id: "privacy",
+    title: "10. Privacy",
+    content: `Your use of the Platform is also governed by our Privacy Policy, which is incorporated into these Terms by reference. By using the Platform, you consent to the collection and use of your information as described in our Privacy Policy.`,
   },
   {
     id: "liability",
-    title: "8. Limitation of Liability",
-    content: `To the maximum extent permitted by law, Marketplace shall not be liable for:
-
-• Indirect, incidental, special, or consequential damages
-• Loss of profits, revenue, data, or business opportunities
-• Damages resulting from the conduct of third-party merchants
-• Service interruptions, errors, or security breaches beyond our reasonable control
-
-Our total liability to you for any claim arising from your use of the Platform shall not exceed the amount you paid to Marketplace in the three months preceding the claim.
-
-Nothing in these Terms limits liability for death, personal injury, fraud, or any other matter that cannot be excluded by law.`,
+    title: "11. Limitation of Liability",
+    content: `To the maximum extent permitted by law, BAZR shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Platform. Our total liability to you for any claim shall not exceed the greater of (a) the amount you paid to us in the 12 months preceding the claim, or (b) ₺500. BAZR acts as an intermediary and is not liable for seller conduct, product quality, or delivery delays.`,
   },
   {
-    id: "dispute",
-    title: "9. Dispute Resolution",
-    content: `If a dispute arises between a buyer and merchant, we encourage both parties to resolve it directly. If this fails, you may raise a formal dispute through the Platform's dispute resolution centre, available in your account settings.
-
-Marketplace will review disputes and may mediate, but is not obligated to resolve disputes between buyers and merchants. Marketplace's decision in mediation is advisory only.
-
-These Terms are governed by the laws of the Republic of Turkey. Any legal proceedings shall be conducted in the courts of Istanbul.`,
+    id: "governing",
+    title: "12. Governing Law & Disputes",
+    content: `These Terms are governed by the laws of the Republic of Turkey. Any disputes arising from these Terms or your use of the Platform shall first be submitted to BAZR's support team for resolution. If unresolved within 30 days, disputes shall be referred to the Istanbul Courts and Enforcement Offices.`,
   },
   {
-    id: "changes",
-    title: "10. Changes to These Terms",
-    content: `Marketplace reserves the right to modify these Terms at any time. Material changes will be communicated via email to registered users and displayed prominently on the Platform at least 14 days before taking effect.
-
-Your continued use of the Platform after the effective date of revised Terms constitutes your acceptance. If you do not agree to the revised Terms, you must stop using the Platform and may close your account.`,
+    id: "termination",
+    title: "13. Termination",
+    content: `We reserve the right to suspend or terminate your account at any time, with or without notice, for conduct that we believe violates these Terms or is otherwise harmful to other users, us, or third parties. Upon termination, your right to use the Platform immediately ceases. Provisions that by their nature should survive termination will survive.`,
+  },
+  {
+    id: "contact",
+    title: "14. Contact",
+    content: `For questions regarding these Terms, please contact our Legal team at legal@marketplace.example.com or write to: BAZR Legal, Levent, Istanbul, Turkey.`,
   },
 ];
-
-function Section({
-  section,
-  defaultOpen,
-}: {
-  section: (typeof SECTIONS)[0];
-  defaultOpen?: boolean;
-}) {
-  const [open, setOpen] = useState(!!defaultOpen);
-  return (
-    <div
-      className="rounded-2xl overflow-hidden"
-      style={{
-        border: "1px solid rgba(51,51,51,0.08)",
-        background: "white",
-      }}
-    >
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-6 py-5 text-left"
-      >
-        <span
-          className="font-bold text-[0.9375rem]"
-          style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
-        >
-          {section.title}
-        </span>
-        <ChevronDown
-          className="w-4 h-4 flex-shrink-0 transition-transform duration-200"
-          style={{
-            color: "var(--charcoal-soft)",
-            transform: open ? "rotate(180deg)" : "rotate(0deg)",
-          }}
-        />
-      </button>
-      {open && (
-        <div
-          className="px-6 pb-6 text-sm leading-relaxed whitespace-pre-line"
-          style={{
-            color: "var(--charcoal-soft)",
-            fontFamily: "var(--font-body)",
-            borderTop: "1px solid rgba(51,51,51,0.06)",
-            paddingTop: "1.25rem",
-          }}
-        >
-          {section.content}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function TermsPage() {
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
       {/* Hero */}
-      <div
-        className="relative overflow-hidden py-14 px-4"
-        style={{ background: "var(--charcoal)" }}
-      >
+      <div className="bg-[var(--charcoal)] py-14 px-4 relative overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-48 h-48 border-[20px] border-[var(--red)]/10 rounded-full pointer-events-none" />
         <div className="max-w-[1300px] mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 mb-4">
-            <FileText className="w-4 h-4" style={{ color: "var(--red)" }} />
-            <span
-              className="font-mono text-[10px] uppercase tracking-[3px]"
-              style={{ color: "var(--charcoal-soft)" }}
-            >
+            <FileText className="w-4 h-4 text-[var(--red)]" />
+            <span className="font-mono text-[10px] uppercase tracking-[3px] text-[var(--charcoal-soft)]">
               Legal
             </span>
           </div>
           <h1
-            className="text-[36px] lg:text-[52px] text-white leading-tight mb-3"
+            className="text-[var(--off-white)] text-[36px] lg:text-[48px] leading-tight mb-2"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Terms of <span style={{ color: "var(--red)" }}>Service</span>
+            Terms of <span className="text-[var(--red)]">Service</span>
           </h1>
-          <p
-            className="text-sm"
-            style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-body)" }}
-          >
+          <p className="text-[var(--charcoal-soft)] text-[15px]">
             Last updated: {LAST_UPDATED}
           </p>
         </div>
       </div>
 
-      <div className="max-w-[900px] mx-auto px-4 lg:px-8 py-12 space-y-4">
-        {/* Intro box */}
-        <div
-          className="p-6 rounded-2xl mb-8"
-          style={{
-            background: "rgba(200,16,46,0.04)",
-            border: "1px solid rgba(200,16,46,0.12)",
-          }}
-        >
-          <p
-            className="text-sm leading-relaxed"
-            style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
-          >
-            Please read these Terms of Service carefully before using the
-            Marketplace platform. These Terms constitute a legally binding
-            agreement between you and Marketplace. If you have any questions,
-            please{" "}
-            <a
-              href="/contact"
-              style={{ color: "var(--red)" }}
-              className="underline"
+      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-14">
+        <div className="grid lg:grid-cols-[240px_1fr] gap-12">
+          {/* Sticky sidebar TOC */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-24">
+              <p
+                className="font-mono text-[10px] uppercase tracking-[3px] mb-4"
+                style={{ color: "var(--charcoal-soft)" }}
+              >
+                Contents
+              </p>
+              <nav className="space-y-1">
+                {SECTIONS.map((s) => (
+                  <a
+                    key={s.id}
+                    href={`#${s.id}`}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] transition-all group"
+                    style={{ color: "var(--charcoal-soft)" }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.color =
+                        "var(--charcoal)";
+                      (e.currentTarget as HTMLElement).style.background =
+                        "rgba(51,51,51,0.05)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.color =
+                        "var(--charcoal-soft)";
+                      (e.currentTarget as HTMLElement).style.background =
+                        "transparent";
+                    }}
+                  >
+                    <ChevronRight className="w-3 h-3 opacity-40" />
+                    {s.title.replace(/^\d+\.\s/, "")}
+                  </a>
+                ))}
+              </nav>
+
+              {/* Privacy link */}
+              <div
+                className="mt-8 pt-6"
+                style={{ borderTop: "1px solid rgba(51,51,51,0.08)" }}
+              >
+                <p
+                  className="font-mono text-[10px] uppercase tracking-[3px] mb-3"
+                  style={{ color: "var(--charcoal-soft)" }}
+                >
+                  Related
+                </p>
+                <Link
+                  href="/privacy"
+                  className="text-[13px] font-semibold flex items-center gap-1.5 hover:underline"
+                  style={{ color: "var(--red)" }}
+                >
+                  Privacy Policy <ChevronRight className="w-3 h-3" />
+                </Link>
+                <Link
+                  href="/returns"
+                  className="text-[13px] font-semibold flex items-center gap-1.5 hover:underline mt-2"
+                  style={{ color: "var(--red)" }}
+                >
+                  Returns Policy <ChevronRight className="w-3 h-3" />
+                </Link>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main content */}
+          <div className="space-y-0">
+            {/* Intro */}
+            <div
+              className="p-6 rounded-2xl mb-8"
+              style={{
+                background: "rgba(200,16,46,0.04)",
+                border: "1px solid rgba(200,16,46,0.12)",
+              }}
             >
-              contact us
-            </a>
-            .
-          </p>
-        </div>
+              <p
+                className="text-[0.875rem] leading-relaxed"
+                style={{ color: "var(--charcoal-soft)" }}
+              >
+                Please read these Terms of Service carefully before using BAZR
+                Marketplace. These terms constitute a legally binding agreement
+                between you and BAZR. By creating an account or making a
+                purchase, you agree to be bound by these terms.
+              </p>
+            </div>
 
-        {SECTIONS.map((section, i) => (
-          <Section key={section.id} section={section} defaultOpen={i === 0} />
-        ))}
+            {/* Sections */}
+            <div
+              className="bg-white rounded-2xl divide-y overflow-hidden"
+              style={{
+                border: "1px solid rgba(51,51,51,0.08)",
+                boxShadow: "0 1px 4px rgba(51,51,51,0.04)",
+              }}
+            >
+              {SECTIONS.map((section) => (
+                <section key={section.id} id={section.id} className="p-8">
+                  <h2
+                    className="text-[1.125rem] font-bold text-[var(--charcoal)] mb-4"
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    {section.title}
+                  </h2>
+                  <p
+                    className="text-[0.875rem] leading-relaxed"
+                    style={{ color: "var(--charcoal-soft)" }}
+                  >
+                    {section.content}
+                  </p>
+                </section>
+              ))}
+            </div>
 
-        <div
-          className="text-center py-8 text-sm"
-          style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-body)" }}
-        >
-          Questions about these terms?{" "}
-          <a
-            href="/contact"
-            style={{ color: "var(--red)" }}
-            className="underline"
-          >
-            Contact our legal team
-          </a>
+            {/* Footer note */}
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p
+                className="font-mono text-[11px]"
+                style={{ color: "var(--charcoal-soft)" }}
+              >
+                Effective from {LAST_UPDATED}
+              </p>
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+                style={{ background: "var(--charcoal)" }}
+                onMouseEnter={(e) =>
+                  ((e.currentTarget as HTMLElement).style.background =
+                    "var(--red)")
+                }
+                onMouseLeave={(e) =>
+                  ((e.currentTarget as HTMLElement).style.background =
+                    "var(--charcoal)")
+                }
+              >
+                Contact Legal Team
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </main>

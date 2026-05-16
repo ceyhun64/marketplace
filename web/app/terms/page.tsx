@@ -1,10 +1,12 @@
-import TermsPage from "@/components/modules/terms/TermsPage";
+// app/terms/page.tsx — Kullanım Koşulları sayfası
 import type { Metadata } from "next";
+import TermsPage from "@/components/modules/terms/TermsPage";
 
 export const metadata: Metadata = {
   title: "Terms of Service — Marketplace",
   description:
-    "Read our Terms of Service. Understand your rights and obligations as a buyer or seller on the Marketplace platform.",
+    "Read the terms and conditions governing your use of BAZR Marketplace, including buyer and seller obligations, payment terms, and dispute resolution.",
+  robots: { index: true, follow: false },
 };
 
 export default function TermsRoute() {

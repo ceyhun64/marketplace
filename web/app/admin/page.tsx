@@ -1,5 +1,11 @@
 import { Suspense } from "react";
 import AdminDashboardPage from "@/components/modules/admin/AdminDashboardPage";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Admin Dashboard — Marketplace",
+  robots: { index: false, follow: false },
+};
 
 export default function AdminDashboardRoute() {
   return (
