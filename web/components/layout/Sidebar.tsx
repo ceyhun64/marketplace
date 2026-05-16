@@ -19,6 +19,8 @@ import {
   LogOut,
   Puzzle,
   FileText,
+  BadgeCheck,
+  Bell,
 } from "lucide-react";
 
 const ICONS: Record<string, React.ElementType> = {
@@ -35,6 +37,8 @@ const ICONS: Record<string, React.ElementType> = {
   star: Star,
   puzzle: Puzzle,
   "file-text": FileText,
+  "badge-check": BadgeCheck,
+  bell: Bell,
 };
 
 interface NavLink {

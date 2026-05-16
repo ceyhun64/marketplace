@@ -4,6 +4,7 @@ const merchantLinks = [
   { href: "/merchant", label: "Dashboard", icon: "grid" },
   { href: "/merchant/catalogue", label: "Catalogue & Offers", icon: "package" },
   { href: "/merchant/orders", label: "Orders", icon: "shopping-cart" },
+  { href: "/merchant/shipments", label: "Kargo Takip", icon: "truck" },
   { href: "/merchant/analytics", label: "Analytics", icon: "bar-chart-2" },
   { href: "/merchant/reviews", label: "Reviews", icon: "star" },
   { href: "/merchant/store-settings", label: "Store Settings", icon: "store" },

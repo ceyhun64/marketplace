@@ -113,13 +113,15 @@ export default function MerchantOrdersView() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="placed">Placed</SelectItem>
-              <SelectItem value="payment_confirmed">
-                Payment Confirmed
-              </SelectItem>
-              <SelectItem value="label_generated">Label Generated</SelectItem>
-              <SelectItem value="delivered">Delivered</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectItem value="PENDING">Beklemede</SelectItem>
+              <SelectItem value="PAYMENT_CONFIRMED">Ödeme Onaylandı</SelectItem>
+              <SelectItem value="LABEL_GENERATED">Etiket Oluşturuldu</SelectItem>
+              <SelectItem value="COURIER_ASSIGNED">Kurye Atandı</SelectItem>
+              <SelectItem value="PICKED_UP">Kurye Teslim Aldı</SelectItem>
+              <SelectItem value="IN_TRANSIT">Yolda</SelectItem>
+              <SelectItem value="OUT_FOR_DELIVERY">Dağıtımda</SelectItem>
+              <SelectItem value="DELIVERED">Teslim Edildi</SelectItem>
+              <SelectItem value="CANCELLED">İptal Edildi</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -12,9 +12,12 @@ import {
   Clock,
   ChevronRight,
   AlertCircle,
+  DollarSign,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useMerchantStats } from "@/queries/useAnalytics";
+import { formatPrice } from "@/lib/format";
 
 export default function MerchantDashboard() {
   const { data: profile } = useQuery({
@@ -45,6 +48,8 @@ export default function MerchantDashboard() {
     },
   });
 
+  const { data: analyticsStats } = useMerchantStats();
+
   const offers = offersData?.items || offersData?.data || offersData || [];
   const orders = ordersData?.items || ordersData?.data || ordersData || [];
 
@@ -60,7 +65,20 @@ export default function MerchantDashboard() {
   const slug = profile?.slug || profile?.Slug;
   const plan = profile?.subscriptionPlan || profile?.Subscription?.Plan || profile?.subscription?.plan || "Basic";
 
+  const revenueDisplay = analyticsStats
+    ? formatPrice(analyticsStats.totalRevenue)
+    : "—";
+
   const statCards = [
+    {
+      label: "Toplam Gelir",
+      value: revenueDisplay,
+      icon: DollarSign,
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
+      href: "/merchant/analytics",
+      isText: true,
+    },
     {
       label: "Total Products",
       value: stats.totalProducts,
@@ -68,22 +86,16 @@ export default function MerchantDashboard() {
       color: "text-blue-600",
       bg: "bg-blue-50",
       href: "/merchant/catalogue",
+      isText: false,
     },
     {
       label: "On Marketplace",
       value: stats.inMarket,
       icon: Globe,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
-      href: "/merchant/catalogue",
-    },
-    {
-      label: "In E-Store",
-      value: stats.inStore,
-      icon: Store,
       color: "text-violet-600",
       bg: "bg-violet-50",
       href: "/merchant/catalogue",
+      isText: false,
     },
     {
       label: "Pending Orders",
@@ -92,6 +104,7 @@ export default function MerchantDashboard() {
       color: "text-amber-600",
       bg: "bg-amber-50",
       href: "/merchant/orders",
+      isText: false,
     },
   ];
 
@@ -203,7 +216,7 @@ export default function MerchantDashboard() {
                   <s.icon className={`w-4 h-4 ${s.color}`} />
                 </div>
               </div>
-              <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+              <p className={`font-bold text-gray-900 ${s.isText ? "text-xl" : "text-2xl"}`}>{s.value}</p>
             </div>
           </Link>
         ))}
