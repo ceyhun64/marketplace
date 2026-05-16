@@ -314,6 +314,13 @@ export default function CourierShipmentsPage() {
 
                   {/* Actions */}
                   <div className="flex shrink-0 flex-wrap gap-2">
+                    <a
+                      href={`/courier/shipments/${shipment.id}`}
+                      className="inline-flex items-center gap-1.5 text-xs border border-gray-200 rounded-lg px-3 py-1.5 text-gray-600 hover:bg-gray-50 transition-colors font-medium"
+                    >
+                      <ChevronRight className="h-3.5 w-3.5" />
+                      Detay
+                    </a>
                     {shipment.labelUrl && (
                       <Button
                         variant="outline"

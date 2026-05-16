@@ -2,7 +2,8 @@ import { Sidebar } from "@/components/layout/Sidebar";
 
 const courierLinks = [
   { href: "/courier", label: "Dashboard", icon: "grid" },
-  { href: "/courier/shipments", label: "My Shipments", icon: "truck" },
+  { href: "/courier/shipments", label: "Kargolarım", icon: "truck" },
+  { href: "/courier/profile", label: "Profilim", icon: "user-check" },
 ];
 
 export default function CourierLayout({

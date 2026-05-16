@@ -6,7 +6,11 @@ import {
   useMyCourierShipments,
   useConfirmPickup,
   useConfirmDelivery,
+  useMyCourierProfile,
+  useToggleCourierAvailability,
 } from "@/queries/useCouriers";
+import { toast } from "sonner";
+import { ToggleRight, ToggleLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -27,15 +31,34 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default function CourierDashboardPage() {
   const { data: shipments = [], isLoading } = useMyCourierShipments();
+  const { data: profile } = useMyCourierProfile();
+  const toggleAvailability = useToggleCourierAvailability();
   const confirmPickup = useConfirmPickup();
   const confirmDelivery = useConfirmDelivery();
 
-  const active = shipments.filter((s: any) => s.status !== "DELIVERED");
-  const done = shipments.filter((s: any) => s.status === "DELIVERED");
+  const active = shipments.filter((s: any) => s.status !== "DELIVERED" && s.status !== "FAILED");
   const inTransit = shipments.filter((s: any) =>
     ["PICKED_UP", "IN_TRANSIT", "OUT_FOR_DELIVERY"].includes(s.status),
   );
   const pending = shipments.filter((s: any) => s.status === "COURIER_ASSIGNED");
+
+  // "Bugün teslim" gerçek sayıyı profile'dan al, yoksa fallback hesapla
+  const todayDelivered = profile?.stats?.todayDelivered ??
+    shipments.filter((s: any) => {
+      if (s.status !== "DELIVERED") return false;
+      const updated = s.actualDeliveredAt ?? s.updatedAt;
+      if (!updated) return false;
+      return new Date(updated).toDateString() === new Date().toDateString();
+    }).length;
+
+  const handleToggleAvailability = async () => {
+    try {
+      await toggleAvailability.mutateAsync();
+      toast.success(profile?.isAvailable ? "Çevrimdışı olarak işaretlendiniz" : "Çevrimiçi olarak işaretlendiniz");
+    } catch {
+      toast.error("Durum güncellenemedi");
+    }
+  };
 
   const stats = [
     {
@@ -60,8 +83,8 @@ export default function CourierDashboardPage() {
       bg: "bg-violet-50",
     },
     {
-      label: "Delivered",
-      value: done.length,
+      label: "Bugün Teslim",
+      value: todayDelivered,
       icon: CheckCircle,
       color: "text-emerald-600",
       bg: "bg-emerald-50",
@@ -70,11 +93,32 @@ export default function CourierDashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">My Shipments</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          {active.length} active · {done.length} delivered today
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">
+            {profile ? `Merhaba, ${profile.fullName.split(" ")[0]}` : "Dashboard"}
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {active.length} aktif kargo · {todayDelivered} bugün teslim edildi
+          </p>
+        </div>
+        {profile && (
+          <button
+            onClick={handleToggleAvailability}
+            disabled={toggleAvailability.isPending}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-60 ${
+              profile.isAvailable
+                ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+            }`}
+          >
+            {profile.isAvailable ? (
+              <><ToggleRight className="w-4 h-4" />Çevrimiçi</>
+            ) : (
+              <><ToggleLeft className="w-4 h-4" />Çevrimdışı</>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Stats */}

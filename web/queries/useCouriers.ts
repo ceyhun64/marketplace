@@ -236,3 +236,48 @@ export function useUpdateCourierLocation() {
     },
   });
 }
+
+// ── Courier Self Profile (Courier Panel) ──────────────────────────────────────
+
+export interface CourierProfile {
+  id: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  vehicleType: string;
+  plateNumber?: string;
+  isActive: boolean;
+  isAvailable: boolean;
+  currentLatitude?: number;
+  currentLongitude?: number;
+  lastLocationUpdate?: string;
+  createdAt: string;
+  stats: {
+    totalDelivered: number;
+    totalActive: number;
+    todayDelivered: number;
+  };
+}
+
+export function useMyCourierProfile() {
+  return useQuery<CourierProfile>({
+    queryKey: ["courier-me-profile"],
+    queryFn: async () => {
+      const { data } = await api.get("/api/couriers/me");
+      return data;
+    },
+    staleTime: STALE_TIME.MEDIUM,
+    refetchInterval: 1000 * 60 * 2, // 2 dakikada bir
+  });
+}
+
+export function useToggleCourierAvailability() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.patch("/api/couriers/me/availability"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["courier-me-profile"] });
+    },
+  });
+}

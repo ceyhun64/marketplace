@@ -106,6 +106,66 @@ public class CouriersController : ControllerBase
         return Ok(new ApiResponse<string>("Kurye silindi."));
     }
 
+    // GET /api/couriers/me — Courier (kendi profili)
+    [HttpGet("me")]
+    [Authorize(Policy = "CourierOnly")]
+    public async Task<IActionResult> GetMyProfile()
+    {
+        var courier = await _db.Couriers
+            .Include(c => c.User)
+            .Include(c => c.Shipments)
+            .FirstOrDefaultAsync(c => c.UserId == _currentUser.UserId);
+
+        if (courier == null)
+            return NotFound(new { message = "Kurye profili bulunamadı." });
+
+        var totalDelivered = courier.Shipments.Count(s => s.Status == Domain.Enums.ShipmentStatus.Delivered);
+        var totalActive = courier.Shipments.Count(s =>
+            s.Status != Domain.Enums.ShipmentStatus.Delivered &&
+            s.Status != Domain.Enums.ShipmentStatus.Failed);
+        var todayDelivered = courier.Shipments.Count(s =>
+            s.Status == Domain.Enums.ShipmentStatus.Delivered &&
+            s.UpdatedAt.Date == DateTime.UtcNow.Date);
+
+        return Ok(new
+        {
+            courier.Id,
+            courier.UserId,
+            FullName = courier.User.FirstName + " " + courier.User.LastName,
+            Email = courier.User.Email,
+            Phone = courier.User.Phone,
+            courier.VehicleType,
+            courier.PlateNumber,
+            courier.IsActive,
+            courier.IsAvailable,
+            courier.CurrentLatitude,
+            courier.CurrentLongitude,
+            courier.LastLocationUpdate,
+            courier.CreatedAt,
+            Stats = new
+            {
+                TotalDelivered = totalDelivered,
+                TotalActive = totalActive,
+                TodayDelivered = todayDelivered,
+            }
+        });
+    }
+
+    // PATCH /api/couriers/me/availability — Courier (müsaitlik toggle)
+    [HttpPatch("me/availability")]
+    [Authorize(Policy = "CourierOnly")]
+    public async Task<IActionResult> ToggleMyAvailability()
+    {
+        var courier = await _db.Couriers.FirstOrDefaultAsync(c => c.UserId == _currentUser.UserId);
+        if (courier == null)
+            return NotFound(new { message = "Kurye profili bulunamadı." });
+
+        courier.IsAvailable = !courier.IsAvailable;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { isAvailable = courier.IsAvailable, message = courier.IsAvailable ? "Çevrimiçi" : "Çevrimdışı" });
+    }
+
     // PUT /api/couriers/me/location — Courier
     // Kurye kendi anlık konumunu günceller; SignalR ile admin + müşterilere yayınlanır.
     [HttpPut("me/location")]
