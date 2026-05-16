@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Store, Tag } from "lucide-react";
+import { ShoppingCart, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/types/entities";
 import { WishlistButton } from "@/components/modules/store/WishlistButton";
@@ -12,6 +12,24 @@ interface ProductCardProps {
   storeSlug?: string;
   onAddToCart?: (product: Product) => void;
   className?: string;
+}
+
+// Deterministic local fallback images from /public/products/
+const LOCAL_PRODUCT_IMAGES = [
+  "/products/product1.webp",
+  "/products/product2.webp",
+  "/products/product3.webp",
+  "/products/product4.webp",
+  "/products/product5.webp",
+  "/products/product6.webp",
+];
+
+function getLocalFallback(productId: string): string {
+  let hash = 0;
+  for (let i = 0; i < productId.length; i++) {
+    hash = (hash * 31 + productId.charCodeAt(i)) & 0xffffffff;
+  }
+  return LOCAL_PRODUCT_IMAGES[Math.abs(hash) % LOCAL_PRODUCT_IMAGES.length];
 }
 
 export function ProductCard({
@@ -26,7 +44,11 @@ export function ProductCard({
       ? `/store/${storeSlug}/product/${product.id}`
       : `/product/${product.id}`;
 
-  const coverImage = product.images?.[0] ?? null;
+  const coverImage =
+    product.images?.[0] && product.images[0].trim() !== ""
+      ? product.images[0]
+      : getLocalFallback(product.id);
+
   const isOutOfStock = product.stock === 0;
 
   return (
@@ -46,7 +68,6 @@ export function ProductCard({
         className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 z-10"
         style={{ background: "var(--red)" }}
       />
-      {/* ewlkdlkejd */}
 
       {/* Image */}
       <Link
@@ -54,25 +75,24 @@ export function ProductCard({
         className="relative block aspect-square overflow-hidden"
         style={{ background: "var(--off-white)" }}
       >
-        {coverImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={coverImage}
-            alt={product.name}
-            className={cn(
-              "w-full h-full object-cover transition-transform duration-300 group-hover:scale-105",
-              isOutOfStock && "opacity-60 grayscale",
-            )}
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ShoppingCart
-              className="w-10 h-10"
-              style={{ color: "rgba(51,51,51,0.1)" }}
-            />
-          </div>
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={coverImage}
+          alt={product.name}
+          className={cn(
+            "w-full h-full object-cover transition-transform duration-300 group-hover:scale-105",
+            isOutOfStock && "opacity-60 grayscale",
+          )}
+          loading="lazy"
+          onError={(e) => {
+            const el = e.currentTarget;
+            const fallback = getLocalFallback(product.id);
+            // Prevent infinite loop if local image also fails
+            if (!el.src.includes("/products/product")) {
+              el.src = fallback;
+            }
+          }}
+        />
 
         {isOutOfStock && (
           <div
@@ -105,14 +125,12 @@ export function ProductCard({
                   letterSpacing: "0.05em",
                 }}
               >
-                <Tag className="h-2.5 w-2.5" />
                 {tag}
               </span>
             ))}
           </div>
         )}
 
-        {/* Wishlist icon */}
         <div className="absolute right-2.5 top-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <WishlistButton
             productId={product.id}
