@@ -16,6 +16,10 @@ import {
   AlertCircle,
   Package,
   RefreshCw,
+  Search,
+  Ticket,
+  CircleCheck,
+  Loader2,
 } from "lucide-react";
 
 const RETURN_STEPS = [
@@ -98,8 +102,66 @@ const FAQS = [
   },
 ];
 
+// Simulated ticket statuses
+const TICKET_STATUSES: Record<
+  string,
+  {
+    status: string;
+    step: number;
+    updated: string;
+    label: string;
+    color: string;
+  }
+> = {
+  "RET-001234": {
+    status: "Approved",
+    step: 2,
+    updated: "May 15, 2026",
+    label: "Label sent to your email",
+    color: "var(--success)",
+  },
+  "RET-005678": {
+    status: "In Review",
+    step: 1,
+    updated: "May 16, 2026",
+    label: "Our team is reviewing your request",
+    color: "#d97706",
+  },
+  "RET-009999": {
+    status: "Refunded",
+    step: 5,
+    updated: "May 10, 2026",
+    label: "Refund processed to your original payment method",
+    color: "var(--success)",
+  },
+};
+
 export default function ReturnsPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [ticketId, setTicketId] = useState("");
+  const [ticketResult, setTicketResult] = useState<
+    null | "found" | "not_found"
+  >(null);
+  const [ticketLoading, setTicketLoading] = useState(false);
+  const [ticketData, setTicketData] = useState<
+    (typeof TICKET_STATUSES)[string] | null
+  >(null);
+
+  const handleTicketCheck = async () => {
+    if (!ticketId.trim()) return;
+    setTicketLoading(true);
+    setTicketResult(null);
+    await new Promise((r) => setTimeout(r, 900));
+    const found = TICKET_STATUSES[ticketId.trim().toUpperCase()];
+    if (found) {
+      setTicketData(found);
+      setTicketResult("found");
+    } else {
+      setTicketData(null);
+      setTicketResult("not_found");
+    }
+    setTicketLoading(false);
+  };
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
@@ -210,6 +272,217 @@ export default function ReturnsPage() {
       </div>
 
       <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-16 space-y-20">
+        {/* ── NEW: Return Ticket Tracker ── */}
+        <section
+          className="rounded-2xl p-6 lg:p-8"
+          style={{
+            background: "var(--white)",
+            border: "1.5px solid var(--border-light)",
+            boxShadow: "var(--shadow-sm)",
+          }}
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: "var(--red-muted)" }}
+            >
+              <Ticket className="w-5 h-5" style={{ color: "var(--red)" }} />
+            </div>
+            <div>
+              <h2
+                className="font-bold text-base"
+                style={{
+                  color: "var(--charcoal)",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                Track Your Return Ticket
+              </h2>
+              <p
+                className="text-xs"
+                style={{
+                  color: "var(--charcoal-mist)",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                Enter your return ticket ID (e.g. RET-001234) to see the latest
+                status.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-3 max-w-lg">
+            <input
+              type="text"
+              value={ticketId}
+              onChange={(e) => {
+                setTicketId(e.target.value);
+                setTicketResult(null);
+              }}
+              placeholder="RET-XXXXXX"
+              className="flex-1 px-4 py-3 rounded-xl text-sm outline-none font-mono"
+              style={{
+                background: "var(--off-white)",
+                border: "1.5px solid var(--border-light)",
+                color: "var(--charcoal)",
+              }}
+              onFocus={(e) =>
+                (e.currentTarget.style.borderColor = "var(--red)")
+              }
+              onBlur={(e) =>
+                (e.currentTarget.style.borderColor = "var(--border-light)")
+              }
+              onKeyDown={(e) => e.key === "Enter" && handleTicketCheck()}
+            />
+            <button
+              onClick={handleTicketCheck}
+              disabled={!ticketId.trim() || ticketLoading}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm text-white"
+              style={{
+                background:
+                  ticketId.trim() && !ticketLoading
+                    ? "var(--charcoal)"
+                    : "var(--charcoal-mist)",
+                fontFamily: "var(--font-body)",
+                cursor:
+                  ticketId.trim() && !ticketLoading ? "pointer" : "not-allowed",
+              }}
+            >
+              {ticketLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Search className="w-4 h-4" />
+              )}
+              {ticketLoading ? "Checking…" : "Track"}
+            </button>
+          </div>
+
+          {ticketResult === "not_found" && (
+            <div
+              className="mt-4 flex items-center gap-3 px-4 py-3 rounded-xl"
+              style={{
+                background: "var(--danger-bg)",
+                border: "1px solid var(--danger-border)",
+              }}
+            >
+              <AlertCircle
+                className="w-4 h-4 flex-shrink-0"
+                style={{ color: "var(--red)" }}
+              />
+              <p
+                className="text-sm"
+                style={{
+                  color: "var(--charcoal)",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                No ticket found for <strong>{ticketId}</strong>. Please
+                double-check the ID or{" "}
+                <Link
+                  href="/contact"
+                  style={{ color: "var(--red)" }}
+                  className="underline"
+                >
+                  contact support
+                </Link>
+                .
+              </p>
+            </div>
+          )}
+
+          {ticketResult === "found" && ticketData && (
+            <div
+              className="mt-5 rounded-xl p-5"
+              style={{
+                background: "var(--off-white)",
+                border: "1px solid var(--border-light)",
+              }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <span
+                    className="font-mono text-xs font-bold"
+                    style={{ color: "var(--charcoal-mist)" }}
+                  >
+                    {ticketId.toUpperCase()}
+                  </span>
+                  <p
+                    className="font-bold text-sm mt-0.5"
+                    style={{
+                      color: "var(--charcoal)",
+                      fontFamily: "var(--font-body)",
+                    }}
+                  >
+                    {ticketData.label}
+                  </p>
+                </div>
+                <span
+                  className="text-xs font-bold px-3 py-1 rounded-full"
+                  style={{
+                    background: `${ticketData.color}15`,
+                    color: ticketData.color,
+                    border: `1px solid ${ticketData.color}30`,
+                    fontFamily: "var(--font-mono)",
+                  }}
+                >
+                  {ticketData.status}
+                </span>
+              </div>
+              {/* Progress bar */}
+              <div className="flex items-center gap-1 mb-2">
+                {RETURN_STEPS.map((s, idx) => (
+                  <div key={idx} className="flex items-center gap-1 flex-1">
+                    <div
+                      className="flex-1 h-1.5 rounded-full"
+                      style={{
+                        background:
+                          idx < ticketData.step
+                            ? "var(--red)"
+                            : "var(--border-light)",
+                      }}
+                    />
+                    {idx === RETURN_STEPS.length - 1 && (
+                      <CircleCheck
+                        className="w-4 h-4"
+                        style={{
+                          color:
+                            ticketData.step >= 5
+                              ? "var(--success)"
+                              : "var(--border-light)",
+                        }}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between">
+                {RETURN_STEPS.map((s, idx) => (
+                  <span
+                    key={idx}
+                    className="text-[9px] font-mono"
+                    style={{
+                      color:
+                        idx < ticketData.step
+                          ? "var(--charcoal-soft)"
+                          : "var(--charcoal-mist)",
+                    }}
+                  >
+                    {s.number}
+                  </span>
+                ))}
+              </div>
+              <p
+                className="text-xs mt-3"
+                style={{
+                  color: "var(--charcoal-mist)",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                Last updated: {ticketData.updated}
+              </p>
+            </div>
+          )}
+        </section>
+
         {/* Timeline */}
         <section>
           <div className="mb-10">
