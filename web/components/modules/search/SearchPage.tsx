@@ -2129,7 +2129,3 @@ export default function SearchPage() {
     </div>
   );
 }
-
-export function generateMetadata() {
-  return { title: "Arama — Marketplace" };
-}
