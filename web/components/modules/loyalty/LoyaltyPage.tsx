@@ -15,6 +15,8 @@ import {
   HeartHandshake,
   Sparkles,
   ArrowRight,
+  TrendingUp,
+  Lock,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -127,13 +129,223 @@ const REDEEM_OPTIONS = [
   { label: "₺250 Discount", points: 4200, desc: "Off your next order" },
 ];
 
+// Tier ladder: total points scale endpoints for visualization
+const TIER_SCALE_MAX = 20000;
+
+function ProgressTracker({ userPoints }: { userPoints: number }) {
+  const currentTier =
+    TIERS.find((t) => userPoints >= t.minPoints && userPoints <= t.maxPoints) ??
+    TIERS[0];
+  const nextTier =
+    TIERS[TIERS.findIndex((t) => t.id === currentTier.id) + 1] ?? null;
+  const isPlatinum = currentTier.id === "platinum";
+
+  const progressPct = isPlatinum
+    ? 100
+    : nextTier
+      ? Math.min(
+          100,
+          ((userPoints - currentTier.minPoints) /
+            (nextTier.minPoints - currentTier.minPoints)) *
+            100,
+        )
+      : 0;
+
+  const pointsToNext = nextTier ? nextTier.minPoints - userPoints : 0;
+
+  // Milestone checkpoints within current tier
+  const milestones = (() => {
+    if (!nextTier) return [];
+    const range = nextTier.minPoints - currentTier.minPoints;
+    const step = range / 4;
+    return [1, 2, 3].map((i) => ({
+      pts: Math.round(currentTier.minPoints + step * i),
+      pct: (i / 4) * 100,
+    }));
+  })();
+
+  return (
+    <div
+      className="rounded-2xl p-6"
+      style={{
+        background: "rgba(255,255,255,0.06)",
+        border: "1px solid rgba(255,255,255,0.12)",
+        maxWidth: 540,
+        margin: "0 auto",
+        textAlign: "left",
+      }}
+    >
+      {/* Header row */}
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <div className="text-[11px] text-white/50 uppercase tracking-widest mb-1">
+            Your Balance
+          </div>
+          <div className="text-[2rem] font-bold" style={{ color: "#eab308" }}>
+            {userPoints.toLocaleString()}{" "}
+            <span className="text-[1rem] font-medium text-white/60">pts</span>
+          </div>
+        </div>
+        <div
+          className="px-4 py-2 rounded-full flex items-center gap-2"
+          style={{
+            background: currentTier.bg,
+            border: `1px solid ${currentTier.border}`,
+          }}
+        >
+          <Crown className="w-4 h-4" style={{ color: currentTier.color }} />
+          <span
+            className="font-bold text-[14px]"
+            style={{ color: currentTier.color }}
+          >
+            {currentTier.label}
+          </span>
+        </div>
+      </div>
+
+      {/* Tier ladder (visual) */}
+      <div className="mb-5">
+        <div className="flex justify-between text-[10px] text-white/40 mb-2 font-mono">
+          {TIERS.map((t) => (
+            <span
+              key={t.id}
+              style={{ color: t.id === currentTier.id ? t.color : undefined }}
+              className={t.id === currentTier.id ? "font-bold" : ""}
+            >
+              {t.label}
+            </span>
+          ))}
+        </div>
+
+        {/* Full multi-tier track */}
+        <div
+          className="relative h-3 rounded-full"
+          style={{ background: "rgba(255,255,255,0.08)" }}
+        >
+          {/* Filled portion */}
+          <div
+            className="absolute left-0 top-0 h-3 rounded-full transition-all duration-700"
+            style={{
+              width: `${Math.min(100, (userPoints / TIER_SCALE_MAX) * 100)}%`,
+              background: `linear-gradient(90deg, #cd7f32, #9ca3af, #eab308, var(--red))`,
+            }}
+          />
+
+          {/* Tier boundary markers */}
+          {TIERS.slice(1).map((t) => {
+            const pct = (t.minPoints / TIER_SCALE_MAX) * 100;
+            const reached = userPoints >= t.minPoints;
+            return (
+              <div
+                key={t.id}
+                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
+                style={{ left: `${pct}%` }}
+              >
+                <div
+                  className="w-3 h-3 rounded-full border-2"
+                  style={{
+                    borderColor: reached ? t.color : "rgba(255,255,255,0.2)",
+                    background: reached ? t.color : "rgba(30,30,30,0.8)",
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Tier threshold labels */}
+        <div className="flex justify-between text-[9px] text-white/30 mt-1 font-mono">
+          <span>0</span>
+          {TIERS.slice(1).map((t) => (
+            <span
+              key={t.id}
+              style={{ color: userPoints >= t.minPoints ? t.color : undefined }}
+            >
+              {t.minPoints >= 1000 ? `${t.minPoints / 1000}k` : t.minPoints}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Progress to next tier */}
+      {nextTier && (
+        <div>
+          <div className="flex justify-between text-[12px] text-white/50 mb-2">
+            <span>{userPoints.toLocaleString()} pts</span>
+            <span className="font-semibold" style={{ color: nextTier.color }}>
+              {nextTier.minPoints.toLocaleString()} pts → {nextTier.label}
+            </span>
+          </div>
+
+          {/* Segment progress bar */}
+          <div
+            className="relative h-2 rounded-full mb-1"
+            style={{ background: "rgba(255,255,255,0.08)" }}
+          >
+            <div
+              className="h-2 rounded-full transition-all duration-700"
+              style={{ width: `${progressPct}%`, background: nextTier.color }}
+            />
+            {/* Milestone ticks */}
+            {milestones.map((m) => (
+              <div
+                key={m.pts}
+                className="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 opacity-30"
+                style={{ left: `${m.pct}%`, background: "white" }}
+                title={`${m.pts.toLocaleString()} pts`}
+              />
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-white/40">
+              {pointsToNext.toLocaleString()} more pts to{" "}
+              <strong style={{ color: nextTier.color }}>
+                {nextTier.label}
+              </strong>
+            </span>
+            <span className="text-[11px] text-white/40">
+              {Math.round(progressPct)}%
+            </span>
+          </div>
+
+          {/* Unlocks preview */}
+          <div
+            className="mt-3 p-3 rounded-xl"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.06)",
+            }}
+          >
+            <p
+              className="text-[10px] uppercase tracking-widest mb-1.5"
+              style={{ color: nextTier.color }}
+            >
+              Unlocks at {nextTier.label}
+            </p>
+            <p className="text-[12px] text-white/60">{nextTier.perks[0]}</p>
+          </div>
+        </div>
+      )}
+
+      {isPlatinum && (
+        <div
+          className="mt-3 text-center text-[13px] font-semibold"
+          style={{ color: "var(--red)" }}
+        >
+          🎉 You're at the top tier — Platinum!
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function LoyaltyPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"earn" | "redeem" | "tiers">(
     "tiers",
   );
 
-  // Mock user points for demonstration
   const userPoints = user ? 1240 : null;
   const userTier =
     userPoints !== null
@@ -141,20 +353,6 @@ export default function LoyaltyPage() {
           (t) => userPoints >= t.minPoints && userPoints <= t.maxPoints,
         ) ?? TIERS[0])
       : null;
-  const nextTier = userTier
-    ? (TIERS[TIERS.findIndex((t) => t.id === userTier.id) + 1] ?? null)
-    : null;
-  const progressPct =
-    userTier && nextTier
-      ? Math.min(
-          100,
-          ((userPoints! - userTier.minPoints) /
-            (nextTier.minPoints - userTier.minPoints)) *
-            100,
-        )
-      : userTier?.id === "platinum"
-        ? 100
-        : 0;
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
@@ -212,7 +410,7 @@ export default function LoyaltyPage() {
               marginBottom: "1.25rem",
             }}
           >
-            Every Purchase
+            <span style={{ color: "white" }}>Every Purchase</span>
             <br />
             <span style={{ color: "var(--red-light)" }}>Earns You More</span>
           </h1>
@@ -227,6 +425,7 @@ export default function LoyaltyPage() {
             Join thousands of members earning points on every order. The more
             you shop, the higher your tier — and the better your rewards.
           </p>
+
           {!user ? (
             <div
               style={{
@@ -273,105 +472,7 @@ export default function LoyaltyPage() {
               </Link>
             </div>
           ) : (
-            <div
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: 20,
-                padding: "1.75rem 2rem",
-                maxWidth: 480,
-                margin: "0 auto",
-                textAlign: "left",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "1rem",
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      fontSize: "0.75rem",
-                      color: "rgba(255,255,255,0.5)",
-                      marginBottom: "0.25rem",
-                    }}
-                  >
-                    YOUR BALANCE
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "2rem",
-                      fontWeight: 700,
-                      color: "#eab308",
-                    }}
-                  >
-                    {userPoints?.toLocaleString()} pts
-                  </div>
-                </div>
-                <div
-                  style={{
-                    padding: "0.5rem 1rem",
-                    borderRadius: 100,
-                    background: userTier?.bg,
-                    border: `1px solid ${userTier?.border}`,
-                    color: userTier?.color,
-                    fontWeight: 700,
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  {userTier?.label}
-                </div>
-              </div>
-              {nextTier && (
-                <div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: "0.75rem",
-                      color: "rgba(255,255,255,0.5)",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    <span>{userPoints} pts</span>
-                    <span>
-                      {nextTier.minPoints} pts to {nextTier.label}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      background: "rgba(255,255,255,0.1)",
-                      borderRadius: 100,
-                      height: 6,
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: `${progressPct}%`,
-                        background: "var(--red)",
-                        borderRadius: 100,
-                        height: "100%",
-                        transition: "width 0.6s ease",
-                      }}
-                    />
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.75rem",
-                      color: "rgba(255,255,255,0.45)",
-                      marginTop: "0.5rem",
-                    }}
-                  >
-                    {(nextTier.minPoints - userPoints!).toLocaleString()} more
-                    points to {nextTier.label}
-                  </div>
-                </div>
-              )}
-            </div>
+            <ProgressTracker userPoints={userPoints!} />
           )}
         </div>
       </section>
@@ -442,9 +543,9 @@ export default function LoyaltyPage() {
               </h3>
               <p
                 style={{
-                  fontSize: "0.875rem",
+                  fontSize: "0.9rem",
                   color: "var(--charcoal-soft)",
-                  lineHeight: 1.7,
+                  lineHeight: 1.6,
                 }}
               >
                 {item.desc}
@@ -454,7 +555,7 @@ export default function LoyaltyPage() {
         </div>
       </section>
 
-      {/* Tabs */}
+      {/* Tab section */}
       <section
         style={{
           maxWidth: 1100,
@@ -462,40 +563,32 @@ export default function LoyaltyPage() {
           padding: "2rem 1.5rem 5rem",
         }}
       >
-        {/* Tab nav */}
+        {/* Tabs */}
         <div
+          className="flex gap-1 mb-8 p-1 rounded-xl"
           style={{
-            display: "flex",
-            gap: "0.5rem",
-            marginBottom: "2rem",
-            borderBottom: "1px solid var(--border-light)",
-            paddingBottom: "0",
+            background: "var(--off-white-2)",
+            border: "1px solid rgba(51,51,51,0.07)",
+            display: "inline-flex",
           }}
         >
           {(["tiers", "earn", "redeem"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
+              className="px-5 py-2 rounded-lg text-[13px] font-bold transition-all"
               style={{
-                padding: "0.75rem 1.5rem",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontWeight: 600,
-                fontSize: "0.875rem",
+                background: activeTab === tab ? "white" : "transparent",
                 color:
-                  activeTab === tab ? "var(--red)" : "var(--charcoal-soft)",
-                borderBottom:
                   activeTab === tab
-                    ? "2px solid var(--red)"
-                    : "2px solid transparent",
-                marginBottom: -1,
-                transition: "color 0.15s, border-color 0.15s",
-                textTransform: "capitalize",
+                    ? "var(--charcoal)"
+                    : "var(--charcoal-soft)",
+                boxShadow:
+                  activeTab === tab ? "0 1px 4px rgba(51,51,51,0.08)" : "none",
               }}
             >
               {tab === "tiers"
-                ? "Member Tiers"
+                ? "Tier Benefits"
                 : tab === "earn"
                   ? "Ways to Earn"
                   : "Redeem Points"}
@@ -512,132 +605,177 @@ export default function LoyaltyPage() {
               gap: "1.25rem",
             }}
           >
-            {TIERS.map((tier) => (
-              <div
-                key={tier.id}
-                style={{
-                  background: "var(--white)",
-                  border: tier.popular
-                    ? `2px solid ${tier.color}`
-                    : "1px solid var(--border-light)",
-                  borderRadius: 20,
-                  padding: "1.75rem",
-                  position: "relative",
-                  boxShadow: tier.popular
-                    ? `0 4px 24px ${tier.color}22`
-                    : "none",
-                }}
-              >
-                {tier.popular && (
+            {TIERS.map((tier) => {
+              const isCurrentTier = userTier?.id === tier.id;
+              const isLocked = userTier
+                ? TIERS.findIndex((t) => t.id === tier.id) >
+                  TIERS.findIndex((t) => t.id === userTier.id)
+                : true;
+              return (
+                <div
+                  key={tier.id}
+                  style={{
+                    background: "var(--white)",
+                    border: tier.popular
+                      ? `2px solid ${tier.color}`
+                      : isCurrentTier
+                        ? `2px solid ${tier.color}`
+                        : "1px solid var(--border-light)",
+                    borderRadius: 20,
+                    padding: "1.75rem",
+                    position: "relative",
+                    boxShadow: isCurrentTier
+                      ? `0 4px 24px ${tier.color}22`
+                      : "none",
+                    opacity: !user || isLocked ? 0.75 : 1,
+                  }}
+                >
+                  {tier.popular && !isCurrentTier && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: -12,
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        background: tier.color,
+                        color: "white",
+                        padding: "0.25rem 0.875rem",
+                        borderRadius: 100,
+                        fontSize: "0.6875rem",
+                        fontWeight: 700,
+                        letterSpacing: "0.05em",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      MOST POPULAR
+                    </div>
+                  )}
+                  {isCurrentTier && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: -12,
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        background: tier.color,
+                        color: "white",
+                        padding: "0.25rem 0.875rem",
+                        borderRadius: 100,
+                        fontSize: "0.6875rem",
+                        fontWeight: 700,
+                        letterSpacing: "0.05em",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      YOUR TIER
+                    </div>
+                  )}
+
                   <div
                     style={{
-                      position: "absolute",
-                      top: -12,
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      background: tier.color,
-                      color: "white",
-                      padding: "0.25rem 0.875rem",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      background: tier.bg,
+                      border: `1px solid ${tier.border}`,
                       borderRadius: 100,
-                      fontSize: "0.6875rem",
-                      fontWeight: 700,
-                      letterSpacing: "0.05em",
-                      whiteSpace: "nowrap",
+                      padding: "0.375rem 1rem",
+                      marginBottom: "1rem",
                     }}
                   >
-                    MOST POPULAR
-                  </div>
-                )}
-                <div
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                    background: tier.bg,
-                    border: `1px solid ${tier.border}`,
-                    borderRadius: 100,
-                    padding: "0.375rem 1rem",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  <Crown style={{ width: 14, height: 14, color: tier.color }} />
-                  <span
-                    style={{
-                      fontSize: "0.8125rem",
-                      fontWeight: 700,
-                      color: tier.color,
-                    }}
-                  >
-                    {tier.label}
-                  </span>
-                </div>
-                <div style={{ marginBottom: "0.5rem" }}>
-                  <span
-                    style={{
-                      fontSize: "2rem",
-                      fontWeight: 800,
-                      color: "var(--charcoal)",
-                    }}
-                  >
-                    {tier.multiplier}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "0.875rem",
-                      color: "var(--charcoal-soft)",
-                      marginLeft: "0.5rem",
-                    }}
-                  >
-                    points
-                  </span>
-                </div>
-                <div
-                  style={{
-                    fontSize: "0.8125rem",
-                    color: "var(--charcoal-mist)",
-                    marginBottom: "1.5rem",
-                  }}
-                >
-                  {tier.maxPoints === Infinity
-                    ? `${tier.minPoints.toLocaleString()}+ pts`
-                    : `${tier.minPoints.toLocaleString()}–${tier.maxPoints.toLocaleString()} pts`}
-                </div>
-                <ul
-                  style={{
-                    listStyle: "none",
-                    padding: 0,
-                    margin: 0,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0.625rem",
-                  }}
-                >
-                  {tier.perks.map((perk, i) => (
-                    <li
-                      key={i}
+                    <Crown
+                      style={{ width: 14, height: 14, color: tier.color }}
+                    />
+                    <span
                       style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: "0.625rem",
-                        fontSize: "0.875rem",
+                        fontSize: "0.8125rem",
+                        fontWeight: 700,
+                        color: tier.color,
+                      }}
+                    >
+                      {tier.label}
+                    </span>
+                  </div>
+
+                  <div style={{ marginBottom: "0.5rem" }}>
+                    <span
+                      style={{
+                        fontSize: "2rem",
+                        fontWeight: 800,
                         color: "var(--charcoal)",
                       }}
                     >
-                      <Check
+                      {tier.multiplier}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "0.875rem",
+                        color: "var(--charcoal-soft)",
+                        marginLeft: "0.5rem",
+                      }}
+                    >
+                      points
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.8125rem",
+                      color: "var(--charcoal-mist)",
+                      marginBottom: "1.5rem",
+                    }}
+                  >
+                    {tier.maxPoints === Infinity
+                      ? `${tier.minPoints.toLocaleString()}+ pts`
+                      : `${tier.minPoints.toLocaleString()}–${tier.maxPoints.toLocaleString()} pts`}
+                  </div>
+
+                  <ul
+                    style={{
+                      listStyle: "none",
+                      padding: 0,
+                      margin: 0,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.625rem",
+                    }}
+                  >
+                    {tier.perks.map((perk, i) => (
+                      <li
+                        key={i}
                         style={{
-                          width: 15,
-                          height: 15,
-                          color: tier.color,
-                          flexShrink: 0,
-                          marginTop: 2,
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: "0.625rem",
+                          fontSize: "0.875rem",
+                          color: "var(--charcoal)",
                         }}
-                      />
-                      {perk}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+                      >
+                        <Check
+                          style={{
+                            width: 15,
+                            height: 15,
+                            color: tier.color,
+                            flexShrink: 0,
+                            marginTop: 2,
+                          }}
+                        />
+                        {perk}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {user && isLocked && (
+                    <div
+                      className="mt-4 flex items-center gap-1.5 text-[12px]"
+                      style={{ color: "var(--charcoal-mist)" }}
+                    >
+                      <Lock className="w-3 h-3" />
+                      Reach {tier.minPoints.toLocaleString()} pts to unlock
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -714,82 +852,129 @@ export default function LoyaltyPage() {
               gap: "1.25rem",
             }}
           >
-            {REDEEM_OPTIONS.map((opt, i) => (
-              <div
-                key={i}
-                style={{
-                  background: "var(--white)",
-                  border: "1px solid var(--border-light)",
-                  borderRadius: 16,
-                  padding: "1.5rem",
-                  textAlign: "center",
-                }}
-              >
+            {REDEEM_OPTIONS.map((opt, i) => {
+              const canRedeem =
+                user && userPoints !== null && userPoints >= opt.points;
+              return (
                 <div
+                  key={i}
                   style={{
-                    fontSize: "1.375rem",
-                    fontWeight: 800,
-                    color: "var(--charcoal)",
-                    marginBottom: "0.25rem",
+                    background: "var(--white)",
+                    border: "1px solid var(--border-light)",
+                    borderRadius: 16,
+                    padding: "1.5rem",
+                    textAlign: "center",
+                    opacity: user && !canRedeem ? 0.7 : 1,
                   }}
                 >
-                  {opt.label}
-                </div>
-                <div
-                  style={{
-                    fontSize: "0.875rem",
-                    color: "var(--charcoal-soft)",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  {opt.desc}
-                </div>
-                <div
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "0.375rem",
-                    background: "var(--red-muted)",
-                    padding: "0.375rem 1rem",
-                    borderRadius: 100,
-                    marginBottom: "1.25rem",
-                  }}
-                >
-                  <Star
+                  <div
                     style={{
-                      width: 13,
-                      height: 13,
-                      color: "var(--red)",
-                      fill: "var(--red)",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "0.8125rem",
-                      fontWeight: 700,
-                      color: "var(--red)",
+                      fontSize: "1.375rem",
+                      fontWeight: 800,
+                      color: "var(--charcoal)",
+                      marginBottom: "0.25rem",
                     }}
                   >
-                    {opt.points.toLocaleString()} pts
-                  </span>
+                    {opt.label}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.875rem",
+                      color: "var(--charcoal-soft)",
+                      marginBottom: "1rem",
+                    }}
+                  >
+                    {opt.desc}
+                  </div>
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.375rem",
+                      background: "var(--red-muted)",
+                      padding: "0.375rem 1rem",
+                      borderRadius: 100,
+                      marginBottom: "1.25rem",
+                    }}
+                  >
+                    <Star
+                      style={{
+                        width: 13,
+                        height: 13,
+                        color: "var(--red)",
+                        fill: "var(--red)",
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "0.8125rem",
+                        fontWeight: 700,
+                        color: "var(--red)",
+                      }}
+                    >
+                      {opt.points.toLocaleString()} pts
+                    </span>
+                  </div>
+
+                  {/* Progress if user can't afford it yet */}
+                  {user && userPoints !== null && !canRedeem && (
+                    <div className="mb-3">
+                      <div
+                        className="w-full h-1.5 rounded-full mb-1"
+                        style={{ background: "rgba(51,51,51,0.08)" }}
+                      >
+                        <div
+                          className="h-1.5 rounded-full"
+                          style={{
+                            width: `${Math.min(100, (userPoints / opt.points) * 100)}%`,
+                            background: "var(--red)",
+                          }}
+                        />
+                      </div>
+                      <p
+                        className="text-[11px]"
+                        style={{ color: "var(--charcoal-mist)" }}
+                      >
+                        {(opt.points - userPoints).toLocaleString()} pts needed
+                      </p>
+                    </div>
+                  )}
+
+                  <button
+                    disabled={!canRedeem}
+                    style={{
+                      width: "100%",
+                      padding: "0.625rem",
+                      background: canRedeem
+                        ? "var(--charcoal)"
+                        : "var(--off-white-2)",
+                      color: canRedeem ? "white" : "var(--charcoal-mist)",
+                      border: "none",
+                      borderRadius: 10,
+                      fontWeight: 600,
+                      fontSize: "0.875rem",
+                      cursor: canRedeem ? "pointer" : "default",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.375rem",
+                    }}
+                  >
+                    {!user ? (
+                      <>Sign in to redeem</>
+                    ) : canRedeem ? (
+                      <>
+                        Redeem <ChevronRight className="w-3.5 h-3.5" />
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-3.5 h-3.5" /> Not enough points
+                      </>
+                    )}
+                  </button>
                 </div>
-                <button
-                  style={{
-                    width: "100%",
-                    padding: "0.625rem",
-                    background: user ? "var(--charcoal)" : "var(--off-white-2)",
-                    color: user ? "white" : "var(--charcoal-mist)",
-                    border: "none",
-                    borderRadius: 10,
-                    fontWeight: 600,
-                    fontSize: "0.875rem",
-                    cursor: user ? "pointer" : "default",
-                  }}
-                >
-                  {user ? "Redeem" : "Sign in to redeem"}
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

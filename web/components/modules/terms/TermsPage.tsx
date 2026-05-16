@@ -1,10 +1,10 @@
 "use client";
 
-// components/modules/terms/TermsPage.tsx
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FileText, ChevronRight } from "lucide-react";
+import { FileText, ChevronRight, Printer, AlertCircle } from "lucide-react";
 
-const LAST_UPDATED = "1 January 2025";
+const LAST_UPDATED = "1 May 2026";
 
 const SECTIONS = [
   {
@@ -80,170 +80,261 @@ const SECTIONS = [
 ];
 
 export default function TermsPage() {
+  const [activeSection, setActiveSection] = useState<string>("");
+
+  // Scroll spy
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: "-20% 0px -70% 0px" },
+    );
+    SECTIONS.forEach((s) => {
+      const el = document.getElementById(s.id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
-      {/* Hero */}
-      <div className="bg-[var(--charcoal)] py-14 px-4 relative overflow-hidden">
-        <div className="absolute -top-10 -right-10 w-48 h-48 border-[20px] border-[var(--red)]/10 rounded-full pointer-events-none" />
-        <div className="max-w-[1300px] mx-auto relative z-10">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <FileText className="w-4 h-4 text-[var(--red)]" />
-            <span className="font-mono text-[10px] uppercase tracking-[3px] text-[var(--charcoal-soft)]">
-              Legal
-            </span>
+    <>
+      <style>{`
+        @media print {
+          .no-print { display: none !important; }
+          aside { display: none !important; }
+          main { padding: 0 !important; }
+          body { font-size: 12pt; }
+        }
+      `}</style>
+
+      <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
+        {/* Hero */}
+        <div className="bg-[var(--charcoal)] py-14 px-4 relative overflow-hidden no-print">
+          <div className="absolute -top-10 -right-10 w-48 h-48 border-[20px] border-[var(--red)]/10 rounded-full pointer-events-none" />
+          <div className="max-w-[1300px] mx-auto relative z-10">
+            <div className="inline-flex items-center gap-2 mb-4">
+              <FileText className="w-4 h-4 text-[var(--red)]" />
+              <span className="font-mono text-[10px] uppercase tracking-[3px] text-[var(--charcoal-soft)]">
+                Legal
+              </span>
+            </div>
+            <h1
+              className="text-[var(--off-white)] text-[36px] lg:text-[48px] leading-tight mb-4"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Terms of <span className="text-[var(--red)]">Service</span>
+            </h1>
+
+            {/* Highlighted last updated */}
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+              style={{
+                background: "rgba(200,16,46,0.18)",
+                border: "1px solid rgba(200,16,46,0.3)",
+              }}
+            >
+              <AlertCircle
+                className="w-3.5 h-3.5"
+                style={{ color: "var(--red)" }}
+              />
+              <span className="font-mono text-[11px] uppercase tracking-wider text-white/70">
+                Last Updated
+              </span>
+              <span className="text-sm font-bold text-white">
+                {LAST_UPDATED}
+              </span>
+            </div>
+
+            <button
+              onClick={() => window.print()}
+              className="no-print ml-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-white/20 text-sm text-white/70 hover:text-white hover:border-white/40 transition-colors"
+            >
+              <Printer className="w-4 h-4" />
+              Print / PDF
+            </button>
           </div>
-          <h1
-            className="text-[var(--off-white)] text-[36px] lg:text-[48px] leading-tight mb-2"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Terms of <span className="text-[var(--red)]">Service</span>
-          </h1>
-          <p className="text-[var(--charcoal-soft)] text-[15px]">
-            Last updated: {LAST_UPDATED}
-          </p>
         </div>
-      </div>
 
-      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-14">
-        <div className="grid lg:grid-cols-[240px_1fr] gap-12">
-          {/* Sticky sidebar TOC */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-24">
-              <p
-                className="font-mono text-[10px] uppercase tracking-[3px] mb-4"
-                style={{ color: "var(--charcoal-soft)" }}
-              >
-                Contents
-              </p>
-              <nav className="space-y-1">
-                {SECTIONS.map((s) => (
-                  <a
-                    key={s.id}
-                    href={`#${s.id}`}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] transition-all group"
+        <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-14">
+          <div className="grid lg:grid-cols-[240px_1fr] gap-12">
+            {/* Sticky sidebar TOC */}
+            <aside className="hidden lg:block no-print">
+              <div className="sticky top-24">
+                <p
+                  className="font-mono text-[10px] uppercase tracking-[3px] mb-4"
+                  style={{ color: "var(--charcoal-soft)" }}
+                >
+                  Contents
+                </p>
+                <nav className="space-y-0.5">
+                  {SECTIONS.map((s) => {
+                    const isActive = activeSection === s.id;
+                    return (
+                      <a
+                        key={s.id}
+                        href={`#${s.id}`}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] transition-all"
+                        style={{
+                          color: isActive
+                            ? "var(--red)"
+                            : "var(--charcoal-soft)",
+                          background: isActive
+                            ? "rgba(200,16,46,0.07)"
+                            : "transparent",
+                          fontWeight: isActive ? 600 : 400,
+                          borderLeft: isActive
+                            ? "2px solid var(--red)"
+                            : "2px solid transparent",
+                        }}
+                      >
+                        <ChevronRight
+                          className="w-3 h-3 flex-shrink-0"
+                          style={{ opacity: isActive ? 1 : 0.3 }}
+                        />
+                        <span className="truncate">
+                          {s.title.replace(/^\d+\.\s/, "")}
+                        </span>
+                      </a>
+                    );
+                  })}
+                </nav>
+
+                {/* Related */}
+                <div
+                  className="mt-8 pt-6"
+                  style={{ borderTop: "1px solid rgba(51,51,51,0.08)" }}
+                >
+                  <p
+                    className="font-mono text-[10px] uppercase tracking-[3px] mb-3"
                     style={{ color: "var(--charcoal-soft)" }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.color =
-                        "var(--charcoal)";
-                      (e.currentTarget as HTMLElement).style.background =
-                        "rgba(51,51,51,0.05)";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.color =
-                        "var(--charcoal-soft)";
-                      (e.currentTarget as HTMLElement).style.background =
-                        "transparent";
-                    }}
                   >
-                    <ChevronRight className="w-3 h-3 opacity-40" />
-                    {s.title.replace(/^\d+\.\s/, "")}
-                  </a>
-                ))}
-              </nav>
+                    Related
+                  </p>
+                  <Link
+                    href="/privacy"
+                    className="text-[13px] font-semibold flex items-center gap-1.5 hover:underline"
+                    style={{ color: "var(--red)" }}
+                  >
+                    Privacy Policy <ChevronRight className="w-3 h-3" />
+                  </Link>
+                  <Link
+                    href="/returns"
+                    className="text-[13px] font-semibold flex items-center gap-1.5 hover:underline mt-2"
+                    style={{ color: "var(--red)" }}
+                  >
+                    Returns Policy <ChevronRight className="w-3 h-3" />
+                  </Link>
+                </div>
+              </div>
+            </aside>
 
-              {/* Privacy link */}
+            {/* Main content */}
+            <div className="space-y-0">
+              {/* Intro banner */}
               <div
-                className="mt-8 pt-6"
-                style={{ borderTop: "1px solid rgba(51,51,51,0.08)" }}
+                className="p-6 rounded-2xl mb-8"
+                style={{
+                  background: "rgba(200,16,46,0.04)",
+                  border: "1px solid rgba(200,16,46,0.12)",
+                }}
+              >
+                <p
+                  className="text-[0.875rem] leading-relaxed"
+                  style={{ color: "var(--charcoal-soft)" }}
+                >
+                  Please read these Terms of Service carefully before using BAZR
+                  Marketplace. These terms constitute a legally binding
+                  agreement between you and BAZR. By creating an account or
+                  making a purchase, you agree to be bound by these terms.
+                </p>
+              </div>
+
+              {/* Mobile TOC */}
+              <div
+                className="no-print lg:hidden rounded-2xl p-5 mb-8"
+                style={{
+                  border: "1px solid rgba(51,51,51,0.08)",
+                  background: "white",
+                }}
               >
                 <p
                   className="font-mono text-[10px] uppercase tracking-[3px] mb-3"
                   style={{ color: "var(--charcoal-soft)" }}
                 >
-                  Related
+                  Jump to
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {SECTIONS.map((s) => (
+                    <a
+                      key={s.id}
+                      href={`#${s.id}`}
+                      className="text-xs px-3 py-1.5 rounded-full border font-medium"
+                      style={{
+                        borderColor: "rgba(51,51,51,0.12)",
+                        color: "var(--charcoal-soft)",
+                      }}
+                    >
+                      {s.title.replace(/^\d+\.\s/, "")}
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sections */}
+              <div
+                className="bg-white rounded-2xl divide-y overflow-hidden"
+                style={{
+                  border: "1px solid rgba(51,51,51,0.08)",
+                  boxShadow: "0 1px 4px rgba(51,51,51,0.04)",
+                }}
+              >
+                {SECTIONS.map((section) => (
+                  <section
+                    key={section.id}
+                    id={section.id}
+                    className="p-8 scroll-mt-28"
+                  >
+                    <h2
+                      className="text-[1.125rem] font-bold text-[var(--charcoal)] mb-4"
+                      style={{ fontFamily: "var(--font-body)" }}
+                    >
+                      {section.title}
+                    </h2>
+                    <p
+                      className="text-[0.875rem] leading-relaxed"
+                      style={{ color: "var(--charcoal-soft)" }}
+                    >
+                      {section.content}
+                    </p>
+                  </section>
+                ))}
+              </div>
+
+              {/* Footer note */}
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p
+                  className="font-mono text-[11px]"
+                  style={{ color: "var(--charcoal-soft)" }}
+                >
+                  Effective from {LAST_UPDATED}
                 </p>
                 <Link
-                  href="/privacy"
-                  className="text-[13px] font-semibold flex items-center gap-1.5 hover:underline"
-                  style={{ color: "var(--red)" }}
+                  href="/contact"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+                  style={{ background: "var(--charcoal)" }}
                 >
-                  Privacy Policy <ChevronRight className="w-3 h-3" />
-                </Link>
-                <Link
-                  href="/returns"
-                  className="text-[13px] font-semibold flex items-center gap-1.5 hover:underline mt-2"
-                  style={{ color: "var(--red)" }}
-                >
-                  Returns Policy <ChevronRight className="w-3 h-3" />
+                  Contact Legal Team
                 </Link>
               </div>
             </div>
-          </aside>
-
-          {/* Main content */}
-          <div className="space-y-0">
-            {/* Intro */}
-            <div
-              className="p-6 rounded-2xl mb-8"
-              style={{
-                background: "rgba(200,16,46,0.04)",
-                border: "1px solid rgba(200,16,46,0.12)",
-              }}
-            >
-              <p
-                className="text-[0.875rem] leading-relaxed"
-                style={{ color: "var(--charcoal-soft)" }}
-              >
-                Please read these Terms of Service carefully before using BAZR
-                Marketplace. These terms constitute a legally binding agreement
-                between you and BAZR. By creating an account or making a
-                purchase, you agree to be bound by these terms.
-              </p>
-            </div>
-
-            {/* Sections */}
-            <div
-              className="bg-white rounded-2xl divide-y overflow-hidden"
-              style={{
-                border: "1px solid rgba(51,51,51,0.08)",
-                boxShadow: "0 1px 4px rgba(51,51,51,0.04)",
-              }}
-            >
-              {SECTIONS.map((section) => (
-                <section key={section.id} id={section.id} className="p-8">
-                  <h2
-                    className="text-[1.125rem] font-bold text-[var(--charcoal)] mb-4"
-                    style={{ fontFamily: "var(--font-body)" }}
-                  >
-                    {section.title}
-                  </h2>
-                  <p
-                    className="text-[0.875rem] leading-relaxed"
-                    style={{ color: "var(--charcoal-soft)" }}
-                  >
-                    {section.content}
-                  </p>
-                </section>
-              ))}
-            </div>
-
-            {/* Footer note */}
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <p
-                className="font-mono text-[11px]"
-                style={{ color: "var(--charcoal-soft)" }}
-              >
-                Effective from {LAST_UPDATED}
-              </p>
-              <Link
-                href="/contact"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
-                style={{ background: "var(--charcoal)" }}
-                onMouseEnter={(e) =>
-                  ((e.currentTarget as HTMLElement).style.background =
-                    "var(--red)")
-                }
-                onMouseLeave={(e) =>
-                  ((e.currentTarget as HTMLElement).style.background =
-                    "var(--charcoal)")
-                }
-              >
-                Contact Legal Team
-              </Link>
-            </div>
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }
