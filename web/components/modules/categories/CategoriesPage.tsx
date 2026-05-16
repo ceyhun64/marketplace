@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Grid3X3, Search, Tag } from "lucide-react";
+import { ChevronRight, Grid3X3, Home, Search, Tag } from "lucide-react";
 import { useCategories } from "@/queries/useCategories";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -111,6 +111,16 @@ export default function CategoriesPage() {
       {/* Hero bar */}
       <div className="bg-[var(--charcoal)] py-14 px-4">
         <div className="max-w-[1300px] mx-auto">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-1.5 mb-5 text-[12px] text-[var(--charcoal-soft)]">
+            <Link href="/" className="flex items-center gap-1 hover:text-white transition-colors">
+              <Home className="w-3 h-3" />
+              Home
+            </Link>
+            <ChevronRight className="w-3 h-3 opacity-40" />
+            <span className="text-white font-semibold">Categories</span>
+          </nav>
+
           <div className="inline-flex items-center gap-2 mb-4">
             <Grid3X3 className="w-4 h-4 text-[var(--red)]" />
             <span className="font-mono text-[10px] uppercase tracking-[3px] text-[var(--charcoal-soft)]">
@@ -118,11 +128,17 @@ export default function CategoriesPage() {
             </span>
           </div>
           <h1
-            className="text-[var(--off-white)] text-[36px] lg:text-[48px] leading-tight mb-6"
+            className="text-[var(--off-white)] text-[36px] lg:text-[48px] leading-tight mb-2"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Browse Everything
           </h1>
+          {!isLoading && !isError && (
+            <p className="text-[var(--charcoal-soft)] text-[15px] mb-6">
+              <span className="text-white font-bold">{rootCategories.length}</span> categories available
+            </p>
+          )}
+          {(isLoading || isError) && <div className="mb-6" />}
 
           {/* Search */}
           <div className="relative max-w-md">

@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ProductCard } from "@/components/modules/store/ProductCard";
 import type { Product } from "@/types/entities";
 
-// Flash sale bitiş zamanı — 24 saat sonrası
+// Flash sale ends 24 hours from page load
 const SALE_END = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
 function useFlashSaleProducts() {
@@ -60,12 +60,36 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
   );
 }
 
+/** Stock progress bar — shows how much of initial stock remains */
+function StockBar({ stock, maxStock = 50 }: { stock?: number; maxStock?: number }) {
+  if (stock === undefined) return null;
+  const pct = Math.min(100, Math.round((stock / maxStock) * 100));
+  const color =
+    pct <= 20 ? "var(--red)" : pct <= 50 ? "#d97706" : "#16a34a";
+  return (
+    <div className="mt-2">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color }}>
+          {stock <= 0 ? "Sold Out" : stock <= 5 ? `Only ${stock} left!` : `${stock} in stock`}
+        </span>
+        <span className="text-[10px] text-[var(--charcoal-mist)]">{pct}%</span>
+      </div>
+      <div className="h-1.5 rounded-full bg-black/8 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${pct}%`, background: color }}
+        />
+      </div>
+    </div>
+  );
+}
+
 type SortKey = "discount" | "lowstock" | "price_asc";
 
 const SORT_OPTIONS: { key: SortKey; label: string; icon: React.ReactNode }[] = [
-  { key: "discount", label: "En Çok İndirim", icon: <Tag className="w-3.5 h-3.5" /> },
-  { key: "lowstock", label: "Son Stoklar", icon: <AlertTriangle className="w-3.5 h-3.5" /> },
-  { key: "price_asc", label: "En Düşük Fiyat", icon: <Flame className="w-3.5 h-3.5" /> },
+  { key: "discount", label: "Biggest Discount", icon: <Tag className="w-3.5 h-3.5" /> },
+  { key: "lowstock", label: "Almost Gone", icon: <AlertTriangle className="w-3.5 h-3.5" /> },
+  { key: "price_asc", label: "Lowest Price", icon: <Flame className="w-3.5 h-3.5" /> },
 ];
 
 export default function FlashSalePage() {
@@ -95,7 +119,7 @@ export default function FlashSalePage() {
               <div className="inline-flex items-center gap-2 mb-4">
                 <Zap className="w-4 h-4 text-[var(--red)]" />
                 <span className="font-mono text-[10px] uppercase tracking-[3px] text-[var(--charcoal-soft)]">
-                  Sınırlı Süreli Fırsat
+                  Limited Time Offer
                 </span>
               </div>
               <h1
@@ -106,7 +130,7 @@ export default function FlashSalePage() {
                 <span className="text-[var(--red)]">Sale</span>
               </h1>
               <p className="text-[var(--charcoal-soft)] text-[15px] max-w-md">
-                Seçili ürünlerde %50'ye varan indirimler. Süre dolmadan fırsatı kaçırma!
+                Up to 50% off on selected products. Don&apos;t miss out before time runs out!
               </p>
             </div>
 
@@ -114,14 +138,14 @@ export default function FlashSalePage() {
             <div>
               <p className="text-[var(--charcoal-mist)] text-[11px] uppercase tracking-[2px] mb-3 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" />
-                Kampanya bitimine kalan süre
+                Sale ends in
               </p>
               <div className="flex items-center gap-2">
-                <CountdownUnit value={countdown.hours} label="Saat" />
+                <CountdownUnit value={countdown.hours} label="Hours" />
                 <span className="text-white text-[22px] font-bold mb-4 opacity-60">:</span>
-                <CountdownUnit value={countdown.minutes} label="Dakika" />
+                <CountdownUnit value={countdown.minutes} label="Min" />
                 <span className="text-white text-[22px] font-bold mb-4 opacity-60">:</span>
-                <CountdownUnit value={countdown.seconds} label="Saniye" />
+                <CountdownUnit value={countdown.seconds} label="Sec" />
               </div>
             </div>
           </div>
@@ -151,13 +175,13 @@ export default function FlashSalePage() {
         <div className="max-w-[1300px] mx-auto flex items-center justify-between text-[13px]">
           <div className="flex items-center gap-2 font-semibold">
             <Star className="w-4 h-4 text-yellow-300" fill="currentColor" />
-            ₺500 üzeri siparişlerde ücretsiz kargo
+            Free shipping on orders over ₺500
           </div>
           <Link
             href="/products"
             className="flex items-center gap-1 text-white/80 hover:text-white transition-colors font-semibold"
           >
-            Tüm Ürünler <ChevronRight className="w-4 h-4" />
+            All Products <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
@@ -166,7 +190,7 @@ export default function FlashSalePage() {
       <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-12">
         {isError && (
           <div className="text-center py-20 text-[var(--red)] font-semibold">
-            Ürünler yüklenemedi. Lütfen tekrar deneyin.
+            Could not load products. Please try again.
           </div>
         )}
 
@@ -192,10 +216,10 @@ export default function FlashSalePage() {
           <div className="text-center py-20">
             <Zap className="w-14 h-14 text-[var(--charcoal)]/10 mx-auto mb-4" />
             <p className="text-[var(--charcoal-soft)] text-lg font-semibold">
-              Şu an aktif flash sale bulunmuyor.
+              No active flash sale right now.
             </p>
             <p className="text-[var(--charcoal-mist)] text-sm mt-1">
-              Yakında yeni kampanyalar gelecek!
+              New campaigns are coming soon — check back later!
             </p>
           </div>
         )}
@@ -204,11 +228,16 @@ export default function FlashSalePage() {
           <>
             <p className="text-[13px] text-[var(--charcoal-soft)] mb-6">
               <strong className="text-[var(--charcoal)]">{sorted.length}</strong>{" "}
-              ürün flash sale kapsamında
+              products in this flash sale
             </p>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
               {sorted.map((p) => (
-                <ProductCard key={p.id} product={p} context="marketplace" />
+                <div key={p.id} className="flex flex-col">
+                  <ProductCard product={p} context="marketplace" />
+                  <div className="px-1 -mt-1">
+                    <StockBar stock={p.stock} />
+                  </div>
+                </div>
               ))}
             </div>
           </>

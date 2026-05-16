@@ -14,6 +14,9 @@ import {
   Banknote,
   RefreshCw,
   Gift,
+  ArrowDownRight,
+  TrendingUp,
+  BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -91,9 +94,10 @@ export default function WalletPage() {
   const { user } = useAuth();
   const [topUpAmount, setTopUpAmount] = useState<number | "">("");
   const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<"overview" | "topup" | "history">(
+  const [activeTab, setActiveTab] = useState<"overview" | "topup" | "history" | "withdraw">(
     "overview",
   );
+  const [withdrawAmount, setWithdrawAmount] = useState<number | "">("");
 
   // Mock balance
   const balance = user ? 350.9 : null;
@@ -261,6 +265,24 @@ export default function WalletPage() {
                   <Plus className="w-4 h-4" /> Add Funds
                 </button>
                 <button
+                  onClick={() => setActiveTab("withdraw")}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    background: "rgba(255,255,255,0.08)",
+                    color: "white",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    borderRadius: 12,
+                    padding: "0.75rem 1.5rem",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  <ArrowDownRight className="w-4 h-4" /> Withdraw
+                </button>
+                <button
                   onClick={() => setActiveTab("history")}
                   style={{
                     display: "flex",
@@ -290,7 +312,7 @@ export default function WalletPage() {
                 borderBottom: "1px solid var(--border-light)",
               }}
             >
-              {(["overview", "topup", "history"] as const).map((tab) => (
+              {(["overview", "topup", "withdraw", "history"] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -315,91 +337,162 @@ export default function WalletPage() {
                     ? "Add Funds"
                     : tab === "overview"
                       ? "Overview"
-                      : "History"}
+                      : tab === "withdraw"
+                        ? "Withdraw"
+                        : "History"}
                 </button>
               ))}
             </div>
 
             {/* Overview */}
             {activeTab === "overview" && (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                  gap: "1rem",
-                }}
-              >
-                {[
-                  {
-                    label: "Total Loaded",
-                    value: "₺1,050.00",
-                    icon: Plus,
-                    color: "#0d7a4e",
-                  },
-                  {
-                    label: "Total Spent",
-                    value: "₺699.10",
-                    icon: ArrowUpRight,
-                    color: "var(--red)",
-                  },
-                  {
-                    label: "Refunds Received",
-                    value: "₺149.90",
-                    icon: ArrowDownLeft,
-                    color: "#2563eb",
-                  },
-                  {
-                    label: "Bonus Credits",
-                    value: "₺50.00",
-                    icon: Gift,
-                    color: "#7c3aed",
-                  },
-                ].map((stat, i) => (
+              <div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                    gap: "1rem",
+                    marginBottom: "2rem",
+                  }}
+                >
+                  {[
+                    {
+                      label: "Total Loaded",
+                      value: "₺1,050.00",
+                      icon: Plus,
+                      color: "#0d7a4e",
+                    },
+                    {
+                      label: "Total Spent",
+                      value: "₺699.10",
+                      icon: ArrowUpRight,
+                      color: "var(--red)",
+                    },
+                    {
+                      label: "Refunds Received",
+                      value: "₺149.90",
+                      icon: ArrowDownLeft,
+                      color: "#2563eb",
+                    },
+                    {
+                      label: "Bonus Credits",
+                      value: "₺50.00",
+                      icon: Gift,
+                      color: "#7c3aed",
+                    },
+                  ].map((stat, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        background: "var(--white)",
+                        border: "1px solid var(--border-light)",
+                        borderRadius: 16,
+                        padding: "1.5rem",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 40,
+                          height: 40,
+                          background: `${stat.color}14`,
+                          borderRadius: 10,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginBottom: "1rem",
+                        }}
+                      >
+                        <stat.icon
+                          style={{ width: 18, height: 18, color: stat.color }}
+                        />
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "1.5rem",
+                          fontWeight: 800,
+                          color: "var(--charcoal)",
+                          marginBottom: "0.25rem",
+                        }}
+                      >
+                        {stat.value}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "0.8125rem",
+                          color: "var(--charcoal-soft)",
+                        }}
+                      >
+                        {stat.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Spending Analytics */}
+                <div
+                  style={{
+                    background: "var(--white)",
+                    border: "1px solid var(--border-light)",
+                    borderRadius: 20,
+                    padding: "1.75rem",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
+                    <BarChart3 style={{ width: 18, height: 18, color: "var(--red)" }} />
+                    <h3 style={{ fontWeight: 700, fontSize: "1rem", color: "var(--charcoal)" }}>
+                      Spending Analytics
+                    </h3>
+                    <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "var(--charcoal-mist)" }}>
+                      Last 30 days
+                    </span>
+                  </div>
+
+                  {/* Category breakdown */}
+                  {[
+                    { label: "Electronics", amount: 849, pct: 72, color: "var(--red)" },
+                    { label: "Fashion", amount: 2199, pct: 55, color: "#7c3aed" },
+                    { label: "Home & Garden", amount: 320, pct: 28, color: "#2563eb" },
+                    { label: "Books", amount: 89, pct: 8, color: "#059669" },
+                  ].map((cat) => (
+                    <div key={cat.label} style={{ marginBottom: "1rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.375rem" }}>
+                        <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--charcoal)" }}>
+                          {cat.label}
+                        </span>
+                        <span style={{ fontSize: "0.8125rem", color: "var(--charcoal-soft)" }}>
+                          ₺{cat.amount.toFixed(2)}
+                        </span>
+                      </div>
+                      <div style={{ height: 8, borderRadius: 99, background: "var(--off-white-3)", overflow: "hidden" }}>
+                        <div
+                          style={{
+                            height: "100%",
+                            width: `${cat.pct}%`,
+                            borderRadius: 99,
+                            background: cat.color,
+                            transition: "width 0.6s ease",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+
                   <div
-                    key={i}
                     style={{
-                      background: "var(--white)",
-                      border: "1px solid var(--border-light)",
-                      borderRadius: 16,
-                      padding: "1.5rem",
+                      marginTop: "1.25rem",
+                      paddingTop: "1.25rem",
+                      borderTop: "1px solid var(--border-subtle)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      fontSize: "0.8125rem",
+                      color: "var(--charcoal-soft)",
                     }}
                   >
-                    <div
-                      style={{
-                        width: 40,
-                        height: 40,
-                        background: `${stat.color}14`,
-                        borderRadius: 10,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginBottom: "1rem",
-                      }}
-                    >
-                      <stat.icon
-                        style={{ width: 18, height: 18, color: stat.color }}
-                      />
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: 800,
-                        color: "var(--charcoal)",
-                        marginBottom: "0.25rem",
-                      }}
-                    >
-                      {stat.value}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.8125rem",
-                        color: "var(--charcoal-soft)",
-                      }}
-                    >
-                      {stat.label}
-                    </div>
+                    <TrendingUp style={{ width: 14, height: 14, color: "#0d7a4e" }} />
+                    You&apos;ve spent <strong style={{ color: "var(--charcoal)" }}>₺699.10</strong> this month — 12% less than last month.
                   </div>
-                ))}
+                </div>
               </div>
             )}
 
@@ -599,6 +692,87 @@ export default function WalletPage() {
                   >
                     Add ₺{topUpAmount || "0"} to Wallet
                   </button>
+                </div>
+              </div>
+            )}
+
+            {/* Withdraw */}
+            {activeTab === "withdraw" && (
+              <div style={{ maxWidth: 520 }}>
+                <div
+                  style={{
+                    background: "var(--white)",
+                    border: "1px solid var(--border-light)",
+                    borderRadius: 20,
+                    padding: "2rem",
+                  }}
+                >
+                  <h3 style={{ fontWeight: 700, fontSize: "1.125rem", marginBottom: "0.5rem", color: "var(--charcoal)" }}>
+                    Withdraw Funds
+                  </h3>
+                  <p style={{ fontSize: "0.875rem", color: "var(--charcoal-soft)", marginBottom: "1.5rem" }}>
+                    Transfer your wallet balance to your registered bank account. Processing takes 1–3 business days.
+                  </p>
+
+                  <div style={{ marginBottom: "1.5rem" }}>
+                    <label style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--charcoal-mid)", letterSpacing: "0.04em", display: "block", marginBottom: "0.5rem" }}>
+                      AMOUNT
+                    </label>
+                    <div style={{ position: "relative" }}>
+                      <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontWeight: 700, color: "var(--charcoal-mid)" }}>₺</span>
+                      <Input
+                        type="number"
+                        min={10}
+                        max={balance ?? 0}
+                        value={withdrawAmount}
+                        onChange={(e) => setWithdrawAmount(e.target.value ? Number(e.target.value) : "")}
+                        placeholder="Enter amount"
+                        style={{ paddingLeft: "2rem" }}
+                      />
+                    </div>
+                    <p style={{ fontSize: "0.75rem", color: "var(--charcoal-mist)", marginTop: "0.5rem" }}>
+                      Available: ₺{balance?.toFixed(2)} — Minimum withdrawal ₺10
+                    </p>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.75rem",
+                      padding: "0.875rem 1rem",
+                      background: "var(--off-white)",
+                      border: "1.5px solid var(--border-mid)",
+                      borderRadius: 10,
+                      marginBottom: "1.5rem",
+                    }}
+                  >
+                    <Banknote style={{ width: 18, height: 18, color: "var(--charcoal-soft)" }} />
+                    <div>
+                      <div style={{ fontSize: "0.875rem", color: "var(--charcoal)", fontWeight: 600 }}>IBAN ending ••• 4821</div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--charcoal-mist)" }}>Default bank account</div>
+                    </div>
+                  </div>
+
+                  <button
+                    disabled={!withdrawAmount || Number(withdrawAmount) < 10 || Number(withdrawAmount) > (balance ?? 0)}
+                    style={{
+                      width: "100%",
+                      padding: "0.875rem",
+                      background: withdrawAmount && Number(withdrawAmount) >= 10 ? "var(--charcoal)" : "var(--off-white-3)",
+                      color: withdrawAmount && Number(withdrawAmount) >= 10 ? "white" : "var(--charcoal-mist)",
+                      border: "none",
+                      borderRadius: 12,
+                      fontWeight: 700,
+                      fontSize: "0.9375rem",
+                      cursor: withdrawAmount && Number(withdrawAmount) >= 10 ? "pointer" : "not-allowed",
+                    }}
+                  >
+                    Withdraw ₺{withdrawAmount || "0"} to Bank
+                  </button>
+                  <p style={{ fontSize: "0.75rem", color: "var(--charcoal-mist)", marginTop: "0.75rem", textAlign: "center" }}>
+                    Withdrawals are processed within 1–3 business days.
+                  </p>
                 </div>
               </div>
             )}

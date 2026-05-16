@@ -30,7 +30,7 @@ const TYPE_META: Record<
   system: { icon: Bell, bg: "rgba(51,51,51,0.06)", color: "var(--charcoal-soft)" },
 };
 
-const FILTERS = ["All", "Unread", "Orders", "Shipping", "Deals"];
+const FILTERS = ["All", "Unread", "Orders", "Shipping", "Deals", "Reviews"];
 
 export default function NotificationsPage() {
   const { notifications, unreadCount, isLoading, markRead, markAllRead, deleteNotif } =
@@ -42,6 +42,7 @@ export default function NotificationsPage() {
     if (filter === "Orders") return n.type === "order";
     if (filter === "Deals") return n.type === "deal";
     if (filter === "Shipping") return n.type === "shipping";
+    if (filter === "Reviews") return n.type === "review";
     return true;
   });
 

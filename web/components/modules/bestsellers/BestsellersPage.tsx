@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Trophy, TrendingUp, Star, ArrowRight, Flame } from "lucide-react";
+import { Trophy, TrendingUp, Star, ArrowRight, Flame, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductCard } from "@/components/modules/store/ProductCard";
 import type { Product } from "@/types/entities";
+import { useState } from "react";
 
 function useBestsellers() {
   return useQuery({
@@ -39,7 +40,16 @@ const STATS = [
   },
 ];
 
-function SkeletonGrid() {
+type SortKey = "popular" | "rating" | "price_asc" | "price_desc";
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "popular", label: "Most Popular" },
+  { key: "rating", label: "Highest Rated" },
+  { key: "price_asc", label: "Price: Low to High" },
+  { key: "price_desc", label: "Price: High to Low" },
+];
+
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {Array.from({ length: 12 }).map((_, i) => (
@@ -61,6 +71,16 @@ function SkeletonGrid() {
 
 export default function BestsellersPage() {
   const { data: products, isLoading, isError } = useBestsellers();
+  const [sort, setSort] = useState<SortKey>("popular");
+  const [sortOpen, setSortOpen] = useState(false);
+
+  const sortedProducts = [...(products ?? [])].sort((a, b) => {
+    if (sort === "price_asc") return a.price - b.price;
+    if (sort === "price_desc") return b.price - a.price;
+    return 0; // popular / rating: API-ordered
+  });
+
+  const activeSortLabel = SORT_OPTIONS.find((o) => o.key === sort)?.label ?? "Sort";
 
   return (
     <main className="min-h-screen">
@@ -119,7 +139,7 @@ export default function BestsellersPage() {
       {/* Content */}
       <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-10">
         {/* Top 3 podium */}
-        {!isLoading && !isError && products && products.length >= 3 && (
+        {!isLoading && !isError && sortedProducts && sortedProducts.length >= 3 && (
           <div className="mb-12">
             <div className="flex items-center gap-3 mb-6">
               <span
@@ -134,7 +154,7 @@ export default function BestsellersPage() {
               </span>
             </div>
             <div className="grid md:grid-cols-3 gap-4">
-              {products.slice(0, 3).map((product, i) => {
+              {sortedProducts.slice(0, 3).map((product, i) => {
                 const medals = ["🥇", "🥈", "🥉"];
                 const borders = [
                   "border-yellow-400/40",
@@ -205,17 +225,44 @@ export default function BestsellersPage() {
         )}
 
         {/* All products */}
-        <div className="flex items-center gap-3 mb-6">
-          <span
-            className="inline-block w-6 h-px"
-            style={{ background: "var(--red)" }}
-          />
-          <span
-            className="font-mono text-[11px] tracking-[0.18em] uppercase"
-            style={{ color: "var(--charcoal-soft)" }}
-          >
-            All Best Sellers
-          </span>
+        <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+          <div className="flex items-center gap-3">
+            <span
+              className="inline-block w-6 h-px"
+              style={{ background: "var(--red)" }}
+            />
+            <span
+              className="font-mono text-[11px] tracking-[0.18em] uppercase"
+              style={{ color: "var(--charcoal-soft)" }}
+            >
+              All Best Sellers
+            </span>
+          </div>
+
+          {/* Sort dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setSortOpen((p) => !p)}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-black/10 text-[13px] font-semibold text-[var(--charcoal)] hover:border-[var(--charcoal)] transition-colors bg-white"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              {activeSortLabel}
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${sortOpen ? "rotate-180" : ""}`} />
+            </button>
+            {sortOpen && (
+              <div className="absolute right-0 top-full mt-1 bg-white rounded-xl border border-black/10 shadow-lg z-20 min-w-[190px] overflow-hidden">
+                {SORT_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.key}
+                    onClick={() => { setSort(opt.key); setSortOpen(false); }}
+                    className={`w-full text-left px-4 py-2.5 text-[13px] hover:bg-[var(--off-white)] transition-colors ${sort === opt.key ? "font-bold text-[var(--red)]" : "text-[var(--charcoal)]"}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {isLoading && <SkeletonGrid />}
@@ -232,7 +279,7 @@ export default function BestsellersPage() {
           </div>
         )}
 
-        {!isLoading && !isError && products && products.length === 0 && (
+        {!isLoading && !isError && sortedProducts && sortedProducts.length === 0 && (
           <div className="text-center py-20">
             <Trophy
               className="w-12 h-12 mx-auto mb-4"
@@ -254,9 +301,9 @@ export default function BestsellersPage() {
           </div>
         )}
 
-        {!isLoading && !isError && products && products.length > 0 && (
+        {!isLoading && !isError && sortedProducts && sortedProducts.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {products.map((product, i) => (
+            {sortedProducts.map((product, i) => (
               <div key={product.id} className="relative">
                 {i < 10 && (
                   <div

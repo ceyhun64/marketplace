@@ -50,6 +50,18 @@ export default function GiftCardsPage() {
   const [senderName, setSenderName] = useState("");
   const [message, setMessage] = useState("");
   const [redeemCode, setRedeemCode] = useState("");
+  const [balanceCode, setBalanceCode] = useState("");
+  const [checkedBalance, setCheckedBalance] = useState<number | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
+
+  const handleCheckBalance = async () => {
+    if (!balanceCode) return;
+    setBalanceLoading(true);
+    // Simulate API call
+    await new Promise((r) => setTimeout(r, 800));
+    setCheckedBalance(Math.random() > 0.3 ? Math.round(Math.random() * 500 + 50) : 0);
+    setBalanceLoading(false);
+  };
 
   const finalAmount =
     selectedAmount ?? (customAmount ? parseInt(customAmount, 10) || 0 : 0);
@@ -208,6 +220,13 @@ export default function GiftCardsPage() {
             <Gift className="w-4 h-4 mr-2" />
             Send Gift Card — ₺{finalAmount || "–"}
           </Button>
+          <p className="text-[12px] text-[var(--charcoal-mist)] mt-3">
+            By purchasing, you agree to our{" "}
+            <a href="/terms#gift-cards" className="underline hover:text-[var(--charcoal)] transition-colors">
+              Gift Card Terms &amp; Conditions
+            </a>
+            . Gift cards never expire and are non-refundable.
+          </p>
         </div>
 
         {/* Right — Preview + redeem */}
@@ -246,6 +265,36 @@ export default function GiftCardsPage() {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Balance check */}
+          <div className="bg-[var(--off-white)] rounded-2xl p-6 border border-black/5">
+            <h3 className="text-[15px] font-bold text-[var(--charcoal)] mb-1">
+              Check balance
+            </h3>
+            <p className="text-[13px] text-[var(--charcoal-soft)] mb-4">
+              Enter a gift card code to see its remaining balance.
+            </p>
+            <div className="flex gap-2">
+              <Input
+                placeholder="e.g. GC-XXXX-XXXX"
+                value={balanceCode}
+                onChange={(e) => { setBalanceCode(e.target.value); setCheckedBalance(null); }}
+                className="h-10 text-[13px] font-mono"
+              />
+              <Button
+                disabled={!balanceCode || balanceLoading}
+                onClick={handleCheckBalance}
+                className="shrink-0 bg-[var(--charcoal)] hover:bg-[var(--charcoal)]/90 text-white h-10 px-5 rounded-xl font-bold text-[13px]"
+              >
+                {balanceLoading ? "…" : "Check"}
+              </Button>
+            </div>
+            {checkedBalance !== null && (
+              <p className={`mt-3 text-[14px] font-bold ${checkedBalance > 0 ? "text-green-600" : "text-[var(--red)]"}`}>
+                {checkedBalance > 0 ? `Remaining balance: ₺${checkedBalance.toFixed(2)}` : "This card has no remaining balance."}
+              </p>
+            )}
           </div>
 
           {/* Redeem section */}
@@ -309,6 +358,13 @@ export default function GiftCardsPage() {
               );
             })}
           </div>
+          <p className="text-center text-[12px] text-[var(--charcoal-mist)] mt-8">
+            Gift cards are subject to our{" "}
+            <a href="/terms#gift-cards" className="underline hover:text-[var(--charcoal)] transition-colors">
+              Terms &amp; Conditions
+            </a>
+            . No expiry date. Not redeemable for cash.
+          </p>
         </div>
       </div>
     </main>

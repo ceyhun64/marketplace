@@ -201,6 +201,54 @@ export default function HelpCenterPage() {
           </div>
         )}
 
+        {/* Popular Articles */}
+        {!search && !activeCategory && (
+          <div className="mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="inline-block w-6 h-px" style={{ background: "var(--red)" }} />
+              <h2 className="font-mono text-[11px] tracking-[0.18em] uppercase text-[var(--charcoal-soft)]">
+                Popular Articles
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {[
+                { q: "How do I track my order?", cat: "orders", icon: "🚚" },
+                { q: "What is the return policy?", cat: "returns", icon: "↩️" },
+                { q: "What payment methods are accepted?", cat: "payment", icon: "💳" },
+                { q: "How do I become a seller?", cat: "sellers", icon: "🏪" },
+                { q: "How long does delivery take?", cat: "shipping", icon: "📦" },
+                { q: "How do I reset my password?", cat: "account", icon: "🔑" },
+              ].map((article) => {
+                const category = CATEGORIES.find((c) => c.key === article.cat);
+                const articleData = category?.articles.find((a) => a.q === article.q);
+                return (
+                  <button
+                    key={article.q}
+                    onClick={() => {
+                      setActiveCategory(article.cat);
+                      setOpenItems((prev) => ({ ...prev, [`${article.cat}-${article.q}`]: true }));
+                    }}
+                    className="flex items-start gap-3 p-4 bg-white rounded-xl border border-black/5 hover:border-[var(--charcoal)]/20 hover:shadow-sm transition-all text-left group"
+                  >
+                    <span className="text-xl flex-shrink-0 mt-0.5">{article.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[14px] font-semibold text-[var(--charcoal)] group-hover:text-[var(--red)] transition-colors leading-snug">
+                        {article.q}
+                      </p>
+                      {articleData && (
+                        <p className="text-[12px] text-[var(--charcoal-soft)] mt-1 line-clamp-2">
+                          {articleData.a}
+                        </p>
+                      )}
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-[var(--charcoal-mist)] group-hover:text-[var(--red)] flex-shrink-0 mt-0.5 transition-colors" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="grid md:grid-cols-2 gap-8">
           {displayCategories.map((cat) => {
             const Icon = cat.icon;

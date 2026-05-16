@@ -9,6 +9,8 @@ import {
   Loader2,
   X,
   LogIn,
+  Share2,
+  ShoppingCart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
@@ -216,6 +218,37 @@ function AuthWishlist() {
     toast.success(`${item.product.name} added to cart!`);
   };
 
+  const handleAddAllToCart = () => {
+    const available = items.filter((i) => i.product.stock > 0);
+    available.forEach((item) => {
+      if (!hasItem(item.productId)) {
+        addItem({
+          offerId: item.productId,
+          productId: item.productId,
+          productName: item.product.name,
+          productImage: item.product.images?.[0] ?? "",
+          price: item.product.price,
+          merchantId: "",
+          merchantStoreName: item.product.merchant.storeName,
+          merchantSlug: item.product.merchant.slug,
+          stock: item.product.stock,
+          source: "MARKETPLACE" as const,
+        });
+      }
+    });
+    toast.success(`${available.length} item${available.length !== 1 ? "s" : ""} added to cart!`);
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      await navigator.share({ title: "My Wishlist", url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast.success("Wishlist link copied to clipboard!");
+    }
+  };
+
   if (isLoading) return <WishlistSkeleton />;
 
   if (error && !isLoading) {
@@ -255,7 +288,26 @@ function AuthWishlist() {
   return (
     <>
       {items.length > 0 && (
-        <div className="mb-6 flex justify-end">
+        <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={handleAddAllToCart}
+              className="rounded-full bg-[var(--charcoal)] hover:bg-[var(--red)] text-white gap-2 font-bold"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              Add All to Cart
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShare}
+              className="rounded-full gap-2 font-semibold"
+            >
+              <Share2 className="w-4 h-4" />
+              Share Wishlist
+            </Button>
+          </div>
           <Button
             variant="ghost"
             size="sm"
