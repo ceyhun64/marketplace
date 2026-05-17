@@ -69,7 +69,7 @@ function isMainHost(host: string): boolean {
   return false;
 }
 
-export function proxy(req: NextRequest) {
+export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const rawHost = req.headers.get("host") ?? "";
 
