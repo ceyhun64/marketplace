@@ -43,8 +43,8 @@ export default function MerchantOrdersView() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Orders</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Orders</h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
           Manage and fulfill incoming orders
         </p>
       </div>
@@ -56,59 +56,59 @@ export default function MerchantOrdersView() {
             label: "Total",
             value: stats.total,
             icon: ShoppingCart,
-            color: "text-blue-600",
-            bg: "bg-blue-50",
+            color: "text-[var(--info)]",
+            bg: "bg-[var(--info-bg)]",
           },
           {
             label: "Pending",
             value: stats.pending,
             icon: Clock,
-            color: "text-amber-600",
-            bg: "bg-amber-50",
+            color: "text-[var(--warning)]",
+            bg: "bg-[var(--warning-bg)]",
           },
           {
             label: "Processing",
             value: stats.processing,
             icon: Package,
-            color: "text-violet-600",
-            bg: "bg-violet-50",
+            color: "text-[var(--charcoal-mid)]",
+            bg: "bg-[var(--off-white-2)]",
           },
           {
             label: "Delivered",
             value: stats.delivered,
             icon: CheckCircle,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50",
+            color: "text-[var(--success)]",
+            bg: "bg-[var(--success-bg)]",
           },
         ].map((s) => (
           <div
             key={s.label}
-            className="bg-white rounded-xl border border-gray-100 p-5"
+            className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-light)] p-5"
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+              <p className="text-xs text-[var(--text-tertiary)] font-medium uppercase tracking-wider">
                 {s.label}
               </p>
               <div className={`p-1.5 rounded-lg ${s.bg}`}>
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+            <p className="text-2xl font-bold text-[var(--text-primary)]">{s.value}</p>
           </div>
         ))}
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100">
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-          <p className="text-sm font-semibold text-gray-900">
+      <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-light)]">
+        <div className="px-5 py-4 border-b border-[var(--border-light)] flex items-center justify-between">
+          <p className="text-sm font-semibold text-[var(--text-primary)]">
             All Orders
-            <span className="ml-2 text-sm font-normal text-gray-400">
+            <span className="ml-2 text-sm font-normal text-[var(--text-tertiary)]">
               ({paginationTotal} orders)
             </span>
           </p>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-44 h-8 border-gray-200 text-xs">
+            <SelectTrigger className="w-44 h-8 border-[var(--border-mid)] text-xs">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>

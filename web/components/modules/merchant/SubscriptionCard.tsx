@@ -37,9 +37,9 @@ const PLAN_FEATURES: Record<PlanType, string[]> = {
 };
 
 const PLAN_ACCENT: Record<PlanType, string> = {
-  BASIC: "bg-gray-400",
-  PRO: "bg-blue-600",
-  ENTERPRISE: "bg-amber-600",
+  BASIC: "bg-[var(--charcoal-mist)]",
+  PRO: "bg-[var(--info)]",
+  ENTERPRISE: "bg-[var(--warning)]",
 };
 
 export default function SubscriptionCard() {
@@ -63,7 +63,7 @@ export default function SubscriptionCard() {
     <div className="space-y-5">
       {/* Current plan badge */}
       <div className="flex items-center gap-3">
-        <p className="text-sm text-gray-500">Your current plan:</p>
+        <p className="text-sm text-[var(--text-secondary)]">Your current plan:</p>
         <span
           className={`text-xs font-semibold px-3 py-1 rounded-full ${PLAN_COLORS[currentPlan]}`}
         >
@@ -80,10 +80,10 @@ export default function SubscriptionCard() {
           return (
             <div
               key={plan}
-              className={`bg-white rounded-2xl border overflow-hidden transition-all ${
+              className={`bg-[var(--bg-surface)] rounded-2xl border overflow-hidden transition-all ${
                 isCurrent
                   ? "border-blue-500 shadow-md shadow-blue-500/10"
-                  : "border-gray-100 hover:border-gray-200 hover:shadow-sm"
+                  : "border-[var(--border-light)] hover:border-[var(--border-mid)] hover:shadow-sm"
               }`}
             >
               {/* Accent top bar */}
@@ -93,14 +93,14 @@ export default function SubscriptionCard() {
                 {/* Plan name + price */}
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-0.5">
+                    <p className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-widest mb-0.5">
                       Plan
                     </p>
-                    <h3 className="text-xl font-bold text-gray-900">
+                    <h3 className="text-xl font-bold text-[var(--text-primary)]">
                       {PLAN_LABELS[plan]}
                     </h3>
                   </div>
-                  <p className="text-sm font-semibold text-gray-700 mt-1">
+                  <p className="text-sm font-semibold text-[var(--text-secondary)] mt-1">
                     {PLAN_PRICES[plan]}
                   </p>
                 </div>
@@ -110,9 +110,9 @@ export default function SubscriptionCard() {
                   {PLAN_FEATURES[plan].map((feature) => (
                     <li
                       key={feature}
-                      className="flex items-start gap-2 text-sm text-gray-500"
+                      className="flex items-start gap-2 text-sm text-[var(--text-secondary)]"
                     >
-                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                      <Check className="w-3.5 h-3.5 text-[var(--success)] shrink-0 mt-0.5" />
                       {feature}
                     </li>
                   ))}
@@ -120,21 +120,21 @@ export default function SubscriptionCard() {
 
                 {/* CTA */}
                 {isCurrent ? (
-                  <div className="text-center py-2.5 rounded-xl border border-blue-200 text-xs font-semibold text-blue-600 uppercase tracking-wider">
+                  <div className="text-center py-2.5 rounded-xl border border-[var(--info-border)] text-xs font-semibold text-[var(--info)] uppercase tracking-wider">
                     Current Plan
                   </div>
                 ) : isUpgrade ? (
                   <Button
                     onClick={() => upgradeMutation.mutate(plan)}
                     disabled={upgradeMutation.isPending}
-                    className="w-full bg-gray-900 text-white hover:bg-gray-700"
+                    className="w-full bg-[var(--charcoal)] text-white hover:bg-[var(--charcoal-2)]"
                   >
                     {upgradeMutation.isPending
                       ? "Processing..."
                       : `Upgrade to ${PLAN_LABELS[plan]}`}
                   </Button>
                 ) : (
-                  <div className="text-center py-2.5 rounded-xl bg-gray-50 text-xs text-gray-400">
+                  <div className="text-center py-2.5 rounded-xl bg-[var(--bg-sunken)] text-xs text-[var(--text-tertiary)]">
                     Below current plan
                   </div>
                 )}

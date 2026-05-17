@@ -118,14 +118,14 @@ export default function ProductFormModal({
       className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-[var(--bg-surface)] rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--border-light)]">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">
               {isEdit ? "Edit Product" : "Add New Product"}
             </h2>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
               {isEdit
                 ? "Update product details"
                 : "Add a new product to your catalogue"}
@@ -133,7 +133,7 @@ export default function ProductFormModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="p-1.5 rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--off-white-2)] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -224,8 +224,8 @@ export default function ProductFormModal({
           </Field>
 
           {/* Publish Channels */}
-          <div className="rounded-xl border border-gray-100 p-4 space-y-3 bg-gray-50/50">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+          <div className="rounded-xl border border-[var(--border-light)] p-4 space-y-3 bg-[var(--bg-sunken)]/50">
+            <p className="text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-widest">
               Publish Channels
             </p>
             <ToggleRow
@@ -233,7 +233,7 @@ export default function ProductFormModal({
               description="Visible on your store page"
               checked={form.publishToStore}
               onChange={(v) => set("publishToStore", v)}
-              color="bg-violet-600"
+              color="bg-[var(--charcoal-mid)]"
             />
             <ToggleRow
               label="Publish to Marketplace"
@@ -247,7 +247,7 @@ export default function ProductFormModal({
                 if (!canPublishToMarket) return;
                 set("publishToMarket", v);
               }}
-              color="bg-blue-600"
+              color="bg-[var(--info)]"
               disabled={!canPublishToMarket}
             />
           </div>
@@ -263,14 +263,14 @@ export default function ProductFormModal({
         <div className="flex gap-3 px-6 pb-6">
           <button
             onClick={onClose}
-            className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors"
+            className="flex-1 border border-[var(--border-mid)] text-[var(--text-secondary)] rounded-xl py-2.5 text-sm font-medium hover:bg-[var(--bg-sunken)] transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="flex-1 bg-gray-900 text-white rounded-xl py-2.5 text-sm font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 bg-[var(--charcoal)] text-white rounded-xl py-2.5 text-sm font-medium hover:bg-[var(--charcoal-2)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {submitting
               ? "Saving..."
@@ -287,7 +287,7 @@ export default function ProductFormModal({
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const inputCls =
-  "w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors";
+  "w-full border border-[var(--border-mid)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors";
 
 function Field({
   label,
@@ -302,11 +302,11 @@ function Field({
 }) {
   return (
     <div>
-      <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1.5">
+      <label className="flex items-center gap-1 text-sm font-medium text-[var(--text-secondary)] mb-1.5">
         {label}
         {required && <span className="text-red-500">*</span>}
         {hint && (
-          <span className="text-gray-400 font-normal text-xs">({hint})</span>
+          <span className="text-[var(--text-tertiary)] font-normal text-xs">({hint})</span>
         )}
       </label>
       {children}
@@ -332,8 +332,8 @@ function ToggleRow({
   return (
     <div className={`flex items-center justify-between ${disabled ? "opacity-50" : ""}`}>
       <div>
-        <p className="text-sm font-medium text-gray-800">{label}</p>
-        <p className="text-xs text-gray-400">{description}</p>
+        <p className="text-sm font-medium text-[var(--text-primary)]">{label}</p>
+        <p className="text-xs text-[var(--text-tertiary)]">{description}</p>
       </div>
       <button
         type="button"
@@ -342,11 +342,11 @@ function ToggleRow({
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
           disabled ? "cursor-not-allowed" : "cursor-pointer"
         } ${
-          checked && !disabled ? color : "bg-gray-200"
+          checked && !disabled ? color : "bg-[var(--off-white-3)]"
         }`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+          className={`inline-block h-4 w-4 transform rounded-full bg-[var(--bg-surface)] shadow transition-transform ${
             checked && !disabled ? "translate-x-6" : "translate-x-1"
           }`}
         />

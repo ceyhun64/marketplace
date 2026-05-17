@@ -26,8 +26,8 @@ export default function MerchantStoreSettingsView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Store Settings</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Store Settings</h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
           Manage your store profile, visuals and domain
         </p>
       </div>

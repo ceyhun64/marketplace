@@ -12,9 +12,9 @@ export default function InvoicesTable() {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+      <div className="bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-xl overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-100">
+          <thead className="bg-[var(--bg-sunken)] border-b border-[var(--border-light)]">
             <tr>
               {[
                 "Invoice No.",
@@ -27,14 +27,14 @@ export default function InvoicesTable() {
               ].map((h) => (
                 <th
                   key={h}
-                  className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                  className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide"
                 >
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-[var(--border-subtle)]">
             {Array.from({ length: 5 }).map((_, i) => (
               <tr key={i}>
                 {Array.from({ length: 7 }).map((_, j) => (
@@ -52,7 +52,7 @@ export default function InvoicesTable() {
 
   if (!invoices.length) {
     return (
-      <div className="bg-white border border-gray-100 rounded-xl p-12 text-center text-gray-400">
+      <div className="bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-xl p-12 text-center text-[var(--text-tertiary)]">
         <p className="text-sm font-medium">No invoices yet</p>
         <p className="text-xs mt-1">
           Invoices will appear here as sales are made.
@@ -62,9 +62,9 @@ export default function InvoicesTable() {
   }
 
   return (
-    <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+    <div className="bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-xl overflow-hidden">
       <table className="w-full text-sm">
-        <thead className="bg-gray-50 border-b border-gray-100">
+        <thead className="bg-[var(--bg-sunken)] border-b border-[var(--border-light)]">
           <tr>
             {[
               "Invoice No.",
@@ -77,36 +77,36 @@ export default function InvoicesTable() {
             ].map((h) => (
               <th
                 key={h}
-                className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide"
               >
                 {h}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50">
+        <tbody className="divide-y divide-[var(--border-subtle)]">
           {invoices.map((inv) => (
-            <tr key={inv.id} className="hover:bg-gray-50 transition-colors">
+            <tr key={inv.id} className="hover:bg-[var(--bg-sunken)] transition-colors">
               <td className="px-5 py-3">
-                <span className="font-mono text-xs font-bold text-blue-600">
+                <span className="font-mono text-xs font-bold text-[var(--info)]">
                   {inv.invoiceNumber}
                 </span>
               </td>
               <td className="px-5 py-3">
-                <span className="font-mono text-xs text-gray-500">
+                <span className="font-mono text-xs text-[var(--text-secondary)]">
                   #{inv.orderId.slice(0, 8).toUpperCase()}
                 </span>
               </td>
-              <td className="px-5 py-3 text-gray-900">
+              <td className="px-5 py-3 text-[var(--text-primary)]">
                 {formatPrice(inv.subTotal)}
               </td>
-              <td className="px-5 py-3 text-gray-500">
+              <td className="px-5 py-3 text-[var(--text-secondary)]">
                 {formatPrice(inv.vatAmount)}
               </td>
-              <td className="px-5 py-3 font-semibold text-gray-900">
+              <td className="px-5 py-3 font-semibold text-[var(--text-primary)]">
                 {formatPrice(inv.totalAmount)}
               </td>
-              <td className="px-5 py-3 text-xs text-gray-400">
+              <td className="px-5 py-3 text-xs text-[var(--text-tertiary)]">
                 {formatDate(inv.issuedAt)}
               </td>
               <td className="px-5 py-3">
@@ -115,7 +115,7 @@ export default function InvoicesTable() {
                     href={inv.pdfUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-emerald-600 hover:underline font-medium"
+                    className="text-xs text-[var(--success)] hover:underline font-medium"
                   >
                     Download
                   </a>
@@ -123,7 +123,7 @@ export default function InvoicesTable() {
                   <button
                     onClick={() => downloadMutation.mutate(inv.id)}
                     disabled={downloadMutation.isPending}
-                    className="text-xs text-blue-600 hover:underline disabled:opacity-50"
+                    className="text-xs text-[var(--info)] hover:underline disabled:opacity-50"
                   >
                     {downloadMutation.isPending ? "..." : "Download"}
                   </button>

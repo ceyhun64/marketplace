@@ -74,8 +74,8 @@ export default function MerchantDashboard() {
       label: "Toplam Gelir",
       value: revenueDisplay,
       icon: DollarSign,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
+      color: "text-[var(--success)]",
+      bg: "bg-[var(--success-bg)]",
       href: "/merchant/analytics",
       isText: true,
     },
@@ -83,8 +83,8 @@ export default function MerchantDashboard() {
       label: "Total Products",
       value: stats.totalProducts,
       icon: Package,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
+      color: "text-[var(--info)]",
+      bg: "bg-[var(--info-bg)]",
       href: "/merchant/catalogue",
       isText: false,
     },
@@ -92,8 +92,8 @@ export default function MerchantDashboard() {
       label: "On Marketplace",
       value: stats.inMarket,
       icon: Globe,
-      color: "text-violet-600",
-      bg: "bg-violet-50",
+      color: "text-[var(--charcoal-mid)]",
+      bg: "bg-[var(--off-white-2)]",
       href: "/merchant/catalogue",
       isText: false,
     },
@@ -101,8 +101,8 @@ export default function MerchantDashboard() {
       label: "Pending Orders",
       value: stats.pendingOrders,
       icon: Clock,
-      color: "text-amber-600",
-      bg: "bg-amber-50",
+      color: "text-[var(--warning)]",
+      bg: "bg-[var(--warning-bg)]",
       href: "/merchant/orders",
       isText: false,
     },
@@ -133,24 +133,24 @@ export default function MerchantDashboard() {
       label: "Add Product",
       desc: "New product & pricing",
       icon: Package,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
+      color: "text-[var(--info)]",
+      bg: "bg-[var(--info-bg)]",
     },
     {
       href: "/merchant/orders",
       label: "Orders",
       desc: `${stats.pendingOrders} pending`,
       icon: ShoppingCart,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
+      color: "text-[var(--success)]",
+      bg: "bg-[var(--success-bg)]",
     },
     {
       href: `/store/${slug}`,
       label: "View My Store",
       desc: "Customer-facing view",
       icon: Store,
-      color: "text-violet-600",
-      bg: "bg-violet-50",
+      color: "text-[var(--charcoal-mid)]",
+      bg: "bg-[var(--off-white-2)]",
       external: true,
     },
     {
@@ -158,8 +158,8 @@ export default function MerchantDashboard() {
       label: "Analytics",
       desc: "Sales reports",
       icon: TrendingUp,
-      color: "text-amber-600",
-      bg: "bg-amber-50",
+      color: "text-[var(--warning)]",
+      bg: "bg-[var(--warning-bg)]",
     },
   ];
 
@@ -168,10 +168,10 @@ export default function MerchantDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
             Welcome, {storeName}
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
             Here's your store overview
           </p>
         </div>
@@ -207,24 +207,24 @@ export default function MerchantDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((s) => (
           <Link key={s.label} href={s.href}>
-            <div className="bg-white rounded-xl border border-gray-100 p-5 hover:border-gray-200 hover:shadow-sm transition-all cursor-pointer">
+            <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-light)] p-5 hover:border-[var(--border-mid)] hover:shadow-sm transition-all cursor-pointer">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+                <p className="text-xs text-[var(--text-tertiary)] font-medium uppercase tracking-wider">
                   {s.label}
                 </p>
                 <div className={`p-1.5 rounded-lg ${s.bg}`}>
                   <s.icon className={`w-4 h-4 ${s.color}`} />
                 </div>
               </div>
-              <p className={`font-bold text-gray-900 ${s.isText ? "text-xl" : "text-2xl"}`}>{s.value}</p>
+              <p className={`font-bold text-[var(--text-primary)] ${s.isText ? "text-xl" : "text-2xl"}`}>{s.value}</p>
             </div>
           </Link>
         ))}
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl border border-gray-100 p-6">
-        <h2 className="text-sm font-semibold text-gray-900 mb-4">
+      <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-light)] p-6">
+        <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-4">
           Quick Actions
         </h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -234,15 +234,15 @@ export default function MerchantDashboard() {
               href={link.href}
               target={link.external ? "_blank" : undefined}
             >
-              <div className="flex flex-col items-center justify-center p-4 border border-dashed border-gray-200 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all cursor-pointer gap-2">
+              <div className="flex flex-col items-center justify-center p-4 border border-dashed border-[var(--border-mid)] rounded-xl hover:border-[var(--border-strong)] hover:bg-[var(--bg-sunken)] transition-all cursor-pointer gap-2">
                 <div className={`p-2 rounded-lg ${link.bg}`}>
                   <link.icon className={`w-5 h-5 ${link.color}`} />
                 </div>
                 <div className="text-center">
-                  <p className="text-xs font-medium text-gray-700">
+                  <p className="text-xs font-medium text-[var(--text-secondary)]">
                     {link.label}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">{link.desc}</p>
+                  <p className="text-xs text-[var(--text-tertiary)] mt-0.5">{link.desc}</p>
                 </div>
               </div>
             </Link>
@@ -252,9 +252,9 @@ export default function MerchantDashboard() {
 
       {/* Recent Orders */}
       {orders.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-100">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <h2 className="text-sm font-semibold text-gray-900">
+        <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-light)]">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">
               Recent Orders
             </h2>
             <Link href="/merchant/orders">
@@ -263,25 +263,25 @@ export default function MerchantDashboard() {
               </Button>
             </Link>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[var(--border-subtle)]">
             {orders.slice(0, 5).map((order: any) => (
               <div
                 key={order.id}
-                className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-between px-5 py-3 hover:bg-[var(--bg-sunken)] transition-colors"
               >
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-[var(--text-primary)]">
                     #{order.id?.slice(-8).toUpperCase()}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-[var(--text-tertiary)]">
                     {new Date(order.createdAt).toLocaleDateString("en-US")}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="font-semibold text-sm text-gray-900">
+                  <span className="font-semibold text-sm text-[var(--text-primary)]">
                     ₺{order.totalAmount?.toLocaleString("en-US")}
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-600 capitalize">
+                  <span className="text-xs px-2 py-0.5 rounded-md font-medium bg-[var(--off-white-2)] text-[var(--text-secondary)] capitalize">
                     {order.status}
                   </span>
                 </div>

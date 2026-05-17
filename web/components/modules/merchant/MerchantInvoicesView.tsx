@@ -145,20 +145,20 @@ export default function MerchantInvoicesView() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Invoices</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Invoices</h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
           View and download all sales invoices
         </p>
       </div>
 
       {/* Tab Switcher */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+      <div className="flex gap-1 bg-[var(--off-white-2)] p-1 rounded-xl w-fit">
         <button
           onClick={() => setActiveTab("invoices")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             activeTab === "invoices"
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+              ? "bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm"
+              : "text-[var(--text-secondary)] hover:text-[var(--text-secondary)]"
           }`}
         >
           <Receipt className="w-4 h-4" />
@@ -168,8 +168,8 @@ export default function MerchantInvoicesView() {
           onClick={() => setActiveTab("accounting")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             activeTab === "accounting"
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+              ? "bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm"
+              : "text-[var(--text-secondary)] hover:text-[var(--text-secondary)]"
           }`}
         >
           <BookOpen className="w-4 h-4" />
@@ -186,44 +186,44 @@ export default function MerchantInvoicesView() {
             label: "Total Invoices",
             value: filtered.length,
             icon: Receipt,
-            color: "text-gray-600",
-            bg: "bg-gray-100",
+            color: "text-[var(--text-secondary)]",
+            bg: "bg-[var(--off-white-2)]",
           },
           {
             label: "Gross Revenue",
             value: formatCurrency(totalRevenue),
             icon: TrendingUp,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50",
+            color: "text-[var(--success)]",
+            bg: "bg-[var(--success-bg)]",
           },
           {
             label: "Net Revenue",
             value: formatCurrency(netRevenue),
             icon: FileText,
-            color: "text-blue-600",
-            bg: "bg-blue-50",
+            color: "text-[var(--info)]",
+            bg: "bg-[var(--info-bg)]",
           },
           {
             label: "Total VAT",
             value: formatCurrency(totalVat),
             icon: Receipt,
-            color: "text-amber-600",
-            bg: "bg-amber-50",
+            color: "text-[var(--warning)]",
+            bg: "bg-[var(--warning-bg)]",
           },
         ].map((s) => (
           <div
             key={s.label}
-            className="bg-white rounded-xl border border-gray-100 p-5"
+            className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-light)] p-5"
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+              <p className="text-xs text-[var(--text-tertiary)] font-medium uppercase tracking-wider">
                 {s.label}
               </p>
               <div className={`p-1.5 rounded-lg ${s.bg}`}>
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
             </div>
-            <p className="text-xl font-bold text-gray-900">{s.value}</p>
+            <p className="text-xl font-bold text-[var(--text-primary)]">{s.value}</p>
           </div>
         ))}
       </div>
@@ -231,17 +231,17 @@ export default function MerchantInvoicesView() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-tertiary)]" />
           <Input
             placeholder="Search by invoice no, customer or order..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 border-gray-200"
+            className="pl-9 border-[var(--border-mid)]"
           />
         </div>
         <Select value={monthFilter} onValueChange={setMonthFilter}>
-          <SelectTrigger className="w-44 border-gray-200">
-            <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+          <SelectTrigger className="w-44 border-[var(--border-mid)]">
+            <Calendar className="w-4 h-4 mr-2 text-[var(--text-tertiary)]" />
             <SelectValue placeholder="Filter by month" />
           </SelectTrigger>
           <SelectContent>
@@ -263,11 +263,11 @@ export default function MerchantInvoicesView() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <h2 className="text-sm font-semibold text-gray-900">
+      <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-light)] overflow-hidden">
+        <div className="px-5 py-4 border-b border-[var(--border-light)]">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)]">
             Invoice List
-            <span className="ml-2 text-sm font-normal text-gray-400">
+            <span className="ml-2 text-sm font-normal text-[var(--text-tertiary)]">
               ({filtered.length} invoices)
             </span>
           </h2>
@@ -275,32 +275,32 @@ export default function MerchantInvoicesView() {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50 border-b border-gray-100">
-                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableRow className="bg-[var(--bg-sunken)] border-b border-[var(--border-light)]">
+                <TableHead className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
                   Invoice No.
                 </TableHead>
-                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <TableHead className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
                   Order
                 </TableHead>
-                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <TableHead className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
                   Customer
                 </TableHead>
-                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <TableHead className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
                   Channel
                 </TableHead>
-                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">
+                <TableHead className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide text-right">
                   Net
                 </TableHead>
-                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">
+                <TableHead className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide text-right">
                   VAT
                 </TableHead>
-                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">
+                <TableHead className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide text-right">
                   Total
                 </TableHead>
-                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <TableHead className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
                   Date
                 </TableHead>
-                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">
+                <TableHead className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide text-right">
                   PDF
                 </TableHead>
               </TableRow>
@@ -320,7 +320,7 @@ export default function MerchantInvoicesView() {
                 <TableRow>
                   <TableCell
                     colSpan={9}
-                    className="text-center py-16 text-gray-400"
+                    className="text-center py-16 text-[var(--text-tertiary)]"
                   >
                     <FileText className="w-12 h-12 mx-auto mb-3 opacity-20" />
                     <p className="text-sm font-medium">No invoices found</p>
@@ -333,23 +333,23 @@ export default function MerchantInvoicesView() {
                 filtered.map((invoice) => (
                   <TableRow
                     key={invoice.id}
-                    className="hover:bg-gray-50 border-b border-gray-50"
+                    className="hover:bg-[var(--bg-sunken)] border-b border-[var(--border-subtle)]"
                   >
-                    <TableCell className="font-mono text-xs text-blue-600 font-medium">
+                    <TableCell className="font-mono text-xs text-[var(--info)] font-medium">
                       {invoice.invoiceNumber}
                     </TableCell>
-                    <TableCell className="text-xs text-gray-500 font-mono">
+                    <TableCell className="text-xs text-[var(--text-secondary)] font-mono">
                       {invoice.orderNumber}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-700">
+                    <TableCell className="text-sm text-[var(--text-secondary)]">
                       {invoice.customerName}
                     </TableCell>
                     <TableCell>
                       <span
                         className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                           invoice.source === "MARKETPLACE"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-emerald-100 text-emerald-700"
+                            ? "bg-[var(--info-bg)] text-[var(--info)]"
+                            : "bg-[var(--success-bg)] text-[var(--success)]"
                         }`}
                       >
                         {invoice.source === "MARKETPLACE"
@@ -357,19 +357,19 @@ export default function MerchantInvoicesView() {
                           : "E-Store"}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right text-sm font-medium text-gray-900">
+                    <TableCell className="text-right text-sm font-medium text-[var(--text-primary)]">
                       {formatCurrency(invoice.subTotal)}
                     </TableCell>
-                    <TableCell className="text-right text-xs text-gray-500">
+                    <TableCell className="text-right text-xs text-[var(--text-secondary)]">
                       {formatCurrency(invoice.vatAmount)}
-                      <span className="ml-1 text-gray-400">
+                      <span className="ml-1 text-[var(--text-tertiary)]">
                         ({Math.round(invoice.vatRate * 100)}%)
                       </span>
                     </TableCell>
-                    <TableCell className="text-right text-sm font-bold text-gray-900">
+                    <TableCell className="text-right text-sm font-bold text-[var(--text-primary)]">
                       {formatCurrency(invoice.totalAmount)}
                     </TableCell>
-                    <TableCell className="text-xs text-gray-500">
+                    <TableCell className="text-xs text-[var(--text-secondary)]">
                       {new Date(invoice.issuedAt).toLocaleDateString("en-US", {
                         day: "2-digit",
                         month: "short",
@@ -387,7 +387,7 @@ export default function MerchantInvoicesView() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 w-7 p-0 text-gray-400 hover:text-blue-600"
+                              className="h-7 w-7 p-0 text-[var(--text-tertiary)] hover:text-[var(--info)]"
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
                             </Button>
@@ -396,7 +396,7 @@ export default function MerchantInvoicesView() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-7 text-xs border-gray-200"
+                          className="h-7 text-xs border-[var(--border-mid)]"
                           onClick={() =>
                             handleDownload(invoice.id, invoice.invoiceNumber)
                           }
@@ -417,11 +417,11 @@ export default function MerchantInvoicesView() {
 
       {/* Accounting Ledger Tab */}
       {activeTab === "accounting" && (
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-2xl shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-light)]">
             <div>
-              <h2 className="text-base font-semibold text-gray-900">Accounting Ledger</h2>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <h2 className="text-base font-semibold text-[var(--text-primary)]">Accounting Ledger</h2>
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                 Sipariş/fatura/ödeme bağlantılı tam muhasebe izi
               </p>
             </div>
@@ -440,13 +440,13 @@ export default function MerchantInvoicesView() {
 
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Invoice #</TableHead>
-                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</TableHead>
-                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Amount</TableHead>
-                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Description</TableHead>
-                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Payment Ref</TableHead>
-                <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Date</TableHead>
+              <TableRow className="bg-[var(--bg-sunken)]">
+                <TableHead className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Invoice #</TableHead>
+                <TableHead className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Type</TableHead>
+                <TableHead className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Amount</TableHead>
+                <TableHead className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Description</TableHead>
+                <TableHead className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Payment Ref</TableHead>
+                <TableHead className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Date</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -454,23 +454,23 @@ export default function MerchantInvoicesView() {
                 ? Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
                       {Array.from({ length: 6 }).map((_, j) => (
-                        <TableCell key={j}><div className="h-4 w-24 bg-gray-100 animate-pulse rounded" /></TableCell>
+                        <TableCell key={j}><div className="h-4 w-24 bg-[var(--off-white-2)] animate-pulse rounded" /></TableCell>
                       ))}
                     </TableRow>
                   ))
                 : accountingEntries.map((entry) => (
-                    <TableRow key={entry.id} className="hover:bg-gray-50 transition-colors">
-                      <TableCell className="font-mono text-xs font-semibold text-gray-700">
+                    <TableRow key={entry.id} className="hover:bg-[var(--bg-sunken)] transition-colors">
+                      <TableCell className="font-mono text-xs font-semibold text-[var(--text-secondary)]">
                         {entry.invoiceNumber}
                       </TableCell>
                       <TableCell>
                         <span
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                             entry.entryType === "SALE"
-                              ? "bg-green-50 text-green-700"
+                              ? "bg-[var(--success-bg)] text-green-700"
                               : entry.entryType === "REFUND"
                               ? "bg-red-50 text-red-700"
-                              : "bg-orange-50 text-orange-700"
+                              : "bg-[var(--warning-bg)] text-orange-700"
                           }`}
                         >
                           {entry.entryType === "SALE" ? (
@@ -488,13 +488,13 @@ export default function MerchantInvoicesView() {
                       >
                         {entry.amount >= 0 ? "+" : ""}₺{entry.amount.toFixed(2)}
                       </TableCell>
-                      <TableCell className="text-sm text-gray-600 max-w-xs truncate">
+                      <TableCell className="text-sm text-[var(--text-secondary)] max-w-xs truncate">
                         {entry.description}
                       </TableCell>
-                      <TableCell className="font-mono text-xs text-gray-400">
+                      <TableCell className="font-mono text-xs text-[var(--text-tertiary)]">
                         {entry.paymentReference ?? "—"}
                       </TableCell>
-                      <TableCell className="text-sm text-gray-500">
+                      <TableCell className="text-sm text-[var(--text-secondary)]">
                         {new Date(entry.createdAt).toLocaleDateString()}
                       </TableCell>
                     </TableRow>
@@ -503,7 +503,7 @@ export default function MerchantInvoicesView() {
           </Table>
 
           {!accountingLoading && accountingEntries.length === 0 && (
-            <div className="text-center py-16 text-gray-400">
+            <div className="text-center py-16 text-[var(--text-tertiary)]">
               <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
               <p className="text-sm">No accounting entries found</p>
             </div>

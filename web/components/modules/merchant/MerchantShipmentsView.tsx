@@ -65,23 +65,23 @@ function StatusStepper({ current }: { current: ShipmentStatus }) {
               className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
                 done
                   ? active
-                    ? "bg-blue-600 ring-2 ring-blue-200"
-                    : "bg-emerald-500"
+                    ? "bg-[var(--info)] ring-2 ring-[var(--info-bg)]"
+                    : "bg-[var(--success)]"
                   : isFailed && i === currentIdx
-                  ? "bg-red-500"
-                  : "bg-gray-200"
+                  ? "bg-[var(--red)]"
+                  : "bg-[var(--off-white-3)]"
               }`}
             >
               {done && !active ? (
                 <CheckCircle2 className="w-3 h-3 text-white" />
               ) : active ? (
-                <div className="w-2 h-2 bg-white rounded-full" />
+                <div className="w-2 h-2 bg-[var(--bg-surface)] rounded-full" />
               ) : null}
             </div>
             {i < STATUS_STEPS.length - 1 && (
               <div
                 className={`h-0.5 flex-1 transition-colors ${
-                  !isFailed && i < currentIdx ? "bg-emerald-400" : "bg-gray-200"
+                  !isFailed && i < currentIdx ? "bg-[var(--success)]" : "bg-[var(--off-white-3)]"
                 }`}
               />
             )}
@@ -97,7 +97,7 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
 
   const statusLabel = SHIPMENT_STATUS_LABELS[shipment.status] ?? shipment.status;
   const statusColor =
-    SHIPMENT_STATUS_COLORS[shipment.status] ?? "bg-gray-100 text-gray-600";
+    SHIPMENT_STATUS_COLORS[shipment.status] ?? "bg-[var(--off-white-2)] text-[var(--text-secondary)]";
 
   const eta = shipment.estimatedDeliveryEnd
     ? new Date(shipment.estimatedDeliveryEnd).toLocaleDateString("tr-TR", {
@@ -109,22 +109,22 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
   return (
     <>
       <tr
-        className="hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-50"
+        className="hover:bg-[var(--bg-sunken)] transition-colors cursor-pointer border-b border-[var(--border-subtle)]"
         onClick={() => setExpanded((v) => !v)}
       >
         <td className="px-5 py-4">
           <div className="flex items-center gap-1.5">
             {expanded ? (
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+              <ChevronDown className="w-3.5 h-3.5 text-[var(--text-tertiary)]" />
             ) : (
-              <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+              <ChevronRight className="w-3.5 h-3.5 text-[var(--text-tertiary)]" />
             )}
-            <span className="font-mono text-xs font-bold text-blue-600">
+            <span className="font-mono text-xs font-bold text-[var(--info)]">
               {shipment.trackingNumber}
             </span>
           </div>
         </td>
-        <td className="px-5 py-4 text-sm text-gray-700">
+        <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">
           {shipment.customerName ?? "—"}
         </td>
         <td className="px-5 py-4">
@@ -134,18 +134,18 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
             {statusLabel}
           </span>
         </td>
-        <td className="px-5 py-4 text-sm text-gray-600">
-          {shipment.courierName ?? <span className="text-gray-300">—</span>}
+        <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">
+          {shipment.courierName ?? <span className="text-[var(--text-tertiary)]">—</span>}
         </td>
-        <td className="px-5 py-4 text-xs text-gray-500">
+        <td className="px-5 py-4 text-xs text-[var(--text-secondary)]">
           {shipment.actualDeliveredAt ? (
-            <span className="text-emerald-600 font-medium">
+            <span className="text-[var(--success)] font-medium">
               Teslim: {new Date(shipment.actualDeliveredAt).toLocaleDateString("tr-TR")}
             </span>
           ) : eta ? (
             `Tahmini: ${eta}`
           ) : (
-            <span className="text-gray-300">—</span>
+            <span className="text-[var(--text-tertiary)]">—</span>
           )}
         </td>
         <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
@@ -155,7 +155,7 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
                 href={shipment.labelUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                className="text-xs text-[var(--info)] hover:underline flex items-center gap-1"
               >
                 <ExternalLink className="w-3 h-3" />
                 Etiket
@@ -166,18 +166,18 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
       </tr>
 
       {expanded && (
-        <tr className="bg-gray-50/60">
+        <tr className="bg-[var(--bg-sunken)]/60">
           <td colSpan={6} className="px-5 py-4">
             {/* Status stepper */}
             <div className="mb-4">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+              <p className="text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wider mb-3">
                 Kargo Durumu
               </p>
               <StatusStepper current={shipment.status} />
               <div className="flex justify-between mt-1.5">
                 {["Hazırlandı", "Etiket", "Kurye", "Alındı", "Yolda", "Dağıtımda", "Teslim"].map(
                   (label) => (
-                    <span key={label} className="text-[10px] text-gray-400 text-center flex-1">
+                    <span key={label} className="text-[10px] text-[var(--text-tertiary)] text-center flex-1">
                       {label}
                     </span>
                   )
@@ -188,7 +188,7 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
             {/* Events timeline */}
             {shipment.events && shipment.events.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                <p className="text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wider mb-2">
                   Kargo Geçmişi
                 </p>
                 <div className="space-y-2">
@@ -198,25 +198,25 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
                     .map((event, i) => (
                       <div
                         key={event.id ?? i}
-                        className="flex items-start gap-3 bg-white rounded-lg px-4 py-2.5 border border-gray-100"
+                        className="flex items-start gap-3 bg-[var(--bg-surface)] rounded-lg px-4 py-2.5 border border-[var(--border-light)]"
                       >
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 flex-shrink-0" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-[var(--info)] mt-1.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-[var(--text-primary)]">
                             {SHIPMENT_STATUS_LABELS[event.status as ShipmentStatus] ??
                               event.status}
                           </p>
                           {event.note && (
-                            <p className="text-xs text-gray-500 mt-0.5">{event.note}</p>
+                            <p className="text-xs text-[var(--text-secondary)] mt-0.5">{event.note}</p>
                           )}
                           {event.location && (
-                            <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                            <p className="text-xs text-[var(--text-tertiary)] flex items-center gap-1 mt-0.5">
                               <MapPin className="w-3 h-3" />
                               {event.location}
                             </p>
                           )}
                         </div>
-                        <span className="text-xs text-gray-400 shrink-0">
+                        <span className="text-xs text-[var(--text-tertiary)] shrink-0">
                           {new Date(event.createdAt).toLocaleString("tr-TR", {
                             day: "2-digit",
                             month: "short",
@@ -232,9 +232,9 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
 
             {/* Courier info */}
             {(shipment.courierName || shipment.courierPhone) && (
-              <div className="mt-3 flex items-center gap-4 text-xs text-gray-500 bg-white rounded-lg px-4 py-2.5 border border-gray-100">
-                <Truck className="w-4 h-4 text-gray-400" />
-                <span className="font-medium text-gray-700">
+              <div className="mt-3 flex items-center gap-4 text-xs text-[var(--text-secondary)] bg-[var(--bg-surface)] rounded-lg px-4 py-2.5 border border-[var(--border-light)]">
+                <Truck className="w-4 h-4 text-[var(--text-tertiary)]" />
+                <span className="font-medium text-[var(--text-secondary)]">
                   {shipment.courierName}
                 </span>
                 {shipment.courierPhone && (
@@ -321,8 +321,8 @@ export default function MerchantShipmentsView() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Kargo Takip</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Kargo Takip</h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
           Siparişlerinizin kargo durumunu anlık takip edin
         </p>
       </div>
@@ -334,72 +334,72 @@ export default function MerchantShipmentsView() {
             label: "Toplam Kargo",
             value: stats.total,
             icon: Package,
-            color: "text-gray-600",
-            bg: "bg-gray-100",
+            color: "text-[var(--text-secondary)]",
+            bg: "bg-[var(--off-white-2)]",
           },
           {
             label: "Bekleyen",
             value: stats.pending,
             icon: Clock,
-            color: "text-amber-600",
-            bg: "bg-amber-50",
+            color: "text-[var(--warning)]",
+            bg: "bg-[var(--warning-bg)]",
           },
           {
             label: "Yolda",
             value: stats.inTransit,
             icon: Truck,
-            color: "text-blue-600",
-            bg: "bg-blue-50",
+            color: "text-[var(--info)]",
+            bg: "bg-[var(--info-bg)]",
           },
           {
             label: "Teslim Edildi",
             value: stats.delivered,
             icon: CheckCircle2,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50",
+            color: "text-[var(--success)]",
+            bg: "bg-[var(--success-bg)]",
           },
         ].map((s) => (
           <div
             key={s.label}
-            className="bg-white rounded-xl border border-gray-100 p-5"
+            className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-light)] p-5"
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+              <p className="text-xs text-[var(--text-tertiary)] font-medium uppercase tracking-wider">
                 {s.label}
               </p>
               <div className={`p-1.5 rounded-lg ${s.bg}`}>
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+            <p className="text-2xl font-bold text-[var(--text-primary)]">{s.value}</p>
           </div>
         ))}
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100">
-        <div className="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row items-start sm:items-center gap-3 justify-between">
-          <p className="text-sm font-semibold text-gray-900">
+      <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-light)]">
+        <div className="px-5 py-4 border-b border-[var(--border-light)] flex flex-col sm:flex-row items-start sm:items-center gap-3 justify-between">
+          <p className="text-sm font-semibold text-[var(--text-primary)]">
             Kargo Listesi
-            <span className="ml-2 font-normal text-gray-400">
+            <span className="ml-2 font-normal text-[var(--text-tertiary)]">
               ({filtered.length} kargo)
             </span>
           </p>
           <div className="flex gap-2 flex-wrap">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-tertiary)]" />
               <input
                 type="text"
                 placeholder="Takip no veya müşteri..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors w-52"
+                className="pl-8 pr-3 py-1.5 text-xs border border-[var(--border-mid)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors w-52"
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white cursor-pointer"
+              className="text-xs border border-[var(--border-mid)] rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-[var(--bg-surface)] cursor-pointer"
             >
               {STATUS_FILTER_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -412,13 +412,13 @@ export default function MerchantShipmentsView() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-[var(--bg-sunken)] border-b border-[var(--border-light)]">
               <tr>
                 {["Takip No", "Müşteri", "Durum", "Kurye", "Tahmini Teslimat", ""].map(
                   (h) => (
                     <th
                       key={h}
-                      className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                      className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide"
                     >
                       {h}
                     </th>
@@ -440,11 +440,11 @@ export default function MerchantShipmentsView() {
               ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-16 text-center">
-                    <Truck className="w-10 h-10 mx-auto mb-3 text-gray-200" />
-                    <p className="text-sm font-medium text-gray-500">
+                    <Truck className="w-10 h-10 mx-auto mb-3 text-[var(--border-mid)]" />
+                    <p className="text-sm font-medium text-[var(--text-secondary)]">
                       Kargo kaydı bulunamadı
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-[var(--text-tertiary)] mt-1">
                       Siparişler paketlendiğinde kargo bilgileri burada görünür
                     </p>
                   </td>
@@ -460,13 +460,13 @@ export default function MerchantShipmentsView() {
       </div>
 
       {/* Info banner */}
-      <div className="rounded-xl border border-blue-100 bg-blue-50 px-5 py-4 flex items-start gap-3">
-        <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+      <div className="rounded-xl border border-blue-100 bg-[var(--info-bg)] px-5 py-4 flex items-start gap-3">
+        <AlertCircle className="w-4 h-4 text-[var(--info)] mt-0.5 flex-shrink-0" />
         <div>
-          <p className="text-sm font-semibold text-blue-800">
+          <p className="text-sm font-semibold text-[var(--info)]">
             Kargo Süreci Hakkında
           </p>
-          <p className="text-xs text-blue-700 mt-0.5">
+          <p className="text-xs text-[var(--info)] mt-0.5">
             Siparişiniz "Paketlendi" olarak işaretlendiğinde admin tarafından
             kargo etiketi oluşturulur ve kurye atanır. Takip numaranız
             otomatik olarak burada görünür.

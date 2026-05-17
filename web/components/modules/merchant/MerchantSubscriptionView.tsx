@@ -31,9 +31,9 @@ const PLANS = [
     label: "Basic",
     price: "Free",
     icon: Star,
-    color: "text-gray-600",
-    bg: "bg-gray-50",
-    activeBorder: "border-gray-900",
+    color: "text-[var(--text-secondary)]",
+    bg: "bg-[var(--bg-sunken)]",
+    activeBorder: "border-[var(--charcoal)]",
     features: [
       { label: "Independent E-Store", ok: true },
       { label: "Up to 50 products", ok: true },
@@ -49,9 +49,9 @@ const PLANS = [
     label: "Pro",
     price: "$29/mo",
     icon: Zap,
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-    activeBorder: "border-blue-600",
+    color: "text-[var(--info)]",
+    bg: "bg-[var(--info-bg)]",
+    activeBorder: "border-[var(--info)]",
     features: [
       { label: "Independent E-Store", ok: true },
       { label: "Unlimited products", ok: true },
@@ -67,9 +67,9 @@ const PLANS = [
     label: "Enterprise",
     price: "Custom",
     icon: Building2,
-    color: "text-violet-600",
-    bg: "bg-violet-50",
-    activeBorder: "border-violet-600",
+    color: "text-[var(--charcoal-mid)]",
+    bg: "bg-[var(--off-white-2)]",
+    activeBorder: "border-[var(--border-strong)]",
     features: [
       { label: "Independent E-Store", ok: true },
       { label: "Unlimited products", ok: true },
@@ -104,10 +104,10 @@ export default function MerchantSubscriptionView() {
   return (
     <div className="space-y-6 max-w-5xl">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
           My Subscription
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
           View and manage your current plan
         </p>
       </div>
@@ -125,13 +125,13 @@ export default function MerchantSubscriptionView() {
         >
           <CardContent className="py-5 px-6 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">
+              <p className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-widest">
                 Current Plan
               </p>
               <p className="text-xl font-bold mt-0.5">{currentPlan}</p>
               {/* Subscription uses endDate, not expiresAt */}
               {subscription?.endDate && (
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-[var(--text-tertiary)] mt-1">
                   Renews:{" "}
                   {new Date(subscription.endDate).toLocaleDateString("en-US", {
                     year: "numeric",
@@ -148,8 +148,8 @@ export default function MerchantSubscriptionView() {
               <span
                 className={`text-xs px-2 py-0.5 rounded-full font-medium mt-1 inline-block ${
                   subscription?.isActive
-                    ? "bg-emerald-500/20 text-emerald-300"
-                    : "bg-white/10 text-white"
+                    ? "bg-[var(--success)]/20 text-[var(--success)]"
+                    : "bg-[var(--bg-surface)]/10 text-white"
                 }`}
               >
                 {subscription?.isActive ? "Active" : "Inactive"}
@@ -176,7 +176,7 @@ export default function MerchantSubscriptionView() {
             <Card
               key={plan.key}
               className={`border-2 shadow-none rounded-2xl relative ${
-                isActive ? "" : "border-gray-100"
+                isActive ? "" : "border-[var(--border-light)]"
               }`}
               style={activeBorderStyle}
             >
@@ -195,23 +195,23 @@ export default function MerchantSubscriptionView() {
                   <div className={`p-1.5 rounded-lg ${plan.bg}`}>
                     <Icon className={`w-4 h-4 ${plan.color}`} />
                   </div>
-                  <CardTitle className="text-base font-bold text-gray-900">
+                  <CardTitle className="text-base font-bold text-[var(--text-primary)]">
                     {plan.label}
                   </CardTitle>
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{plan.price}</p>
+                <p className="text-2xl font-bold text-[var(--text-primary)]">{plan.price}</p>
               </CardHeader>
               <CardContent className="space-y-3">
                 <ul className="space-y-2">
                   {plan.features.map((f) => (
                     <li key={f.label} className="flex items-center gap-2">
                       {f.ok ? (
-                        <CheckCircle className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                        <CheckCircle className="w-3.5 h-3.5 text-[var(--success)] flex-shrink-0" />
                       ) : (
-                        <XCircle className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+                        <XCircle className="w-3.5 h-3.5 text-[var(--text-tertiary)] flex-shrink-0" />
                       )}
                       <span
-                        className={`text-xs ${f.ok ? "text-gray-700" : "text-gray-400"}`}
+                        className={`text-xs ${f.ok ? "text-[var(--text-secondary)]" : "text-[var(--text-tertiary)]"}`}
                       >
                         {f.label}
                       </span>
@@ -221,7 +221,7 @@ export default function MerchantSubscriptionView() {
 
                 {plan.key === "ENTERPRISE" ? (
                   <button
-                    className="w-full mt-2 px-4 py-2 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="w-full mt-2 px-4 py-2 rounded-lg text-xs font-semibold border border-[var(--border-mid)] text-[var(--text-secondary)] hover:bg-[var(--bg-sunken)] transition-colors"
                     onClick={() =>
                       toast.info("Contact us for Enterprise pricing")
                     }
@@ -234,9 +234,9 @@ export default function MerchantSubscriptionView() {
                     disabled={isActive || upgradePlan.isPending}
                     className={`w-full mt-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
                       isActive
-                        ? "bg-gray-100 text-gray-400 cursor-default"
+                        ? "bg-[var(--off-white-2)] text-[var(--text-tertiary)] cursor-default"
                         : isDowngrade
-                          ? "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                          ? "border border-[var(--border-mid)] text-[var(--text-secondary)] hover:bg-[var(--bg-sunken)]"
                           : "text-white"
                     }`}
                     style={
@@ -271,9 +271,9 @@ export default function MerchantSubscriptionView() {
       </div>
 
       {/* FAQ */}
-      <Card className="border border-gray-100 shadow-none rounded-2xl">
+      <Card className="border border-[var(--border-light)] shadow-none rounded-2xl">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-900">
+          <CardTitle className="text-base font-semibold text-[var(--text-primary)]">
             Frequently Asked Questions
           </CardTitle>
         </CardHeader>
@@ -281,10 +281,10 @@ export default function MerchantSubscriptionView() {
           {FAQ_ITEMS.map((item) => (
             <div
               key={item.q}
-              className="border-b border-gray-100 pb-4 last:border-0 last:pb-0"
+              className="border-b border-[var(--border-light)] pb-4 last:border-0 last:pb-0"
             >
-              <p className="text-sm font-semibold text-gray-900">{item.q}</p>
-              <p className="text-sm text-gray-500 mt-1">{item.a}</p>
+              <p className="text-sm font-semibold text-[var(--text-primary)]">{item.q}</p>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">{item.a}</p>
             </div>
           ))}
         </CardContent>

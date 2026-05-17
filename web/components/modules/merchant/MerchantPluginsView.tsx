@@ -22,12 +22,12 @@ interface Plugin {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  analytics: "bg-blue-50 text-blue-600",
-  marketing: "bg-pink-50 text-pink-600",
-  fulfillment: "bg-orange-50 text-orange-600",
-  payment: "bg-green-50 text-green-600",
-  inventory: "bg-purple-50 text-purple-600",
-  crm: "bg-yellow-50 text-yellow-600",
+  analytics: "bg-[var(--info-bg)] text-[var(--info)]",
+  marketing: "bg-[var(--red-muted)] text-[var(--red)]",
+  fulfillment: "bg-[var(--warning-bg)] text-[var(--warning)]",
+  payment: "bg-[var(--success-bg)] text-green-600",
+  inventory: "bg-[var(--off-white-2)] text-[var(--charcoal-mid)]",
+  crm: "bg-[var(--warning-bg)] text-[var(--warning)]",
 };
 
 export default function MerchantPluginsView() {
@@ -69,10 +69,10 @@ export default function MerchantPluginsView() {
   return (
     <div className="space-y-6 max-w-5xl">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
           Plugin Marketplace
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
           Extend your store with powerful add-ons
         </p>
       </div>
@@ -80,33 +80,33 @@ export default function MerchantPluginsView() {
       {/* Active Plugins */}
       {activePlugins.length > 0 && (
         <div>
-          <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <Zap className="w-4 h-4 text-green-500" />
+          <h2 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2">
+            <Zap className="w-4 h-4 text-[var(--success)]" />
             Active Plugins ({activePlugins.length})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {activePlugins.map((p) => (
               <div
                 key={p.id}
-                className="bg-white border border-green-200 rounded-2xl p-5 shadow-sm"
+                className="bg-[var(--bg-surface)] border border-[var(--success-border)] rounded-2xl p-5 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 flex-1">
-                    <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--success-bg)] flex items-center justify-center flex-shrink-0">
                       <Puzzle className="w-5 h-5 text-green-600" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-semibold text-gray-900">
+                        <p className="text-sm font-semibold text-[var(--text-primary)]">
                           {p.name}
                         </p>
                         <span
-                          className={`text-xs px-2 py-0.5 rounded-full capitalize ${CATEGORY_COLORS[p.category] ?? "bg-gray-100 text-gray-600"}`}
+                          className={`text-xs px-2 py-0.5 rounded-full capitalize ${CATEGORY_COLORS[p.category] ?? "bg-[var(--off-white-2)] text-[var(--text-secondary)]"}`}
                         >
                           {p.category}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                      <p className="text-xs text-[var(--text-secondary)] mt-1 line-clamp-2">
                         {p.description}
                       </p>
                       {p.createdAt && (
@@ -119,7 +119,7 @@ export default function MerchantPluginsView() {
                   </div>
                   <div className="flex flex-col items-end gap-2 flex-shrink-0">
                     <div className="flex items-center gap-1">
-                      <Check className="w-4 h-4 text-green-500" />
+                      <Check className="w-4 h-4 text-[var(--success)]" />
                       <span className="text-xs font-semibold text-green-600">
                         Active
                       </span>
@@ -150,8 +150,8 @@ export default function MerchantPluginsView() {
 
       {/* Available Plugins */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-          <Package className="w-4 h-4 text-gray-400" />
+        <h2 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2">
+          <Package className="w-4 h-4 text-[var(--text-tertiary)]" />
           Available Plugins
         </h2>
 
@@ -160,7 +160,7 @@ export default function MerchantPluginsView() {
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="bg-white border border-gray-100 rounded-2xl p-5"
+                className="bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-2xl p-5"
               >
                 <Skeleton className="h-10 w-10 rounded-xl mb-3" />
                 <Skeleton className="h-4 w-32 mb-2" />
@@ -170,9 +170,9 @@ export default function MerchantPluginsView() {
             ))}
           </div>
         ) : availablePlugins.length === 0 ? (
-          <div className="bg-white border border-gray-100 rounded-2xl p-12 text-center">
-            <Puzzle className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-            <p className="text-sm text-gray-500">
+          <div className="bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-2xl p-12 text-center">
+            <Puzzle className="w-10 h-10 mx-auto mb-3 text-[var(--text-tertiary)]" />
+            <p className="text-sm text-[var(--text-secondary)]">
               You have activated all available plugins!
             </p>
           </div>
@@ -181,30 +181,30 @@ export default function MerchantPluginsView() {
             {availablePlugins.map((p) => (
               <div
                 key={p.id}
-                className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:border-gray-200 transition-colors"
+                className="bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-2xl p-5 shadow-sm hover:border-[var(--border-mid)] transition-colors"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
-                    <Puzzle className="w-5 h-5 text-gray-500" />
+                  <div className="w-10 h-10 rounded-xl bg-[var(--off-white-2)] flex items-center justify-center flex-shrink-0">
+                    <Puzzle className="w-5 h-5 text-[var(--text-secondary)]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-semibold text-gray-900">
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">
                         {p.name}
                       </p>
                       <span
-                        className={`text-xs px-2 py-0.5 rounded-full capitalize ${CATEGORY_COLORS[p.category] ?? "bg-gray-100 text-gray-600"}`}
+                        className={`text-xs px-2 py-0.5 rounded-full capitalize ${CATEGORY_COLORS[p.category] ?? "bg-[var(--off-white-2)] text-[var(--text-secondary)]"}`}
                       >
                         {p.category}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                    <p className="text-xs text-[var(--text-secondary)] mt-1 line-clamp-2">
                       {p.description}
                     </p>
                     <div className="flex items-center justify-between mt-3">
                       <div className="flex items-center gap-1">
-                        <DollarSign className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="text-sm font-semibold text-gray-900">
+                        <DollarSign className="w-3.5 h-3.5 text-[var(--text-tertiary)]" />
+                        <span className="text-sm font-semibold text-[var(--text-primary)]">
                           {p.monthlyPrice === 0
                             ? "Free"
                             : `$${p.monthlyPrice}/mo`}

@@ -48,14 +48,14 @@ function StatCard({
   return (
     <button
       onClick={onClick}
-      className={`text-left bg-white rounded-xl border p-5 transition-all ${
+      className={`text-left bg-[var(--bg-surface)] rounded-xl border p-5 transition-all ${
         active
-          ? "border-gray-900 shadow-sm ring-1 ring-gray-900/10"
-          : "border-gray-100 hover:border-gray-200 hover:shadow-sm"
+          ? "border-[var(--charcoal)] shadow-sm ring-1 ring-[var(--border-mid)]"
+          : "border-[var(--border-light)] hover:border-[var(--border-mid)] hover:shadow-sm"
       }`}
     >
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+        <p className="text-xs text-[var(--text-tertiary)] font-medium uppercase tracking-wider">
           {label}
         </p>
         <div className={`p-1.5 rounded-lg ${bg}`}>
@@ -231,10 +231,10 @@ export default function MerchantCatalogueView() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
             Product Catalogue
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
             {isFetching && !isLoading
               ? "Updating..."
               : `${totalCount} product${totalCount !== 1 ? "s" : ""} in your catalogue`}
@@ -262,8 +262,8 @@ export default function MerchantCatalogueView() {
         <StatCard
           label="Total Products"
           value={stats.total}
-          color="text-gray-900"
-          bg="bg-gray-100"
+          color="text-[var(--text-primary)]"
+          bg="bg-[var(--off-white-2)]"
           active={publishFilter === "all"}
           onClick={() => {
             setPublishFilter("all");
@@ -273,8 +273,8 @@ export default function MerchantCatalogueView() {
         <StatCard
           label="On Marketplace"
           value={stats.onMarket}
-          color="text-blue-600"
-          bg="bg-blue-50"
+          color="text-[var(--info)]"
+          bg="bg-[var(--info-bg)]"
           active={publishFilter === "market"}
           onClick={() => {
             setPublishFilter("market");
@@ -284,8 +284,8 @@ export default function MerchantCatalogueView() {
         <StatCard
           label="In E-Store"
           value={stats.onStore}
-          color="text-violet-600"
-          bg="bg-violet-50"
+          color="text-[var(--charcoal-mid)]"
+          bg="bg-[var(--off-white-2)]"
           active={publishFilter === "store"}
           onClick={() => {
             setPublishFilter("store");
@@ -295,8 +295,8 @@ export default function MerchantCatalogueView() {
         <StatCard
           label="Pending Approval"
           value={stats.pendingApproval}
-          color="text-amber-600"
-          bg="bg-amber-50"
+          color="text-[var(--warning)]"
+          bg="bg-[var(--warning-bg)]"
           active={false}
           onClick={() => {}}
         />
@@ -313,13 +313,13 @@ export default function MerchantCatalogueView() {
       {/* Filters Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-tertiary)] pointer-events-none" />
           <input
             type="text"
             placeholder="Search products..."
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 text-sm bg-[var(--bg-surface)] border border-[var(--border-mid)] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
           />
         </div>
 
@@ -329,7 +329,7 @@ export default function MerchantCatalogueView() {
             setSort(e.target.value);
             setPage(1);
           }}
-          className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors cursor-pointer"
+          className="bg-[var(--bg-surface)] border border-[var(--border-mid)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors cursor-pointer"
         >
           {SORT_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
@@ -338,7 +338,7 @@ export default function MerchantCatalogueView() {
           ))}
         </select>
 
-        <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1">
+        <div className="flex gap-1 bg-[var(--bg-surface)] border border-[var(--border-mid)] rounded-xl p-1">
           {(
             [
               { key: "all", label: "All" },
@@ -356,7 +356,7 @@ export default function MerchantCatalogueView() {
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                 publishFilter === f.key
                   ? "text-white"
-                  : "text-gray-500 hover:text-gray-900"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
               style={
                 publishFilter === f.key ? { background: "var(--red)" } : {}
@@ -380,14 +380,14 @@ export default function MerchantCatalogueView() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-[var(--text-tertiary)]">
             Page {page} of {totalPages} — {totalCount} products
           </p>
           <div className="flex gap-2">
             <button
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
-              className="px-4 py-2 text-sm border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 text-sm border border-[var(--border-mid)] rounded-lg bg-[var(--bg-surface)] hover:bg-[var(--bg-sunken)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               ← Previous
             </button>
@@ -408,7 +408,7 @@ export default function MerchantCatalogueView() {
                     className={`w-9 h-9 text-sm rounded-lg transition-colors ${
                       p === page
                         ? "text-white font-semibold"
-                        : "border border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
+                        : "border border-[var(--border-mid)] bg-[var(--bg-surface)] hover:bg-[var(--bg-sunken)] text-[var(--text-secondary)]"
                     }`}
                     style={p === page ? { background: "var(--red)" } : {}}
                   >
@@ -420,7 +420,7 @@ export default function MerchantCatalogueView() {
             <button
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
-              className="px-4 py-2 text-sm border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 text-sm border border-[var(--border-mid)] rounded-lg bg-[var(--bg-surface)] hover:bg-[var(--bg-sunken)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               Next →
             </button>
@@ -432,9 +432,9 @@ export default function MerchantCatalogueView() {
       {!isLoading &&
         filteredProducts.length === 0 &&
         allProducts.length > 0 && (
-          <div className="bg-white border border-gray-100 rounded-xl p-12 text-center">
-            <Search className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-            <p className="text-sm font-medium text-gray-700">
+          <div className="bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-xl p-12 text-center">
+            <Search className="w-10 h-10 mx-auto mb-3 text-[var(--text-tertiary)]" />
+            <p className="text-sm font-medium text-[var(--text-secondary)]">
               No products match your filters
             </p>
             <button
@@ -443,7 +443,7 @@ export default function MerchantCatalogueView() {
                 setSearch("");
                 setDebouncedSearch("");
               }}
-              className="mt-3 text-xs text-blue-600 hover:underline font-medium"
+              className="mt-3 text-xs text-[var(--info)] hover:underline font-medium"
             >
               Clear filters
             </button>
@@ -471,21 +471,21 @@ export default function MerchantCatalogueView() {
             e.target === e.currentTarget && setDeleteConfirm(null)
           }
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+          <div className="bg-[var(--bg-surface)] rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center mb-4">
               <AlertTriangle className="w-5 h-5 text-red-500" />
             </div>
-            <h3 className="text-base font-semibold text-gray-900 mb-1">
+            <h3 className="text-base font-semibold text-[var(--text-primary)] mb-1">
               Delete Product
             </h3>
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-sm text-[var(--text-secondary)] mb-6">
               This product will be removed from your catalogue. This action
               cannot be undone.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors"
+                className="flex-1 border border-[var(--border-mid)] text-[var(--text-secondary)] rounded-xl py-2.5 text-sm font-medium hover:bg-[var(--bg-sunken)] transition-colors"
               >
                 Cancel
               </button>
