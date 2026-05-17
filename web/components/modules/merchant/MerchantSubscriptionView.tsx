@@ -175,29 +175,29 @@ export default function MerchantSubscriptionView() {
           return (
             <Card
               key={plan.key}
-              className={`border-2 shadow-none rounded-2xl relative ${
+              className={`border-2 shadow-none rounded-2xl ${
                 isActive ? "" : "border-[var(--border-light)]"
               }`}
               style={activeBorderStyle}
             >
-              {isActive && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span
-                    className="text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest"
-                    style={{ background: "var(--red)" }}
-                  >
-                    Current
-                  </span>
-                </div>
-              )}
               <CardHeader className="pb-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className={`p-1.5 rounded-lg ${plan.bg}`}>
-                    <Icon className={`w-4 h-4 ${plan.color}`} />
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <div className={`p-1.5 rounded-lg ${plan.bg}`}>
+                      <Icon className={`w-4 h-4 ${plan.color}`} />
+                    </div>
+                    <CardTitle className="text-base font-bold text-[var(--text-primary)]">
+                      {plan.label}
+                    </CardTitle>
                   </div>
-                  <CardTitle className="text-base font-bold text-[var(--text-primary)]">
-                    {plan.label}
-                  </CardTitle>
+                  {isActive && (
+                    <span
+                      className="text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider whitespace-nowrap"
+                      style={{ background: "var(--red)" }}
+                    >
+                      Current
+                    </span>
+                  )}
                 </div>
                 <p className="text-2xl font-bold text-[var(--text-primary)]">{plan.price}</p>
               </CardHeader>

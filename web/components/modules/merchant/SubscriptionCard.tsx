@@ -82,7 +82,7 @@ export default function SubscriptionCard() {
               key={plan}
               className={`bg-[var(--bg-surface)] rounded-2xl border overflow-hidden transition-all ${
                 isCurrent
-                  ? "border-blue-500 shadow-md shadow-blue-500/10"
+                  ? "border-[var(--red)] shadow-md shadow-[rgba(200,16,46,0.1)]"
                   : "border-[var(--border-light)] hover:border-[var(--border-mid)] hover:shadow-sm"
               }`}
             >
