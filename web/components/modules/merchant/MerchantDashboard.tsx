@@ -71,7 +71,7 @@ export default function MerchantDashboard() {
 
   const statCards = [
     {
-      label: "Toplam Gelir",
+      label: "Total Revenue",
       value: revenueDisplay,
       icon: DollarSign,
       color: "text-[var(--success)]",

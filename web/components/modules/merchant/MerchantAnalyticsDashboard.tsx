@@ -34,7 +34,7 @@ export default function MerchantAnalyticsDashboard() {
   const { data: salesChart, isLoading: chartLoading } =
     useMerchantSalesChart(period);
 
-  // API yanıtını güvenli şekilde diziye çevir (obje veya dizi gelebilir)
+  // Safely convert API response to array (can be object or array)
   function toArray(data: unknown): any[] {
     if (Array.isArray(data)) return data;
     if (data && typeof data === "object") {
@@ -47,14 +47,14 @@ export default function MerchantAnalyticsDashboard() {
     return [];
   }
 
-  // Grafik için API verisini MerchantSalesChart formatına çevir
+  // Convert API data to MerchantSalesChart format
   // Backend SalesPeriodDto: { label, revenue, orderCount }
   // Backend SalesDataPoint: { date, revenue, orderCount, source }
   const chartData = toArray(salesChart).map((d) => ({
     gun: d.label
       ? d.label
       : d.date
-        ? new Date(d.date).toLocaleDateString("tr-TR", { weekday: "short" })
+        ? new Date(d.date).toLocaleDateString("en-US", { weekday: "short" })
         : "—",
     marketplace: d.source === "MARKETPLACE" || !d.source ? (d.revenue ?? 0) : 0,
     estore: d.source === "ESTORE" ? (d.revenue ?? 0) : 0,
@@ -179,10 +179,10 @@ export default function MerchantAnalyticsDashboard() {
             </div>
           ) : comparison ? (
             <>
-              {/* Görsel karşılaştırma grafiği */}
+{/* Visual comparison chart */}
               <ComparisonChart data={comparison} className="mb-4" />
 
-              {/* Sayısal tablo */}
+{/* Numeric comparison table */}
               <div className="divide-y divide-[var(--border-light)]">
                 <div className="grid grid-cols-3 pb-2 text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">
                   <span>Metric</span>

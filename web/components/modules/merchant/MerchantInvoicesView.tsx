@@ -95,7 +95,7 @@ export default function MerchantInvoicesView() {
       const pdfUrl = res.data?.pdfUrl;
 
       if (pdfUrl) {
-        // Cloudinary CDN URL'ini yeni sekmede aç
+        // Open Cloudinary CDN URL in a new tab
         window.open(pdfUrl, "_blank");
       } else {
         // Fallback: blob olarak indir
@@ -422,7 +422,7 @@ export default function MerchantInvoicesView() {
             <div>
               <h2 className="text-base font-semibold text-[var(--text-primary)]">Accounting Ledger</h2>
               <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                Sipariş/fatura/ödeme bağlantılı tam muhasebe izi
+                Full audit trail linked to orders, invoices, and payments
               </p>
             </div>
             <Select value={accountingEntryType} onValueChange={setAccountingEntryType}>
@@ -467,10 +467,10 @@ export default function MerchantInvoicesView() {
                         <span
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                             entry.entryType === "SALE"
-                              ? "bg-[var(--success-bg)] text-green-700"
+                              ? "bg-[var(--success-bg)] text-[var(--success)]"
                               : entry.entryType === "REFUND"
-                              ? "bg-red-50 text-red-700"
-                              : "bg-[var(--warning-bg)] text-orange-700"
+                              ? "bg-[var(--danger-bg)] text-[var(--danger)]"
+                              : "bg-[var(--warning-bg)] text-[var(--warning)]"
                           }`}
                         >
                           {entry.entryType === "SALE" ? (
@@ -483,7 +483,7 @@ export default function MerchantInvoicesView() {
                       </TableCell>
                       <TableCell
                         className={`text-sm font-semibold ${
-                          entry.amount >= 0 ? "text-green-700" : "text-red-700"
+                          entry.amount >= 0 ? "text-[var(--success)]" : "text-[var(--danger)]"
                         }`}
                       >
                         {entry.amount >= 0 ? "+" : ""}₺{entry.amount.toFixed(2)}

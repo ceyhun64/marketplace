@@ -57,7 +57,7 @@ export default function MerchantReviewsView() {
   const [openReply, setOpenReply] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState<Record<string, string>>({});
 
-  // Merchant'ın ürünlerini çek
+  // Fetch merchant products
   const { data: catalogueData, isLoading: catalogueLoading } = useQuery({
     queryKey: ["merchant-products-for-reviews"],
     queryFn: async () => {
@@ -72,7 +72,7 @@ export default function MerchantReviewsView() {
 
   const products: MerchantProduct[] = catalogueData ?? [];
 
-  // Her ürün için yorumları çek
+  // Fetch reviews for each product
   const { data: reviewsMap, isLoading: reviewsLoading } = useQuery({
     queryKey: ["merchant-all-reviews", products.map((p) => p.id).join(",")],
     enabled: products.length > 0,
@@ -106,7 +106,7 @@ export default function MerchantReviewsView() {
 
   const isLoading = catalogueLoading || reviewsLoading;
 
-  // Tüm ürün+yorum verilerini birleştir
+  // Merge all product + review data
   const allReviews = products.flatMap((product) =>
     (reviewsMap?.[product.id] ?? []).map((r) => ({ ...r, product })),
   );

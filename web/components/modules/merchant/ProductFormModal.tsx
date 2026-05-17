@@ -240,7 +240,7 @@ export default function ProductFormModal({
               description={
                 canPublishToMarket
                   ? "Visible in general listing (approval may be required)"
-                  : "Pro veya Enterprise plan gerekli"
+                  : "Pro or Enterprise plan required"
               }
               checked={form.publishToMarket && canPublishToMarket}
               onChange={(v) => {

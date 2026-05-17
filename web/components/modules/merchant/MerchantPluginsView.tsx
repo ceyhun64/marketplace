@@ -37,7 +37,7 @@ export default function MerchantPluginsView() {
     queryKey: ["merchant-plugins"],
     queryFn: async () => {
       const res = await api.get("/api/plugins/available");
-      // Backend ApiResponse<List<PluginDto>> döndürür
+      // Backend returns ApiResponse<List<PluginDto>>
       const body = res.data;
       return Array.isArray(body) ? body : (body?.data ?? []);
     },

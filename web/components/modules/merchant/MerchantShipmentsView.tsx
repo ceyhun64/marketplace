@@ -100,7 +100,7 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
     SHIPMENT_STATUS_COLORS[shipment.status] ?? "bg-[var(--off-white-2)] text-[var(--text-secondary)]";
 
   const eta = shipment.estimatedDeliveryEnd
-    ? new Date(shipment.estimatedDeliveryEnd).toLocaleDateString("tr-TR", {
+    ? new Date(shipment.estimatedDeliveryEnd).toLocaleDateString("en-US", {
         day: "2-digit",
         month: "short",
       })
@@ -140,10 +140,10 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
         <td className="px-5 py-4 text-xs text-[var(--text-secondary)]">
           {shipment.actualDeliveredAt ? (
             <span className="text-[var(--success)] font-medium">
-              Teslim: {new Date(shipment.actualDeliveredAt).toLocaleDateString("tr-TR")}
+              Teslim: {new Date(shipment.actualDeliveredAt).toLocaleDateString("en-US")}
             </span>
           ) : eta ? (
-            `Tahmini: ${eta}`
+            `Est. ${eta}`
           ) : (
             <span className="text-[var(--text-tertiary)]">—</span>
           )}
@@ -175,7 +175,7 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
               </p>
               <StatusStepper current={shipment.status} />
               <div className="flex justify-between mt-1.5">
-                {["Hazırlandı", "Etiket", "Kurye", "Alındı", "Yolda", "Dağıtımda", "Teslim"].map(
+                {["Prepared", "Label", "Courier", "Picked Up", "In Transit", "Out for Delivery", "Delivered"].map(
                   (label) => (
                     <span key={label} className="text-[10px] text-[var(--text-tertiary)] text-center flex-1">
                       {label}
@@ -189,7 +189,7 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
             {shipment.events && shipment.events.length > 0 && (
               <div>
                 <p className="text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wider mb-2">
-                  Kargo Geçmişi
+                  Shipment History
                 </p>
                 <div className="space-y-2">
                   {shipment.events
@@ -217,7 +217,7 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
                           )}
                         </div>
                         <span className="text-xs text-[var(--text-tertiary)] shrink-0">
-                          {new Date(event.createdAt).toLocaleString("tr-TR", {
+                          {new Date(event.createdAt).toLocaleString("en-US", {
                             day: "2-digit",
                             month: "short",
                             hour: "2-digit",
@@ -256,7 +256,7 @@ export default function MerchantShipmentsView() {
   const { data, isLoading } = useQuery<MerchantShipment[]>({
     queryKey: ["merchant-shipments", statusFilter],
     queryFn: async () => {
-      // Merchant'ın siparişlerini çek, shipment bilgisiyle
+      // Fetch merchant orders with shipment info
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
       const res = await api.get(`/api/orders/merchant/incoming?${params}`);
@@ -265,7 +265,7 @@ export default function MerchantShipmentsView() {
         ? raw
         : raw?.items ?? raw?.data ?? raw?.orders ?? [];
 
-      // Sipariş içinden shipment'ları çıkar
+      // Extract shipments from orders
       return orders
         .filter((o: any) => o.shipment)
         .map((o: any) => ({
@@ -308,22 +308,22 @@ export default function MerchantShipmentsView() {
   };
 
   const STATUS_FILTER_OPTIONS: { value: "all" | ShipmentStatus; label: string }[] = [
-    { value: "all", label: "Tümü" },
-    { value: "PENDING", label: "Beklemede" },
-    { value: "LABEL_GENERATED", label: "Etiket Oluşturuldu" },
-    { value: "COURIER_ASSIGNED", label: "Kurye Atandı" },
-    { value: "PICKED_UP", label: "Alındı" },
-    { value: "IN_TRANSIT", label: "Yolda" },
-    { value: "OUT_FOR_DELIVERY", label: "Dağıtımda" },
-    { value: "DELIVERED", label: "Teslim Edildi" },
+    { value: "all", label: "All" },
+    { value: "PENDING", label: "Pending" },
+    { value: "LABEL_GENERATED", label: "Label Generated" },
+    { value: "COURIER_ASSIGNED", label: "Courier Assigned" },
+    { value: "PICKED_UP", label: "Picked Up" },
+    { value: "IN_TRANSIT", label: "In Transit" },
+    { value: "OUT_FOR_DELIVERY", label: "Out for Delivery" },
+    { value: "DELIVERED", label: "Delivered" },
   ];
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Kargo Takip</h1>
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Shipment Tracking</h1>
         <p className="text-sm text-[var(--text-secondary)] mt-1">
-          Siparişlerinizin kargo durumunu anlık takip edin
+          Track the shipping status of your orders in real time
         </p>
       </div>
 
@@ -331,28 +331,28 @@ export default function MerchantShipmentsView() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
-            label: "Toplam Kargo",
+            label: "Total Shipments",
             value: stats.total,
             icon: Package,
             color: "text-[var(--text-secondary)]",
             bg: "bg-[var(--off-white-2)]",
           },
           {
-            label: "Bekleyen",
+            label: "Pending",
             value: stats.pending,
             icon: Clock,
             color: "text-[var(--warning)]",
             bg: "bg-[var(--warning-bg)]",
           },
           {
-            label: "Yolda",
+            label: "In Transit",
             value: stats.inTransit,
             icon: Truck,
             color: "text-[var(--info)]",
             bg: "bg-[var(--info-bg)]",
           },
           {
-            label: "Teslim Edildi",
+            label: "Delivered",
             value: stats.delivered,
             icon: CheckCircle2,
             color: "text-[var(--success)]",
@@ -380,9 +380,9 @@ export default function MerchantShipmentsView() {
       <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-light)]">
         <div className="px-5 py-4 border-b border-[var(--border-light)] flex flex-col sm:flex-row items-start sm:items-center gap-3 justify-between">
           <p className="text-sm font-semibold text-[var(--text-primary)]">
-            Kargo Listesi
+            Shipment List
             <span className="ml-2 font-normal text-[var(--text-tertiary)]">
-              ({filtered.length} kargo)
+              ({filtered.length} shipment{filtered.length !== 1 ? "s" : ""})
             </span>
           </p>
           <div className="flex gap-2 flex-wrap">
@@ -390,7 +390,7 @@ export default function MerchantShipmentsView() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-tertiary)]" />
               <input
                 type="text"
-                placeholder="Takip no veya müşteri..."
+                placeholder="Tracking no or customer..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-8 pr-3 py-1.5 text-xs border border-[var(--border-mid)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors w-52"
@@ -414,7 +414,7 @@ export default function MerchantShipmentsView() {
           <table className="w-full text-sm">
             <thead className="bg-[var(--bg-sunken)] border-b border-[var(--border-light)]">
               <tr>
-                {["Takip No", "Müşteri", "Durum", "Kurye", "Tahmini Teslimat", ""].map(
+                {["Tracking No.", "Customer", "Status", "Courier", "Est. Delivery", ""].map(
                   (h) => (
                     <th
                       key={h}
@@ -442,10 +442,10 @@ export default function MerchantShipmentsView() {
                   <td colSpan={6} className="py-16 text-center">
                     <Truck className="w-10 h-10 mx-auto mb-3 text-[var(--border-mid)]" />
                     <p className="text-sm font-medium text-[var(--text-secondary)]">
-                      Kargo kaydı bulunamadı
+                      No shipments found
                     </p>
                     <p className="text-xs text-[var(--text-tertiary)] mt-1">
-                      Siparişler paketlendiğinde kargo bilgileri burada görünür
+                      Shipping details will appear here once orders are packed
                     </p>
                   </td>
                 </tr>
@@ -460,16 +460,14 @@ export default function MerchantShipmentsView() {
       </div>
 
       {/* Info banner */}
-      <div className="rounded-xl border border-blue-100 bg-[var(--info-bg)] px-5 py-4 flex items-start gap-3">
+      <div className="rounded-xl border border-[var(--info-border)] bg-[var(--info-bg)] px-5 py-4 flex items-start gap-3">
         <AlertCircle className="w-4 h-4 text-[var(--info)] mt-0.5 flex-shrink-0" />
         <div>
           <p className="text-sm font-semibold text-[var(--info)]">
-            Kargo Süreci Hakkında
+            About the Shipping Process
           </p>
           <p className="text-xs text-[var(--info)] mt-0.5">
-            Siparişiniz "Paketlendi" olarak işaretlendiğinde admin tarafından
-            kargo etiketi oluşturulur ve kurye atanır. Takip numaranız
-            otomatik olarak burada görünür.
+            Once your order is marked as "Packed", an admin generates the shipping label and assigns a courier. Your tracking number will appear here automatically.
           </p>
         </div>
       </div>

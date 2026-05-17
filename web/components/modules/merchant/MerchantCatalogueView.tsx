@@ -80,7 +80,7 @@ export default function MerchantCatalogueView() {
     "all" | "market" | "store" | "none"
   >("all");
 
-  // Abonelik planı — Basic planda marketplace yayını kısıtlı
+  // Subscription plan — marketplace publishing restricted on Basic plan
   const { data: subscription } = useMySubscription();
   const currentPlan = subscription?.plan ?? "BASIC";
   const canPublishToMarket = currentPlan === "PRO" || currentPlan === "ENTERPRISE";
@@ -169,11 +169,11 @@ export default function MerchantCatalogueView() {
     field: "publishToMarket" | "publishToStore",
     value: boolean,
   ) => {
-    // Plan kısıtlaması: Basic planda marketplace yayını yapılamaz
+    // Plan restriction: Marketplace publishing requires Pro or Enterprise
     if (field === "publishToMarket" && value && !canPublishToMarket) {
-      toast.error("Marketplace'e yayın yapmak için Pro veya Enterprise planı gereklidir.", {
+      toast.error("Marketplace publishing requires a Pro or Enterprise plan.", {
         action: {
-          label: "Planı Yükselt",
+          label: "Upgrade Plan",
           onClick: () => window.location.href = "/merchant/subscription",
         },
       });
@@ -202,7 +202,7 @@ export default function MerchantCatalogueView() {
 
   return (
     <div className="space-y-6">
-      {/* Basic Plan Marketplace Uyarısı */}
+      {/* Basic Plan Marketplace Warning */}
       {!canPublishToMarket && (
         <div
           className="flex items-center gap-3 px-4 py-3 rounded-xl"
@@ -211,10 +211,10 @@ export default function MerchantCatalogueView() {
           <Lock className="w-4 h-4 flex-shrink-0" style={{ color: "#8b5e1a" }} />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold" style={{ color: "#8b5e1a" }}>
-              Marketplace Yayını — Pro Plan Gerekli
+              Marketplace Publishing — Pro Plan Required
             </p>
             <p className="text-xs mt-0.5" style={{ color: "rgba(139,94,26,0.75)" }}>
-              Basic planda ürünler yalnızca e-mağazanızda görünür. Marketplace'e yayınlamak için planınızı yükseltin.
+              On the Basic plan, products are only visible in your e-store. Upgrade to publish to the Marketplace.
             </p>
           </div>
           <Link
@@ -223,7 +223,7 @@ export default function MerchantCatalogueView() {
             style={{ background: "#8b5e1a" }}
           >
             <Zap className="w-3 h-3" />
-            Planı Yükselt
+            Upgrade Plan
           </Link>
         </div>
       )}

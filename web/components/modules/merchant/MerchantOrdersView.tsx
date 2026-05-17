@@ -114,14 +114,14 @@ export default function MerchantOrdersView() {
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="PENDING">Beklemede</SelectItem>
-              <SelectItem value="PAYMENT_CONFIRMED">Ödeme Onaylandı</SelectItem>
-              <SelectItem value="LABEL_GENERATED">Etiket Oluşturuldu</SelectItem>
-              <SelectItem value="COURIER_ASSIGNED">Kurye Atandı</SelectItem>
-              <SelectItem value="PICKED_UP">Kurye Teslim Aldı</SelectItem>
-              <SelectItem value="IN_TRANSIT">Yolda</SelectItem>
-              <SelectItem value="OUT_FOR_DELIVERY">Dağıtımda</SelectItem>
-              <SelectItem value="DELIVERED">Teslim Edildi</SelectItem>
-              <SelectItem value="CANCELLED">İptal Edildi</SelectItem>
+              <SelectItem value="PAYMENT_CONFIRMED">Payment Confirmed</SelectItem>
+              <SelectItem value="LABEL_GENERATED">Label Generated</SelectItem>
+              <SelectItem value="COURIER_ASSIGNED">Courier Assigned</SelectItem>
+              <SelectItem value="PICKED_UP">Picked Up</SelectItem>
+              <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
+              <SelectItem value="OUT_FOR_DELIVERY">Out for Delivery</SelectItem>
+              <SelectItem value="DELIVERED">Delivered</SelectItem>
+              <SelectItem value="CANCELLED">Cancelled</SelectItem>
             </SelectContent>
           </Select>
         </div>

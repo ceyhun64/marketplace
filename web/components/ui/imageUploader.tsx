@@ -11,15 +11,15 @@ import {
 interface ImageUploaderProps {
   label?: string;
   folder?: string;
-  /** Mevcut görsel URL'i (edit modunda başlangıç değeri) */
+  /** Existing image URL (initial value in edit mode) */
   initialUrl?: string;
-  /** Yükleme tamamlandığında çağrılır */
+  /** Called when upload is complete */
   onUpload: (result: UploadResult) => void;
-  /** Görsel kaldırıldığında çağrılır */
+  /** Called when image is removed */
   onRemove?: () => void;
-  /** Kabul edilen MIME tipleri */
+  /** Accepted MIME types */
   accept?: string;
-  /** Maksimum dosya boyutu (byte, default 5MB) */
+  /** Maximum file size (bytes, default 5MB) */
   maxBytes?: number;
   className?: string;
 }
@@ -49,12 +49,12 @@ export default function ImageUploader({
 
     if (file.size > maxBytes) {
       setLocalError(
-        `Dosya çok büyük — maksimum ${Math.round(maxBytes / 1024 / 1024)} MB`,
+        `File too large — maximum ${Math.round(maxBytes / 1024 / 1024)} MB`,
       );
       return;
     }
 
-    // Anlık önizleme göster
+    // Show instant preview
     const objectUrl = URL.createObjectURL(file);
     setPreview(objectUrl);
 
@@ -89,15 +89,15 @@ export default function ImageUploader({
       )}
 
       {preview ? (
-        /* ── Preview kartı ── */
+        /* ── Preview card ── */
         <div className="relative w-full h-44 rounded-xl overflow-hidden border border-gray-200 group">
           <Image
             src={preview}
-            alt="Önizleme"
+            alt="Preview"
             fill
             className="object-cover"
             unoptimized={preview.startsWith("blob:")}
-            // Addnecek satır:
+            // Line to be added:
             sizes="(max-width: 768px) 100vw, 400px"
           />
           {/* Progress overlay */}
@@ -114,7 +114,7 @@ export default function ImageUploader({
               </span>
             </div>
           )}
-          {/* Kaldır butonu */}
+          {/* Remove button */}
           {!uploading && (
             <button
               type="button"
@@ -140,11 +140,11 @@ export default function ImageUploader({
         >
           <span className="text-3xl">🖼️</span>
           <p className="text-sm text-gray-500">
-            Sürükle bırak veya{" "}
-            <span className="text-blue-500 font-medium">tıkla</span>
+            Drag and drop or{" "}
+            <span className="text-blue-500 font-medium">click</span>
           </p>
           <p className="text-xs text-gray-400">
-            PNG, JPG, WEBP · Maks {Math.round(maxBytes / 1024 / 1024)} MB
+            PNG, JPG, WEBP · Max {Math.round(maxBytes / 1024 / 1024)} MB
           </p>
         </div>
       )}

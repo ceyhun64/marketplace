@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
 import { formatPrice } from "@/lib/format";
 import type { Product } from "@/types/entities";
 
@@ -28,6 +27,36 @@ const HEADERS = [
   "Status",
   "Actions",
 ];
+
+function PublishToggle({
+  checked,
+  disabled,
+  onChange,
+  activeColor,
+}: {
+  checked: boolean;
+  disabled: boolean;
+  onChange: (v: boolean) => void;
+  activeColor: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => !disabled && onChange(!checked)}
+      disabled={disabled}
+      aria-checked={checked}
+      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--red)] focus-visible:ring-offset-1 ${
+        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+      } ${checked ? activeColor : "bg-[var(--off-white-3)]"}`}
+    >
+      <span
+        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+          checked ? "translate-x-[18px]" : "translate-x-[3px]"
+        }`}
+      />
+    </button>
+  );
+}
 
 export default function ProductCatalogueTable({
   products,
@@ -112,7 +141,7 @@ export default function ProductCatalogueTable({
         </thead>
         <tbody className="divide-y divide-[var(--border-subtle)]">
           {products.map((p) => (
-            <tr key={p.id} className="hover:bg-[var(--bg-sunken)]/60 transition-colors">
+            <tr key={p.id} className="hover:bg-[var(--bg-sunken)] transition-colors">
               {/* Product */}
               <td className="px-4 py-3">
                 <div className="flex items-center gap-3 min-w-0">
@@ -150,7 +179,7 @@ export default function ProductCatalogueTable({
                 <span
                   className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                     p.stock === 0
-                      ? "bg-red-50 text-red-600"
+                      ? "bg-[var(--danger-bg)] text-[var(--danger)]"
                       : p.stock < 10
                         ? "bg-[var(--warning-bg)] text-[var(--warning)]"
                         : "bg-[var(--success-bg)] text-[var(--success)]"
@@ -162,26 +191,32 @@ export default function ProductCatalogueTable({
 
               {/* Marketplace Toggle */}
               <td className="px-4 py-3">
-                <Switch
-                  checked={p.publishToMarket}
-                  disabled={toggling === `${p.id}-publishToMarket`}
-                  onCheckedChange={(v) =>
-                    handleToggle(p.id, "publishToMarket", v)
-                  }
-                  className="data-[state=checked]:bg-[var(--info)]"
-                />
+                <div className="flex items-center gap-2">
+                  <PublishToggle
+                    checked={p.publishToMarket}
+                    disabled={toggling === `${p.id}-publishToMarket`}
+                    onChange={(v) => handleToggle(p.id, "publishToMarket", v)}
+                    activeColor="bg-[var(--info)]"
+                  />
+                  <span className={`text-xs font-medium ${p.publishToMarket ? "text-[var(--info)]" : "text-[var(--text-tertiary)]"}`}>
+                    {p.publishToMarket ? "On" : "Off"}
+                  </span>
+                </div>
               </td>
 
               {/* E-Store Toggle */}
               <td className="px-4 py-3">
-                <Switch
-                  checked={p.publishToStore}
-                  disabled={toggling === `${p.id}-publishToStore`}
-                  onCheckedChange={(v) =>
-                    handleToggle(p.id, "publishToStore", v)
-                  }
-                  className="data-[state=checked]:bg-[var(--charcoal-mid)]"
-                />
+                <div className="flex items-center gap-2">
+                  <PublishToggle
+                    checked={p.publishToStore}
+                    disabled={toggling === `${p.id}-publishToStore`}
+                    onChange={(v) => handleToggle(p.id, "publishToStore", v)}
+                    activeColor="bg-[var(--success)]"
+                  />
+                  <span className={`text-xs font-medium ${p.publishToStore ? "text-[var(--success)]" : "text-[var(--text-tertiary)]"}`}>
+                    {p.publishToStore ? "On" : "Off"}
+                  </span>
+                </div>
               </td>
 
               {/* Status */}
@@ -202,13 +237,13 @@ export default function ProductCatalogueTable({
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => onEdit(p)}
-                    className="text-xs text-[var(--info)] hover:text-[var(--info)] font-medium transition-colors"
+                    className="text-xs text-[var(--info)] hover:underline font-medium transition-colors"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => onDelete(p.id)}
-                    className="text-xs text-red-400 hover:text-red-600 transition-colors"
+                    className="text-xs text-[var(--danger)] hover:text-[var(--red-dark)] transition-colors"
                   >
                     Delete
                   </button>
