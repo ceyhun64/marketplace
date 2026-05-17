@@ -19,7 +19,12 @@ public class Product
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation
+    // Navigation — many-to-one
     public MerchantProfile Merchant { get; set; } = null!;
     public Category Category { get; set; } = null!;
+
+    // Navigation — one-to-many
+    public ICollection<Review> Reviews { get; set; } = new List<Review>();
+    public ICollection<WishlistItem> WishlistItems { get; set; } = new List<WishlistItem>();
+    public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 }

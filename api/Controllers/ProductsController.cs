@@ -1,6 +1,8 @@
+using api.Application.Commands.Products;
 using api.Common.DTOs;
 using api.Domain.Entities;
 using api.Infrastructure.Persistence;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,8 +14,13 @@ namespace api.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly IMediator _mediator;
 
-    public ProductsController(AppDbContext db) => _db = db;
+    public ProductsController(AppDbContext db, IMediator mediator)
+    {
+        _db = db;
+        _mediator = mediator;
+    }
 
     // ── PUBLIC ──────────────────────────────────────────────────────────────
 
@@ -134,52 +141,41 @@ public class ProductsController : ControllerBase
             return NotFound(new { message = "Ürün bulunamadı." });
 
         // ── Reviews & Rating ────────────────────────────────────────────────
-        // Try-catch: Reviews tablosu migration uygulanmadan önce yoksa 500 vermez.
         int reviewCount = 0;
         double rating = 0.0;
         Dictionary<int, int> ratingDistribution = new();
         List<object> reviewDtos = new();
 
-        try
-        {
-            var reviews = await _db
-                .Reviews.Where(r => r.ProductId == id)
-                .Include(r => r.Customer)
-                .OrderByDescending(r => r.CreatedAt)
-                .ToListAsync();
+        var reviews = await _db
+            .Reviews.Where(r => r.ProductId == id)
+            .Include(r => r.Customer)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
 
-            reviewCount = reviews.Count;
-            rating = reviewCount > 0 ? reviews.Average(r => r.Rating) : 0.0;
+        reviewCount = reviews.Count;
+        rating = reviewCount > 0 ? reviews.Average(r => r.Rating) : 0.0;
 
-            ratingDistribution = reviews
-                .GroupBy(r => r.Rating)
-                .ToDictionary(g => g.Key, g => g.Count());
+        ratingDistribution = reviews
+            .GroupBy(r => r.Rating)
+            .ToDictionary(g => g.Key, g => g.Count());
 
-            reviewDtos = reviews
-                .Take(20)
-                .Select(r =>
-                    (object)
-                        new
-                        {
-                            r.Id,
-                            r.Rating,
-                            r.Title,
-                            r.Comment,
-                            r.CreatedAt,
-                            CustomerName = r.Customer != null
-                                ? r.Customer.FirstName
-                                    + " "
-                                    + r.Customer.LastName.Substring(0, 1)
-                                    + "."
-                                : "Anonymous",
-                        }
-                )
-                .ToList();
-        }
-        catch (Exception)
-        {
-            // Reviews tablosu henüz migrate edilmemiş — boş dön, sayfa yine de açılır.
-        }
+        reviewDtos = reviews
+            .Take(20)
+            .Select(r =>
+                (object)
+                    new
+                    {
+                        r.Id,
+                        r.Rating,
+                        r.Title,
+                        r.Comment,
+                        r.CreatedAt,
+                        CustomerName = r.Customer != null
+                            ? r.Customer.FirstName + " " + r.Customer.LastName.Substring(0, 1) + "."
+                            : "Anonymous",
+                    }
+            )
+            .ToList();
 
         // ── Related Products (same category, different product) ──────────────
         var relatedProducts = await _db
@@ -235,18 +231,9 @@ public class ProductsController : ControllerBase
             })
             .ToListAsync();
 
-        // ── Meta Stats (views = wishlist count × 10 heuristic, favorites, purchases) ──
-        int favoritesCount = 0;
-        int purchaseCount = 0;
-        try
-        {
-            favoritesCount = await _db.WishlistItems.CountAsync(w => w.ProductId == id);
-            purchaseCount = await _db.OrderItems.CountAsync(i => i.ProductId == id);
-        }
-        catch (Exception)
-        {
-            // WishlistItems veya OrderItems henüz migrate edilmemiş olabilir.
-        }
+        // ── Meta Stats (views = wishlist count × heuristic, favorites, purchases) ──
+        var favoritesCount = await _db.WishlistItems.CountAsync(w => w.ProductId == id);
+        var purchaseCount = await _db.OrderItems.CountAsync(i => i.ProductId == id);
 
         // ── Shipping info (from merchant handling hours + product price) ──────
         var freeShipping = product.Price >= 500m;
@@ -676,7 +663,7 @@ public class ProductsController : ControllerBase
         );
     }
 
-    /// <summary>Ürün oluştur (Admin veya Merchant)</summary>
+    /// <summary>Ürün oluştur (Admin veya Merchant) — CreateProductCommand üzerinden işlenir</summary>
     [HttpPost]
     [Authorize(Policy = "AdminOrMerchant")]
     public async Task<IActionResult> Create([FromBody] CreateProductRequest dto)
@@ -689,105 +676,39 @@ public class ProductsController : ControllerBase
         if (!categoryExists)
             return BadRequest(new { message = "Geçersiz kategori." });
 
-        // MerchantId belirleme: admin başkası adına ekleyebilir, merchant sadece kendisi
-        Guid merchantId;
-        var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-        if (userRole == "Admin")
+        try
         {
-            // Admin: dto'da MerchantId verilmişse onu kullan, yoksa kendi profilini bul
-            if (dto.MerchantId.HasValue)
-            {
-                var merchantExists = await _db.MerchantProfiles.AnyAsync(m =>
-                    m.Id == dto.MerchantId.Value
-                );
-                if (!merchantExists)
-                    return BadRequest(new { message = "Belirtilen merchant bulunamadı." });
-                merchantId = dto.MerchantId.Value;
-            }
-            else
-            {
-                var adminMerchant = await _db
-                    .MerchantProfiles.Where(m => m.UserId == Guid.Parse(userIdClaim!))
-                    .FirstOrDefaultAsync();
-                if (adminMerchant == null)
+            var command = new CreateProductCommand(
+                Name: dto.Name,
+                Description: dto.Description,
+                CategoryId: dto.CategoryId,
+                Price: dto.Price,
+                Stock: dto.Stock,
+                MerchantId: dto.MerchantId,
+                Images: dto.Images,
+                Tags: dto.Tags,
+                ShortDescription: dto.ShortDescription,
+                PublishToMarket: dto.PublishToMarket,
+                PublishToStore: dto.PublishToStore
+            );
+
+            var result = await _mediator.Send(command);
+
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = result.Id },
+                new
                 {
-                    var fallback = await _db.MerchantProfiles.FirstOrDefaultAsync(m => m.IsActive);
-                    if (fallback == null)
-                        return BadRequest(
-                            new
-                            {
-                                message = "Ürün eklemek için en az bir merchant gerekli. MerchantId gönderin.",
-                            }
-                        );
-                    merchantId = fallback.Id;
+                    result.Id,
+                    result.Name,
+                    result.IsApproved,
                 }
-                else
-                {
-                    merchantId = adminMerchant.Id;
-                }
-            }
+            );
         }
-        else
+        catch (InvalidOperationException ex)
         {
-            // Merchant: kendi profilini bul
-            var merchant = await _db
-                .MerchantProfiles.Include(m => m.Subscription)
-                .FirstOrDefaultAsync(m => m.UserId == Guid.Parse(userIdClaim!));
-            if (merchant == null)
-                return Forbid();
-            merchantId = merchant.Id;
-
-            // Plan kontrolü: PublishToMarket sadece Pro+ planlarda
-            if (dto.PublishToMarket)
-            {
-                var plan = merchant.Subscription?.Plan ?? api.Domain.Enums.PlanType.Basic;
-                if (plan == api.Domain.Enums.PlanType.Basic)
-                    return BadRequest(
-                        new ApiResponse<string>(
-                            "Marketplace'e ürün yayınlamak için Pro veya Enterprise planı gereklidir."
-                        )
-                    );
-            }
+            return BadRequest(new ApiResponse<string>(ex.Message));
         }
-
-        var product = new Product
-        {
-            Id = Guid.NewGuid(),
-            MerchantId = merchantId,
-            Name = dto.Name.Trim(),
-            Description = dto.Description.Trim(),
-            ShortDescription = dto.ShortDescription?.Trim(),
-            CategoryId = dto.CategoryId,
-            Images = dto.Images ?? new List<string>(),
-            Tags = dto.Tags ?? new List<string>(),
-            Price = dto.Price,
-            Stock = dto.Stock,
-            PublishToMarket = dto.PublishToMarket,
-            PublishToStore = dto.PublishToStore,
-            IsApproved = userRole == "Admin",
-            IsDeleted = false,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
-
-        _db.Products.Add(product);
-        await _db.SaveChangesAsync();
-
-        return CreatedAtAction(
-            nameof(GetById),
-            new { id = product.Id },
-            new
-            {
-                product.Id,
-                product.Name,
-                product.Price,
-                product.Stock,
-                product.IsApproved,
-                product.MerchantId,
-            }
-        );
     }
 
     /// <summary>Onay bekleyen ürünler</summary>
@@ -987,20 +908,11 @@ public class ProductsController : ControllerBase
             .CountAsync();
 
         // Ortalama puan (tüm ürünler üzerinden)
-        double avgRating = 0.0;
-        int reviewCount = 0;
-        try
-        {
-            var allReviews = await _db
-                .Reviews.Where(r => r.Product.MerchantId == merchant.Id)
-                .ToListAsync();
-            avgRating = allReviews.Count > 0 ? allReviews.Average(r => r.Rating) : 0.0;
-            reviewCount = allReviews.Count;
-        }
-        catch (Exception)
-        {
-            // Reviews tablosu henüz migrate edilmemiş olabilir.
-        }
+        var allReviews = await _db
+            .Reviews.Where(r => r.Product.MerchantId == merchant.Id)
+            .ToListAsync();
+        var avgRating = allReviews.Count > 0 ? allReviews.Average(r => r.Rating) : 0.0;
+        var reviewCount = allReviews.Count;
 
         // Mağaza aktiflik süresi
         var memberSinceDays = (int)(DateTime.UtcNow - merchant.CreatedAt).TotalDays;

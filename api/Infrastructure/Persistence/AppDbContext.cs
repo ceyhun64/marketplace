@@ -174,7 +174,7 @@ public class AppDbContext : DbContext
         modelBuilder
             .Entity<Review>()
             .HasOne(r => r.Product)
-            .WithMany()
+            .WithMany(p => p.Reviews)
             .HasForeignKey(r => r.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
 
@@ -201,9 +201,17 @@ public class AppDbContext : DbContext
         modelBuilder
             .Entity<OrderItem>()
             .HasOne(i => i.Product)
-            .WithMany()
+            .WithMany(p => p.OrderItems)
             .HasForeignKey(i => i.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // ── WishlistItem → Product (N:1) ──────────────────────────────────────
+        modelBuilder
+            .Entity<WishlistItem>()
+            .HasOne(w => w.Product)
+            .WithMany(p => p.WishlistItems)
+            .HasForeignKey(w => w.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // ── decimal precision ─────────────────────────────────────────────────
         modelBuilder.Entity<Order>().Property(o => o.TotalAmount).HasColumnType("decimal(18,2)");

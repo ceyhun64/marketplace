@@ -34,6 +34,16 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,12 +54,10 @@ jobs:
           dotnet-version: "10.0.x"
 
       - name: Restore NuGet packages
-        working-directory: ./api
-        run: dotnet restore
+        run: dotnet restore marketplace.sln
 
       - name: Build
-        working-directory: ./api
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build marketplace.sln --no-restore --configuration Release
 
       - name: Run migrations (test DB)
         working-directory: ./api
@@ -58,13 +66,13 @@ jobs:
         run: dotnet ef database update --no-build
 
       - name: Run tests
-        working-directory: ./api
         env:
           DATABASE_URL: "Host=localhost;Port=5432;Database=marketplace_test;Username=postgres;Password=postgres"
+          REDIS_URL: "redis://localhost:6379"
           JWT_SECRET: "test-secret-key-for-ci-minimum-32-chars!!"
           JWT_ISSUER: "https://localhost"
           JWT_AUDIENCE: "https://localhost"
-        run: dotnet test --no-build --configuration Release --verbosity normal
+        run: dotnet test marketplace.sln --no-build --configuration Release --verbosity normal
 
   # ─────────────────────────────────────────
   # JOB 2: Next.js Build

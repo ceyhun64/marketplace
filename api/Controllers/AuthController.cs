@@ -479,6 +479,13 @@ public class AuthController : ControllerBase
         User user
     )
     {
+        // MerchantProfile navigation property token claim için gereklidir.
+        // Yüklenmemişse burada eagerly yükle — merchantId claim eksikliği önlenir.
+        if (user.MerchantProfile is null && user.Role == UserRole.Merchant)
+        {
+            await _db.Entry(user).Reference(u => u.MerchantProfile).LoadAsync();
+        }
+
         var accessToken = _tokenService.GenerateAccessToken(user);
         var refreshToken = _tokenService.GenerateRefreshToken();
         var expiresDays = int.TryParse(_config["REFRESH_EXPIRES_DAYS"], out var d) ? d : 7;

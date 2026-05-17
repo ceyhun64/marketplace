@@ -1,5 +1,6 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
   images: {
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
@@ -38,4 +39,4 @@ const nextConfig = {
   serverExternalPackages: [],
 };
 
-module.exports = nextConfig;
+export default nextConfig;

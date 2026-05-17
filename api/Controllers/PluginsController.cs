@@ -111,15 +111,16 @@ public class PluginsController : ControllerBase
     }
 
     /// <summary>
-    /// DELETE /api/plugins/{id}/deactivate
-    /// Merchant plugin aboneliğini iptal eder.
+    /// PATCH /api/plugins/{id}/deactivate
+    /// Plugin'i geçici olarak deaktive eder — aboneliği SİLMEZ, sadece IsActive=false yapar.
+    /// Aboneliği tamamen iptal etmek için DELETE /api/plugins/{id}/subscribe kullanın.
     /// Frontend: useDeactivatePlugin mutation
     /// </summary>
-    [HttpDelete("{id:guid}/deactivate")]
+    [HttpPatch("{id:guid}/deactivate")]
     [Authorize(Policy = "MerchantOnly")]
     public async Task<IActionResult> DeactivatePlugin(Guid id)
     {
-        var result = await _mediator.Send(new UnsubscribePluginCommand(id));
+        var result = await _mediator.Send(new DeactivatePluginCommand(id));
         if (!result.Success)
             return BadRequest(new ApiResponse<string>(result.Message));
 

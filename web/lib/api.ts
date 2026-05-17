@@ -72,13 +72,17 @@ api.interceptors.response.use(
       response.data = response.data.data;
     }
 
-    // Bazı endpoint'ler { data: T } döndürür (success field yok) — onu da aç
+    // Bazı endpoint'ler { data: T } döndürür (success field yok) — onu da aç.
+    // Önceki Object.keys().length === 1 koşulu { data: [...], total: 10 } gibi
+    // iki-key response'ları kaçırıyordu. Artık yalnızca "data" key'i olan ve
+    // "total/page/limit/items" gibi pagination key'leri BULUNMAYAN yanıtları açıyoruz.
+    const PAGINATION_KEYS = ["total", "page", "limit", "items", "pages", "stores"];
     if (
       response.data !== null &&
       typeof response.data === "object" &&
       !("success" in response.data) &&
       "data" in response.data &&
-      Object.keys(response.data).length === 1
+      !PAGINATION_KEYS.some((k) => k in (response.data as object))
     ) {
       response.data = (response.data as { data: unknown }).data;
     }

@@ -6,6 +6,7 @@ using api.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace api.Controllers;
 
@@ -14,7 +15,8 @@ namespace api.Controllers;
 [Authorize]
 public class OrdersController(
     AppDbContext db,
-    ICurrentUserService currentUser
+    ICurrentUserService currentUser,
+    IFulfillmentService fulfillmentService
 ) : ControllerBase
 {
     // ─── CUSTOMER ──────────────────────────────────────────────
@@ -25,68 +27,92 @@ public class OrdersController(
     {
         var productIds = dto.Items.Select(i => i.ProductId).ToList();
 
-        var products = await db
-            .Products.Include(p => p.Merchant)
-            .Where(p => productIds.Contains(p.Id) && p.Stock > 0 && !p.IsDeleted)
-            .ToListAsync();
+        Order order = null!;
+        List<OrderItem> orderItems = new();
 
-        if (products.Count != dto.Items.Count)
-            return BadRequest(new { message = "Bazı ürünler bulunamadı veya stok yetersiz." });
-
-        decimal total = 0;
-        var orderItems = new List<OrderItem>();
-
-        foreach (var item in dto.Items)
+        // IsolationLevel.Serializable ile race condition önlenir — aynı stok eş zamanlı
+        // iki siparişe dağıtılamaz.
+        await using var transaction = await db.Database.BeginTransactionAsync(
+            IsolationLevel.Serializable);
+        try
         {
-            var product = products.First(p => p.Id == item.ProductId);
+            var products = await db
+                .Products.Include(p => p.Merchant)
+                .Where(p => productIds.Contains(p.Id) && !p.IsDeleted)
+                .ToListAsync();
 
-            if (product.Stock < item.Quantity)
-                return BadRequest(new { message = $"'{product.Name}' için yeterli stok yok." });
+            if (products.Count != dto.Items.Count)
+            {
+                await transaction.RollbackAsync();
+                return BadRequest(new { message = "Bazı ürünler bulunamadı." });
+            }
 
-            orderItems.Add(
-                new OrderItem
+            decimal total = 0;
+
+            foreach (var item in dto.Items)
+            {
+                var product = products.First(p => p.Id == item.ProductId);
+
+                if (product.Stock < item.Quantity)
                 {
-                    Id = Guid.NewGuid(),
-                    ProductId = product.Id,
-                    MerchantId = product.MerchantId,
-                    ProductName = product.Name,
-                    ProductImage = product.Images.FirstOrDefault(),
-                    UnitPrice = product.Price,
-                    Quantity = item.Quantity,
+                    await transaction.RollbackAsync();
+                    return BadRequest(new { message = $"'{product.Name}' için yeterli stok yok." });
                 }
-            );
 
-            total += product.Price * item.Quantity;
-            product.Stock -= item.Quantity;
-            product.UpdatedAt = DateTime.UtcNow;
+                orderItems.Add(
+                    new OrderItem
+                    {
+                        Id = Guid.NewGuid(),
+                        ProductId = product.Id,
+                        MerchantId = product.MerchantId,
+                        ProductName = product.Name,
+                        ProductImage = product.Images.FirstOrDefault(),
+                        UnitPrice = product.Price,
+                        Quantity = item.Quantity,
+                    }
+                );
+
+                total += product.Price * item.Quantity;
+                product.Stock -= item.Quantity;
+                product.UpdatedAt = DateTime.UtcNow;
+            }
+
+            order = new Order
+            {
+                Id = Guid.NewGuid(),
+                CustomerId = currentUser.UserId,
+                Source = Enum.Parse<OrderSource>(dto.Source),
+                Status = OrderStatus.Pending,
+                TotalAmount = total,
+                ShippingRate = Enum.Parse<ShippingRate>(dto.ShippingRate),
+                RecipientName = dto.ShippingAddress.FullName,
+                RecipientPhone = dto.ShippingAddress.Phone,
+                AddressLine = dto.ShippingAddress.AddressLine,
+                City = dto.ShippingAddress.City,
+                District = dto.ShippingAddress.District,
+                PostalCode = dto.ShippingAddress.PostalCode,
+                Items = orderItems,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+
+            db.Orders.Add(order);
+            await db.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
         }
 
-        var order = new Order
-        {
-            Id = Guid.NewGuid(),
-            CustomerId = currentUser.UserId,
-            Source = Enum.Parse<OrderSource>(dto.Source),
-            Status = OrderStatus.Pending,
-            TotalAmount = total,
-            ShippingRate = Enum.Parse<ShippingRate>(dto.ShippingRate),
-            RecipientName = dto.ShippingAddress.FullName,
-            RecipientPhone = dto.ShippingAddress.Phone,
-            AddressLine = dto.ShippingAddress.AddressLine,
-            City = dto.ShippingAddress.City,
-            District = dto.ShippingAddress.District,
-            PostalCode = dto.ShippingAddress.PostalCode,
-            Items = orderItems,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
-
-        db.Orders.Add(order);
-        await db.SaveChangesAsync();
+        // Kargo kaydını transaction dışında oluştur (external servis çağrısı)
+        await fulfillmentService.CreateShipmentForOrderAsync(order);
 
         return CreatedAtAction(
             nameof(GetOrder),
             new { id = order.Id },
-            new { orderId = order.Id, totalAmount = total }
+            new { orderId = order.Id, totalAmount = order.TotalAmount }
         );
     }
 

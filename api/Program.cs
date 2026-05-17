@@ -114,8 +114,11 @@ try
 
     // ── MediatR ───────────────────────────────────────────────────────────────
     builder.Services.AddMediatR(cfg =>
-        cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly())
-    );
+    {
+        cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+        // FluentValidation pipeline: her Send() çağrısında validator'lar otomatik tetiklenir
+        cfg.AddOpenBehavior(typeof(api.Application.Behaviours.ValidationBehaviour<,>));
+    });
 
     // ── AutoMapper ────────────────────────────────────────────────────────────
     builder.Services.AddAutoMapper(cfg => cfg.AddMaps(AppDomain.CurrentDomain.GetAssemblies()));
@@ -288,6 +291,21 @@ try
 
         await DataSeeder.SeedAsync(db);
     }
+
+    // ── Global ValidationException → 400 Bad Request ─────────────────────────
+    // FluentValidation pipeline behavior tarafından fırlatılan ValidationException'ları
+    // standart 400 yanıtına dönüştürür.
+    app.Use(async (ctx, next) =>
+    {
+        try { await next(); }
+        catch (FluentValidation.ValidationException ex)
+        {
+            ctx.Response.StatusCode = 400;
+            ctx.Response.ContentType = "application/json";
+            var errors = ex.Errors.Select(e => new { field = e.PropertyName, message = e.ErrorMessage });
+            await ctx.Response.WriteAsJsonAsync(new { success = false, errors });
+        }
+    });
 
     // ── Middleware Pipeline ───────────────────────────────────────────────────
     app.UseSwagger();
