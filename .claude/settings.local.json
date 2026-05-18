@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem \"c:\\\\PROJECTS\\\\marketplace\" | ForEach-Object { $_.Name })",
+      "PowerShell(Get-ChildItem \"c:\\\\PROJECTS\\\\marketplace\\\\api\" -Recurse -File | Where-Object { $_.Extension -in '.cs','.json','.xml' } | Select-Object -ExpandProperty FullName | Sort-Object)"
+    ]
+  }
+}

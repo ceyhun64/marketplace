@@ -2,8 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   ShoppingCart,
   Users,
@@ -15,8 +14,12 @@ import {
   DollarSign,
   AlertCircle,
   Store,
+  Activity,
+  Percent,
 } from "lucide-react";
 import Link from "next/link";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface DashboardStats {
   totalOrders: number;
@@ -33,8 +36,42 @@ interface DashboardStats {
   fulfillmentSuccessRate: number;
   activeDeliveries: number;
   totalUsers: number;
-  recentOrders?: any[];
 }
+
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+
+function StatCardSkeleton() {
+  return (
+    <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5">
+      <Skeleton className="h-7 w-7 rounded-lg mb-3" />
+      <Skeleton className="h-7 w-20 mb-1.5" />
+      <Skeleton className="h-3 w-28" />
+    </div>
+  );
+}
+
+// ── Stat card ─────────────────────────────────────────────────────────────────
+
+// Maps arbitrary color groups to our 4 semantic tokens
+const COLOR_MAP: Record<
+  string,
+  { text: string; bg: string }
+> = {
+  blue:    { text: "text-(--info)",    bg: "bg-(--info-bg)" },
+  cyan:    { text: "text-(--info)",    bg: "bg-(--info-bg)" },
+  indigo:  { text: "text-(--info)",    bg: "bg-(--info-bg)" },
+  teal:    { text: "text-(--success)", bg: "bg-(--success-bg)" },
+  green:   { text: "text-(--success)", bg: "bg-(--success-bg)" },
+  emerald: { text: "text-(--success)", bg: "bg-(--success-bg)" },
+  amber:   { text: "text-(--warning)", bg: "bg-(--warning-bg)" },
+  orange:  { text: "text-(--warning)", bg: "bg-(--warning-bg)" },
+  rose:    { text: "text-(--danger)",  bg: "bg-(--danger-bg)" },
+  red:     { text: "text-(--danger)",  bg: "bg-(--danger-bg)" },
+  violet:  { text: "text-(--info)",    bg: "bg-(--info-bg)" },
+  gray:    { text: "text-(--text-tertiary)", bg: "bg-(--off-white-2)" },
+};
+
+// ── Main Component ────────────────────────────────────────────────────────────
 
 export default function AdminDashboardPage() {
   const { data, isLoading } = useQuery({
@@ -43,195 +80,108 @@ export default function AdminDashboardPage() {
       const res = await api.get("/api/admin/dashboard");
       const d = res.data;
       return {
-        totalOrders: d.orders?.totalOrders ?? d.totalOrders ?? 0,
-        pendingOrders: d.orders?.pendingOrders ?? d.pendingOrders ?? 0,
-        ordersToday: d.orders?.ordersToday ?? d.ordersToday ?? 0,
-        ordersThisMonth: d.orders?.ordersThisMonth ?? d.ordersThisMonth ?? 0,
-        totalMerchants: d.merchants?.totalMerchants ?? d.totalMerchants ?? 0,
-        activeMerchants: d.merchants?.activeMerchants ?? d.activeMerchants ?? 0,
-        totalRevenue: d.totalRevenue ?? d.revenue?.revenueThisMonth ?? 0,
-        revenueThisMonth: d.revenue?.revenueThisMonth ?? 0,
-        totalProducts: d.totalProducts ?? 0,
-        pendingProducts: d.pendingProducts ?? 0,
-        pendingMerchants: d.pendingMerchants ?? 0,
+        totalOrders:           d.orders?.totalOrders ?? d.totalOrders ?? 0,
+        pendingOrders:         d.orders?.pendingOrders ?? d.pendingOrders ?? 0,
+        ordersToday:           d.orders?.ordersToday ?? d.ordersToday ?? 0,
+        ordersThisMonth:       d.orders?.ordersThisMonth ?? d.ordersThisMonth ?? 0,
+        totalMerchants:        d.merchants?.totalMerchants ?? d.totalMerchants ?? 0,
+        activeMerchants:       d.merchants?.activeMerchants ?? d.activeMerchants ?? 0,
+        totalRevenue:          d.totalRevenue ?? d.revenue?.revenueThisMonth ?? 0,
+        revenueThisMonth:      d.revenue?.revenueThisMonth ?? 0,
+        totalProducts:         d.totalProducts ?? 0,
+        pendingProducts:       d.pendingProducts ?? 0,
+        pendingMerchants:      d.pendingMerchants ?? 0,
         fulfillmentSuccessRate: d.fulfillmentSuccessRate ?? 0,
-        activeDeliveries: d.activeShipments ?? d.activeDeliveries ?? 0,
-        totalUsers: d.totalUsers ?? 0,
-        recentOrders: d.recentOrders,
+        activeDeliveries:      d.activeShipments ?? d.activeDeliveries ?? 0,
+        totalUsers:            d.totalUsers ?? 0,
       } as DashboardStats;
     },
   });
 
-  const stats = data || ({} as DashboardStats);
+  const s = data ?? ({} as DashboardStats);
 
   const cards = [
-    {
-      label: "Total Orders",
-      value: stats.totalOrders ?? 0,
-      icon: ShoppingCart,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
-      href: "/admin/orders",
-    },
-    {
-      label: "Pending Orders",
-      value: stats.pendingOrders ?? 0,
-      icon: Clock,
-      color: "text-amber-600",
-      bg: "bg-amber-50",
-      href: "/admin/orders",
-    },
-    {
-      label: "Orders Today",
-      value: stats.ordersToday ?? 0,
-      icon: TrendingUp,
-      color: "text-cyan-600",
-      bg: "bg-cyan-50",
-      href: "/admin/orders",
-    },
-    {
-      label: "Orders This Month",
-      value: stats.ordersThisMonth ?? 0,
-      icon: ShoppingCart,
-      color: "text-indigo-600",
-      bg: "bg-indigo-50",
-      href: "/admin/orders",
-    },
+    { label: "Total Orders",       value: s.totalOrders ?? 0,   icon: ShoppingCart, color: "blue",   href: "/admin/orders" },
+    { label: "Pending Orders",     value: s.pendingOrders ?? 0, icon: Clock,        color: "amber",  href: "/admin/orders" },
+    { label: "Orders Today",       value: s.ordersToday ?? 0,   icon: TrendingUp,   color: "cyan",   href: "/admin/orders" },
+    { label: "Orders This Month",  value: s.ordersThisMonth ?? 0, icon: ShoppingCart, color: "indigo", href: "/admin/orders" },
     {
       label: "Active Merchants",
-      value: `${stats.activeMerchants ?? 0} / ${stats.totalMerchants ?? 0}`,
-      icon: Users,
-      color: "text-violet-600",
-      bg: "bg-violet-50",
-      href: "/admin/merchants",
+      value: `${s.activeMerchants ?? 0} / ${s.totalMerchants ?? 0}`,
+      icon: Users, color: "violet", href: "/admin/merchants",
     },
-    {
-      label: "Total Users",
-      value: stats.totalUsers ?? 0,
-      icon: Users,
-      color: "text-teal-600",
-      bg: "bg-teal-50",
-      href: "/admin/users",
-    },
+    { label: "Total Users",        value: s.totalUsers ?? 0,    icon: Users,        color: "teal",   href: "/admin/users" },
     {
       label: "Total Revenue",
-      value: `₺${(stats.totalRevenue ?? 0).toLocaleString("en-US")}`,
-      icon: DollarSign,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
-      href: "/admin/analytics",
+      value: `₺${(s.totalRevenue ?? 0).toLocaleString("en-US")}`,
+      icon: DollarSign, color: "emerald", href: "/admin/analytics",
     },
     {
       label: "This Month Revenue",
-      value: `₺${(stats.revenueThisMonth ?? 0).toLocaleString("en-US")}`,
-      icon: TrendingUp,
-      color: "text-green-600",
-      bg: "bg-green-50",
-      href: "/admin/analytics",
+      value: `₺${(s.revenueThisMonth ?? 0).toLocaleString("en-US")}`,
+      icon: TrendingUp, color: "green", href: "/admin/analytics",
     },
-    {
-      label: "Total Products",
-      value: stats.totalProducts ?? 0,
-      icon: Package,
-      color: "text-cyan-600",
-      bg: "bg-cyan-50",
-      href: "/admin/products",
-    },
-    {
-      label: "Pending Approval",
-      value: stats.pendingProducts ?? 0,
-      icon: AlertCircle,
-      color: "text-rose-500",
-      bg: "bg-rose-50",
-      href: "/admin/products",
-    },
-    {
-      label: "Fulfillment Rate",
-      value: `${stats.fulfillmentSuccessRate ?? 0}%`,
-      icon: CheckCircle,
-      color: "text-teal-600",
-      bg: "bg-teal-50",
-      href: "/admin/analytics",
-    },
-    {
-      label: "Active Deliveries",
-      value: stats.activeDeliveries ?? 0,
-      icon: Truck,
-      color: "text-indigo-600",
-      bg: "bg-indigo-50",
-      href: "/admin/fulfillment",
-    },
+    { label: "Total Products",     value: s.totalProducts ?? 0,  icon: Package,     color: "cyan",   href: "/admin/products" },
+    { label: "Pending Approval",   value: s.pendingProducts ?? 0, icon: AlertCircle, color: "rose",   href: "/admin/products" },
+    { label: "Fulfillment Rate",   value: `${s.fulfillmentSuccessRate ?? 0}%`, icon: CheckCircle, color: "teal", href: "/admin/analytics" },
+    { label: "Active Deliveries",  value: s.activeDeliveries ?? 0, icon: Truck,      color: "indigo", href: "/admin/fulfillment" },
   ];
 
   const quickLinks = [
-    { href: "/admin/merchants", label: "Merchants", icon: Users },
-    {
-      href: "/admin/products",
-      label: "Review Products",
-      icon: Package,
-    },
-    { href: "/admin/categories", label: "Categories", icon: TrendingUp },
-    { href: "/admin/couriers", label: "Couriers", icon: Truck },
-    { href: "/admin/users", label: "Users", icon: Store },
-    { href: "/admin/analytics", label: "Analytics", icon: TrendingUp },
+    { href: "/admin/merchants",  label: "Merchants",   icon: Users },
+    { href: "/admin/products",   label: "Products",    icon: Package },
+    { href: "/admin/categories", label: "Categories",  icon: TrendingUp },
+    { href: "/admin/couriers",   label: "Couriers",    icon: Truck },
+    { href: "/admin/commission", label: "Commission",  icon: Percent },
+    { href: "/admin/analytics",  label: "Analytics",   icon: TrendingUp },
+    { href: "/admin/logs",       label: "Audit Logs",  icon: Activity },
   ];
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Platform overview & key metrics
+        <h1 className="text-2xl font-semibold text-(--text-primary)">Dashboard</h1>
+        <p className="text-sm text-(--text-tertiary) mt-1">
+          Platform overview &amp; key metrics
         </p>
       </div>
 
       {/* Stats Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-4 gap-4">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-xl border border-gray-100 p-5"
-            >
-              <div className="animate-pulse space-y-3">
-                <div className="h-3 bg-gray-100 rounded w-3/4" />
-                <div className="h-7 bg-gray-100 rounded w-1/2" />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-4 gap-4">
-          {cards.map((card) => (
-            <Link key={card.label} href={card.href}>
-              <div className="bg-white rounded-xl border border-gray-100 p-5 hover:border-gray-200 hover:shadow-sm transition-all cursor-pointer group">
-                <div className={`inline-flex p-2 rounded-lg ${card.bg} mb-3`}>
-                  <card.icon className={`w-4 h-4 ${card.color}`} />
-                </div>
-                <p className="text-2xl font-bold text-gray-900 mb-1">
-                  {card.value}
-                </p>
-                <p className="text-xs text-gray-500 font-medium">
-                  {card.label}
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {isLoading
+          ? Array.from({ length: 12 }).map((_, i) => <StatCardSkeleton key={i} />)
+          : cards.map((card) => {
+              const tokens = COLOR_MAP[card.color] ?? COLOR_MAP.gray;
+              return (
+                <Link key={card.label} href={card.href}>
+                  <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5 hover:border-(--border-mid) hover:shadow-sm transition-all cursor-pointer">
+                    <div className={`inline-flex p-2 rounded-lg ${tokens.bg} mb-3`}>
+                      <card.icon className={`w-4 h-4 ${tokens.text}`} />
+                    </div>
+                    <p className="text-2xl font-bold text-(--text-primary) mb-1">
+                      {card.value}
+                    </p>
+                    <p className="text-xs text-(--text-tertiary) font-medium">
+                      {card.label}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+      </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl border border-gray-100 p-6">
-        <h2 className="text-sm font-semibold text-gray-900 mb-4">
+      <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-6">
+        <h2 className="text-sm font-semibold text-(--text-primary) mb-4">
           Quick Actions
         </h2>
-        <div className="grid grid-cols-6 gap-3">
+        <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
           {quickLinks.map((link) => (
             <Link key={link.href} href={link.href}>
-              <div className="flex flex-col items-center justify-center p-4 border border-dashed border-gray-200 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all cursor-pointer gap-2">
-                <link.icon className="w-5 h-5 text-gray-400" />
-                <span className="text-xs text-gray-600 text-center font-medium">
+              <div className="flex flex-col items-center justify-center p-4 border border-dashed border-(--border-mid) rounded-xl hover:border-(--border-strong) hover:bg-(--bg-sunken) transition-all cursor-pointer gap-2">
+                <link.icon className="w-5 h-5 text-(--text-tertiary)" />
+                <span className="text-xs text-(--text-secondary) text-center font-medium leading-tight">
                   {link.label}
                 </span>
               </div>
@@ -241,23 +191,23 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Pending Merchants Alert */}
-      {(stats.pendingMerchants ?? 0) > 0 && (
-        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-center justify-between">
+      {(s.pendingMerchants ?? 0) > 0 && (
+        <div className="flex items-center justify-between px-4 py-3.5 rounded-xl border border-(--warning-border) bg-(--warning-bg)">
           <div className="flex items-center gap-3">
-            <Store className="w-5 h-5 text-orange-500 flex-shrink-0" />
+            <Store className="w-5 h-5 text-(--warning) shrink-0" />
             <div>
-              <p className="font-medium text-orange-900 text-sm">
-                {stats.pendingMerchants} merchant application
-                {stats.pendingMerchants > 1 ? "s" : ""} awaiting review
+              <p className="font-medium text-(--text-primary) text-sm">
+                {s.pendingMerchants} merchant application
+                {s.pendingMerchants! > 1 ? "s" : ""} awaiting review
               </p>
-              <p className="text-xs text-orange-700 mt-0.5">
-                New merchant applicants are waiting for approval before they can
-                list products.
+              <p className="text-xs text-(--text-secondary) mt-0.5">
+                New applicants are waiting for approval before they can list
+                products.
               </p>
             </div>
           </div>
           <Link href="/admin/merchants?tab=pending">
-            <span className="text-xs font-semibold text-orange-700 bg-orange-100 hover:bg-orange-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap">
+            <span className="text-xs font-semibold text-(--warning) bg-(--warning-bg) hover:opacity-80 border border-(--warning-border) px-3 py-1.5 rounded-lg transition-opacity cursor-pointer whitespace-nowrap">
               Review →
             </span>
           </Link>
@@ -265,22 +215,21 @@ export default function AdminDashboardPage() {
       )}
 
       {/* Pending Products Alert */}
-      {(stats.pendingProducts ?? 0) > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
+      {(s.pendingProducts ?? 0) > 0 && (
+        <div className="flex items-center justify-between px-4 py-3.5 rounded-xl border border-(--border-mid) bg-(--bg-sunken)">
           <div className="flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+            <AlertCircle className="w-5 h-5 text-(--text-tertiary) shrink-0" />
             <div>
-              <p className="font-medium text-amber-900 text-sm">
-                {stats.pendingProducts} products awaiting review
+              <p className="font-medium text-(--text-primary) text-sm">
+                {s.pendingProducts} products awaiting review
               </p>
-              <p className="text-xs text-amber-700 mt-0.5">
-                Merchant products are waiting for your approval before going
-                live.
+              <p className="text-xs text-(--text-secondary) mt-0.5">
+                Merchant products are waiting for approval before going live.
               </p>
             </div>
           </div>
-          <Link href="/admin/products/pending">
-            <span className="text-xs font-semibold text-amber-700 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap">
+          <Link href="/admin/products">
+            <span className="text-xs font-semibold text-(--text-secondary) hover:text-(--text-primary) px-3 py-1.5 rounded-lg border border-(--border-mid) hover:border-(--border-strong) transition-colors cursor-pointer whitespace-nowrap">
               Review →
             </span>
           </Link>

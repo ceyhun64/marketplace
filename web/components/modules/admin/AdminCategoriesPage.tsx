@@ -134,14 +134,14 @@ export default function AdminCategoriesPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Categories</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-semibold text-(--text-primary)">Categories</h1>
+          <p className="text-sm text-(--text-tertiary) mt-1">
             Manage root and sub-categories
           </p>
         </div>
         <Button
           onClick={() => setAddOpen(true)}
-          className="gap-2 bg-gray-900 hover:bg-gray-800 text-white"
+          className="gap-2 bg-(--charcoal) hover:bg-(--charcoal-2) text-white"
         >
           <Plus className="w-4 h-4" />
           New Category
@@ -155,37 +155,37 @@ export default function AdminCategoriesPage() {
             label: "Root Categories",
             value: rootCategories.length,
             icon: FolderOpen,
-            color: "text-blue-600",
-            bg: "bg-blue-50",
+            color: "text-(--info)",
+            bg: "bg-(--info-bg)",
           },
           {
             label: "Subcategories",
             value: categories.filter((c) => c.parentId).length,
             icon: Folder,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50",
+            color: "text-(--success)",
+            bg: "bg-(--success-bg)",
           },
           {
             label: "Total",
             value: categories.length,
             icon: Tag,
-            color: "text-violet-600",
-            bg: "bg-violet-50",
+            color: "text-(--info)",
+            bg: "bg-(--info-bg)",
           },
         ].map((s) => (
           <div
             key={s.label}
-            className="bg-white rounded-xl border border-gray-100 p-5"
+            className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5"
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+              <p className="text-xs text-(--text-tertiary) font-medium uppercase tracking-wider">
                 {s.label}
               </p>
               <div className={`p-1.5 rounded-lg ${s.bg}`}>
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+            <p className="text-2xl font-bold text-(--text-primary)">{s.value}</p>
           </div>
         ))}
       </div>
@@ -193,10 +193,10 @@ export default function AdminCategoriesPage() {
       {/* Category Tree */}
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--charcoal)" />
         </div>
       ) : rootCategories.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-100 flex flex-col items-center justify-center py-16 text-gray-400">
+        <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) flex flex-col items-center justify-center py-16 text-(--text-tertiary)">
           <FolderOpen className="w-12 h-12 mb-3 opacity-20" />
           <p className="text-sm font-medium">No categories yet</p>
           <Button
@@ -215,24 +215,24 @@ export default function AdminCategoriesPage() {
             return (
               <div
                 key={cat.id}
-                className="bg-white rounded-xl border border-gray-100 overflow-hidden"
+                className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden"
               >
                 {/* Root Category Row */}
-                <div className="flex items-center justify-between p-4 hover:bg-gray-50 border-b border-gray-100">
+                <div className="flex items-center justify-between p-4 hover:bg-(--bg-sunken) border-b border-(--border-light)">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-(--info-bg) rounded-lg flex items-center justify-center">
                       {cat.iconUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={cat.iconUrl} alt="" className="w-5 h-5" />
                       ) : (
-                        <FolderOpen className="w-4 h-4 text-blue-600" />
+                        <FolderOpen className="w-4 h-4 text-(--info)" />
                       )}
                     </div>
                     <div>
-                      <p className="font-semibold text-sm text-gray-900">
+                      <p className="font-semibold text-sm text-(--text-primary)">
                         {cat.name}
                       </p>
-                      <p className="text-xs text-gray-400">/{cat.slug}</p>
+                      <p className="text-xs text-(--text-tertiary)">/{cat.slug}</p>
                     </div>
                     <Badge variant="secondary" className="text-xs">
                       {withSubs.subCategories?.length ?? 0} sub
@@ -250,7 +250,7 @@ export default function AdminCategoriesPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-8 w-8 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                      className="h-8 w-8 p-0 text-(--danger) hover:text-(--danger) hover:bg-(--danger-bg)"
                       onClick={() => openDelete(cat)}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -260,20 +260,20 @@ export default function AdminCategoriesPage() {
 
                 {/* Sub Categories */}
                 {(withSubs.subCategories?.length ?? 0) > 0 && (
-                  <div className="divide-y divide-gray-50">
+                  <div className="divide-y divide-(--border-subtle)">
                     {withSubs.subCategories!.map((sub) => (
                       <div
                         key={sub.id}
-                        className="flex items-center justify-between px-4 py-3 pl-12 hover:bg-gray-50"
+                        className="flex items-center justify-between px-4 py-3 pl-12 hover:bg-(--bg-sunken)"
                       >
                         <div className="flex items-center gap-3">
-                          <ChevronRight className="w-3 h-3 text-gray-300" />
-                          <div className="w-6 h-6 bg-emerald-100 rounded flex items-center justify-center">
-                            <Folder className="w-3 h-3 text-emerald-600" />
+                          <ChevronRight className="w-3 h-3 text-(--charcoal-mist)" />
+                          <div className="w-6 h-6 bg-(--success-bg) rounded flex items-center justify-center">
+                            <Folder className="w-3 h-3 text-(--success)" />
                           </div>
                           <div>
-                            <p className="text-sm text-gray-700">{sub.name}</p>
-                            <p className="text-xs text-gray-400">/{sub.slug}</p>
+                            <p className="text-sm text-(--text-secondary)">{sub.name}</p>
+                            <p className="text-xs text-(--text-tertiary)">/{sub.slug}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
@@ -288,7 +288,7 @@ export default function AdminCategoriesPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-7 w-7 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                            className="h-7 w-7 p-0 text-(--danger) hover:text-(--danger) hover:bg-(--danger-bg)"
                             onClick={() => openDelete(sub)}
                           >
                             <Trash2 className="w-3 h-3" />
@@ -366,14 +366,14 @@ export default function AdminCategoriesPage() {
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-rose-500" />
+              <AlertTriangle className="w-5 h-5 text-(--danger)" />
               Delete Category
             </DialogTitle>
           </DialogHeader>
           <div className="py-2">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-(--text-secondary)">
               Are you sure you want to delete{" "}
-              <span className="font-semibold text-gray-900">
+              <span className="font-semibold text-(--text-primary)">
                 {deleteTarget?.name}
               </span>
               ? This action cannot be undone.

@@ -15,11 +15,13 @@ public class ProductsController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IMediator _mediator;
+    private readonly IConfiguration _config;
 
-    public ProductsController(AppDbContext db, IMediator mediator)
+    public ProductsController(AppDbContext db, IMediator mediator, IConfiguration config)
     {
         _db = db;
         _mediator = mediator;
+        _config = config;
     }
 
     // ── PUBLIC ──────────────────────────────────────────────────────────────
@@ -236,7 +238,10 @@ public class ProductsController : ControllerBase
         var purchaseCount = await _db.OrderItems.CountAsync(i => i.ProductId == id);
 
         // ── Shipping info (from merchant handling hours + product price) ──────
-        var freeShipping = product.Price >= 500m;
+        var freeShippingThreshold = _config.GetValue<decimal>("Shipping:FreeShippingThreshold", 500m);
+        var standardShippingCost = _config.GetValue<decimal>("Shipping:StandardCost", 29.90m);
+        var expressShippingCost = _config.GetValue<decimal>("Shipping:ExpressCost", 59.90m);
+        var freeShipping = product.Price >= freeShippingThreshold;
         var handlingHours = product.Merchant.HandlingHours;
         var estimatedMin = (int)Math.Ceiling(handlingHours / 24.0) + 1;
         var estimatedMax = estimatedMin + 2;
@@ -354,12 +359,12 @@ public class ProductsController : ControllerBase
             // Related & Brand
             RelatedProducts = relatedProducts,
             BrandProducts = brandProducts,
-            // Meta
+            // Meta — görüntülenme sayacı için gerçek ProductView tablosu gereklidir
             Meta = new
             {
-                Views = favoritesCount * 12 + purchaseCount * 5 + reviewCount * 3,
                 Favorites = favoritesCount,
                 PurchaseCount = purchaseCount,
+                ReviewCount = reviewCount,
                 LastUpdated = product.UpdatedAt,
             },
             // Shipping
@@ -367,10 +372,10 @@ public class ProductsController : ControllerBase
             {
                 FreeShipping = freeShipping,
                 EstimatedDelivery = $"{estimatedMin}–{estimatedMax} business days",
-                ShippingCost = freeShipping ? 0m : 29.90m,
+                ShippingCost = freeShipping ? 0m : standardShippingCost,
                 ExpressAvailable = true,
                 ExpressDelivery = "Next business day",
-                ExpressCost = 59.90m,
+                ExpressCost = expressShippingCost,
             },
             // Specifications (from description parsing or defaults)
             Specifications = new

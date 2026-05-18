@@ -52,19 +52,19 @@ const PLAN_CONFIG: Record<
 > = {
   BASIC: {
     label: "Basic",
-    color: "bg-gray-100 text-gray-700",
+    color: "bg-(--off-white-2) text-(--text-secondary)",
     icon: <ShieldCheck className="w-3.5 h-3.5" />,
     price: "Free",
   },
   PRO: {
     label: "Pro",
-    color: "bg-blue-100 text-blue-700",
+    color: "bg-(--info-bg) text-(--info)",
     icon: <Zap className="w-3.5 h-3.5" />,
     price: "$X/mo",
   },
   ENTERPRISE: {
     label: "Enterprise",
-    color: "bg-violet-100 text-violet-700",
+    color: "bg-(--info-bg) text-(--info)",
     icon: <Crown className="w-3.5 h-3.5" />,
     price: "Custom",
   },
@@ -138,8 +138,8 @@ export default function AdminSubscriptionsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Subscriptions</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-semibold text-(--text-primary)">Subscriptions</h1>
+        <p className="text-sm text-(--text-tertiary) mt-1">
           View and manage merchant subscription plans
         </p>
       </div>
@@ -151,44 +151,44 @@ export default function AdminSubscriptionsPage() {
             label: "Total Merchants",
             value: stats.total,
             icon: Users,
-            color: "text-gray-600",
-            bg: "bg-gray-100",
+            color: "text-(--text-secondary)",
+            bg: "bg-(--off-white-2)",
           },
           {
             label: "Pro Members",
             value: stats.pro,
             icon: Zap,
-            color: "text-blue-600",
-            bg: "bg-blue-50",
+            color: "text-(--info)",
+            bg: "bg-(--info-bg)",
           },
           {
             label: "Enterprise",
             value: stats.enterprise,
             icon: Crown,
-            color: "text-violet-600",
-            bg: "bg-violet-50",
+            color: "text-(--info)",
+            bg: "bg-(--info-bg)",
           },
           {
             label: "Monthly Revenue",
             value: `$${stats.mrr.toLocaleString()}`,
             icon: TrendingUp,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50",
+            color: "text-(--success)",
+            bg: "bg-(--success-bg)",
           },
         ].map((s) => (
           <div
             key={s.label}
-            className="bg-white rounded-xl border border-gray-100 p-5"
+            className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5"
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+              <p className="text-xs text-(--text-tertiary) font-medium uppercase tracking-wider">
                 {s.label}
               </p>
               <div className={`p-1.5 rounded-lg ${s.bg}`}>
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+            <p className="text-2xl font-bold text-(--text-primary)">{s.value}</p>
           </div>
         ))}
       </div>
@@ -231,24 +231,24 @@ export default function AdminSubscriptionsPage() {
           return (
             <div
               key={plan}
-              className="bg-white rounded-xl border border-gray-100 p-5"
+              className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5"
             >
               <div className="flex items-center justify-between mb-3">
                 <PlanBadge plan={plan} />
-                <span className="text-2xl font-bold text-gray-900">
+                <span className="text-2xl font-bold text-(--text-primary)">
                   {count}
                 </span>
               </div>
-              <p className="text-xs font-semibold text-gray-500 mb-1">
+              <p className="text-xs font-semibold text-(--text-tertiary) mb-1">
                 {cfg.price}
               </p>
               <ul className="space-y-1 mt-3">
                 {features.map((f) => (
                   <li
                     key={f}
-                    className="text-xs text-gray-600 flex items-center gap-1.5"
+                    className="text-xs text-(--text-secondary) flex items-center gap-1.5"
                   >
-                    <span className="text-emerald-500">✓</span> {f}
+                    <span className="text-(--success)">✓</span> {f}
                   </li>
                 ))}
               </ul>
@@ -260,16 +260,16 @@ export default function AdminSubscriptionsPage() {
       {/* Filters */}
       <div className="flex gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-tertiary)" />
           <Input
             placeholder="Search by merchant name or email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 border-gray-200"
+            className="pl-9 border-(--border-mid)"
           />
         </div>
         <Select value={planFilter} onValueChange={setPlanFilter}>
-          <SelectTrigger className="w-44 border-gray-200">
+          <SelectTrigger className="w-44 border-(--border-mid)">
             <SelectValue placeholder="Filter by plan" />
           </SelectTrigger>
           <SelectContent>
@@ -282,34 +282,34 @@ export default function AdminSubscriptionsPage() {
       </div>
 
       {/* Merchants Table */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <h2 className="text-sm font-semibold text-gray-900">
+      <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden">
+        <div className="px-5 py-4 border-b border-(--border-light)">
+          <h2 className="text-sm font-semibold text-(--text-primary)">
             Merchant Subscriptions
-            <span className="ml-2 text-sm font-normal text-gray-400">
+            <span className="ml-2 text-sm font-normal text-(--text-tertiary)">
               ({filtered.length} records)
             </span>
           </h2>
         </div>
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50 border-b border-gray-100">
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            <TableRow className="bg-(--bg-sunken) border-b border-(--border-light)">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Merchant
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Current Plan
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Status
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Start Date
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 End Date
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide text-right">
                 Change Plan
               </TableHead>
             </TableRow>
@@ -329,7 +329,7 @@ export default function AdminSubscriptionsPage() {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="text-center py-16 text-gray-400"
+                  className="text-center py-16 text-(--text-tertiary)"
                 >
                   <Building2 className="w-10 h-10 mx-auto mb-2 opacity-20" />
                   <p className="text-sm font-medium">No merchants found</p>
@@ -339,13 +339,13 @@ export default function AdminSubscriptionsPage() {
               filtered.map((merchant) => (
                 <TableRow
                   key={merchant.merchantId}
-                  className="hover:bg-gray-50 border-b border-gray-50"
+                  className="hover:bg-(--bg-sunken) border-b border-(--border-subtle)"
                 >
                   <TableCell>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-(--text-primary)">
                       {merchant.merchantName}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-(--text-tertiary)">
                       {merchant.merchantEmail}
                     </p>
                   </TableCell>
@@ -354,7 +354,7 @@ export default function AdminSubscriptionsPage() {
                   </TableCell>
                   <TableCell>
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-md font-medium ${merchant.status === "ACTIVE" ? "bg-emerald-50 text-emerald-700" : merchant.status === "CANCELLED" ? "bg-rose-50 text-rose-600" : "bg-gray-100 text-gray-600"}`}
+                      className={`text-xs px-2 py-0.5 rounded-md font-medium ${merchant.status === "ACTIVE" ? "bg-(--success-bg) text-(--success)" : merchant.status === "CANCELLED" ? "bg-(--danger-bg) text-(--danger)" : "bg-(--off-white-2) text-(--text-secondary)"}`}
                     >
                       {merchant.status === "ACTIVE"
                         ? "Active"
@@ -363,12 +363,12 @@ export default function AdminSubscriptionsPage() {
                           : "Expired"}
                     </span>
                   </TableCell>
-                  <TableCell className="text-xs text-gray-500">
+                  <TableCell className="text-xs text-(--text-tertiary)">
                     {merchant.startDate
                       ? new Date(merchant.startDate).toLocaleDateString("en-US")
                       : "—"}
                   </TableCell>
-                  <TableCell className="text-xs text-gray-500">
+                  <TableCell className="text-xs text-(--text-tertiary)">
                     {merchant.endDate
                       ? new Date(merchant.endDate).toLocaleDateString("en-US")
                       : "—"}
@@ -383,7 +383,7 @@ export default function AdminSubscriptionsPage() {
                         })
                       }
                     >
-                      <SelectTrigger className="w-32 h-7 text-xs border-gray-200">
+                      <SelectTrigger className="w-32 h-7 text-xs border-(--border-mid)">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

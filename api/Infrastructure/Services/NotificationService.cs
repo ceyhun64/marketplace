@@ -117,8 +117,6 @@ public class NotificationService : INotificationService
 
         try
         {
-            TwilioClient.Init(accountSid, authToken);
-
             var smsMessage = await MessageResource.CreateAsync(
                 body: message,
                 from: new PhoneNumber(fromNumber),

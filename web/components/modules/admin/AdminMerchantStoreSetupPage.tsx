@@ -165,15 +165,15 @@ export default function AdminMerchantStoreSetupPage() {
           variant="ghost"
           size="sm"
           onClick={() => router.push("/admin/merchants")}
-          className="text-gray-500"
+          className="text-(--text-tertiary)"
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Back
         </Button>
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Store Setup</h1>
+          <h1 className="text-2xl font-semibold text-(--text-primary)">Store Setup</h1>
           {merchant && (
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-(--text-tertiary) mt-0.5">
               Configuring store for {merchant.email}
             </p>
           )}
@@ -185,24 +185,24 @@ export default function AdminMerchantStoreSetupPage() {
         <div
           className={`flex items-center gap-3 p-4 rounded-xl border ${
             merchant.isSuspended
-              ? "bg-rose-50 border-rose-200"
-              : "bg-blue-50 border-blue-200"
+              ? "bg-(--danger-bg) border-(--danger-border)"
+              : "bg-(--info-bg) border-(--info-border)"
           }`}
         >
           {merchant.isSuspended ? (
-            <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0" />
+            <AlertCircle className="w-5 h-5 text-(--danger) shrink-0" />
           ) : (
-            <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
+            <CheckCircle2 className="w-5 h-5 text-(--info) shrink-0" />
           )}
           <div className="text-sm">
-            <p className="font-medium text-gray-900">
+            <p className="font-medium text-(--text-primary)">
               {merchant.storeName || "New Store"}
             </p>
-            <p className="text-gray-500">
+            <p className="text-(--text-tertiary)">
               {merchant.email} · Plan:{" "}
               <span className="font-semibold">{merchant.plan || "BASIC"}</span>
               {merchant.isSuspended && (
-                <span className="ml-2 text-rose-600 font-semibold">
+                <span className="ml-2 text-(--danger) font-semibold">
                   (Suspended)
                 </span>
               )}
@@ -213,16 +213,16 @@ export default function AdminMerchantStoreSetupPage() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Store Identity */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-6">
           <div className="flex items-center gap-2 mb-5">
-            <Store className="w-4 h-4 text-blue-500" />
-            <h2 className="text-sm font-semibold text-gray-900">Store Identity</h2>
+            <Store className="w-4 h-4 text-(--info)" />
+            <h2 className="text-sm font-semibold text-(--text-primary)">Store Identity</h2>
           </div>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="storeName">
-                  Store Name <span className="text-rose-500">*</span>
+                  Store Name <span className="text-(--danger)">*</span>
                 </Label>
                 <Input
                   id="storeName"
@@ -236,7 +236,7 @@ export default function AdminMerchantStoreSetupPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="slug">
-                  URL Slug <span className="text-rose-500">*</span>
+                  URL Slug <span className="text-(--danger)">*</span>
                 </Label>
                 <div className="flex gap-2">
                   <Input
@@ -259,9 +259,9 @@ export default function AdminMerchantStoreSetupPage() {
                   </Button>
                 </div>
                 {form.slug && (
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-(--text-tertiary)">
                     /store/
-                    <span className="text-blue-600 font-medium">
+                    <span className="text-(--info) font-medium">
                       {form.slug}
                     </span>
                   </p>
@@ -284,10 +284,10 @@ export default function AdminMerchantStoreSetupPage() {
         </div>
 
         {/* Branding */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-6">
           <div className="flex items-center gap-2 mb-5">
-            <Image className="w-4 h-4 text-violet-500" />
-            <h2 className="text-sm font-semibold text-gray-900">Branding</h2>
+            <Image className="w-4 h-4 text-(--info)" />
+            <h2 className="text-sm font-semibold text-(--text-primary)">Branding</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -304,7 +304,7 @@ export default function AdminMerchantStoreSetupPage() {
                 <img
                   src={form.logoUrl}
                   alt="Logo preview"
-                  className="h-12 w-12 object-contain rounded border border-gray-200"
+                  className="h-12 w-12 object-contain rounded border border-(--border-mid)"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = "none";
                   }}
@@ -325,7 +325,7 @@ export default function AdminMerchantStoreSetupPage() {
                 <img
                   src={form.bannerUrl}
                   alt="Banner preview"
-                  className="h-12 w-full object-cover rounded border border-gray-200"
+                  className="h-12 w-full object-cover rounded border border-(--border-mid)"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = "none";
                   }}
@@ -336,10 +336,10 @@ export default function AdminMerchantStoreSetupPage() {
         </div>
 
         {/* Domain */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-6">
           <div className="flex items-center gap-2 mb-5">
-            <Globe className="w-4 h-4 text-emerald-500" />
-            <h2 className="text-sm font-semibold text-gray-900">Domain Settings</h2>
+            <Globe className="w-4 h-4 text-(--success)" />
+            <h2 className="text-sm font-semibold text-(--text-primary)">Domain Settings</h2>
           </div>
           <div className="space-y-2">
             <Label htmlFor="customDomain">Custom Domain / Subdomain</Label>
@@ -354,17 +354,17 @@ export default function AdminMerchantStoreSetupPage() {
               }
               placeholder="store.platform.com or mycustomstore.com"
             />
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-(--text-tertiary)">
               Subdomain (Pro) or custom domain (Enterprise) — plan requirements apply.
             </p>
           </div>
         </div>
 
         {/* Location & Fulfillment */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-6">
           <div className="flex items-center gap-2 mb-5">
-            <MapPin className="w-4 h-4 text-amber-500" />
-            <h2 className="text-sm font-semibold text-gray-900">Location & Fulfillment</h2>
+            <MapPin className="w-4 h-4 text-(--warning)" />
+            <h2 className="text-sm font-semibold text-(--text-primary)">Location & Fulfillment</h2>
           </div>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -397,7 +397,7 @@ export default function AdminMerchantStoreSetupPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="handlingHours" className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-gray-400" />
+                <Clock className="w-4 h-4 text-(--text-tertiary)" />
                 Handling Time (hours)
               </Label>
               <Select
@@ -422,16 +422,16 @@ export default function AdminMerchantStoreSetupPage() {
         </div>
 
         {/* Subscription Plan */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
-          <h2 className="text-sm font-semibold text-gray-900 mb-5">Subscription Plan</h2>
+        <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-6">
+          <h2 className="text-sm font-semibold text-(--text-primary) mb-5">Subscription Plan</h2>
           <div className="grid grid-cols-3 gap-3">
             {(["BASIC", "PRO", "ENTERPRISE"] as const).map((plan) => (
               <label
                 key={plan}
                 className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                   form.plan === plan
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "border-(--charcoal) bg-(--bg-sunken)"
+                    : "border-(--border-mid) hover:border-(--border-strong)"
                 }`}
               >
                 <input
@@ -442,8 +442,8 @@ export default function AdminMerchantStoreSetupPage() {
                   onChange={() => setForm((prev) => ({ ...prev, plan }))}
                   className="sr-only"
                 />
-                <p className="text-sm font-semibold text-gray-900">{plan}</p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-sm font-semibold text-(--text-primary)">{plan}</p>
+                <p className="text-xs text-(--text-tertiary) mt-1">
                   {plan === "BASIC"
                     ? "Free · 50 products"
                     : plan === "PRO"
@@ -467,7 +467,7 @@ export default function AdminMerchantStoreSetupPage() {
           <Button
             type="submit"
             disabled={setupMutation.isPending}
-            className="min-w-32 bg-gray-900 hover:bg-gray-800"
+            className="min-w-32 bg-(--charcoal) hover:bg-(--charcoal-2)"
           >
             {setupMutation.isPending ? "Saving..." : "Save Store"}
           </Button>

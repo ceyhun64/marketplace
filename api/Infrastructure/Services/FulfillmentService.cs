@@ -98,10 +98,28 @@ public class FulfillmentService : IFulfillmentService
                 }
             );
 
-        _ = _notificationService.SendOrderUpdateNotificationAsync(
-            shipment.OrderId.ToString(),
-            $"Kargo durumu güncellendi: {newStatus}"
-        );
+        // Güvenli fire-and-forget — unobserved exception gizlenmez
+        var shipmentIdForLog = shipment.Id;
+        var orderIdForNotif = shipment.OrderId.ToString();
+        var statusForNotif = newStatus.ToString();
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _notificationService.SendOrderUpdateNotificationAsync(
+                    orderIdForNotif,
+                    $"Kargo durumu güncellendi: {statusForNotif}"
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Kargo durum bildirimi gönderilemedi: ShipmentId={Id}",
+                    shipmentIdForLog
+                );
+            }
+        });
     }
 
     public async Task<Shipment> CreateShipmentForOrderAsync(Order order)

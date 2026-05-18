@@ -166,17 +166,17 @@ export default function AdminPluginsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
+          <h1 className="text-2xl font-semibold text-(--text-primary)">
             Plugin Marketplace
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-(--text-tertiary) mt-1">
             Manage available plugins for merchants
           </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button
-              className="rounded-xl gap-2 bg-gray-900 hover:bg-gray-800"
+              className="rounded-xl gap-2 bg-(--charcoal) hover:bg-(--charcoal-2)"
               onClick={openCreate}
             >
               <Plus className="w-4 h-4" />
@@ -191,23 +191,23 @@ export default function AdminPluginsPage() {
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-600">
+                <Label className="text-xs font-medium text-(--text-secondary)">
                   Name
                 </Label>
                 <Input
                   placeholder="e.g. Advanced Analytics"
-                  className="rounded-xl border-gray-200"
+                  className="rounded-xl border-(--border-mid)"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-600">
+                <Label className="text-xs font-medium text-(--text-secondary)">
                   Description
                 </Label>
                 <Textarea
                   placeholder="What does this plugin do?"
-                  className="rounded-xl border-gray-200 resize-none"
+                  className="rounded-xl border-(--border-mid) resize-none"
                   rows={3}
                   value={form.description}
                   onChange={(e) =>
@@ -216,23 +216,23 @@ export default function AdminPluginsPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-600">
+                <Label className="text-xs font-medium text-(--text-secondary)">
                   Slug (URL-safe)
                 </Label>
                 <Input
                   placeholder="e.g. advanced-analytics"
-                  className="rounded-xl border-gray-200"
+                  className="rounded-xl border-(--border-mid)"
                   value={form.slug}
                   onChange={(e) => setForm({ ...form, slug: e.target.value })}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-600">
+                  <Label className="text-xs font-medium text-(--text-secondary)">
                     Minimum Plan
                   </Label>
                   <select
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    className="w-full border border-(--border-mid) rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
                     value={form.minimumPlan}
                     onChange={(e) =>
                       setForm({ ...form, minimumPlan: e.target.value })
@@ -244,14 +244,14 @@ export default function AdminPluginsPage() {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-600">
+                  <Label className="text-xs font-medium text-(--text-secondary)">
                     Monthly Price ($)
                   </Label>
                   <Input
                     type="number"
                     min={0}
                     placeholder="0"
-                    className="rounded-xl border-gray-200"
+                    className="rounded-xl border-(--border-mid)"
                     value={form.monthlyPrice}
                     onChange={(e) =>
                       setForm({
@@ -263,11 +263,11 @@ export default function AdminPluginsPage() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-600">
+                <Label className="text-xs font-medium text-(--text-secondary)">
                   Category
                 </Label>
                 <select
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="w-full border border-(--border-mid) rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
                   value={form.category}
                   onChange={(e) =>
                     setForm({ ...form, category: e.target.value })
@@ -282,7 +282,7 @@ export default function AdminPluginsPage() {
                 </select>
               </div>
               <Button
-                className="w-full rounded-xl bg-gray-900 hover:bg-gray-800"
+                className="w-full rounded-xl bg-(--charcoal) hover:bg-(--charcoal-2)"
                 onClick={handleSubmit}
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
@@ -294,13 +294,13 @@ export default function AdminPluginsPage() {
       </div>
 
       {/* Search */}
-      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="p-4 border-b border-gray-100">
+      <div className="bg-(--bg-surface) border border-(--border-light) rounded-2xl shadow-sm">
+        <div className="p-4 border-b border-(--border-light)">
           <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-tertiary)" />
             <Input
               placeholder="Search plugins..."
-              className="pl-9 rounded-xl border-gray-200"
+              className="pl-9 rounded-xl border-(--border-mid)"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -309,26 +309,26 @@ export default function AdminPluginsPage() {
 
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead className="font-semibold text-gray-600 text-xs uppercase">
+            <TableRow className="bg-(--bg-sunken)">
+              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
                 Plugin
               </TableHead>
-              <TableHead className="font-semibold text-gray-600 text-xs uppercase">
+              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
                 Category
               </TableHead>
-              <TableHead className="font-semibold text-gray-600 text-xs uppercase">
+              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
                 Min Plan
               </TableHead>
-              <TableHead className="font-semibold text-gray-600 text-xs uppercase">
+              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
                 Price/mo
               </TableHead>
-              <TableHead className="font-semibold text-gray-600 text-xs uppercase">
+              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
                 Featured
               </TableHead>
-              <TableHead className="font-semibold text-gray-600 text-xs uppercase">
+              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
                 Status
               </TableHead>
-              <TableHead className="font-semibold text-gray-600 text-xs uppercase">
+              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
                 Actions
               </TableHead>
             </TableRow>
@@ -347,35 +347,35 @@ export default function AdminPluginsPage() {
               : (plugins ?? []).map((p) => (
                   <TableRow
                     key={p.id}
-                    className="hover:bg-gray-50 transition-colors"
+                    className="hover:bg-(--bg-sunken) transition-colors"
                   >
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                          <Puzzle className="w-4 h-4 text-gray-500" />
+                        <div className="w-8 h-8 rounded-lg bg-(--off-white-2) flex items-center justify-center">
+                          <Puzzle className="w-4 h-4 text-(--text-tertiary)" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-(--text-primary)">
                             {p.name}
                           </p>
-                          <p className="text-xs text-gray-400 max-w-[200px] truncate">
+                          <p className="text-xs text-(--text-tertiary) max-w-[200px] truncate">
                             {p.description}
                           </p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full capitalize">
+                      <span className="text-xs bg-(--off-white-2) text-(--text-secondary) px-2 py-1 rounded-full capitalize">
                         {p.category}
                       </span>
                     </TableCell>
-                    <TableCell className="text-sm text-gray-600">
+                    <TableCell className="text-sm text-(--text-secondary)">
                       {p.minimumPlan}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        <DollarSign className="w-3.5 h-3.5 text-green-500" />
-                        <span className="text-sm font-semibold text-gray-900">
+                        <DollarSign className="w-3.5 h-3.5 text-(--success)" />
+                        <span className="text-sm font-semibold text-(--text-primary)">
                           {p.monthlyPrice === 0
                             ? "Free"
                             : `$${p.monthlyPrice}/mo`}
@@ -388,7 +388,7 @@ export default function AdminPluginsPage() {
                           Featured
                         </span>
                       ) : (
-                        <span className="text-xs text-gray-400">—</span>
+                        <span className="text-xs text-(--text-tertiary)">—</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -403,15 +403,15 @@ export default function AdminPluginsPage() {
                       >
                         {p.isActive ? (
                           <>
-                            <ToggleRight className="w-5 h-5 text-green-500" />
-                            <span className="text-xs font-medium text-green-600">
+                            <ToggleRight className="w-5 h-5 text-(--success)" />
+                            <span className="text-xs font-medium text-(--success)">
                               Active
                             </span>
                           </>
                         ) : (
                           <>
-                            <ToggleLeft className="w-5 h-5 text-gray-400" />
-                            <span className="text-xs font-medium text-gray-400">
+                            <ToggleLeft className="w-5 h-5 text-(--text-tertiary)" />
+                            <span className="text-xs font-medium text-(--text-tertiary)">
                               Inactive
                             </span>
                           </>
@@ -426,7 +426,7 @@ export default function AdminPluginsPage() {
                           className="h-7 w-7 p-0 rounded-lg"
                           onClick={() => openEdit(p)}
                         >
-                          <Pencil className="w-3.5 h-3.5 text-gray-500" />
+                          <Pencil className="w-3.5 h-3.5 text-(--text-tertiary)" />
                         </Button>
                         <Button
                           size="sm"
@@ -452,7 +452,7 @@ export default function AdminPluginsPage() {
         </Table>
 
         {!isLoading && (plugins ?? []).length === 0 && (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-16 text-(--text-tertiary)">
             <Puzzle className="w-10 h-10 mx-auto mb-3 opacity-30" />
             <p className="text-sm">No plugins found</p>
             <p className="text-xs mt-1">

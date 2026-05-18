@@ -656,6 +656,155 @@ public class AdminController : ControllerBase
         );
     }
 
+    // ── COMMISSION SETTINGS ──────────────────────────────────────────────────
+
+    /// <summary>Platform komisyon ve ücret yapılandırmasını döner.</summary>
+    [HttpGet("settings/commission")]
+    public IActionResult GetCommissionSettings()
+    {
+        return Ok(new
+        {
+            marketplaceFeePercent        = _config.GetValue<decimal>("Commission:MarketplaceFeePercent", 8.0m),
+            paymentProcessingFeePercent  = _config.GetValue<decimal>("Commission:PaymentProcessingFeePercent", 2.9m),
+            paymentProcessingFlatFee     = _config.GetValue<decimal>("Commission:PaymentProcessingFlatFee", 0.30m),
+            subscriptionBasicMonthly     = _config.GetValue<decimal>("Commission:SubscriptionBasicMonthly", 0m),
+            subscriptionProMonthly       = _config.GetValue<decimal>("Commission:SubscriptionProMonthly", 299m),
+            subscriptionEnterpriseMonthly = _config.GetValue<decimal>("Commission:SubscriptionEnterpriseMonthly", 799m),
+            refundFeePercent             = _config.GetValue<decimal>("Commission:RefundFeePercent", 0m),
+            currencyCode                 = _config["Commission:CurrencyCode"] ?? "TRY",
+            updatedAt                    = DateTime.UtcNow,
+        });
+    }
+
+    // ── AUDIT LOGS ────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Son platform aktivitelerinden derlenen denetim kaydı.
+    /// Ayrı bir log tablosu olmadan mevcut DB'den türetilir.
+    /// </summary>
+    [HttpGet("logs")]
+    public async Task<IActionResult> GetAuditLogs(
+        [FromQuery] int page  = 1,
+        [FromQuery] int limit = 50,
+        [FromQuery] string? eventType = null
+    )
+    {
+        var events = new List<AuditLogEntry>();
+
+        // Sipariş olayları
+        if (eventType is null or "order")
+        {
+            var orders = await _db.Orders
+                .OrderByDescending(o => o.UpdatedAt)
+                .Take(200)
+                .Select(o => new { o.Id, o.Status, o.TotalAmount, o.UpdatedAt, o.CreatedAt, o.CustomerId })
+                .ToListAsync();
+
+            foreach (var o in orders)
+            {
+                events.Add(new AuditLogEntry(
+                    Id:          Guid.NewGuid(),
+                    EventType:   "order",
+                    Severity:    "info",
+                    Message:     $"Order {o.Id.ToString()[..8].ToUpper()} → {o.Status} (₺{o.TotalAmount:F2})",
+                    ActorId:     o.CustomerId,
+                    ResourceId:  o.Id,
+                    OccurredAt:  o.UpdatedAt
+                ));
+            }
+        }
+
+        // Kullanıcı kayıt olayları
+        if (eventType is null or "user")
+        {
+            var users = await _db.Users
+                .Where(u => !u.IsDeleted)
+                .OrderByDescending(u => u.CreatedAt)
+                .Take(100)
+                .Select(u => new { u.Id, u.Email, u.Role, u.AccountStatus, u.CreatedAt })
+                .ToListAsync();
+
+            foreach (var u in users)
+            {
+                events.Add(new AuditLogEntry(
+                    Id:          Guid.NewGuid(),
+                    EventType:   "user",
+                    Severity:    u.AccountStatus == AccountStatus.Suspended ? "warning" : "info",
+                    Message:     $"User registered: {u.Email} [{u.Role}] — status: {u.AccountStatus}",
+                    ActorId:     u.Id,
+                    ResourceId:  u.Id,
+                    OccurredAt:  u.CreatedAt
+                ));
+            }
+        }
+
+        // Merchant başvuru / durum olayları
+        if (eventType is null or "merchant")
+        {
+            var merchants = await _db.MerchantProfiles
+                .Include(m => m.User)
+                .OrderByDescending(m => m.UpdatedAt)
+                .Take(100)
+                .Select(m => new { m.Id, m.StoreName, m.IsActive, m.UpdatedAt, m.CreatedAt, UserEmail = m.User.Email, UserId = m.User.Id, UserStatus = m.User.AccountStatus })
+                .ToListAsync();
+
+            foreach (var m in merchants)
+            {
+                var severity = !m.IsActive ? "warning"
+                    : m.UserStatus == AccountStatus.PendingApproval ? "warning"
+                    : "info";
+                events.Add(new AuditLogEntry(
+                    Id:          Guid.NewGuid(),
+                    EventType:   "merchant",
+                    Severity:    severity,
+                    Message:     $"Merchant '{m.StoreName}' ({m.UserEmail}) — active: {m.IsActive}, status: {m.UserStatus}",
+                    ActorId:     m.UserId,
+                    ResourceId:  m.Id,
+                    OccurredAt:  m.UpdatedAt
+                ));
+            }
+        }
+
+        // Ürün onay/red olayları
+        if (eventType is null or "product")
+        {
+            var products = await _db.Products
+                .Where(p => !p.IsDeleted)
+                .OrderByDescending(p => p.UpdatedAt)
+                .Take(100)
+                .Select(p => new { p.Id, p.Name, p.IsApproved, p.UpdatedAt, MerchantId = p.MerchantId })
+                .ToListAsync();
+
+            foreach (var p in products)
+            {
+                events.Add(new AuditLogEntry(
+                    Id:          Guid.NewGuid(),
+                    EventType:   "product",
+                    Severity:    p.IsApproved ? "info" : "warning",
+                    Message:     $"Product '{p.Name}' — approved: {p.IsApproved}",
+                    ActorId:     p.MerchantId,
+                    ResourceId:  p.Id,
+                    OccurredAt:  p.UpdatedAt
+                ));
+            }
+        }
+
+        // Tarihe göre sırala, sayfalandır
+        var sorted = events
+            .OrderByDescending(e => e.OccurredAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .ToList();
+
+        return Ok(new
+        {
+            total = events.Count,
+            page,
+            limit,
+            items = sorted,
+        });
+    }
+
     // ── USERS ─────────────────────────────────────────────────────────────────
 
     [HttpGet("users")]
@@ -743,4 +892,14 @@ public record AdminStoreSetupDto(
     int? HandlingHours,
     double? Latitude,
     double? Longitude
+);
+
+public record AuditLogEntry(
+    Guid   Id,
+    string EventType,
+    string Severity,
+    string Message,
+    Guid   ActorId,
+    Guid   ResourceId,
+    DateTime OccurredAt
 );

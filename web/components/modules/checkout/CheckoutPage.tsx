@@ -18,6 +18,7 @@ import {
   Loader2,
   CheckCircle2,
   Package,
+  AlertCircle,
 } from "lucide-react";
 import api from "@/lib/api";
 import { CITY_COORDINATES } from "@/lib/constants";
@@ -71,13 +72,16 @@ const STEP_CONFIG: Record<
   },
 };
 
-function validateAddress(form: Partial<ShippingAddress>): string | null {
-  if (!form.fullName?.trim()) return "Full name is required.";
-  if (!form.phone?.trim()) return "Phone number is required.";
-  if (!form.addressLine?.trim()) return "Address is required.";
-  if (!form.city?.trim()) return "City is required.";
-  if (!form.postalCode?.trim()) return "Postal code is required.";
-  return null;
+type AddressErrors = Partial<Record<keyof ShippingAddress, string>>;
+
+function validateAddress(form: Partial<ShippingAddress>): AddressErrors {
+  const errors: AddressErrors = {};
+  if (!form.fullName?.trim()) errors.fullName = "Full name is required.";
+  if (!form.phone?.trim()) errors.phone = "Phone number is required.";
+  if (!form.addressLine?.trim()) errors.addressLine = "Address is required.";
+  if (!form.city?.trim()) errors.city = "City is required.";
+  if (!form.postalCode?.trim()) errors.postalCode = "Postal code is required.";
+  return errors;
 }
 
 // ── Step Indicator ──────────────────────────────────────────────────────────
@@ -95,7 +99,7 @@ function StepIndicator({ current }: { current: Step }) {
             <div className="flex items-center gap-3 flex-1">
               {/* Circle */}
               <div
-                className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300"
+                className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all duration-300"
                 style={{
                   background: done
                     ? "var(--red)"
@@ -172,21 +176,36 @@ function AddressStep({
   onChange: (v: Partial<ShippingAddress>) => void;
   onNext: () => void;
 }) {
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<AddressErrors>({});
 
   const handleNext = () => {
-    const err = validateAddress(value);
-    if (err) return setError(err);
-    setError(null);
+    const errs = validateAddress(value);
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
+    setErrors({});
     onNext();
   };
 
+  const clearField = (field: keyof AddressErrors) =>
+    setErrors((prev) => { const next = { ...prev }; delete next[field]; return next; });
+
+  const inputStyle = (field: keyof AddressErrors): React.CSSProperties => ({
+    ...fieldStyle,
+    borderColor: errors[field] ? "var(--red)" : "rgba(51,51,51,0.15)",
+  });
+
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.currentTarget.style.borderColor = "var(--charcoal)";
+    if (!errors[e.currentTarget.name as keyof AddressErrors]) {
+      e.currentTarget.style.borderColor = "var(--charcoal)";
+    }
     e.currentTarget.style.background = "#fff";
   };
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.currentTarget.style.borderColor = "rgba(51,51,51,0.15)";
+    if (!errors[e.currentTarget.name as keyof AddressErrors]) {
+      e.currentTarget.style.borderColor = "rgba(51,51,51,0.15)";
+    }
     e.currentTarget.style.background = "var(--off-white)";
   };
 
@@ -194,97 +213,98 @@ function AddressStep({
     <div className="space-y-5">
       <div>
         <h2
-          className="text-[1.4rem] font-normal text-[var(--charcoal)] mb-1"
+          className="text-[1.4rem] font-normal text-(--charcoal) mb-1"
           style={{ fontFamily: "var(--font-display)" }}
         >
           Delivery <em style={{ color: "var(--red)" }}>Address</em>
         </h2>
-        <p className="font-mono text-[11px] text-[var(--charcoal-soft)]">
+        <p className="font-mono text-[11px] text-(--charcoal-soft)">
           Fill in your shipping details below
         </p>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
+        {/* Full Name */}
         <div>
-          <label
-            className="font-mono text-[10px] uppercase tracking-[0.15em] mb-2 block"
-            style={{ color: "var(--charcoal-soft)" }}
-          >
+          <label className="font-mono text-[10px] uppercase tracking-[0.15em] mb-2 block" style={{ color: "var(--charcoal-soft)" }}>
             Full Name *
           </label>
           <input
+            name="fullName"
             type="text"
             value={value.fullName ?? ""}
-            onChange={(e) => onChange({ ...value, fullName: e.target.value })}
+            onChange={(e) => { onChange({ ...value, fullName: e.target.value }); clearField("fullName"); }}
             placeholder="Ayşe Yılmaz"
-            style={fieldStyle}
+            style={inputStyle("fullName")}
             onFocus={handleFocus}
             onBlur={handleBlur}
           />
+          {errors.fullName && <p className="mt-1 text-[11px] font-mono" style={{ color: "var(--red)" }}>{errors.fullName}</p>}
         </div>
+
+        {/* Phone */}
         <div>
-          <label
-            className="font-mono text-[10px] uppercase tracking-[0.15em] mb-2 block"
-            style={{ color: "var(--charcoal-soft)" }}
-          >
+          <label className="font-mono text-[10px] uppercase tracking-[0.15em] mb-2 block" style={{ color: "var(--charcoal-soft)" }}>
             Phone *
           </label>
           <input
+            name="phone"
             type="tel"
             value={value.phone ?? ""}
-            onChange={(e) => onChange({ ...value, phone: e.target.value })}
+            onChange={(e) => { onChange({ ...value, phone: e.target.value }); clearField("phone"); }}
             placeholder="+90 5xx xxx xx xx"
-            style={fieldStyle}
+            style={inputStyle("phone")}
             onFocus={handleFocus}
             onBlur={handleBlur}
           />
+          {errors.phone && <p className="mt-1 text-[11px] font-mono" style={{ color: "var(--red)" }}>{errors.phone}</p>}
         </div>
       </div>
 
+      {/* Address Line */}
       <div>
-        <label
-          className="font-mono text-[10px] uppercase tracking-[0.15em] mb-2 block"
-          style={{ color: "var(--charcoal-soft)" }}
-        >
+        <label className="font-mono text-[10px] uppercase tracking-[0.15em] mb-2 block" style={{ color: "var(--charcoal-soft)" }}>
           Address *
         </label>
         <input
+          name="addressLine"
           type="text"
           value={value.addressLine ?? ""}
-          onChange={(e) => onChange({ ...value, addressLine: e.target.value })}
+          onChange={(e) => { onChange({ ...value, addressLine: e.target.value }); clearField("addressLine"); }}
           placeholder="Street, apartment, floor..."
-          style={fieldStyle}
+          style={inputStyle("addressLine")}
           onFocus={handleFocus}
           onBlur={handleBlur}
         />
+        {errors.addressLine && <p className="mt-1 text-[11px] font-mono" style={{ color: "var(--red)" }}>{errors.addressLine}</p>}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {/* City */}
         <div>
-          <label
-            className="font-mono text-[10px] uppercase tracking-[0.15em] mb-2 block"
-            style={{ color: "var(--charcoal-soft)" }}
-          >
+          <label className="font-mono text-[10px] uppercase tracking-[0.15em] mb-2 block" style={{ color: "var(--charcoal-soft)" }}>
             City *
           </label>
           <input
+            name="city"
             type="text"
             value={value.city ?? ""}
-            onChange={(e) => onChange({ ...value, city: e.target.value })}
+            onChange={(e) => { onChange({ ...value, city: e.target.value }); clearField("city"); }}
             placeholder="İstanbul"
-            style={fieldStyle}
+            style={inputStyle("city")}
             onFocus={handleFocus}
             onBlur={handleBlur}
           />
+          {errors.city && <p className="mt-1 text-[11px] font-mono" style={{ color: "var(--red)" }}>{errors.city}</p>}
         </div>
+
+        {/* District (optional) */}
         <div>
-          <label
-            className="font-mono text-[10px] uppercase tracking-[0.15em] mb-2 block"
-            style={{ color: "var(--charcoal-soft)" }}
-          >
+          <label className="font-mono text-[10px] uppercase tracking-[0.15em] mb-2 block" style={{ color: "var(--charcoal-soft)" }}>
             District
           </label>
           <input
+            name="district"
             type="text"
             value={value.district ?? ""}
             onChange={(e) => onChange({ ...value, district: e.target.value })}
@@ -294,39 +314,25 @@ function AddressStep({
             onBlur={handleBlur}
           />
         </div>
+
+        {/* Postal Code */}
         <div>
-          <label
-            className="font-mono text-[10px] uppercase tracking-[0.15em] mb-2 block"
-            style={{ color: "var(--charcoal-soft)" }}
-          >
+          <label className="font-mono text-[10px] uppercase tracking-[0.15em] mb-2 block" style={{ color: "var(--charcoal-soft)" }}>
             Postal Code *
           </label>
           <input
+            name="postalCode"
             type="text"
             value={value.postalCode ?? ""}
-            onChange={(e) => onChange({ ...value, postalCode: e.target.value })}
+            onChange={(e) => { onChange({ ...value, postalCode: e.target.value }); clearField("postalCode"); }}
             placeholder="34700"
-            style={fieldStyle}
+            style={inputStyle("postalCode")}
             onFocus={handleFocus}
             onBlur={handleBlur}
           />
+          {errors.postalCode && <p className="mt-1 text-[11px] font-mono" style={{ color: "var(--red)" }}>{errors.postalCode}</p>}
         </div>
       </div>
-
-      {error && (
-        <div
-          className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm"
-          style={{
-            background: "rgba(187,16,35,0.06)",
-            border: "1px solid rgba(187,16,35,0.2)",
-            color: "var(--red)",
-            fontFamily: "var(--font-body)",
-          }}
-        >
-          <span className="w-4 h-4 flex-shrink-0">⚠</span>
-          {error}
-        </div>
-      )}
 
       <button
         onClick={handleNext}
@@ -338,9 +344,7 @@ function AddressStep({
           letterSpacing: "0.02em",
         }}
         onMouseEnter={(e) => (e.currentTarget.style.background = "var(--red)")}
-        onMouseLeave={(e) =>
-          (e.currentTarget.style.background = "var(--charcoal)")
-        }
+        onMouseLeave={(e) => (e.currentTarget.style.background = "var(--charcoal)")}
       >
         Continue to Shipping
         <ArrowRight className="w-4 h-4" />
@@ -358,6 +362,7 @@ function ShippingStep({
   onChange,
   onNext,
   onBack,
+  isLoading = false,
 }: {
   address: Partial<ShippingAddress>;
   merchantId?: string;
@@ -365,19 +370,21 @@ function ShippingStep({
   onChange: (r: ShippingRate) => void;
   onNext: () => void;
   onBack: () => void;
+  isLoading?: boolean;
 }) {
   const cityCoords = resolveCityCoords(address.city);
+  const canProceed = !!value && !isLoading;
 
   return (
     <div className="space-y-6">
       <div>
         <h2
-          className="text-[1.4rem] font-normal text-[var(--charcoal)] mb-1"
+          className="text-[1.4rem] font-normal text-(--charcoal) mb-1"
           style={{ fontFamily: "var(--font-display)" }}
         >
           Shipping <em style={{ color: "var(--red)" }}>Options</em>
         </h2>
-        <p className="font-mono text-[11px] text-[var(--charcoal-soft)]">
+        <p className="font-mono text-[11px] text-(--charcoal-soft)">
           Choose how fast you want your order
         </p>
       </div>
@@ -390,25 +397,14 @@ function ShippingStep({
             border: "1px solid rgba(51,51,51,0.08)",
           }}
         >
-          <MapPin
-            className="w-4 h-4 flex-shrink-0"
-            style={{ color: "var(--red)" }}
-          />
-          <span
-            className="text-[var(--charcoal-soft)] text-[13px]"
-            style={{ fontFamily: "var(--font-body)" }}
-          >
-            {[address.addressLine, address.district, address.city]
-              .filter(Boolean)
-              .join(", ")}
+          <MapPin className="w-4 h-4 shrink-0" style={{ color: "var(--red)" }} />
+          <span className="text-(--charcoal-soft) text-[13px]" style={{ fontFamily: "var(--font-body)" }}>
+            {[address.addressLine, address.district, address.city].filter(Boolean).join(", ")}
           </span>
           {cityCoords && (
             <span
-              className="ml-auto font-mono text-[10px] px-2 py-0.5 rounded-full flex-shrink-0"
-              style={{
-                color: "#2d7a4f",
-                background: "rgba(45,122,79,0.08)",
-              }}
+              className="ml-auto font-mono text-[10px] px-2 py-0.5 rounded-full shrink-0"
+              style={{ color: "#2d7a4f", background: "rgba(45,122,79,0.08)" }}
             >
               ETA calculating
             </span>
@@ -427,7 +423,8 @@ function ShippingStep({
       <div className="flex gap-3">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-semibold transition-all"
+          disabled={isLoading}
+          className="flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
           style={{
             border: "1.5px solid rgba(51,51,51,0.15)",
             color: "var(--charcoal)",
@@ -435,14 +432,14 @@ function ShippingStep({
             fontFamily: "var(--font-body)",
           }}
           onMouseEnter={(e) => {
-            const el = e.currentTarget as HTMLElement;
-            el.style.background = "var(--off-white)";
-            el.style.borderColor = "var(--charcoal)";
+            if (!isLoading) {
+              (e.currentTarget as HTMLElement).style.background = "var(--off-white)";
+              (e.currentTarget as HTMLElement).style.borderColor = "var(--charcoal)";
+            }
           }}
           onMouseLeave={(e) => {
-            const el = e.currentTarget as HTMLElement;
-            el.style.background = "transparent";
-            el.style.borderColor = "rgba(51,51,51,0.15)";
+            (e.currentTarget as HTMLElement).style.background = "transparent";
+            (e.currentTarget as HTMLElement).style.borderColor = "rgba(51,51,51,0.15)";
           }}
         >
           <ArrowLeft className="w-4 h-4" />
@@ -450,24 +447,32 @@ function ShippingStep({
         </button>
         <button
           onClick={onNext}
-          disabled={!value}
+          disabled={!canProceed}
           className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           style={{
             background: "var(--charcoal)",
             fontFamily: "var(--font-body)",
-            boxShadow: value ? "0 4px 16px rgba(51,51,51,0.15)" : "none",
+            boxShadow: canProceed ? "0 4px 16px rgba(51,51,51,0.15)" : "none",
             letterSpacing: "0.02em",
           }}
           onMouseEnter={(e) => {
-            if (!e.currentTarget.disabled)
-              e.currentTarget.style.background = "var(--red)";
+            if (canProceed) e.currentTarget.style.background = "var(--red)";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = "var(--charcoal)";
           }}
         >
-          Continue to Payment
-          <ArrowRight className="w-4 h-4" />
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Creating order…
+            </>
+          ) : (
+            <>
+              Continue to Payment
+              <ArrowRight className="w-4 h-4" />
+            </>
+          )}
         </button>
       </div>
     </div>
@@ -574,7 +579,7 @@ export default function CheckoutPage() {
           <div className="flex items-center gap-2">
             <Package className="w-4 h-4" style={{ color: "var(--red)" }} />
             <h1
-              className="text-[1rem] font-bold text-[var(--charcoal)]"
+              className="text-[1rem] font-bold text-(--charcoal)"
               style={{ fontFamily: "var(--font-body)" }}
             >
               Checkout
@@ -624,6 +629,7 @@ export default function CheckoutPage() {
                     onChange={setShippingRate}
                     onNext={handleGoToPayment}
                     onBack={goBack}
+                    isLoading={creatingOrder}
                   />
                   {orderError && (
                     <div
@@ -635,15 +641,8 @@ export default function CheckoutPage() {
                         fontFamily: "var(--font-body)",
                       }}
                     >
-                      ⚠ {orderError}
-                    </div>
-                  )}
-                  {creatingOrder && (
-                    <div className="mt-4 flex items-center justify-center gap-2 text-sm text-[var(--charcoal-soft)]">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span style={{ fontFamily: "var(--font-body)" }}>
-                        Creating order...
-                      </span>
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      {orderError}
                     </div>
                   )}
                 </div>
@@ -654,12 +653,12 @@ export default function CheckoutPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h2
-                        className="text-[1.4rem] font-normal text-[var(--charcoal)] mb-1"
+                        className="text-[1.4rem] font-normal text-(--charcoal) mb-1"
                         style={{ fontFamily: "var(--font-display)" }}
                       >
                         Secure <em style={{ color: "var(--red)" }}>Payment</em>
                       </h2>
-                      <p className="font-mono text-[11px] text-[var(--charcoal-soft)]">
+                      <p className="font-mono text-[11px] text-(--charcoal-soft)">
                         Powered by Stripe — your data is safe
                       </p>
                     </div>
@@ -727,12 +726,12 @@ export default function CheckoutPage() {
                   <span className="text-lg">{badge.icon}</span>
                   <div>
                     <p
-                      className="text-[12px] font-bold text-[var(--charcoal)]"
+                      className="text-[12px] font-bold text-(--charcoal)"
                       style={{ fontFamily: "var(--font-body)" }}
                     >
                       {badge.title}
                     </p>
-                    <p className="font-mono text-[10px] text-[var(--charcoal-soft)]">
+                    <p className="font-mono text-[10px] text-(--charcoal-soft)">
                       {badge.desc}
                     </p>
                   </div>

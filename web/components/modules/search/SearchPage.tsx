@@ -23,6 +23,8 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
+import { useCart } from "@/hooks/use-cart";
+import { toast } from "sonner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -91,11 +93,11 @@ type ViewMode = "grid" | "list";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "relevance", label: "En Alakalı" },
-  { value: "newest", label: "En Yeni" },
-  { value: "popular", label: "En Popüler" },
-  { value: "price_asc", label: "Fiyat: Düşükten Yükseğe" },
-  { value: "price_desc", label: "Fiyat: Yüksekten Düşüğe" },
+  { value: "relevance", label: "Most Relevant" },
+  { value: "newest", label: "Newest" },
+  { value: "popular", label: "Most Popular" },
+  { value: "price_asc", label: "Price: Low to High" },
+  { value: "price_desc", label: "Price: High to Low" },
 ];
 
 const PRICE_PRESETS = [
@@ -156,6 +158,28 @@ function SearchProductCard({
   const href = `/product/${product.id}`;
   const coverImage = product.images?.[0] ?? null;
   const isOutOfStock = product.stock === 0;
+  const cart = useCart();
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isOutOfStock) return;
+    cart.addItem({
+      offerId: product.id,
+      productId: product.id,
+      productName: product.name,
+      productImage: product.images?.[0],
+      price: product.price,
+      merchantId: product.merchantId,
+      merchantStoreName: product.merchantStoreName,
+      merchantSlug: product.merchantSlug,
+      stock: product.stock,
+    });
+    toast.success("Added to cart", {
+      description: product.name,
+      duration: 2000,
+    });
+  };
 
   if (viewMode === "list") {
     return (
@@ -170,7 +194,7 @@ function SearchProductCard({
             padding: 16,
             transition: "all 0.2s",
           }}
-          className="hover:border-[var(--red)] hover:shadow-md"
+          className="hover:border-(--red) hover:shadow-md"
         >
           {/* Image */}
           <div
@@ -221,7 +245,7 @@ function SearchProductCard({
                   letterSpacing: "0.05em",
                 }}
               >
-                STOK YOK
+                OUT OF STOCK
               </div>
             )}
           </div>
@@ -334,24 +358,9 @@ function SearchProductCard({
               >
                 ₺{product.price.toLocaleString("tr-TR")}
               </div>
-              {product.score !== undefined && (
-                <div
-                  style={{
-                    fontSize: 10,
-                    color: "var(--charcoal-mist)",
-                    textAlign: "right",
-                    marginTop: 2,
-                  }}
-                >
-                  skor: {product.score.toFixed(2)}
-                </div>
-              )}
             </div>
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
+              onClick={handleAddToCart}
               style={{
                 background: "var(--red)",
                 color: "#fff",
@@ -360,7 +369,7 @@ function SearchProductCard({
                 padding: "8px 16px",
                 fontSize: 12,
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: isOutOfStock ? "not-allowed" : "pointer",
                 display: "flex",
                 alignItems: "center",
                 gap: 6,
@@ -369,7 +378,7 @@ function SearchProductCard({
               disabled={isOutOfStock}
             >
               <ShoppingCart size={14} />
-              Sepete Ekle
+              Add to Cart
             </button>
           </div>
         </div>
@@ -388,7 +397,7 @@ function SearchProductCard({
           transition: "all 0.25s",
           position: "relative",
         }}
-        className="hover:-translate-y-1 hover:shadow-lg hover:border-[var(--red)]"
+        className="hover:-translate-y-1 hover:shadow-lg hover:border-(--red)"
       >
         {/* Red hover top bar */}
         <div
@@ -465,7 +474,7 @@ function SearchProductCard({
                   borderRadius: 4,
                 }}
               >
-                STOK YOK
+                OUT OF STOCK
               </span>
             </div>
           )}
@@ -523,8 +532,7 @@ function SearchProductCard({
             </span>
             <button
               onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
+                handleAddToCart(e);
               }}
               style={{
                 width: 34,
@@ -535,11 +543,11 @@ function SearchProductCard({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                cursor: "pointer",
+                cursor: isOutOfStock ? "not-allowed" : "pointer",
                 transition: "all 0.2s",
                 color: "var(--charcoal-soft)",
               }}
-              className="hover:bg-[var(--red)] hover:border-[var(--red)] hover:text-white"
+              className="hover:bg-(--red) hover:border-(--red) hover:text-white"
               disabled={isOutOfStock}
             >
               <ShoppingCart size={14} />
@@ -816,7 +824,7 @@ export default function SearchPage() {
       params.set("limit", "20");
 
       const res = await fetch(`/api/products/search?${params.toString()}`);
-      if (!res.ok) throw new Error("Arama başarısız oldu");
+      if (!res.ok) throw new Error("Search failed. Please try again.");
       const data = await res.json();
 
       const rawItems: any[] =
@@ -923,7 +931,7 @@ export default function SearchPage() {
       }}
     >
       {/* Categories */}
-      <FilterSection title="Kategoriler">
+      <FilterSection title="Categories">
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           <li>
             <button
@@ -943,7 +951,7 @@ export default function SearchPage() {
                 transition: "all 0.15s",
               }}
             >
-              Tümü
+              All
             </button>
           </li>
           {categories.slice(0, 12).map((cat) => (
@@ -1001,7 +1009,7 @@ export default function SearchPage() {
                   marginBottom: 6,
                 }}
               >
-                Arama Sonuçlarında
+                In Results
               </div>
               {results.facets.categories.map((facet) => (
                 <button
@@ -1052,7 +1060,7 @@ export default function SearchPage() {
       </FilterSection>
 
       {/* Price Range */}
-      <FilterSection title="Fiyat Aralığı">
+      <FilterSection title="Price Range">
         <div style={{ marginBottom: 10 }}>
           {PRICE_PRESETS.map((preset) => (
             <button
@@ -1158,7 +1166,7 @@ export default function SearchPage() {
             cursor: "pointer",
           }}
         >
-          Uygula
+          Apply
         </button>
         {(minPrice || maxPrice) && (
           <button
@@ -1177,14 +1185,14 @@ export default function SearchPage() {
               cursor: "pointer",
             }}
           >
-            Fiyat filtresini kaldır
+            Clear price filter
           </button>
         )}
       </FilterSection>
 
       {/* Tags / Facets */}
       {results?.facets?.tags && results.facets.tags.length > 0 && (
-        <FilterSection title="Etiketler">
+        <FilterSection title="Tags">
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {results.facets.tags.map((facetTag) => {
               const isActive = activeTagList.includes(facetTag.key);
@@ -1272,10 +1280,10 @@ export default function SearchPage() {
               style={{ color: "inherit", textDecoration: "none" }}
               className="hover:text-white"
             >
-              Anasayfa
+              Home
             </Link>
             <ChevronRight size={12} />
-            <span style={{ color: "rgba(255,255,255,0.7)" }}>Arama</span>
+            <span style={{ color: "rgba(255,255,255,0.7)" }}>Search</span>
             {q && (
               <>
                 <ChevronRight size={12} />
@@ -1312,7 +1320,7 @@ export default function SearchPage() {
               type="text"
               value={inputValue}
               onChange={(e) => handleInputChange(e.target.value)}
-              placeholder="Ürün, kategori veya marka ara..."
+              placeholder="Search products, categories or brands..."
               style={{
                 width: "100%",
                 padding: "14px 48px 14px 48px",
@@ -1375,7 +1383,7 @@ export default function SearchPage() {
                   <strong style={{ color: "#fff" }}>
                     {results.total.toLocaleString("tr-TR")}
                   </strong>{" "}
-                  sonuç
+                  results
                 </span>
                 {results.queryTime !== undefined && (
                   <span
@@ -1395,7 +1403,7 @@ export default function SearchPage() {
                     }}
                   >
                     <Sparkles size={11} />
-                    Bunu mu demek istediniz?{" "}
+                    Did you mean?{" "}
                     <button
                       onClick={() =>
                         navigate({ q: results.suggestion, page: undefined })
@@ -1448,7 +1456,7 @@ export default function SearchPage() {
                 letterSpacing: "0.06em",
               }}
             >
-              Aktif Filtreler:
+              Active Filters:
             </span>
             {category && (
               <span
@@ -1571,7 +1579,7 @@ export default function SearchPage() {
                 fontWeight: 600,
               }}
             >
-              Tümünü Temizle
+              Clear All
             </button>
           </div>
         </div>
@@ -1626,7 +1634,7 @@ export default function SearchPage() {
               }}
             >
               <Filter size={14} />
-              Filtreler
+              Filters
               {activeFilterCount > 0 && (
                 <span
                   style={{
@@ -1865,7 +1873,7 @@ export default function SearchPage() {
                   marginBottom: 8,
                 }}
               >
-                Sonuç bulunamadı
+                No results found
               </h2>
               <p
                 style={{
@@ -1876,8 +1884,8 @@ export default function SearchPage() {
                   margin: "0 auto 24px",
                 }}
               >
-                &ldquo;<strong>{q}</strong>&rdquo; için herhangi bir ürün
-                bulunamadı. Farklı anahtar kelimeler ya da filtreler deneyin.
+                No products found for &ldquo;<strong>{q}</strong>&rdquo;.
+                Try different keywords or adjust your filters.
               </p>
               <div
                 style={{
@@ -1909,7 +1917,7 @@ export default function SearchPage() {
                     cursor: "pointer",
                   }}
                 >
-                  Filtreleri Temizle
+                  Clear Filters
                 </button>
                 <Link
                   href="/"
@@ -1925,7 +1933,7 @@ export default function SearchPage() {
                     display: "inline-block",
                   }}
                 >
-                  Anasayfaya Dön
+                  Back to Home
                 </Link>
               </div>
             </div>
@@ -1981,7 +1989,7 @@ export default function SearchPage() {
                       opacity: page <= 1 ? 0.5 : 1,
                     }}
                   >
-                    ← Önceki
+                    ← Previous
                   </button>
 
                   {Array.from({ length: Math.min(results.totalPages, 7) }).map(
@@ -2042,7 +2050,7 @@ export default function SearchPage() {
                       opacity: page >= results.totalPages ? 0.5 : 1,
                     }}
                   >
-                    Sonraki →
+                    Next →
                   </button>
                 </div>
               )}
@@ -2094,7 +2102,7 @@ export default function SearchPage() {
                   margin: 0,
                 }}
               >
-                Filtreler
+                Filters
               </h3>
               <button
                 onClick={() => setMobileFiltersOpen(false)}

@@ -65,7 +65,7 @@ public sealed record UserInfoResponse(
     Guid? MerchantId
 );
 
-public sealed record RefreshTokenResponse(string AccessToken, DateTime ExpiresAt);
+public sealed record RefreshTokenResponse(string AccessToken, DateTime ExpiresAt, string NewRefreshToken);
 
 public sealed record MessageResponse(string Message, bool Success = true);
 

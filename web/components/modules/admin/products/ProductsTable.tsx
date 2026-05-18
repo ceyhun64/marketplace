@@ -23,7 +23,7 @@ export default function ProductsTable({
 }: Props) {
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-8 text-center text-sm text-gray-400">
+      <div className="bg-(--bg-surface) border border-(--border-mid) rounded-xl p-8 text-center text-sm text-(--text-tertiary)">
         Loading...
       </div>
     );
@@ -31,16 +31,16 @@ export default function ProductsTable({
 
   if (products.length === 0) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-8 text-center text-sm text-gray-400">
+      <div className="bg-(--bg-surface) border border-(--border-mid) rounded-xl p-8 text-center text-sm text-(--text-tertiary)">
         {tab === "pending" ? "No products pending approval" : "No products added yet"}
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+    <div className="bg-(--bg-surface) border border-(--border-mid) rounded-xl overflow-hidden">
       <table className="w-full text-sm">
-        <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+        <thead className="bg-(--bg-sunken) text-xs text-(--text-tertiary) uppercase tracking-wide">
           <tr>
             {[
               "Product Name",
@@ -56,10 +56,10 @@ export default function ProductsTable({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-(--border-light)">
           {products.map((p) => (
-            <tr key={p.id} className="hover:bg-gray-50">
-              <td className="px-4 py-3 font-medium text-gray-900">
+            <tr key={p.id} className="hover:bg-(--bg-sunken)">
+              <td className="px-4 py-3 font-medium text-(--text-primary)">
                 <div className="flex items-center gap-2">
                   {p.imageUrls?.[0] && (
                     <img
@@ -71,20 +71,20 @@ export default function ProductsTable({
                   {p.name}
                 </div>
               </td>
-              <td className="px-4 py-3 text-gray-500">{getCategoryName(p)}</td>
-              <td className="px-4 py-3 text-gray-600">{p.offerCount ?? 0}</td>
+              <td className="px-4 py-3 text-(--text-tertiary)">{getCategoryName(p)}</td>
+              <td className="px-4 py-3 text-(--text-secondary)">{p.offerCount ?? 0}</td>
               <td className="px-4 py-3">
                 <span
                   className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                     p.isApproved
-                      ? "bg-green-50 text-green-700"
+                      ? "bg-(--success-bg) text-(--success)"
                       : "bg-yellow-50 text-yellow-700"
                   }`}
                 >
                   {p.isApproved ? "Approved" : "Pending"}
                 </span>
               </td>
-              <td className="px-4 py-3 text-gray-500">
+              <td className="px-4 py-3 text-(--text-tertiary)">
                 {new Date(p.createdAt).toLocaleDateString("en-US")}
               </td>
               <td className="px-4 py-3">
@@ -92,7 +92,7 @@ export default function ProductsTable({
                   {!p.isApproved && (
                     <button
                       onClick={() => onApprove(p.id)}
-                      className="text-xs text-green-600 hover:underline"
+                      className="text-xs text-(--success) hover:underline"
                     >
                       Approve
                     </button>

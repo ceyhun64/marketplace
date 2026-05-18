@@ -56,6 +56,18 @@ try
             lc.ReadFrom.Configuration(ctx.Configuration).Enrich.FromLogContext().WriteTo.Console()
     );
 
+    // ── Stripe — global API key, başlangıçta bir kez ayarlanır ──────────────
+    Stripe.StripeConfiguration.ApiKey =
+        config["STRIPE_SECRET_KEY"]
+        ?? throw new InvalidOperationException(
+            "STRIPE_SECRET_KEY ortam değişkeni tanımlı değil.");
+
+    // ── Twilio — global istemci başlatma, başlangıçta bir kez yapılır ────────
+    var twilioSid = config["TWILIO_ACCOUNT_SID"];
+    var twilioToken = config["TWILIO_AUTH_TOKEN"];
+    if (!string.IsNullOrEmpty(twilioSid) && !string.IsNullOrEmpty(twilioToken))
+        Twilio.TwilioClient.Init(twilioSid, twilioToken);
+
     // ── PostgreSQL + EF Core ──────────────────────────────────────────────────
     var npgsqlConn = ToNpgsql(config["DATABASE_URL"]!, builder.Environment.IsDevelopment());
     builder.Services.AddDbContext<AppDbContext>(opt =>
@@ -174,9 +186,24 @@ try
     builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
     builder.Services.AddInMemoryRateLimiting();
 
-    // ── CORS — geliştirme aşaması: tüm originlere izin ver ───────────────────
+    // ── CORS ─────────────────────────────────────────────────────────────────
     builder.Services.AddCors(opt =>
-        opt.AddPolicy("Frontend", p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod())
+        opt.AddPolicy("Frontend", p =>
+        {
+            if (builder.Environment.IsDevelopment())
+            {
+                p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+            }
+            else
+            {
+                var frontendOrigin = config["FRONTEND_URL"]
+                    ?? throw new InvalidOperationException(
+                        "FRONTEND_URL ortam değişkeni production ortamında tanımlı değil.");
+                p.WithOrigins(frontendOrigin)
+                 .AllowAnyHeader()
+                 .AllowAnyMethod();
+            }
+        })
     );
 
     // ── Application Services ──────────────────────────────────────────────────

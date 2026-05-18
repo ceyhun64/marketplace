@@ -5,7 +5,7 @@ import { useCategories } from "@/queries/useCategories";
 import { useCreateProduct, useUpdateProduct } from "@/queries/useProducts";
 import MultiImageUploader from "@/components/ui/multiImageUploader";
 import type { Product } from "@/types/entities";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 
 interface Props {
   product?: Product | null;
@@ -106,8 +106,9 @@ export default function ProductFormModal({
       }
       onSuccess();
       onClose();
-    } catch (e: any) {
-      setError(e?.response?.data?.message ?? "Operation failed.");
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      setError(err?.response?.data?.message ?? "Operation failed.");
     }
   };
 
@@ -118,14 +119,14 @@ export default function ProductFormModal({
       className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-[var(--bg-surface)] rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-(--bg-surface) rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--border-light)]">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-(--border-light)">
           <div>
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+            <h2 className="text-lg font-semibold text-(--text-primary)">
               {isEdit ? "Edit Product" : "Add New Product"}
             </h2>
-            <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
+            <p className="text-xs text-(--text-tertiary) mt-0.5">
               {isEdit
                 ? "Update product details"
                 : "Add a new product to your catalogue"}
@@ -133,7 +134,7 @@ export default function ProductFormModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--off-white-2)] transition-colors"
+            className="p-1.5 rounded-lg text-(--text-tertiary) hover:text-(--text-secondary) hover:bg-(--off-white-2) transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -224,8 +225,8 @@ export default function ProductFormModal({
           </Field>
 
           {/* Publish Channels */}
-          <div className="rounded-xl border border-[var(--border-light)] p-4 space-y-3 bg-[var(--bg-sunken)]/50">
-            <p className="text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-widest">
+          <div className="rounded-xl border border-(--border-light) p-4 space-y-3 bg-(--bg-sunken)/50">
+            <p className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-widest">
               Publish Channels
             </p>
             <ToggleRow
@@ -233,7 +234,7 @@ export default function ProductFormModal({
               description="Visible on your store page"
               checked={form.publishToStore}
               onChange={(v) => set("publishToStore", v)}
-              color="bg-[var(--charcoal-mid)]"
+              color="bg-(--charcoal-mid)"
             />
             <ToggleRow
               label="Publish to Marketplace"
@@ -247,7 +248,7 @@ export default function ProductFormModal({
                 if (!canPublishToMarket) return;
                 set("publishToMarket", v);
               }}
-              color="bg-[var(--info)]"
+              color="bg-(--info)"
               disabled={!canPublishToMarket}
             />
           </div>
@@ -263,20 +264,25 @@ export default function ProductFormModal({
         <div className="flex gap-3 px-6 pb-6">
           <button
             onClick={onClose}
-            className="flex-1 border border-[var(--border-mid)] text-[var(--text-secondary)] rounded-xl py-2.5 text-sm font-medium hover:bg-[var(--bg-sunken)] transition-colors"
+            className="flex-1 border border-(--border-mid) text-(--text-secondary) rounded-xl py-2.5 text-sm font-medium hover:bg-(--bg-sunken) transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="flex-1 bg-[var(--charcoal)] text-white rounded-xl py-2.5 text-sm font-medium hover:bg-[var(--charcoal-2)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 bg-(--charcoal) text-white rounded-xl py-2.5 text-sm font-medium hover:bg-(--charcoal-2) disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
-            {submitting
-              ? "Saving..."
-              : isEdit
-                ? "Update Product"
-                : "Add Product"}
+            {submitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving…
+              </>
+            ) : isEdit ? (
+              "Update Product"
+            ) : (
+              "Add Product"
+            )}
           </button>
         </div>
       </div>
@@ -286,8 +292,9 @@ export default function ProductFormModal({
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// On-brand focus: charcoal ring matching the design system
 const inputCls =
-  "w-full border border-[var(--border-mid)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors";
+  "w-full border border-(--border-mid) rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--charcoal)/15 focus:border-(--charcoal) transition-colors";
 
 function Field({
   label,
@@ -302,11 +309,13 @@ function Field({
 }) {
   return (
     <div>
-      <label className="flex items-center gap-1 text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+      <label className="flex items-center gap-1 text-sm font-medium text-(--text-secondary) mb-1.5">
         {label}
         {required && <span className="text-red-500">*</span>}
         {hint && (
-          <span className="text-[var(--text-tertiary)] font-normal text-xs">({hint})</span>
+          <span className="text-(--text-tertiary) font-normal text-xs">
+            ({hint})
+          </span>
         )}
       </label>
       {children}
@@ -330,10 +339,12 @@ function ToggleRow({
   disabled?: boolean;
 }) {
   return (
-    <div className={`flex items-center justify-between ${disabled ? "opacity-50" : ""}`}>
+    <div
+      className={`flex items-center justify-between ${disabled ? "opacity-50" : ""}`}
+    >
       <div>
-        <p className="text-sm font-medium text-[var(--text-primary)]">{label}</p>
-        <p className="text-xs text-[var(--text-tertiary)]">{description}</p>
+        <p className="text-sm font-medium text-(--text-primary)">{label}</p>
+        <p className="text-xs text-(--text-tertiary)">{description}</p>
       </div>
       <button
         type="button"
@@ -341,12 +352,10 @@ function ToggleRow({
         disabled={disabled}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
           disabled ? "cursor-not-allowed" : "cursor-pointer"
-        } ${
-          checked && !disabled ? color : "bg-[var(--off-white-3)]"
-        }`}
+        } ${checked && !disabled ? color : "bg-(--off-white-3)"}`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-[var(--bg-surface)] shadow transition-transform ${
+          className={`inline-block h-4 w-4 transform rounded-full bg-(--bg-surface) shadow transition-transform ${
             checked && !disabled ? "translate-x-6" : "translate-x-1"
           }`}
         />

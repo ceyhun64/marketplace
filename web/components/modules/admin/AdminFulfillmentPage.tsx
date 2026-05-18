@@ -89,42 +89,42 @@ const STATUS_CONFIG: Record<
   },
   PAYMENT_CONFIRMED: {
     label: "Payment Confirmed",
-    color: "bg-blue-100 text-blue-700",
+    color: "bg-(--info-bg) text-(--info)",
     icon: <CheckCircle2 className="w-3 h-3" />,
   },
   LABEL_GENERATED: {
     label: "Label Ready",
-    color: "bg-violet-100 text-violet-700",
+    color: "bg-(--info-bg) text-(--info)",
     icon: <Package className="w-3 h-3" />,
   },
   COURIER_ASSIGNED: {
     label: "Courier Assigned",
-    color: "bg-amber-100 text-amber-700",
+    color: "bg-(--warning-bg) text-(--warning)",
     icon: <UserCheck className="w-3 h-3" />,
   },
   PICKED_UP: {
     label: "Picked Up",
-    color: "bg-orange-100 text-orange-700",
+    color: "bg-(--warning-bg) text-(--warning)",
     icon: <Truck className="w-3 h-3" />,
   },
   IN_TRANSIT: {
     label: "In Transit",
-    color: "bg-cyan-100 text-cyan-700",
+    color: "bg-(--info-bg) text-(--info)",
     icon: <Truck className="w-3 h-3" />,
   },
   OUT_FOR_DELIVERY: {
     label: "Out for Delivery",
-    color: "bg-indigo-100 text-indigo-700",
+    color: "bg-(--info-bg) text-(--info)",
     icon: <MapPin className="w-3 h-3" />,
   },
   DELIVERED: {
     label: "Delivered",
-    color: "bg-emerald-100 text-emerald-700",
+    color: "bg-(--success-bg) text-(--success)",
     icon: <CheckCircle2 className="w-3 h-3" />,
   },
   FAILED: {
     label: "Failed",
-    color: "bg-rose-100 text-rose-700",
+    color: "bg-(--danger-bg) text-(--danger)",
     icon: <AlertCircle className="w-3 h-3" />,
   },
 };
@@ -132,7 +132,7 @@ const STATUS_CONFIG: Record<
 function StatusBadge({ status }: { status: string }) {
   const cfg = STATUS_CONFIG[status as ShipmentStatus] ?? {
     label: status ?? "Unknown",
-    color: "bg-gray-100 text-gray-600",
+    color: "bg-(--off-white-2) text-(--text-secondary)",
     icon: <CircleDot className="w-3 h-3" />,
   };
   return (
@@ -232,8 +232,8 @@ export default function AdminFulfillmentPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Fulfillment</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-semibold text-(--text-primary)">Fulfillment</h1>
+          <p className="text-sm text-(--text-tertiary) mt-1">
             Courier assignment and shipment tracking
           </p>
         </div>
@@ -257,44 +257,44 @@ export default function AdminFulfillmentPage() {
             label: "Total Shipments",
             value: stats.total,
             icon: Package,
-            color: "text-gray-600",
-            bg: "bg-gray-100",
+            color: "text-(--text-secondary)",
+            bg: "bg-(--off-white-2)",
           },
           {
             label: "Active Shipments",
             value: stats.active,
             icon: Truck,
-            color: "text-blue-600",
-            bg: "bg-blue-50",
+            color: "text-(--info)",
+            bg: "bg-(--info-bg)",
           },
           {
             label: "Delivered",
             value: stats.delivered,
             icon: CheckCircle2,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50",
+            color: "text-(--success)",
+            bg: "bg-(--success-bg)",
           },
           {
             label: "Needs Courier",
             value: stats.needsCourier,
             icon: AlertCircle,
-            color: "text-amber-600",
-            bg: "bg-amber-50",
+            color: "text-(--warning)",
+            bg: "bg-(--warning-bg)",
           },
         ].map((s) => (
           <div
             key={s.label}
-            className="bg-white rounded-xl border border-gray-100 p-5"
+            className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5"
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+              <p className="text-xs text-(--text-tertiary) font-medium uppercase tracking-wider">
                 {s.label}
               </p>
               <div className={`p-1.5 rounded-lg ${s.bg}`}>
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+            <p className="text-2xl font-bold text-(--text-primary)">{s.value}</p>
           </div>
         ))}
       </div>
@@ -302,16 +302,16 @@ export default function AdminFulfillmentPage() {
       {/* Filters */}
       <div className="flex gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-tertiary)" />
           <Input
             placeholder="Search by tracking no, customer or order..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 border-gray-200"
+            className="pl-9 border-(--border-mid)"
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-52 border-gray-200">
+          <SelectTrigger className="w-52 border-(--border-mid)">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -326,40 +326,40 @@ export default function AdminFulfillmentPage() {
       </div>
 
       {/* Shipments Table */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <h2 className="text-sm font-semibold text-gray-900">
+      <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden">
+        <div className="px-5 py-4 border-b border-(--border-light)">
+          <h2 className="text-sm font-semibold text-(--text-primary)">
             Shipments
-            <span className="ml-2 text-sm font-normal text-gray-400">
+            <span className="ml-2 text-sm font-normal text-(--text-tertiary)">
               ({filtered.length} records)
             </span>
           </h2>
         </div>
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50 border-b border-gray-100">
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            <TableRow className="bg-(--bg-sunken) border-b border-(--border-light)">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Tracking No.
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Customer
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Merchant
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Status
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Shipping
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Courier
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 ETA
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide text-right">
                 Actions
               </TableHead>
             </TableRow>
@@ -379,7 +379,7 @@ export default function AdminFulfillmentPage() {
               <TableRow>
                 <TableCell
                   colSpan={8}
-                  className="text-center py-16 text-gray-400"
+                  className="text-center py-16 text-(--text-tertiary)"
                 >
                   <Package className="w-10 h-10 mx-auto mb-2 opacity-20" />
                   <p className="text-sm font-medium">No shipments found</p>
@@ -389,20 +389,20 @@ export default function AdminFulfillmentPage() {
               filtered.map((shipment) => (
                 <TableRow
                   key={shipment.id}
-                  className="hover:bg-gray-50 border-b border-gray-50"
+                  className="hover:bg-(--bg-sunken) border-b border-(--border-subtle)"
                 >
-                  <TableCell className="font-mono text-xs text-blue-600">
+                  <TableCell className="font-mono text-xs text-(--info)">
                     {shipment.trackingNumber}
                   </TableCell>
                   <TableCell className="text-sm">
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-(--text-primary)">
                       {shipment.customerName}
                     </p>
-                    <p className="text-xs text-gray-400 truncate max-w-[140px]">
+                    <p className="text-xs text-(--text-tertiary) truncate max-w-[140px]">
                       {shipment.customerAddress}
                     </p>
                   </TableCell>
-                  <TableCell className="text-sm text-gray-600">
+                  <TableCell className="text-sm text-(--text-secondary)">
                     {shipment.merchantName}
                   </TableCell>
                   <TableCell>
@@ -410,7 +410,7 @@ export default function AdminFulfillmentPage() {
                   </TableCell>
                   <TableCell>
                     <span
-                      className={`text-xs font-medium px-2 py-0.5 rounded-md ${shipment.shippingRate === "EXPRESS" ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-600"}`}
+                      className={`text-xs font-medium px-2 py-0.5 rounded-md ${shipment.shippingRate === "EXPRESS" ? "bg-(--warning-bg) text-(--warning)" : "bg-(--off-white-2) text-(--text-secondary)"}`}
                     >
                       {shipment.shippingRate === "EXPRESS"
                         ? "⚡ Express"
@@ -419,16 +419,16 @@ export default function AdminFulfillmentPage() {
                   </TableCell>
                   <TableCell className="text-sm">
                     {shipment.courierName ? (
-                      <span className="text-emerald-700 font-medium">
+                      <span className="text-(--success) font-medium">
                         {shipment.courierName}
                       </span>
                     ) : (
-                      <span className="text-gray-400 italic text-xs">
+                      <span className="text-(--text-tertiary) italic text-xs">
                         Unassigned
                       </span>
                     )}
                   </TableCell>
-                  <TableCell className="text-xs text-gray-500">
+                  <TableCell className="text-xs text-(--text-tertiary)">
                     {shipment.estimatedDelivery
                       ? new Date(shipment.estimatedDelivery).toLocaleDateString(
                           "en-US",
@@ -443,7 +443,7 @@ export default function AdminFulfillmentPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-7 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
+                            className="h-7 text-xs border-blue-200 text-(--info) hover:bg-(--info-bg)"
                             onClick={() =>
                               setAssignDialog({ open: true, shipment })
                             }
@@ -485,24 +485,24 @@ export default function AdminFulfillmentPage() {
           </DialogHeader>
           {assignDialog.shipment && (
             <div className="space-y-4">
-              <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-1">
+              <div className="bg-(--bg-sunken) rounded-lg p-3 text-sm space-y-1">
                 <p>
-                  <span className="text-gray-500">Tracking No.:</span>{" "}
-                  <span className="font-mono font-medium text-blue-600">
+                  <span className="text-(--text-tertiary)">Tracking No.:</span>{" "}
+                  <span className="font-mono font-medium text-(--info)">
                     {assignDialog.shipment.trackingNumber}
                   </span>
                 </p>
                 <p>
-                  <span className="text-gray-500">Customer:</span>{" "}
+                  <span className="text-(--text-tertiary)">Customer:</span>{" "}
                   {assignDialog.shipment.customerName}
                 </p>
                 <p>
-                  <span className="text-gray-500">Address:</span>{" "}
+                  <span className="text-(--text-tertiary)">Address:</span>{" "}
                   {assignDialog.shipment.customerAddress}
                 </p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                <label className="text-sm font-medium text-(--text-secondary) mb-2 block">
                   Select Courier
                 </label>
                 {loadingCouriers ? (
@@ -514,7 +514,7 @@ export default function AdminFulfillmentPage() {
                       .map((courier) => (
                         <label
                           key={courier.id}
-                          className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedCourier === courier.id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:bg-gray-50"}`}
+                          className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedCourier === courier.id ? "border-blue-500 bg-(--info-bg)" : "border-(--border-mid) hover:bg-(--bg-sunken)"}`}
                         >
                           <input
                             type="radio"
@@ -525,25 +525,25 @@ export default function AdminFulfillmentPage() {
                             className="accent-blue-600"
                           />
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">
+                            <p className="text-sm font-medium text-(--text-primary)">
                               {courier.name}
                             </p>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-(--text-tertiary)">
                               {courier.phone} ·{" "}
-                              <span className="text-amber-500">
+                              <span className="text-(--warning)">
                                 {courier.activeShipmentCount} active packages
                               </span>
                             </p>
                           </div>
                           {courier.activeShipmentCount === 0 && (
-                            <span className="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full">
+                            <span className="text-xs text-(--success) font-medium bg-(--success-bg) px-2 py-0.5 rounded-full">
                               Available
                             </span>
                           )}
                         </label>
                       ))}
                     {couriers.filter((c) => c.isActive).length === 0 && (
-                      <p className="text-center text-sm text-gray-400 py-4">
+                      <p className="text-center text-sm text-(--text-tertiary) py-4">
                         No active couriers available
                       </p>
                     )}

@@ -27,7 +27,7 @@ const SourceChart = dynamic(
 
 function ChartSkeleton() {
   return (
-    <div className="w-full h-[200px] bg-gray-100 rounded-lg animate-pulse" />
+    <div className="w-full h-50 bg-(--off-white-2) rounded-lg animate-pulse" />
   );
 }
 
@@ -136,21 +136,21 @@ export default function AdminAnalyticsPage() {
     <div className="space-y-8">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Analytics</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-semibold text-(--text-primary)">Analytics</h1>
+          <p className="text-sm text-(--text-tertiary) mt-1">
             Platform-wide performance overview
           </p>
         </div>
 
-        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-(--off-white-2) rounded-lg p-1">
           {PERIOD_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setPeriod(opt.value)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                 period === opt.value
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-(--bg-surface) text-(--text-primary) shadow-sm"
+                  : "text-(--text-tertiary) hover:text-(--text-secondary)"
               }`}
             >
               {opt.label}
@@ -164,18 +164,18 @@ export default function AdminAnalyticsPage() {
         {kpiCards.map((s) => (
           <div
             key={s.label}
-            className="bg-white rounded-xl border border-gray-100 p-5"
+            className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5"
           >
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+            <p className="text-xs text-(--text-tertiary) font-medium uppercase tracking-wider">
               {s.label}
             </p>
             {overviewLoading ? (
               <Skeleton className="h-8 w-24 mt-2" />
             ) : (
-              <p className="text-2xl font-bold text-gray-900 mt-2">{s.value}</p>
+              <p className="text-2xl font-bold text-(--text-primary) mt-2">{s.value}</p>
             )}
             {s.sub && !overviewLoading && (
-              <p className="text-xs mt-1 font-medium text-gray-400">{s.sub}</p>
+              <p className="text-xs mt-1 font-medium text-(--text-tertiary)">{s.sub}</p>
             )}
           </div>
         ))}
@@ -183,8 +183,8 @@ export default function AdminAnalyticsPage() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <h2 className="text-sm font-semibold text-gray-700 mb-4">
+        <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5">
+          <h2 className="text-sm font-semibold text-(--text-secondary) mb-4">
             Revenue (₺)
           </h2>
           {revenueLoading || overviewLoading ? (
@@ -193,8 +193,8 @@ export default function AdminAnalyticsPage() {
             <RevenueChart key={`revenue-${period}`} data={chartRevenue} />
           )}
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <h2 className="text-sm font-semibold text-gray-700 mb-4">Orders</h2>
+        <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5">
+          <h2 className="text-sm font-semibold text-(--text-secondary) mb-4">Orders</h2>
           {revenueLoading || overviewLoading ? (
             <ChartSkeleton />
           ) : (
@@ -206,16 +206,16 @@ export default function AdminAnalyticsPage() {
       {/* Source + Summary + Fulfillment */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Order Source Pie */}
-        <div className="bg-white rounded-xl border border-gray-100 p-5 flex flex-col items-center">
-          <h2 className="text-sm font-semibold text-gray-700 mb-4 self-start">
+        <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5 flex flex-col items-center">
+          <h2 className="text-sm font-semibold text-(--text-secondary) mb-4 self-start">
             Order Source
           </h2>
           <SourceChart data={sourceData} />
         </div>
 
         {/* Platform Summary */}
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <h2 className="text-sm font-semibold text-gray-700 mb-4">
+        <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5">
+          <h2 className="text-sm font-semibold text-(--text-secondary) mb-4">
             Platform Summary
           </h2>
           {overviewLoading ? (
@@ -246,12 +246,12 @@ export default function AdminAnalyticsPage() {
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="flex justify-between items-center border-b border-gray-50 pb-3 last:border-0 last:pb-0"
+                  className="flex justify-between items-center border-b border-(--border-subtle) pb-3 last:border-0 last:pb-0"
                 >
-                  <p className="text-xs text-gray-400 font-medium">
+                  <p className="text-xs text-(--text-tertiary) font-medium">
                     {item.label}
                   </p>
-                  <p className="text-sm font-bold text-gray-900">
+                  <p className="text-sm font-bold text-(--text-primary)">
                     {item.value}
                   </p>
                 </div>
@@ -261,8 +261,8 @@ export default function AdminAnalyticsPage() {
         </div>
 
         {/* Fulfillment Stats */}
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <h2 className="text-sm font-semibold text-gray-700 mb-4">
+        <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5">
+          <h2 className="text-sm font-semibold text-(--text-secondary) mb-4">
             Fulfillment
           </h2>
           {fulfillmentLoading || overviewLoading ? (
@@ -310,12 +310,12 @@ export default function AdminAnalyticsPage() {
                   className="flex justify-between items-start"
                 >
                   <div>
-                    <p className="text-xs text-gray-400 font-medium">
+                    <p className="text-xs text-(--text-tertiary) font-medium">
                       {item.label}
                     </p>
-                    <p className="text-xs text-gray-300">{item.sub}</p>
+                    <p className="text-xs text-(--charcoal-mist)">{item.sub}</p>
                   </div>
-                  <p className="text-lg font-bold text-gray-900">
+                  <p className="text-lg font-bold text-(--text-primary)">
                     {item.value}
                   </p>
                 </div>

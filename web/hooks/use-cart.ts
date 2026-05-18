@@ -55,8 +55,8 @@ interface CartState {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const SHIPPING_COSTS: Record<ShippingRate, number> = {
-  EXPRESS: 49.9,
-  REGULAR: 19.9,
+  EXPRESS: 59.9,
+  REGULAR: 29.9,
 };
 
 // ── Store ─────────────────────────────────────────────────────────────────────

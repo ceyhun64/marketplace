@@ -20,13 +20,15 @@ public class PaymentService : IPaymentService
     private readonly ILogger<PaymentService> _logger;
     private readonly IInvoiceGeneratorService _invoiceGenerator;
     private readonly INotificationService _notification;
+    private readonly ICurrentUserService _currentUser;
 
     public PaymentService(
         AppDbContext db,
         IConfiguration config,
         ILogger<PaymentService> logger,
         IInvoiceGeneratorService invoiceGenerator,
-        INotificationService notification
+        INotificationService notification,
+        ICurrentUserService currentUser
     )
     {
         _db = db;
@@ -34,12 +36,7 @@ public class PaymentService : IPaymentService
         _logger = logger;
         _invoiceGenerator = invoiceGenerator;
         _notification = notification;
-
-        StripeConfiguration.ApiKey =
-            config["STRIPE_SECRET_KEY"]
-            ?? throw new InvalidOperationException(
-                "STRIPE_SECRET_KEY ortam değişkeni tanımlı değil."
-            );
+        _currentUser = currentUser;
     }
 
     // ── 1. Payment Intent oluştur ─────────────────────────────────────────────
@@ -142,7 +139,30 @@ public class PaymentService : IPaymentService
                 );
             }
 
-            return await FinalizeOrderPaymentAsync(dto.OrderId, dto.PaymentIntentId);
+            // Stripe-imzalı metadata'dan orderId al — istemci girdisine güvenme (IDOR önlemi)
+            if (!intent.Metadata.TryGetValue("orderId", out var orderIdStr)
+                || !Guid.TryParse(orderIdStr, out var orderId))
+            {
+                _logger.LogError(
+                    "❌ PaymentIntent metadata'da geçerli orderId yok: IntentId={Id}",
+                    dto.PaymentIntentId
+                );
+                return ServiceResult<Guid>.Fail("Ödeme referansı doğrulanamadı.");
+            }
+
+            // Kimlik doğrulama: bu PaymentIntent gerçekten bu müşteriye ait mi?
+            if (intent.Metadata.TryGetValue("customerId", out var customerIdStr)
+                && Guid.TryParse(customerIdStr, out var intentCustomerId)
+                && intentCustomerId != _currentUser.UserId)
+            {
+                _logger.LogWarning(
+                    "⚠️ IDOR girişimi: IntentId={IntentId} CustomerId={Claimed} vs {Actual}",
+                    dto.PaymentIntentId, _currentUser.UserId, intentCustomerId
+                );
+                return ServiceResult<Guid>.Fail("Bu ödeme size ait değil.");
+            }
+
+            return await FinalizeOrderPaymentAsync(orderId, dto.PaymentIntentId);
         }
         catch (StripeException ex)
         {
@@ -397,57 +417,89 @@ public class PaymentService : IPaymentService
         string paymentIntentId
     )
     {
-        var order = await _db
-            .Orders.Include(o => o.Items)
-            .Include(o => o.Customer)
-            .FirstOrDefaultAsync(o => o.Id == orderId);
+        string trackingNumber;
 
-        if (order is null)
-            return ServiceResult<Guid>.Fail("Sipariş bulunamadı.");
-
-        if (order.IsPaid)
-        {
-            _logger.LogInformation("Sipariş zaten ödenmiş: {OrderId}", orderId);
-            return ServiceResult<Guid>.Ok(orderId);
-        }
-
-        // Ödeme bilgilerini kaydet
-        order.IsPaid = true;
-        order.PaidAt = DateTime.UtcNow;
-        order.PaymentId = paymentIntentId;
-        order.Status = OrderStatus.PaymentConfirmed;
-        order.UpdatedAt = DateTime.UtcNow;
-
-        // Shipment oluştur
-        var shipment = new api.Domain.Entities.Shipment
-        {
-            Id = Guid.NewGuid(),
-            OrderId = orderId,
-            TrackingNumber = GenerateTrackingNumber(),
-            Status = api.Domain.Enums.ShipmentStatus.Pending,
-            EstimatedDelivery = DateTime.UtcNow.AddDays(
-                order.ShippingRate == api.Domain.Enums.ShippingRate.Express ? 1 : 3
-            ),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
-
-        _db.Shipments.Add(shipment);
-        await _db.SaveChangesAsync();
-
-        _logger.LogInformation(
-            "✅ Sipariş ödendi: OrderId={OrderId} IntentId={IntentId} TrackingNo={Tracking}",
-            orderId,
-            paymentIntentId,
-            shipment.TrackingNumber
-        );
-
-        // Fatura oluştur (arka planda — hata olsa sipariş etkilenmesin)
+        // RepeatableRead transaction — IsPaid okuma ve yazma atomik, TOCTOU race önlenir
+        await using var tx = await _db.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.RepeatableRead);
         try
         {
-            var invoice = await _invoiceGenerator.GenerateAndSaveAsync(order);
-            if (!string.IsNullOrEmpty(invoice.PdfUrl))
-                await _notification.SendInvoiceEmailAsync(orderId, invoice.PdfUrl);
+            var order = await _db
+                .Orders.Include(o => o.Items)
+                .Include(o => o.Customer)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order is null)
+            {
+                await tx.RollbackAsync();
+                return ServiceResult<Guid>.Fail("Sipariş bulunamadı.");
+            }
+
+            if (order.IsPaid)
+            {
+                _logger.LogInformation("Sipariş zaten ödenmiş: {OrderId}", orderId);
+                await tx.RollbackAsync();
+                return ServiceResult<Guid>.Ok(orderId);
+            }
+
+            // Ödeme bilgilerini kaydet
+            order.IsPaid = true;
+            order.PaidAt = DateTime.UtcNow;
+            order.PaymentId = paymentIntentId;
+            order.Status = OrderStatus.PaymentConfirmed;
+            order.UpdatedAt = DateTime.UtcNow;
+
+            // Shipment oluştur — sadece yoksa (CreateShipmentForOrderAsync zaten oluşturmuş olabilir)
+            var shipment = await _db.Shipments.FirstOrDefaultAsync(s => s.OrderId == orderId);
+            if (shipment == null)
+            {
+                shipment = new api.Domain.Entities.Shipment
+                {
+                    Id = Guid.NewGuid(),
+                    OrderId = orderId,
+                    TrackingNumber = GenerateTrackingNumber(),
+                    Status = api.Domain.Enums.ShipmentStatus.Pending,
+                    EstimatedDelivery = DateTime.UtcNow.AddDays(
+                        order.ShippingRate == api.Domain.Enums.ShippingRate.Express ? 1 : 3
+                    ),
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                };
+                _db.Shipments.Add(shipment);
+            }
+
+            await _db.SaveChangesAsync();
+            await tx.CommitAsync();
+
+            trackingNumber = shipment.TrackingNumber;
+
+            _logger.LogInformation(
+                "✅ Sipariş ödendi: OrderId={OrderId} IntentId={IntentId} TrackingNo={Tracking}",
+                orderId,
+                paymentIntentId,
+                trackingNumber
+            );
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
+
+        // Yan etkiler transaction dışında — hata olsa ödeme etkilenmez
+        try
+        {
+            var orderForInvoice = await _db.Orders
+                .Include(o => o.Items)
+                .Include(o => o.Customer)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (orderForInvoice != null)
+            {
+                var invoice = await _invoiceGenerator.GenerateAndSaveAsync(orderForInvoice);
+                if (!string.IsNullOrEmpty(invoice.PdfUrl))
+                    await _notification.SendInvoiceEmailAsync(orderId, invoice.PdfUrl);
+            }
         }
         catch (Exception ex)
         {
@@ -458,12 +510,11 @@ public class PaymentService : IPaymentService
             );
         }
 
-        // Ödeme bildirim e-postası
         try
         {
             await _notification.SendOrderStatusNotificationAsync(
                 orderId,
-                $"Siparişiniz #{orderId.ToString()[..8].ToUpper()} onaylandı! Takip numaranız: {shipment.TrackingNumber}"
+                $"Siparişiniz #{orderId.ToString()[..8].ToUpper()} onaylandı! Takip numaranız: {trackingNumber}"
             );
         }
         catch (Exception ex)

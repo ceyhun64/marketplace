@@ -239,8 +239,16 @@ public class SetupMerchantStoreCommandHandler
 
         if (request.StoreName is not null)
             merchant.StoreName = request.StoreName;
+
         if (request.Slug is not null)
+        {
+            var slugTaken = await _db.MerchantProfiles
+                .AnyAsync(m => m.Slug == request.Slug && m.Id != request.MerchantId, cancellationToken);
+            if (slugTaken)
+                return ServiceResult<bool>.Fail("Bu slug zaten başka bir mağaza tarafından kullanılıyor.");
             merchant.Slug = request.Slug;
+        }
+
         if (request.Description is not null)
             merchant.Description = request.Description;
         if (request.LogoUrl is not null)

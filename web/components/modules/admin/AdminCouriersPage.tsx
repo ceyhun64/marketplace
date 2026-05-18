@@ -2,7 +2,28 @@
 
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
-import { Truck, UserCheck, Package, Activity } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Truck, UserCheck, Package, Plus } from "lucide-react";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Courier {
   id: string;
@@ -16,16 +37,13 @@ interface Courier {
   createdAt: string;
 }
 
+// ── Main Component ────────────────────────────────────────────────────────────
+
 export default function AdminCouriersPage() {
   const [couriers, setCouriers] = useState<Courier[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    phone: "",
-  });
+  const [form, setForm] = useState({ name: "", email: "", password: "", phone: "" });
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
 
@@ -33,9 +51,7 @@ export default function AdminCouriersPage() {
     setLoading(true);
     try {
       const res = await api.get<Courier[]>("/api/couriers");
-      // ApiResponse interceptor tarafından açılır → res.data artık Courier[]
-      const list = Array.isArray(res.data) ? res.data : [];
-      setCouriers(list);
+      setCouriers(Array.isArray(res.data) ? res.data : []);
     } catch {
       setCouriers([]);
     } finally {
@@ -43,9 +59,7 @@ export default function AdminCouriersPage() {
     }
   }
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   async function handleCreate() {
     if (!form.name || !form.email || !form.password) {
@@ -85,263 +99,241 @@ export default function AdminCouriersPage() {
         prev.map((c) => (c.id === id ? { ...c, isActive: !current } : c)),
       );
     } catch {
-      alert("Failed to update courier status.");
+      /* silent */
     }
   }
 
   const activeCouriers = couriers.filter((c) => c.isActive);
 
+  const statCards = [
+    {
+      label: "Total Couriers",
+      value: couriers.length,
+      icon: Truck,
+      color: "text-(--text-tertiary)",
+      bg: "bg-(--off-white-2)",
+    },
+    {
+      label: "Active",
+      value: activeCouriers.length,
+      icon: UserCheck,
+      color: "text-(--success)",
+      bg: "bg-(--success-bg)",
+    },
+    {
+      label: "Active Deliveries",
+      value: couriers.reduce((s, c) => s + (c.activeShipmentCount ?? 0), 0),
+      icon: Package,
+      color: "text-(--info)",
+      bg: "bg-(--info-bg)",
+    },
+  ];
+
   return (
     <div className="space-y-8">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Couriers</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-semibold text-(--text-primary)">Couriers</h1>
+          <p className="text-sm text-(--text-tertiary) mt-1">
             {activeCouriers.length} active / {couriers.length} total couriers
           </p>
         </div>
-        <button
-          onClick={() => {
-            setShowForm(true);
-            setFormError("");
-          }}
-          className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors flex items-center gap-2"
+        <Button
+          onClick={() => { setShowForm(true); setFormError(""); }}
+          className="gap-2 bg-(--charcoal) hover:bg-(--charcoal-2) text-white"
         >
-          <span className="text-base leading-none">+</span> New Courier
-        </button>
+          <Plus className="w-4 h-4" /> New Courier
+        </Button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        {[
-          {
-            label: "Total Couriers",
-            value: couriers.length,
-            icon: Truck,
-            color: "text-gray-600",
-            bg: "bg-gray-100",
-          },
-          {
-            label: "Active",
-            value: activeCouriers.length,
-            icon: UserCheck,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50",
-          },
-          {
-            label: "Active Deliveries",
-            value: couriers.reduce(
-              (s, c) => s + (c.activeShipmentCount ?? 0),
-              0,
-            ),
-            icon: Package,
-            color: "text-blue-600",
-            bg: "bg-blue-50",
-          },
-        ].map((s) => (
+        {statCards.map((s) => (
           <div
             key={s.label}
-            className="bg-white rounded-xl border border-gray-100 p-5"
+            className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5"
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+              <p className="text-xs text-(--text-tertiary) font-medium uppercase tracking-wider">
                 {s.label}
               </p>
               <div className={`p-1.5 rounded-lg ${s.bg}`}>
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+            {loading ? (
+              <Skeleton className="h-7 w-12" />
+            ) : (
+              <p className="text-2xl font-bold text-(--text-primary)">{s.value}</p>
+            )}
           </div>
         ))}
       </div>
 
-      {/* Create Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              New Courier Account
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, name: e.target.value }))
-                  }
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-                  placeholder="John Smith"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, email: e.target.value }))
-                  }
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-                  placeholder="courier@example.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone
-                </label>
-                <input
-                  type="tel"
-                  value={form.phone}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, phone: e.target.value }))
-                  }
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-                  placeholder="+1 5XX XXX XXXX"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="password"
-                  autoComplete="new-password"
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, password: e.target.value }))
-                  }
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-                  placeholder="At least 8 characters"
-                />
-              </div>
-              {formError && (
-                <p className="text-sm text-rose-600">{formError}</p>
-              )}
-              <div className="flex gap-2 justify-end pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={formLoading}
-                  onClick={handleCreate}
-                  className="px-4 py-2 text-sm bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50"
-                >
-                  {formLoading ? "Creating..." : "Create"}
-                </button>
-              </div>
+      {/* Create Dialog */}
+      <Dialog open={showForm} onOpenChange={(o) => { setShowForm(o); if (!o) setFormError(""); }}>
+        <DialogContent className="sm:max-w-105">
+          <DialogHeader>
+            <DialogTitle>New Courier Account</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Full Name <span className="text-(--danger)">*</span></Label>
+              <Input
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="John Smith"
+              />
             </div>
+            <div className="space-y-1.5">
+              <Label>Email <span className="text-(--danger)">*</span></Label>
+              <Input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                placeholder="courier@example.com"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Phone</Label>
+              <Input
+                type="tel"
+                value={form.phone}
+                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                placeholder="+90 5XX XXX XX XX"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Password <span className="text-(--danger)">*</span></Label>
+              <Input
+                type="password"
+                autoComplete="new-password"
+                value={form.password}
+                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                placeholder="At least 8 characters"
+              />
+            </div>
+            {formError && (
+              <p className="text-sm text-(--danger) bg-(--danger-bg) rounded-lg px-3 py-2">
+                {formError}
+              </p>
+            )}
           </div>
-        </div>
-      )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreate}
+              disabled={formLoading || !form.name || !form.email || !form.password}
+            >
+              {formLoading ? "Creating…" : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      {/* Couriers List */}
-      {loading ? (
-        <div className="bg-white border border-gray-100 rounded-xl flex items-center justify-center py-16">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-        </div>
-      ) : couriers.length === 0 ? (
-        <div className="bg-white border border-gray-100 rounded-xl flex flex-col items-center justify-center py-16 text-gray-400">
-          <Truck className="w-12 h-12 mb-3 opacity-20" />
-          <p className="text-sm font-medium">No couriers yet</p>
-          <p className="text-xs mt-1">
-            Click "New Courier" to add your first courier.
-          </p>
-        </div>
-      ) : (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="border-b border-gray-100 bg-gray-50">
-              <tr>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Courier
-                </th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Active Deliveries
-                </th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Completed
-                </th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Status
-                </th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Joined
-                </th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {couriers.map((courier) => (
-                <tr
+      {/* Couriers Table */}
+      <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-(--bg-sunken) border-b border-(--border-light) hover:bg-(--bg-sunken)">
+              {["Courier", "Active Deliveries", "Completed", "Status", "Joined", "Action"].map(
+                (h) => (
+                  <TableHead
+                    key={h}
+                    className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide"
+                  >
+                    {h}
+                  </TableHead>
+                ),
+              )}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i} className="border-b border-(--border-subtle)">
+                  {Array.from({ length: 6 }).map((_, j) => (
+                    <TableCell key={j}>
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : couriers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="py-20 text-center">
+                  <Truck className="w-12 h-12 mx-auto mb-3 text-(--text-tertiary) opacity-20" />
+                  <p className="text-sm text-(--text-tertiary) font-medium">
+                    No couriers yet
+                  </p>
+                  <p className="text-xs text-(--text-tertiary) mt-1">
+                    Click &ldquo;New Courier&rdquo; to add your first courier.
+                  </p>
+                </TableCell>
+              </TableRow>
+            ) : (
+              couriers.map((courier) => (
+                <TableRow
                   key={courier.id}
-                  className="border-b border-gray-50 hover:bg-gray-50"
+                  className="border-b border-(--border-subtle) hover:bg-(--bg-sunken) transition-colors"
                 >
-                  <td className="px-5 py-4">
+                  <TableCell>
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center text-white text-xs font-bold">
+                      <div className="w-8 h-8 rounded-lg bg-(--charcoal) flex items-center justify-center text-white text-xs font-bold shrink-0">
                         {courier.name?.charAt(0)?.toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-sm text-(--text-primary)">
                           {courier.name}
                         </p>
-                        <p className="text-xs text-gray-400">{courier.email}</p>
+                        <p className="text-xs text-(--text-tertiary)">{courier.email}</p>
                         {courier.phone && (
-                          <p className="text-xs text-gray-400">
-                            {courier.phone}
-                          </p>
+                          <p className="text-xs text-(--text-tertiary)">{courier.phone}</p>
                         )}
                       </div>
                     </div>
-                  </td>
-                  <td className="px-5 py-4 font-medium text-gray-900">
+                  </TableCell>
+                  <TableCell className="font-medium text-(--text-primary)">
                     {courier.activeShipmentCount ?? 0}
-                  </td>
-                  <td className="px-5 py-4 text-gray-600">
+                  </TableCell>
+                  <TableCell className="text-(--text-secondary)">
                     {courier.totalDelivered ?? 0}
-                  </td>
-                  <td className="px-5 py-4">
+                  </TableCell>
+                  <TableCell>
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-md font-medium ${courier.isActive ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-500"}`}
+                      className={`text-xs px-2 py-0.5 rounded-md font-medium ${
+                        courier.isActive
+                          ? "bg-(--success-bg) text-(--success)"
+                          : "bg-(--off-white-2) text-(--text-tertiary)"
+                      }`}
                     >
                       {courier.isActive ? "Active" : "Inactive"}
                     </span>
-                  </td>
-                  <td className="px-5 py-4 text-xs text-gray-400">
+                  </TableCell>
+                  <TableCell className="text-xs text-(--text-tertiary)">
                     {courier.createdAt
                       ? new Date(courier.createdAt).toLocaleDateString("en-US")
                       : "—"}
-                  </td>
-                  <td className="px-5 py-4">
+                  </TableCell>
+                  <TableCell>
                     <button
-                      onClick={() =>
-                        handleToggleActive(courier.id, courier.isActive)
-                      }
-                      className={`text-xs font-medium hover:underline ${courier.isActive ? "text-amber-600" : "text-blue-600"}`}
+                      onClick={() => handleToggleActive(courier.id, courier.isActive)}
+                      className={`text-xs font-medium hover:underline transition-opacity ${
+                        courier.isActive ? "text-(--warning)" : "text-(--info)"
+                      }`}
                     >
                       {courier.isActive ? "Deactivate" : "Activate"}
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

@@ -180,8 +180,8 @@ export default function AdminOrdersPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Orders</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-semibold text-(--text-primary)">Orders</h1>
+          <p className="text-sm text-(--text-tertiary) mt-1">
             All orders across the platform
           </p>
         </div>
@@ -202,44 +202,44 @@ export default function AdminOrdersPage() {
             label: "Total Orders",
             value: stats.total,
             icon: ShoppingCart,
-            color: "text-blue-600",
-            bg: "bg-blue-50",
+            color: "text-(--info)",
+            bg: "bg-(--info-bg)",
           },
           {
             label: "Pending",
             value: stats.pending,
             icon: Clock,
-            color: "text-amber-600",
-            bg: "bg-amber-50",
+            color: "text-(--warning)",
+            bg: "bg-(--warning-bg)",
           },
           {
             label: "In Transit",
             value: stats.inTransit,
             icon: Truck,
-            color: "text-indigo-600",
-            bg: "bg-indigo-50",
+            color: "text-(--info)",
+            bg: "bg-(--info-bg)",
           },
           {
             label: "Delivered",
             value: stats.delivered,
             icon: CheckCircle,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50",
+            color: "text-(--success)",
+            bg: "bg-(--success-bg)",
           },
         ].map((s) => (
           <div
             key={s.label}
-            className="bg-white rounded-xl border border-gray-100 p-5"
+            className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5"
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+              <p className="text-xs text-(--text-tertiary) font-medium uppercase tracking-wider">
                 {s.label}
               </p>
               <div className={`p-1.5 rounded-lg ${s.bg}`}>
                 <s.icon className={`h-4 w-4 ${s.color}`} />
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-(--text-primary)">
               {isLoading ? "—" : s.value}
             </p>
           </div>
@@ -248,12 +248,12 @@ export default function AdminOrdersPage() {
 
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-(--text-tertiary)" />
           <Input
             placeholder="Search by order ID, customer or store..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 border-gray-200"
+            className="pl-9 border-(--border-mid)"
           />
         </div>
         <Select
@@ -263,7 +263,7 @@ export default function AdminOrdersPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="w-52 border-gray-200">
+          <SelectTrigger className="w-52 border-(--border-mid)">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -276,29 +276,29 @@ export default function AdminOrdersPage() {
         </Select>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50 border-b border-gray-100">
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            <TableRow className="bg-(--bg-sunken) border-b border-(--border-light)">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Order ID
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Customer
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Store
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Source
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Amount
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Status
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Date
               </TableHead>
               <TableHead />
@@ -319,7 +319,7 @@ export default function AdminOrdersPage() {
               <TableRow>
                 <TableCell
                   colSpan={8}
-                  className="text-center text-gray-400 py-16"
+                  className="text-center text-(--text-tertiary) py-16"
                 >
                   <Package className="h-8 w-8 mx-auto mb-2 opacity-20" />
                   <p className="text-sm font-medium">No orders found</p>
@@ -329,35 +329,35 @@ export default function AdminOrdersPage() {
               filtered.map((order) => (
                 <TableRow
                   key={order.id}
-                  className="hover:bg-gray-50 border-b border-gray-50"
+                  className="hover:bg-(--bg-sunken) border-b border-(--border-subtle)"
                 >
-                  <TableCell className="font-mono text-xs text-gray-500">
+                  <TableCell className="font-mono text-xs text-(--text-tertiary)">
                     #{order.id.slice(0, 8).toUpperCase()}
                   </TableCell>
-                  <TableCell className="text-sm text-gray-900">
+                  <TableCell className="text-sm text-(--text-primary)">
                     {order.customerName ?? "—"}
                   </TableCell>
-                  <TableCell className="text-sm text-gray-600">
+                  <TableCell className="text-sm text-(--text-secondary)">
                     {order.merchantStoreName ?? "—"}
                   </TableCell>
                   <TableCell>
-                    <span className="text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-600">
+                    <span className="text-xs px-2 py-0.5 rounded-md font-medium bg-(--off-white-2) text-(--text-secondary)">
                       {order.source === "MARKETPLACE"
                         ? "Marketplace"
                         : "E-Store"}
                     </span>
                   </TableCell>
-                  <TableCell className="font-semibold text-sm text-gray-900">
+                  <TableCell className="font-semibold text-sm text-(--text-primary)">
                     {formatCurrency(order.totalAmount)}
                   </TableCell>
                   <TableCell>
                     <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ORDER_STATUS_COLORS[order.status] ?? "bg-gray-100 text-gray-800"}`}
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ORDER_STATUS_COLORS[order.status] ?? "bg-(--off-white-2) text-(--text-primary)"}`}
                     >
                       {STATUS_LABEL_EN[order.status] ?? order.status}
                     </span>
                   </TableCell>
-                  <TableCell className="text-xs text-gray-400">
+                  <TableCell className="text-xs text-(--text-tertiary)">
                     {formatDateTime(order.createdAt)}
                   </TableCell>
                   <TableCell>
@@ -387,7 +387,7 @@ export default function AdminOrdersPage() {
           >
             ← Previous
           </Button>
-          <span className="px-3 py-1 text-sm text-gray-600">
+          <span className="px-3 py-1 text-sm text-(--text-secondary)">
             Page {page} of {totalPages}
           </span>
           <Button
@@ -415,25 +415,25 @@ export default function AdminOrdersPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Customer</p>
+                  <p className="text-xs text-(--text-tertiary) mb-0.5">Customer</p>
                   <p className="font-medium">
                     {selectedOrder.customerName ?? "—"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Store</p>
+                  <p className="text-xs text-(--text-tertiary) mb-0.5">Store</p>
                   <p className="font-medium">
                     {selectedOrder.merchantStoreName ?? "—"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Amount</p>
+                  <p className="text-xs text-(--text-tertiary) mb-0.5">Amount</p>
                   <p className="font-semibold">
                     {formatCurrency(selectedOrder.totalAmount)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Shipping</p>
+                  <p className="text-xs text-(--text-tertiary) mb-0.5">Shipping</p>
                   <p>
                     {selectedOrder.shippingRate === "EXPRESS"
                       ? "⚡ Express"
@@ -442,7 +442,7 @@ export default function AdminOrdersPage() {
                 </div>
                 {selectedOrder.shipment?.trackingNumber && (
                   <div className="col-span-2">
-                    <p className="text-xs text-gray-400 mb-0.5">Tracking No.</p>
+                    <p className="text-xs text-(--text-tertiary) mb-0.5">Tracking No.</p>
                     <p className="font-mono text-sm">
                       {selectedOrder.shipment.trackingNumber}
                     </p>
@@ -451,12 +451,12 @@ export default function AdminOrdersPage() {
               </div>
               {selectedOrder.items && selectedOrder.items.length > 0 && (
                 <div>
-                  <p className="text-xs text-gray-400 mb-2">Items</p>
+                  <p className="text-xs text-(--text-tertiary) mb-2">Items</p>
                   <div className="space-y-1">
                     {selectedOrder.items.map((item, i) => (
                       <div
                         key={i}
-                        className="flex justify-between text-sm py-1 border-b border-gray-100 last:border-0"
+                        className="flex justify-between text-sm py-1 border-b border-(--border-light) last:border-0"
                       >
                         <span>
                           {item.productName} × {item.quantity}
@@ -470,7 +470,7 @@ export default function AdminOrdersPage() {
                 </div>
               )}
               <div>
-                <p className="text-xs text-gray-400 mb-2">Update Status</p>
+                <p className="text-xs text-(--text-tertiary) mb-2">Update Status</p>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${ORDER_STATUS_COLORS[selectedOrder.status] ?? ""}`}
@@ -480,7 +480,7 @@ export default function AdminOrdersPage() {
                   </span>
                   {NEXT_STATUSES[selectedOrder.status] && (
                     <>
-                      <span className="text-gray-400">→</span>
+                      <span className="text-(--text-tertiary)">→</span>
                       <Button
                         size="sm"
                         onClick={() =>

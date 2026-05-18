@@ -65,7 +65,7 @@ export default function RegisterPage() {
   const displayError = validationError || error;
 
   return (
-    <div className="min-h-screen  flex items-center justify-center p-6 py-12">
+    <div className="min-h-screen flex items-center justify-center p-6 py-12">
       {/* Background Decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] rounded-full bg-[var(--red)]/5 blur-[100px]" />

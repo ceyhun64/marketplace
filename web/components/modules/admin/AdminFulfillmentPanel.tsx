@@ -92,8 +92,8 @@ export default function AdminFulfillmentPanel() {
               onClick={() => setStatusFilter(value)}
               className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all border ${
                 statusFilter === value
-                  ? "bg-gray-900 text-white border-gray-900"
-                  : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
+                  ? "bg-(--charcoal) text-white border-(--charcoal)"
+                  : "bg-(--bg-surface) text-(--text-tertiary) border-(--border-mid) hover:border-(--border-mid)"
               }`}
             >
               {label}
@@ -105,10 +105,10 @@ export default function AdminFulfillmentPanel() {
         <div
           className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-all ${
             isConnected
-              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              ? "bg-(--success-bg) text-(--success) border-(--success-border)"
               : signalrStatus === "connecting"
-                ? "bg-amber-50 text-amber-700 border-amber-200"
-                : "bg-gray-50 text-gray-500 border-gray-200"
+                ? "bg-(--warning-bg) text-(--warning) border-(--warning-border)"
+                : "bg-(--bg-sunken) text-(--text-tertiary) border-(--border-mid)"
           }`}
         >
           {isConnected ? (
@@ -134,11 +134,11 @@ export default function AdminFulfillmentPanel() {
 
       {/* Son güncelleme bilgisi */}
       {lastUpdate && (
-        <div className="text-xs text-gray-400 flex items-center gap-1.5">
+        <div className="text-xs text-(--text-tertiary) flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
           Son güncelleme: Takip #
           {lastUpdate.shipmentId.slice(0, 8).toUpperCase()} →{" "}
-          <span className="font-medium text-blue-600">{lastUpdate.status}</span>
+          <span className="font-medium text-(--info)">{lastUpdate.status}</span>
           <span className="ml-1">
             {new Date(lastUpdate.updatedAt).toLocaleTimeString("tr-TR")}
           </span>
@@ -147,9 +147,9 @@ export default function AdminFulfillmentPanel() {
 
       {/* Table */}
       {isLoading ? (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+        <div className="bg-(--bg-surface) border border-(--border-light) rounded-xl overflow-hidden">
           <table className="w-full">
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-(--border-subtle)">
               {Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
                   {Array.from({ length: 6 }).map((_, j) => (
@@ -163,13 +163,13 @@ export default function AdminFulfillmentPanel() {
           </table>
         </div>
       ) : !shipments.length ? (
-        <div className="bg-white border border-gray-100 rounded-xl p-12 text-center text-gray-400">
+        <div className="bg-(--bg-surface) border border-(--border-light) rounded-xl p-12 text-center text-(--text-tertiary)">
           <p className="text-sm font-medium">Kargo bulunamadı</p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+        <div className="bg-(--bg-surface) border border-(--border-light) rounded-xl overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="border-b border-gray-100 bg-gray-50">
+            <thead className="border-b border-(--border-light) bg-(--bg-sunken)">
               <tr>
                 {[
                   "Takip No.",
@@ -181,14 +181,14 @@ export default function AdminFulfillmentPanel() {
                 ].map((h) => (
                   <th
                     key={h}
-                    className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                    className="px-5 py-3 text-left text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide"
                   >
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-(--border-subtle)">
               {(shipments as Shipment[]).map((s) => {
                 const displayStatus = getDisplayStatus(s);
                 const isFlashing = flashIds.has(s.id);
@@ -198,12 +198,12 @@ export default function AdminFulfillmentPanel() {
                   <tr
                     key={s.id}
                     className={`transition-all duration-500 ${
-                      isFlashing ? "bg-blue-50" : "hover:bg-gray-50"
+                      isFlashing ? "bg-(--info-bg)" : "hover:bg-(--bg-sunken)"
                     }`}
                   >
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-blue-600">
+                        <span className="font-mono text-xs font-bold text-(--info)">
                           {s.trackingNumber}
                         </span>
                         {hasLiveUpdate && (
@@ -219,7 +219,7 @@ export default function AdminFulfillmentPanel() {
                         className={`text-xs px-2 py-0.5 rounded-full font-medium transition-all ${
                           SHIPMENT_STATUS_COLORS[
                             displayStatus as keyof typeof SHIPMENT_STATUS_COLORS
-                          ] ?? "bg-gray-100 text-gray-600"
+                          ] ?? "bg-(--off-white-2) text-(--text-secondary)"
                         }`}
                       >
                         {SHIPMENT_STATUS_LABELS[
@@ -227,14 +227,14 @@ export default function AdminFulfillmentPanel() {
                         ] ?? displayStatus}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-sm text-gray-700">
+                    <td className="px-5 py-3 text-sm text-(--text-secondary)">
                       {s.courierName ?? (
-                        <span className="text-xs text-gray-400 italic">
+                        <span className="text-xs text-(--text-tertiary) italic">
                           Atanmadı
                         </span>
                       )}
                     </td>
-                    <td className="px-5 py-3 text-xs text-gray-400">
+                    <td className="px-5 py-3 text-xs text-(--text-tertiary)">
                       {liveUpdates[s.id]?.updatedAt
                         ? formatDateTime(liveUpdates[s.id].updatedAt)
                         : s.updatedAt
@@ -247,18 +247,18 @@ export default function AdminFulfillmentPanel() {
                           href={s.labelUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-emerald-600 hover:underline font-medium"
+                          className="text-xs text-(--success) hover:underline font-medium"
                         >
                           İndir
                         </a>
                       ) : (
-                        <span className="text-xs text-gray-400">—</span>
+                        <span className="text-xs text-(--text-tertiary)">—</span>
                       )}
                     </td>
                     <td className="px-5 py-3">
                       <button
                         onClick={() => setAssignTarget(s)}
-                        className="text-xs text-blue-600 hover:underline font-medium"
+                        className="text-xs text-(--info) hover:underline font-medium"
                       >
                         {s.courierId ? "Yeniden Ata" : "Kurye Ata"}
                       </button>

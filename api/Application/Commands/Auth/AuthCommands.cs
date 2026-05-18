@@ -162,6 +162,28 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, ServiceResult<A
             return ServiceResult<AuthResponse>.Fail("E-posta veya şifre hatalı.");
         }
 
+        // Hesap durumu kontrolü — askıya alınmış veya reddedilmiş hesaplar giriş yapamaz
+        if (user.AccountStatus == AccountStatus.Suspended)
+        {
+            _logger.LogWarning("Askıya alınmış hesap giriş denemesi: {Email}", user.Email);
+            return ServiceResult<AuthResponse>.Fail(
+                "Hesabınız askıya alınmıştır. Destek ekibiyle iletişime geçin.");
+        }
+
+        if (user.AccountStatus == AccountStatus.Rejected)
+        {
+            _logger.LogWarning("Reddedilmiş hesap giriş denemesi: {Email}", user.Email);
+            return ServiceResult<AuthResponse>.Fail(
+                "Hesap başvurunuz reddedilmiştir.");
+        }
+
+        if (user.AccountStatus == AccountStatus.PendingApproval)
+        {
+            _logger.LogWarning("Onay bekleyen hesap giriş denemesi: {Email}", user.Email);
+            return ServiceResult<AuthResponse>.Fail(
+                "Hesabınız henüz onaylanmamıştır. Onay e-postası bekleniyor.");
+        }
+
         var accessToken = _tokenService.GenerateAccessToken(user);
         var refreshToken = _tokenService.GenerateRefreshToken();
         var expiresDays = int.TryParse(_config["REFRESH_EXPIRES_DAYS"], out var d) ? d : 7;
@@ -480,8 +502,16 @@ public class RefreshTokenCommandHandler
             int.TryParse(_config["JWT_EXPIRES_MINUTES"], out var m) ? m : 15
         );
 
+        // Token rotation — eski refresh token geçersiz kılınır, yeni token verilir
+        var newRefreshToken = _tokenService.GenerateRefreshToken();
+        var expiresDays = int.TryParse(_config["REFRESH_EXPIRES_DAYS"], out var d) ? d : 7;
+        user.RefreshToken = newRefreshToken;
+        user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(expiresDays);
+        user.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(ct);
+
         return ServiceResult<RefreshTokenResponse>.Ok(
-            new RefreshTokenResponse(accessToken, expiresAt)
+            new RefreshTokenResponse(accessToken, expiresAt, newRefreshToken)
         );
     }
 }

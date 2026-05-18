@@ -77,14 +77,26 @@ public class OrdersController(
                 product.UpdatedAt = DateTime.UtcNow;
             }
 
+            if (!Enum.TryParse<OrderSource>(dto.Source, ignoreCase: true, out var parsedSource))
+            {
+                await transaction.RollbackAsync();
+                return BadRequest(new { message = $"Geçersiz sipariş kaynağı: {dto.Source}" });
+            }
+
+            if (!Enum.TryParse<ShippingRate>(dto.ShippingRate, ignoreCase: true, out var parsedRate))
+            {
+                await transaction.RollbackAsync();
+                return BadRequest(new { message = $"Geçersiz kargo tipi: {dto.ShippingRate}" });
+            }
+
             order = new Order
             {
                 Id = Guid.NewGuid(),
                 CustomerId = currentUser.UserId,
-                Source = Enum.Parse<OrderSource>(dto.Source),
+                Source = parsedSource,
                 Status = OrderStatus.Pending,
                 TotalAmount = total,
-                ShippingRate = Enum.Parse<ShippingRate>(dto.ShippingRate),
+                ShippingRate = parsedRate,
                 RecipientName = dto.ShippingAddress.FullName,
                 RecipientPhone = dto.ShippingAddress.Phone,
                 AddressLine = dto.ShippingAddress.AddressLine,
@@ -246,9 +258,9 @@ public class OrdersController(
     [Authorize(Policy = "CustomerOnly")]
     public async Task<IActionResult> CancelOrder(Guid id, [FromBody] CancelOrderDto dto)
     {
-        var order = await db.Orders.FirstOrDefaultAsync(o =>
-            o.Id == id && o.CustomerId == currentUser.UserId
-        );
+        var order = await db.Orders
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == id && o.CustomerId == currentUser.UserId);
 
         if (order == null)
             return NotFound();
@@ -259,6 +271,22 @@ public class OrdersController(
         order.Status = OrderStatus.Cancelled;
         order.CancellationReason = dto.Reason;
         order.UpdatedAt = DateTime.UtcNow;
+
+        // Stok iadesi — iptal edilen siparişteki ürünlerin stoğunu geri yükle
+        var productIds = order.Items.Select(i => i.ProductId).ToList();
+        var products = await db.Products
+            .Where(p => productIds.Contains(p.Id))
+            .ToListAsync();
+
+        foreach (var item in order.Items)
+        {
+            var product = products.FirstOrDefault(p => p.Id == item.ProductId);
+            if (product != null)
+            {
+                product.Stock += item.Quantity;
+                product.UpdatedAt = DateTime.UtcNow;
+            }
+        }
 
         await db.SaveChangesAsync();
         return Ok(new { message = "Sipariş iptal edildi." });

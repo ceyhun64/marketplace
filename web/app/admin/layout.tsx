@@ -9,10 +9,12 @@ const adminLinks = [
   { href: "/admin/couriers", label: "Couriers", icon: "user-check" },
   { href: "/admin/users", label: "Users", icon: "users" },
   { href: "/admin/categories", label: "Categories", icon: "tag" },
+  { href: "/admin/commission", label: "Commission & Fees", icon: "percent" },
   { href: "/admin/invoices", label: "Invoices", icon: "file-text" },
   { href: "/admin/plugins", label: "Plugin Marketplace", icon: "puzzle" },
   { href: "/admin/analytics", label: "Analytics", icon: "bar-chart-2" },
   { href: "/admin/subscription", label: "Subscriptions", icon: "credit-card" },
+  { href: "/admin/logs", label: "Audit Logs", icon: "activity" },
 ];
 
 export default function AdminLayout({

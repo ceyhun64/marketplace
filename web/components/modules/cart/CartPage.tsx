@@ -458,7 +458,7 @@ export default function CartPage() {
                           fontSize: "1.1rem",
                         }}
                       >
-                        ₺{rate === "EXPRESS" ? "49.90" : "19.90"}
+                        ₺{rate === "EXPRESS" ? "59.90" : "29.90"}
                       </span>
                     </div>
                   </button>

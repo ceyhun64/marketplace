@@ -53,18 +53,18 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
       className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div className="bg-(--bg-surface) rounded-2xl shadow-2xl w-full max-w-md">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between p-6 border-b border-(--border-light)">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Assign Courier</h2>
-            <p className="font-mono text-xs text-gray-400 mt-0.5">
+            <h2 className="text-lg font-semibold text-(--text-primary)">Assign Courier</h2>
+            <p className="font-mono text-xs text-(--text-tertiary) mt-0.5">
               Tracking: {shipment.trackingNumber}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+            className="text-(--text-tertiary) hover:text-(--text-secondary) text-xl leading-none"
           >
             ✕
           </button>
@@ -73,19 +73,19 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
         <div className="p-6 space-y-5">
           {/* Generate Label */}
           {!shipment.labelUrl && (
-            <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between border border-gray-100">
+            <div className="bg-(--bg-sunken) rounded-xl p-4 flex items-center justify-between border border-(--border-light)">
               <div>
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-(--text-primary)">
                   Shipping Label
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-(--text-tertiary) mt-0.5">
                   Generate a QR-coded PDF label
                 </p>
               </div>
               <button
                 onClick={handleGenerateLabel}
                 disabled={labelMutation.isPending}
-                className="text-xs bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors font-medium"
+                className="text-xs bg-(--charcoal) text-white px-4 py-2 rounded-lg hover:bg-(--charcoal-2) disabled:opacity-50 transition-colors font-medium"
               >
                 {labelMutation.isPending ? "Generating..." : "Generate Label"}
               </button>
@@ -93,12 +93,12 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
           )}
 
           {shipment.labelUrl && (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between">
+            <div className="bg-(--success-bg) border border-emerald-200 rounded-xl p-4 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-emerald-800">
+                <p className="text-sm font-medium text-(--success)">
                   ✓ Label Ready
                 </p>
-                <p className="text-xs text-emerald-600 mt-0.5">
+                <p className="text-xs text-(--success) mt-0.5">
                   Download the PDF label
                 </p>
               </div>
@@ -106,7 +106,7 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
                 href={shipment.labelUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs bg-emerald-700 text-white px-4 py-2 rounded-lg hover:bg-emerald-800 transition-colors font-medium"
+                className="text-xs bg-(--success) text-white px-4 py-2 rounded-lg hover:opacity-90 transition-colors font-medium"
               >
                 Download
               </a>
@@ -115,9 +115,9 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
 
           {/* Courier List */}
           <div>
-            <p className="text-sm font-medium text-gray-900 mb-3">
+            <p className="text-sm font-medium text-(--text-primary) mb-3">
               Available Couriers
-              <span className="ml-2 text-xs text-gray-400 font-normal">
+              <span className="ml-2 text-xs text-(--text-tertiary) font-normal">
                 ({availableCouriers.length} available)
               </span>
             </p>
@@ -129,7 +129,7 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
                 ))}
               </div>
             ) : availableCouriers.length === 0 ? (
-              <div className="text-center py-6 text-sm text-gray-400">
+              <div className="text-center py-6 text-sm text-(--text-tertiary)">
                 No available couriers right now.
               </div>
             ) : (
@@ -140,19 +140,19 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
                     onClick={() => setSelectedCourierId(courier.id)}
                     className={`w-full p-3 rounded-xl border text-left transition-all ${
                       selectedCourierId === courier.id
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                        ? "border-blue-500 bg-(--info-bg)"
+                        : "border-(--border-mid) hover:border-(--border-mid) hover:bg-(--bg-sunken)"
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-gray-900 flex items-center justify-center text-white text-xs font-bold">
+                      <div className="w-9 h-9 rounded-lg bg-(--charcoal) flex items-center justify-center text-white text-xs font-bold">
                         {courier.fullName?.charAt(0)?.toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-gray-900">
+                        <p className="font-medium text-sm text-(--text-primary)">
                           {courier.fullName}
                         </p>
-                        <p className="text-xs text-gray-400 font-mono">
+                        <p className="text-xs text-(--text-tertiary) font-mono">
                           {courier.vehicleType ?? "Vehicle not specified"}
                           {courier.vehiclePlate
                             ? ` · ${courier.vehiclePlate}`
@@ -160,7 +160,7 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
                         </p>
                       </div>
                       {selectedCourierId === courier.id && (
-                        <span className="text-blue-600 text-sm font-bold">✓</span>
+                        <span className="text-(--info) text-sm font-bold">✓</span>
                       )}
                     </div>
                   </button>
@@ -170,7 +170,7 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
           </div>
 
           {error && (
-            <p className="text-sm text-rose-600 bg-rose-50 rounded-lg px-3 py-2 border border-rose-100">
+            <p className="text-sm text-(--danger) bg-(--danger-bg) rounded-lg px-3 py-2 border border-(--danger-border)">
               {error}
             </p>
           )}
@@ -180,14 +180,14 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
         <div className="flex gap-3 p-6 pt-0">
           <button
             onClick={onClose}
-            className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors"
+            className="flex-1 border border-(--border-mid) text-(--text-secondary) rounded-xl py-2.5 text-sm font-medium hover:bg-(--bg-sunken) transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleAssign}
             disabled={!selectedCourierId || assignMutation.isPending}
-            className="flex-1 bg-gray-900 text-white rounded-xl py-2.5 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 bg-(--charcoal) text-white rounded-xl py-2.5 text-sm font-medium hover:bg-(--charcoal-2) disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {assignMutation.isPending ? "Assigning..." : "Assign Courier"}
           </button>

@@ -231,8 +231,10 @@ public class AppDbContext : DbContext
             .Property(a => a.Amount)
             .HasColumnType("decimal(18,2)");
 
-        // ── Soft-delete filtresi ──────────────────────────────────────────────
-        modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);
+        // ── Soft-delete + aktif merchant filtresi ─────────────────────────────
+        // Silinmiş ürünler ve askıya alınmış merchant'ların ürünleri hiçbir sorguda görünmez.
+        // Yönetici sorgularında bu filtreyi .IgnoreQueryFilters() ile devre dışı bırakabilirsiniz.
+        modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted && p.Merchant.IsActive);
 
         // ── ProductQuestion → Product (N:1) ───────────────────────────────────
         modelBuilder

@@ -321,14 +321,14 @@ export default function AdminProductsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Products</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-semibold text-(--text-primary)">Products</h1>
+          <p className="text-sm text-(--text-tertiary) mt-1">
             Master catalog — manage and approve all products
           </p>
         </div>
         <Button
           onClick={() => setAddOpen(true)}
-          className="gap-2 bg-gray-900 hover:bg-gray-800 text-white"
+          className="gap-2 bg-(--charcoal) hover:bg-(--charcoal-2) text-white"
         >
           <Plus className="w-4 h-4" />
           Add Product
@@ -342,48 +342,48 @@ export default function AdminProductsPage() {
             label: "Total Products",
             value: allProducts.length,
             icon: Package,
-            color: "text-blue-600",
-            bg: "bg-blue-50",
+            color: "text-(--info)",
+            bg: "bg-(--info-bg)",
           },
           {
             label: "Approved",
             value: allProducts.filter((p) => p.isApproved).length,
             icon: CheckCircle,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50",
+            color: "text-(--success)",
+            bg: "bg-(--success-bg)",
           },
           {
             label: "Pending Approval",
             value: pendingProducts.length,
             icon: Clock,
-            color: "text-amber-600",
-            bg: "bg-amber-50",
+            color: "text-(--warning)",
+            bg: "bg-(--warning-bg)",
           },
         ].map((s) => (
           <div
             key={s.label}
-            className="bg-white rounded-xl border border-gray-100 p-5"
+            className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5"
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+              <p className="text-xs text-(--text-tertiary) font-medium uppercase tracking-wider">
                 {s.label}
               </p>
               <div className={`p-1.5 rounded-lg ${s.bg}`}>
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+            <p className="text-2xl font-bold text-(--text-primary)">{s.value}</p>
           </div>
         ))}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-gray-100">
+        <TabsList className="bg-(--off-white-2)">
           <TabsTrigger value="all">All Products</TabsTrigger>
           <TabsTrigger value="pending" className="relative">
             Pending Approval
             {pendingProducts.length > 0 && (
-              <span className="ml-2 bg-amber-500 text-white text-xs rounded-full px-1.5 py-0.5">
+              <span className="ml-2 bg-(--warning-bg)0 text-white text-xs rounded-full px-1.5 py-0.5">
                 {pendingProducts.length}
               </span>
             )}
@@ -391,13 +391,13 @@ export default function AdminProductsPage() {
         </TabsList>
 
         <TabsContent value="all" className="mt-4">
-          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-            <div className="p-4 border-b border-gray-100">
+          <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden">
+            <div className="p-4 border-b border-(--border-light)">
               <div className="relative max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-tertiary)" />
                 <Input
                   placeholder="Search by name, category or merchant..."
-                  className="pl-9 border-gray-200"
+                  className="pl-9 border-(--border-mid)"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -405,10 +405,10 @@ export default function AdminProductsPage() {
             </div>
             {productsLoading ? (
               <div className="flex items-center justify-center py-16">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--charcoal)" />
               </div>
             ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+              <div className="flex flex-col items-center justify-center py-16 text-(--text-tertiary)">
                 <Package className="w-12 h-12 mb-3 opacity-20" />
                 <p className="text-sm font-medium">No products yet</p>
                 <Button
@@ -423,26 +423,26 @@ export default function AdminProductsPage() {
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-gray-50 border-b border-gray-100">
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <TableRow className="bg-(--bg-sunken) border-b border-(--border-light)">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Product
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Category
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Merchant
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Price / Stock
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Tags
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Status
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Date
                     </TableHead>
                     <TableHead className="w-24" />
@@ -452,7 +452,7 @@ export default function AdminProductsPage() {
                   {filtered.map((product) => (
                     <TableRow
                       key={product.id}
-                      className="hover:bg-gray-50 border-b border-gray-50"
+                      className="hover:bg-(--bg-sunken) border-b border-(--border-subtle)"
                     >
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -460,34 +460,34 @@ export default function AdminProductsPage() {
                             <img
                               src={product.images[0]}
                               alt={product.name}
-                              className="w-10 h-10 object-cover rounded-lg border border-gray-100"
+                              className="w-10 h-10 object-cover rounded-lg border border-(--border-light)"
                             />
                           ) : (
-                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <ImageIcon className="w-4 h-4 text-gray-400" />
+                            <div className="w-10 h-10 bg-(--off-white-2) rounded-lg flex items-center justify-center">
+                              <ImageIcon className="w-4 h-4 text-(--text-tertiary)" />
                             </div>
                           )}
                           <div>
-                            <p className="font-medium text-sm text-gray-900">
+                            <p className="font-medium text-sm text-(--text-primary)">
                               {product.name}
                             </p>
-                            <p className="text-xs text-gray-400 truncate max-w-[180px]">
+                            <p className="text-xs text-(--text-tertiary) truncate max-w-[180px]">
                               {product.description}
                             </p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm text-gray-600">
+                      <TableCell className="text-sm text-(--text-secondary)">
                         {product.categoryName || "—"}
                       </TableCell>
-                      <TableCell className="text-sm text-gray-600">
+                      <TableCell className="text-sm text-(--text-secondary)">
                         {product.merchantStoreName || "—"}
                       </TableCell>
-                      <TableCell className="text-sm text-gray-600">
+                      <TableCell className="text-sm text-(--text-secondary)">
                         <span className="font-semibold">
                           ${product.price?.toFixed(2) ?? "—"}
                         </span>
-                        <span className="text-gray-400 text-xs ml-1">
+                        <span className="text-(--text-tertiary) text-xs ml-1">
                           / {product.stock} pcs
                         </span>
                       </TableCell>
@@ -511,12 +511,12 @@ export default function AdminProductsPage() {
                       </TableCell>
                       <TableCell>
                         <span
-                          className={`text-xs px-2 py-0.5 rounded-md font-medium ${product.isApproved ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
+                          className={`text-xs px-2 py-0.5 rounded-md font-medium ${product.isApproved ? "bg-(--success-bg) text-(--success)" : "bg-(--warning-bg) text-(--warning)"}`}
                         >
                           {product.isApproved ? "Approved" : "Pending"}
                         </span>
                       </TableCell>
-                      <TableCell className="text-xs text-gray-400">
+                      <TableCell className="text-xs text-(--text-tertiary)">
                         {new Date(product.createdAt).toLocaleDateString(
                           "en-US",
                         )}
@@ -526,7 +526,7 @@ export default function AdminProductsPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-7 w-7 p-0 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                            className="h-7 w-7 p-0 text-(--info) hover:text-(--info) hover:bg-(--info-bg)"
                             onClick={() => openEdit(product)}
                           >
                             <Pencil className="w-4 h-4" />
@@ -535,7 +535,7 @@ export default function AdminProductsPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 w-7 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                              className="h-7 w-7 p-0 text-(--success) hover:text-(--success) hover:bg-(--success-bg)"
                               onClick={() =>
                                 approveMutation.mutate({
                                   id: product.id,
@@ -549,7 +549,7 @@ export default function AdminProductsPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-7 w-7 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                            className="h-7 w-7 p-0 text-(--danger) hover:text-(--danger) hover:bg-(--danger-bg)"
                             onClick={() => {
                               setProductToDelete(product);
                               setDeleteConfirmOpen(true);
@@ -568,36 +568,36 @@ export default function AdminProductsPage() {
         </TabsContent>
 
         <TabsContent value="pending" className="mt-4">
-          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden">
             {pendingLoading ? (
               <div className="flex items-center justify-center py-16">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--charcoal)" />
               </div>
             ) : pendingProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+              <div className="flex flex-col items-center justify-center py-16 text-(--text-tertiary)">
                 <CheckCircle className="w-12 h-12 mb-3 opacity-20" />
                 <p className="text-sm font-medium">No pending products</p>
               </div>
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-gray-50 border-b border-gray-100">
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <TableRow className="bg-(--bg-sunken) border-b border-(--border-light)">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Product
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Category
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Added By
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Price
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Date
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Action
                     </TableHead>
                   </TableRow>
@@ -606,7 +606,7 @@ export default function AdminProductsPage() {
                   {pendingProducts.map((product) => (
                     <TableRow
                       key={product.id}
-                      className="hover:bg-gray-50 border-b border-gray-50"
+                      className="hover:bg-(--bg-sunken) border-b border-(--border-subtle)"
                     >
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -614,37 +614,37 @@ export default function AdminProductsPage() {
                             <img
                               src={product.images[0]}
                               alt={product.name}
-                              className="w-10 h-10 object-cover rounded-lg border border-gray-100"
+                              className="w-10 h-10 object-cover rounded-lg border border-(--border-light)"
                             />
                           ) : (
-                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <ImageIcon className="w-4 h-4 text-gray-400" />
+                            <div className="w-10 h-10 bg-(--off-white-2) rounded-lg flex items-center justify-center">
+                              <ImageIcon className="w-4 h-4 text-(--text-tertiary)" />
                             </div>
                           )}
                           <div>
-                            <p className="font-medium text-sm text-gray-900">
+                            <p className="font-medium text-sm text-(--text-primary)">
                               {product.name}
                             </p>
-                            <p className="text-xs text-gray-400 truncate max-w-[200px]">
+                            <p className="text-xs text-(--text-tertiary) truncate max-w-[200px]">
                               {product.description}
                             </p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm text-gray-600">
+                      <TableCell className="text-sm text-(--text-secondary)">
                         {(product as any).category ??
                           (product as any).categoryName ??
                           "—"}
                       </TableCell>
-                      <TableCell className="text-sm text-gray-600">
+                      <TableCell className="text-sm text-(--text-secondary)">
                         {(product as any).merchant?.storeName ??
                           (product as any).merchantStoreName ??
                           "Merchant"}
                       </TableCell>
-                      <TableCell className="text-sm font-semibold text-gray-700">
+                      <TableCell className="text-sm font-semibold text-(--text-secondary)">
                         ${(product as any).price?.toFixed(2) ?? "—"}
                       </TableCell>
-                      <TableCell className="text-xs text-gray-400">
+                      <TableCell className="text-xs text-(--text-tertiary)">
                         {new Date(product.createdAt).toLocaleDateString(
                           "en-US",
                         )}
@@ -653,7 +653,7 @@ export default function AdminProductsPage() {
                         <div className="flex items-center gap-2">
                           <Button
                             size="sm"
-                            className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
+                            className="h-8 bg-(--success) hover:opacity-90 text-white gap-1.5"
                             onClick={() =>
                               approveMutation.mutate({
                                 id: product.id,
@@ -668,7 +668,7 @@ export default function AdminProductsPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-8 border-rose-200 text-rose-600 hover:bg-rose-50 gap-1.5"
+                            className="h-8 border-(--danger-border) text-(--danger) hover:bg-(--danger-bg) gap-1.5"
                             onClick={() =>
                               approveMutation.mutate({
                                 id: product.id,
@@ -829,7 +829,7 @@ export default function AdminProductsPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-(--text-tertiary)">
                   If left blank, the system will assign one automatically.
                 </p>
               </div>
@@ -844,7 +844,7 @@ export default function AdminProductsPage() {
                   setForm((f) => ({ ...f, tags: e.target.value }))
                 }
               />
-              <p className="text-xs text-gray-400">Separate tags with commas</p>
+              <p className="text-xs text-(--text-tertiary)">Separate tags with commas</p>
             </div>
 
             {/* Publish toggles */}
@@ -858,7 +858,7 @@ export default function AdminProductsPage() {
                   }
                   className="w-4 h-4 rounded"
                 />
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-(--text-secondary)">
                   Publish to E-Store
                 </span>
               </label>
@@ -874,7 +874,7 @@ export default function AdminProductsPage() {
                   }
                   className="w-4 h-4 rounded"
                 />
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-(--text-secondary)">
                   Publish to Marketplace
                 </span>
               </label>
@@ -1034,7 +1034,7 @@ export default function AdminProductsPage() {
                   setEditForm((f) => ({ ...f, tags: e.target.value }))
                 }
               />
-              <p className="text-xs text-gray-400">Separate tags with commas</p>
+              <p className="text-xs text-(--text-tertiary)">Separate tags with commas</p>
             </div>
           </div>
           <DialogFooter>
@@ -1074,9 +1074,9 @@ export default function AdminProductsPage() {
             <DialogDescription>This action cannot be undone.</DialogDescription>
           </DialogHeader>
           <div className="py-3">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-(--text-secondary)">
               Are you sure you want to delete{" "}
-              <span className="font-semibold text-gray-900">
+              <span className="font-semibold text-(--text-primary)">
                 {productToDelete?.name}
               </span>
               ? This will permanently remove the product from the platform.

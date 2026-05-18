@@ -42,18 +42,23 @@ export const orderKeys = {
 
 // ── Customer Hooks ────────────────────────────────────────────────────────────
 
+interface PaginatedOrdersResponse {
+  data: Order[];
+  pagination: { page: number; limit: number; total: number; pages: number };
+}
+
 export function useMyOrders(status?: OrderStatus) {
   return useQuery({
     queryKey: orderKeys.myOrders(status),
     queryFn: async () => {
       const params = status ? `?status=${status}` : "";
-      const { data } = await api.get<any>(`/api/orders${params}`);
-      // API returns { data: orders[], pagination: { page, limit, total, pages } }
-      const raw = data ?? {};
-      const items: Order[] = Array.isArray(raw)
-        ? raw
-        : (raw.data ?? raw.items ?? raw.orders ?? []);
-      return items;
+      const { data } = await api.get<PaginatedOrdersResponse>(`/api/orders${params}`);
+      if (!Array.isArray(data?.data)) {
+        throw new Error(
+          `Unexpected orders response shape: ${JSON.stringify(data).slice(0, 200)}`,
+        );
+      }
+      return data.data;
     },
   });
 }
@@ -133,15 +138,15 @@ export function useMerchantIncomingOrders(status?: OrderStatus) {
     queryKey: orderKeys.merchantIncoming(status),
     queryFn: async () => {
       const params = status ? `?status=${status}` : "";
-      const { data } = await api.get<any>(
+      const { data } = await api.get<PaginatedOrdersResponse>(
         `/api/orders/merchant/incoming${params}`,
       );
-      // API returns { data: orders[], pagination: { page, limit, total, pages } }
-      const raw = data ?? {};
-      const items: Order[] = Array.isArray(raw)
-        ? raw
-        : (raw.data ?? raw.items ?? raw.orders ?? []);
-      return items;
+      if (!Array.isArray(data?.data)) {
+        throw new Error(
+          `Unexpected merchant orders response shape: ${JSON.stringify(data).slice(0, 200)}`,
+        );
+      }
+      return data.data;
     },
   });
 }

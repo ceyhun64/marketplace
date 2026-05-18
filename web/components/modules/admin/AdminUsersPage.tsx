@@ -77,22 +77,22 @@ const ROLE_CONFIG: Record<
 > = {
   Customer: {
     label: "Customer",
-    color: "bg-blue-50 text-blue-700",
+    color: "bg-(--info-bg) text-(--info)",
     icon: <Users className="w-3 h-3" />,
   },
   Merchant: {
     label: "Merchant",
-    color: "bg-violet-50 text-violet-700",
+    color: "bg-(--info-bg) text-(--info)",
     icon: <Store className="w-3 h-3" />,
   },
   Admin: {
     label: "Admin",
-    color: "bg-rose-50 text-rose-700",
+    color: "bg-(--danger-bg) text-(--danger)",
     icon: <ShieldCheck className="w-3 h-3" />,
   },
   Courier: {
     label: "Courier",
-    color: "bg-amber-50 text-amber-700",
+    color: "bg-(--warning-bg) text-(--warning)",
     icon: <Truck className="w-3 h-3" />,
   },
 };
@@ -101,19 +101,19 @@ const STATUS_CONFIG: Record<
   AccountStatus,
   { label: string; color: string }
 > = {
-  Active: { label: "Active", color: "bg-emerald-50 text-emerald-700" },
+  Active: { label: "Active", color: "bg-(--success-bg) text-(--success)" },
   PendingApproval: {
     label: "Pending",
-    color: "bg-orange-50 text-orange-700",
+    color: "bg-(--warning-bg) text-(--warning)",
   },
-  Suspended: { label: "Suspended", color: "bg-amber-50 text-amber-700" },
-  Banned: { label: "Banned", color: "bg-rose-50 text-rose-700" },
+  Suspended: { label: "Suspended", color: "bg-(--warning-bg) text-(--warning)" },
+  Banned: { label: "Banned", color: "bg-(--danger-bg) text-(--danger)" },
 };
 
 function RoleBadge({ role }: { role: UserRole }) {
   const cfg = ROLE_CONFIG[role] ?? {
     label: role,
-    color: "bg-gray-100 text-gray-600",
+    color: "bg-gray-100 text-(--text-secondary)",
     icon: null,
   };
   return (
@@ -129,7 +129,7 @@ function RoleBadge({ role }: { role: UserRole }) {
 function StatusBadge({ status }: { status: AccountStatus }) {
   const cfg = STATUS_CONFIG[status] ?? {
     label: status,
-    color: "bg-gray-100 text-gray-600",
+    color: "bg-gray-100 text-(--text-secondary)",
   };
   return (
     <span
@@ -211,10 +211,10 @@ export default function AdminUsersPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
+          <h1 className="text-2xl font-semibold text-(--text-primary)">
             User Management
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-(--text-tertiary) mt-1">
             All registered users across the platform
           </p>
         </div>
@@ -237,43 +237,43 @@ export default function AdminUsersPage() {
             value: stats.total,
             icon: Users,
             color: "text-blue-600",
-            bg: "bg-blue-50",
+            bg: "bg-(--info-bg)",
           },
           {
             label: "Customers",
             value: stats.customers,
             icon: UserCheck,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50",
+            color: "text-(--success)",
+            bg: "bg-(--success-bg)",
           },
           {
             label: "Merchants",
             value: stats.merchants,
             icon: Store,
             color: "text-violet-600",
-            bg: "bg-violet-50",
+            bg: "bg-(--info-bg)",
           },
           {
             label: "Banned / Suspended",
             value: stats.banned,
             icon: UserX,
-            color: "text-rose-600",
-            bg: "bg-rose-50",
+            color: "text-(--danger)",
+            bg: "bg-(--danger-bg)",
           },
         ].map((s) => (
           <div
             key={s.label}
-            className="bg-white rounded-xl border border-gray-100 p-5"
+            className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5"
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+              <p className="text-xs text-(--text-tertiary) font-medium uppercase tracking-wider">
                 {s.label}
               </p>
               <div className={`p-1.5 rounded-lg ${s.bg}`}>
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-(--text-primary)">
               {isLoading ? "—" : s.value}
             </p>
           </div>
@@ -283,7 +283,7 @@ export default function AdminUsersPage() {
       {/* Filters */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-tertiary)" />
           <Input
             placeholder="Search by name or email..."
             value={search}
@@ -291,7 +291,7 @@ export default function AdminUsersPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="pl-9 border-gray-200"
+            className="pl-9 border-(--border-mid)"
           />
         </div>
         <Select
@@ -301,7 +301,7 @@ export default function AdminUsersPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="w-44 border-gray-200">
+          <SelectTrigger className="w-44 border-(--border-mid)">
             <SelectValue placeholder="Filter by role" />
           </SelectTrigger>
           <SelectContent>
@@ -315,29 +315,29 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50 border-b border-gray-100">
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            <TableRow className="bg-(--bg-sunken) border-b border-(--border-light)">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 User
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Role
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Status
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Phone
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Joined
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                 Change Role
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">
+              <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide text-right">
                 Actions
               </TableHead>
             </TableRow>
@@ -357,7 +357,7 @@ export default function AdminUsersPage() {
               <TableRow>
                 <TableCell
                   colSpan={7}
-                  className="text-center py-16 text-gray-400"
+                  className="text-center py-16 text-(--text-tertiary)"
                 >
                   <Users className="w-10 h-10 mx-auto mb-2 opacity-20" />
                   <p className="text-sm font-medium">No users found</p>
@@ -367,7 +367,7 @@ export default function AdminUsersPage() {
               users.map((user) => (
                 <TableRow
                   key={user.id}
-                  className="hover:bg-gray-50 border-b border-gray-50"
+                  className="hover:bg-(--bg-sunken) border-b border-(--border-subtle)"
                 >
                   <TableCell>
                     <div className="flex items-center gap-2.5">
@@ -375,12 +375,12 @@ export default function AdminUsersPage() {
                         {(user.firstName?.charAt(0) || user.email?.charAt(0) || "?").toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-medium text-sm text-gray-900">
+                        <p className="font-medium text-sm text-(--text-primary)">
                           {user.firstName && user.lastName
                             ? `${user.firstName} ${user.lastName}`
                             : user.email}
                         </p>
-                        <p className="text-xs text-gray-400">{user.email}</p>
+                        <p className="text-xs text-(--text-tertiary)">{user.email}</p>
                       </div>
                     </div>
                   </TableCell>
@@ -390,10 +390,10 @@ export default function AdminUsersPage() {
                   <TableCell>
                     <StatusBadge status={user.accountStatus as AccountStatus} />
                   </TableCell>
-                  <TableCell className="text-sm text-gray-500">
-                    {user.phone || <span className="text-gray-300">—</span>}
+                  <TableCell className="text-sm text-(--text-tertiary)">
+                    {user.phone || <span className="text-(--charcoal-mist)">—</span>}
                   </TableCell>
-                  <TableCell className="text-xs text-gray-400">
+                  <TableCell className="text-xs text-(--text-tertiary)">
                     {new Date(user.createdAt).toLocaleDateString("en-US")}
                   </TableCell>
                   <TableCell>
@@ -407,7 +407,7 @@ export default function AdminUsersPage() {
                       }
                       disabled={user.role === "Admin"}
                     >
-                      <SelectTrigger className="w-32 h-7 text-xs border-gray-200">
+                      <SelectTrigger className="w-32 h-7 text-xs border-(--border-mid)">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -438,8 +438,8 @@ export default function AdminUsersPage() {
                           className={`h-7 w-7 p-0 ${
                             user.accountStatus === "Banned" ||
                             user.accountStatus === "Suspended"
-                              ? "text-emerald-600 hover:bg-emerald-50"
-                              : "text-rose-500 hover:bg-rose-50"
+                              ? "text-(--success) hover:bg-(--success-bg)"
+                              : "text-rose-500 hover:bg-(--danger-bg)"
                           }`}
                           onClick={() => {
                             setUserToBan(user);
@@ -474,7 +474,7 @@ export default function AdminUsersPage() {
           >
             ← Previous
           </Button>
-          <span className="px-3 py-1 text-sm text-gray-600">
+          <span className="px-3 py-1 text-sm text-(--text-secondary)">
             Page {page} of {totalPages}
           </span>
           <Button
@@ -497,7 +497,7 @@ export default function AdminUsersPage() {
           {selectedUser && (
             <div className="space-y-4">
               {/* Avatar + Name */}
-              <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+              <div className="flex items-center gap-4 pb-4 border-b border-(--border-light)">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white text-xl font-bold">
                   {(
                     selectedUser.firstName?.charAt(0) ||
@@ -506,7 +506,7 @@ export default function AdminUsersPage() {
                   ).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-semibold text-(--text-primary)">
                     {selectedUser.firstName} {selectedUser.lastName}
                   </p>
                   <div className="flex items-center gap-2 mt-1">
@@ -520,18 +520,18 @@ export default function AdminUsersPage() {
 
               {/* Details Grid */}
               <div className="grid grid-cols-1 gap-3 text-sm">
-                <div className="flex items-center gap-3 text-gray-600">
-                  <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <div className="flex items-center gap-3 text-(--text-secondary)">
+                  <Mail className="w-4 h-4 text-(--text-tertiary) shrink-0" />
                   <span>{selectedUser.email}</span>
                 </div>
                 {selectedUser.phone && (
-                  <div className="flex items-center gap-3 text-gray-600">
-                    <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <div className="flex items-center gap-3 text-(--text-secondary)">
+                    <Phone className="w-4 h-4 text-(--text-tertiary) shrink-0" />
                     <span>{selectedUser.phone}</span>
                   </div>
                 )}
-                <div className="flex items-center gap-3 text-gray-600">
-                  <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <div className="flex items-center gap-3 text-(--text-secondary)">
+                  <Calendar className="w-4 h-4 text-(--text-tertiary) shrink-0" />
                   <span>
                     Joined{" "}
                     {new Date(selectedUser.createdAt).toLocaleDateString(
@@ -541,8 +541,8 @@ export default function AdminUsersPage() {
                   </span>
                 </div>
                 {selectedUser.lastLoginAt && (
-                  <div className="flex items-center gap-3 text-gray-600">
-                    <Shield className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <div className="flex items-center gap-3 text-(--text-secondary)">
+                    <Shield className="w-4 h-4 text-(--text-tertiary) shrink-0" />
                     <span>
                       Last login:{" "}
                       {new Date(selectedUser.lastLoginAt).toLocaleDateString(
@@ -551,8 +551,8 @@ export default function AdminUsersPage() {
                     </span>
                   </div>
                 )}
-                <div className="flex items-center gap-3 text-gray-500 text-xs font-mono">
-                  <span className="text-gray-300">ID:</span>
+                <div className="flex items-center gap-3 text-(--text-tertiary) text-xs font-mono">
+                  <span className="text-(--charcoal-mist)">ID:</span>
                   <span>{selectedUser.id}</span>
                 </div>
               </div>
@@ -604,12 +604,12 @@ export default function AdminUsersPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="py-3">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-(--text-secondary)">
               {userToBan?.accountStatus === "Banned" ||
               userToBan?.accountStatus === "Suspended" ? (
                 <>
                   Restore access for{" "}
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-(--text-primary)">
                     {userToBan?.email}
                   </span>
                   ? They will be able to log in again.
@@ -617,7 +617,7 @@ export default function AdminUsersPage() {
               ) : (
                 <>
                   Ban{" "}
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-(--text-primary)">
                     {userToBan?.email}
                   </span>
                   ? They will lose access to the platform.

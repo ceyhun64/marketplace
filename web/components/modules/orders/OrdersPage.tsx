@@ -6,6 +6,7 @@ import { ORDER_STATUS_LABELS } from "@/types/enums";
 import type { OrderStatus } from "@/types/enums";
 import { useState } from "react";
 import type { Order } from "@/types/entities";
+import { ChevronUp, ChevronDown } from "lucide-react";
 
 const FILTER_TABS = [
   { key: "all", label: "All" },
@@ -25,7 +26,7 @@ function statusMatch(status: OrderStatus, filter: string): boolean {
 
 function statusColor(status: OrderStatus): { text: string; bg: string } {
   if (status === "DELIVERED")
-    return { text: "var(--red)", bg: "rgba(200,16,46,0.08)" };
+    return { text: "var(--success)", bg: "var(--success-bg)" };
   if (status === "FAILED" || status === "CANCELLED")
     return { text: "var(--charcoal-soft)", bg: "rgba(51,51,51,0.08)" };
   return { text: "var(--charcoal)", bg: "rgba(51,51,51,0.06)" };
@@ -45,7 +46,7 @@ function OrderCard({ order }: { order: Order }) {
       }}
     >
       {order.status === "DELIVERED" && (
-        <div className="h-[3px]" style={{ background: "var(--red)" }} />
+        <div className="h-0.75" style={{ background: "var(--success)" }} />
       )}
       <button
         className="w-full text-left p-5 transition-colors"
@@ -118,19 +119,18 @@ function OrderCard({ order }: { order: Order }) {
               })}
             </p>
           </div>
-          <div className="text-right flex-shrink-0">
+          <div className="text-right shrink-0">
             <p
-              className="font-bold text-[var(--charcoal)]"
+              className="font-bold text-(--charcoal)"
               style={{ fontFamily: "var(--font-display)", fontSize: "1.25rem" }}
             >
               ₺{order.totalAmount.toLocaleString("tr-TR")}
             </p>
-            <p
-              className="font-mono text-[11px] mt-1"
-              style={{ color: "var(--red)" }}
-            >
-              {expanded ? "▲" : "▼"}
-            </p>
+            <div className="flex justify-end mt-1" style={{ color: "var(--charcoal-soft)" }}>
+              {expanded
+                ? <ChevronUp className="w-4 h-4" />
+                : <ChevronDown className="w-4 h-4" />}
+            </div>
           </div>
         </div>
       </button>
@@ -256,7 +256,7 @@ export default function OrdersPage() {
             </span>
           </div>
           <h1
-            className="font-normal text-[var(--charcoal)]"
+            className="font-normal text-(--charcoal)"
             style={{ fontFamily: "var(--font-display)", fontSize: "2.2rem" }}
           >
             My <em style={{ color: "var(--red)" }}>Orders</em>

@@ -242,27 +242,27 @@ export default function AdminMerchantsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Merchants</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-semibold text-(--text-primary)">Merchants</h1>
+          <p className="text-sm text-(--text-tertiary) mt-1">
             Manage all sellers on the platform
           </p>
         </div>
         <Button
           onClick={() => setCreateOpen(true)}
-          className="gap-2 bg-gray-900 hover:bg-gray-800 text-white"
+          className="gap-2 bg-(--charcoal) hover:bg-(--charcoal-2) text-white"
         >
           <Plus className="w-4 h-4" /> New Merchant
         </Button>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+      <div className="flex items-center gap-1 bg-(--off-white-2) p-1 rounded-xl w-fit">
         <button
           onClick={() => handleTabChange("active")}
           className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
             tab === "active"
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+              ? "bg-(--bg-surface) text-(--text-primary) shadow-sm"
+              : "text-(--text-tertiary) hover:text-(--text-secondary)"
           }`}
         >
           Active Merchants
@@ -271,13 +271,13 @@ export default function AdminMerchantsPage() {
           onClick={() => handleTabChange("pending")}
           className={`px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
             tab === "pending"
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+              ? "bg-(--bg-surface) text-(--text-primary) shadow-sm"
+              : "text-(--text-tertiary) hover:text-(--text-secondary)"
           }`}
         >
           Pending Applications
           {pending.length > 0 && (
-            <span className="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+            <span className="bg-(--warning) text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-4.5 text-center">
               {pending.length}
             </span>
           )}
@@ -293,51 +293,51 @@ export default function AdminMerchantsPage() {
                 label: "Total",
                 value: stats.total,
                 icon: Building2,
-                color: "text-gray-700",
+                color: "text-(--text-secondary)",
               },
               {
                 label: "Active",
                 value: stats.active,
                 icon: CheckCircle,
-                color: "text-emerald-600",
+                color: "text-(--success)",
               },
               {
                 label: "Suspended",
                 value: stats.suspended,
                 icon: Ban,
-                color: "text-rose-600",
+                color: "text-(--danger)",
               },
               {
                 label: "Custom Domain",
                 value: stats.withDomain,
                 icon: TrendingUp,
-                color: "text-violet-600",
+                color: "text-(--info)",
               },
             ].map((s) => (
               <div
                 key={s.label}
-                className="bg-white rounded-xl border border-gray-100 p-5"
+                className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5"
               >
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+                  <p className="text-xs text-(--text-tertiary) font-medium uppercase tracking-wider">
                     {s.label}
                   </p>
                   <s.icon className={`w-4 h-4 ${s.color}`} />
                 </div>
-                <p className="text-2xl font-bold text-gray-900 mt-2">
+                <p className="text-2xl font-bold text-(--text-primary) mt-2">
                   {s.value}
                 </p>
               </div>
             ))}
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100">
-            <div className="p-4 border-b border-gray-100">
+          <div className="bg-(--bg-surface) rounded-xl border border-(--border-light)">
+            <div className="p-4 border-b border-(--border-light)">
               <div className="relative max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-tertiary)" />
                 <Input
                   placeholder="Search by name or email..."
-                  className="pl-9 border-gray-200"
+                  className="pl-9 border-(--border-mid)"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -345,10 +345,10 @@ export default function AdminMerchantsPage() {
             </div>
             {isLoading ? (
               <div className="flex items-center justify-center py-16">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--charcoal)" />
               </div>
             ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+              <div className="flex flex-col items-center justify-center py-16 text-(--text-tertiary)">
                 <Building2 className="w-10 h-10 mb-3 opacity-20" />
                 <p className="text-sm font-medium">No merchants yet</p>
                 <Button
@@ -363,26 +363,26 @@ export default function AdminMerchantsPage() {
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-gray-50 border-b border-gray-100">
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <TableRow className="bg-(--bg-sunken) border-b border-(--border-light)">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Store
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Email
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Plan
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Domain
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Products
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Status
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                       Joined
                     </TableHead>
                     <TableHead className="w-10" />
@@ -392,34 +392,34 @@ export default function AdminMerchantsPage() {
                   {filtered.map((merchant) => (
                     <TableRow
                       key={merchant.id}
-                      className="hover:bg-gray-50 border-b border-gray-50"
+                      className="hover:bg-(--bg-sunken) border-b border-(--border-subtle)"
                     >
                       <TableCell>
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center text-white text-xs font-bold">
+                          <div className="w-8 h-8 rounded-lg bg-(--charcoal) flex items-center justify-center text-white text-xs font-bold">
                             {merchant.storeName?.charAt(0)?.toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-medium text-sm text-gray-900">
+                            <p className="font-medium text-sm text-(--text-primary)">
                               {merchant.storeName}
                             </p>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-(--text-tertiary)">
                               /{merchant.slug}
                             </p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm text-gray-600">
+                      <TableCell className="text-sm text-(--text-secondary)">
                         {merchant.email}
                       </TableCell>
                       <TableCell>
                         <span
                           className={`text-xs px-2 py-0.5 rounded-md font-medium ${
                             merchant.plan === "Enterprise"
-                              ? "bg-violet-100 text-violet-700"
+                              ? "bg-(--info-bg) text-(--info)"
                               : merchant.plan === "Pro"
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-gray-100 text-gray-600"
+                                ? "bg-(--info-bg) text-(--info)"
+                                : "bg-(--off-white-2) text-(--text-secondary)"
                           }`}
                         >
                           {merchant.plan || "Basic"}
@@ -428,23 +428,23 @@ export default function AdminMerchantsPage() {
                       <TableCell className="text-sm">
                         {merchant.customDomain ? (
                           <div className="flex items-center gap-1">
-                            <span className="text-gray-700 text-xs truncate max-w-[120px]">
+                            <span className="text-(--text-secondary) text-xs truncate max-w-30">
                               {merchant.customDomain}
                             </span>
                             {merchant.domainVerified ? (
-                              <CheckCircle className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                              <CheckCircle className="w-3 h-3 text-emerald-500 shrink-0" />
                             ) : (
-                              <span className="text-xs text-amber-500">!</span>
+                              <span className="text-xs text-(--warning)">!</span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-gray-300 text-xs">—</span>
+                          <span className="text-(--charcoal-mist) text-xs">—</span>
                         )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <ShoppingBag className="w-3 h-3 text-gray-400" />
-                          <span className="text-sm text-gray-700">
+                          <ShoppingBag className="w-3 h-3 text-(--text-tertiary)" />
+                          <span className="text-sm text-(--text-secondary)">
                             {merchant.productCount ?? 0}
                           </span>
                         </div>
@@ -453,14 +453,14 @@ export default function AdminMerchantsPage() {
                         <span
                           className={`text-xs px-2 py-0.5 rounded-md font-medium ${
                             !merchant.isActive
-                              ? "bg-rose-50 text-rose-600"
-                              : "bg-emerald-50 text-emerald-700"
+                              ? "bg-(--danger-bg) text-(--danger)"
+                              : "bg-(--success-bg) text-(--success)"
                           }`}
                         >
                           {!merchant.isActive ? "Suspended" : "Active"}
                         </span>
                       </TableCell>
-                      <TableCell className="text-xs text-gray-400">
+                      <TableCell className="text-xs text-(--text-tertiary)">
                         {new Date(merchant.createdAt).toLocaleDateString(
                           "en-US",
                         )}
@@ -493,8 +493,8 @@ export default function AdminMerchantsPage() {
                             <DropdownMenuItem
                               className={
                                 !merchant.isActive
-                                  ? "text-emerald-600"
-                                  : "text-rose-600"
+                                  ? "text-(--success)"
+                                  : "text-(--danger)"
                               }
                               onClick={() => {
                                 setMerchantToSuspend(merchant);
@@ -526,15 +526,15 @@ export default function AdminMerchantsPage() {
 
       {/* PENDING TAB */}
       {tab === "pending" && (
-        <div className="bg-white rounded-xl border border-gray-100">
-          <div className="p-5 border-b border-gray-100">
+        <div className="bg-(--bg-surface) rounded-xl border border-(--border-light)">
+          <div className="p-5 border-b border-(--border-light)">
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-orange-500" />
-              <p className="text-sm font-semibold text-gray-800">
+              <Clock className="w-4 h-4 text-(--warning)" />
+              <p className="text-sm font-semibold text-(--text-primary)">
                 Merchant Applications Awaiting Review
               </p>
               {pending.length > 0 && (
-                <span className="ml-auto text-xs text-gray-400">
+                <span className="ml-auto text-xs text-(--text-tertiary)">
                   {pending.length} application{pending.length > 1 ? "s" : ""}
                 </span>
               )}
@@ -543,10 +543,10 @@ export default function AdminMerchantsPage() {
 
           {pendingLoading ? (
             <div className="flex items-center justify-center py-16">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--charcoal)" />
             </div>
           ) : pending.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+            <div className="flex flex-col items-center justify-center py-16 text-(--text-tertiary)">
               <UserCheck className="w-10 h-10 mb-3 opacity-20" />
               <p className="text-sm font-medium">No pending applications</p>
               <p className="text-xs mt-1">All caught up!</p>
@@ -554,23 +554,23 @@ export default function AdminMerchantsPage() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50 border-b border-gray-100">
-                  <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <TableRow className="bg-(--bg-sunken) border-b border-(--border-light)">
+                  <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                     Applicant
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                     Store
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                     Contact
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                     Description
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                     Applied
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <TableHead className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -579,49 +579,49 @@ export default function AdminMerchantsPage() {
                 {pending.map((p) => (
                   <TableRow
                     key={p.id}
-                    className="hover:bg-orange-50/30 border-b border-gray-50"
+                    className="hover:bg-(--warning-bg)/30 border-b border-(--border-subtle)"
                   >
                     <TableCell>
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 text-xs font-bold">
+                        <div className="w-8 h-8 rounded-full bg-(--warning-bg) flex items-center justify-center text-(--warning) text-xs font-bold">
                           {p.firstName?.charAt(0)?.toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-medium text-sm text-gray-900">
+                          <p className="font-medium text-sm text-(--text-primary)">
                             {p.firstName} {p.lastName}
                           </p>
-                          <p className="text-xs text-gray-400">{p.email}</p>
+                          <p className="text-xs text-(--text-tertiary)">{p.email}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium text-sm text-gray-900">
+                        <p className="font-medium text-sm text-(--text-primary)">
                           {p.store?.storeName || (
-                            <span className="text-gray-300">—</span>
+                            <span className="text-(--charcoal-mist)">—</span>
                           )}
                         </p>
-                        <p className="text-xs text-gray-400 font-mono">
+                        <p className="text-xs text-(--text-tertiary) font-mono">
                           /store/{p.store?.slug}
                         </p>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-gray-500">
-                      {p.phone || <span className="text-gray-300">—</span>}
+                    <TableCell className="text-sm text-(--text-tertiary)">
+                      {p.phone || <span className="text-(--charcoal-mist)">—</span>}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-500 max-w-[200px] truncate">
+                    <TableCell className="text-sm text-(--text-tertiary) max-w-[200px] truncate">
                       {p.store?.description || (
-                        <span className="text-gray-300">—</span>
+                        <span className="text-(--charcoal-mist)">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-xs text-gray-400">
+                    <TableCell className="text-xs text-(--text-tertiary)">
                       {new Date(p.createdAt).toLocaleDateString("en-US")}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button
                           size="sm"
-                          className="h-8 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+                          className="h-8 gap-1.5 bg-(--success) hover:opacity-90 text-white text-xs"
                           onClick={() => approveMutation.mutate(p.id)}
                           disabled={approveMutation.isPending}
                         >
@@ -631,7 +631,7 @@ export default function AdminMerchantsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-8 gap-1.5 border-rose-200 text-rose-600 hover:bg-rose-50 text-xs"
+                          className="h-8 gap-1.5 border-(--danger-border) text-(--danger) hover:bg-(--danger-bg) text-xs"
                           onClick={() => {
                             setSelectedPending(p);
                             setRejectOpen(true);
@@ -677,7 +677,7 @@ export default function AdminMerchantsPage() {
             <div className="space-y-1.5">
               <Label>Store URL Slug</Label>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500 whitespace-nowrap">
+                <span className="text-sm text-(--text-tertiary) whitespace-nowrap">
                   /store/
                 </span>
                 <Input
@@ -760,7 +760,7 @@ export default function AdminMerchantsPage() {
             <div className="space-y-1.5">
               <Label>URL Slug</Label>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500 whitespace-nowrap">
+                <span className="text-sm text-(--text-tertiary) whitespace-nowrap">
                   /store/
                 </span>
                 <Input
@@ -819,12 +819,12 @@ export default function AdminMerchantsPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="py-3">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-(--text-secondary)">
               {merchantToSuspend?.isActive ? (
                 <>
                   Are you sure you want to{" "}
-                  <span className="font-semibold text-rose-600">suspend</span>{" "}
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-(--danger)">suspend</span>{" "}
+                  <span className="font-semibold text-(--text-primary)">
                     {merchantToSuspend?.storeName}
                   </span>
                   ? Their store will be hidden and they won&apos;t be able to
@@ -833,10 +833,10 @@ export default function AdminMerchantsPage() {
               ) : (
                 <>
                   Are you sure you want to{" "}
-                  <span className="font-semibold text-emerald-600">
+                  <span className="font-semibold text-(--success)">
                     activate
                   </span>{" "}
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-(--text-primary)">
                     {merchantToSuspend?.storeName}
                   </span>
                   ? Their store will become visible again.
@@ -858,7 +858,7 @@ export default function AdminMerchantsPage() {
               className={
                 merchantToSuspend?.isActive
                   ? "bg-rose-600 hover:bg-rose-700 text-white"
-                  : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  : "bg-(--success) hover:opacity-90 text-white"
               }
               onClick={() =>
                 merchantToSuspend &&
@@ -883,13 +883,13 @@ export default function AdminMerchantsPage() {
             <DialogTitle>Reject Application</DialogTitle>
           </DialogHeader>
           <div className="py-2 space-y-3">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-(--text-secondary)">
               Rejecting application from{" "}
-              <span className="font-semibold text-gray-900">
+              <span className="font-semibold text-(--text-primary)">
                 {selectedPending?.firstName} {selectedPending?.lastName}
               </span>{" "}
               for store{" "}
-              <span className="font-semibold text-gray-900">
+              <span className="font-semibold text-(--text-primary)">
                 {selectedPending?.store?.storeName}
               </span>
               .
@@ -901,7 +901,7 @@ export default function AdminMerchantsPage() {
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
               />
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-(--text-tertiary)">
                 This will be included in the notification email to the
                 applicant.
               </p>

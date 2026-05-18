@@ -147,15 +147,15 @@ export default function AdminInvoicesPage() {
       label: "Total Invoices",
       value: summary?.totalInvoices ?? 0,
       icon: Receipt,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
+      color: "text-(--info)",
+      bg: "bg-(--info-bg)",
     },
     {
       label: "Total Revenue",
       value: `$${((summary?.totalRevenue ?? 0) / 100).toFixed(2)}`,
       icon: DollarSign,
-      color: "text-green-600",
-      bg: "bg-green-50",
+      color: "text-(--success)",
+      bg: "bg-(--success-bg)",
     },
     {
       label: "Total VAT Collected",
@@ -168,30 +168,30 @@ export default function AdminInvoicesPage() {
       label: "Pending PDF",
       value: summary?.pendingPdf ?? 0,
       icon: FileText,
-      color: "text-orange-600",
-      bg: "bg-orange-50",
+      color: "text-(--warning)",
+      bg: "bg-(--warning-bg)",
     },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">
+        <h1 className="text-2xl font-semibold text-(--text-primary)">
           Invoice Management
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-(--text-tertiary) mt-1">
           All platform invoices — accounting overview
         </p>
       </div>
 
       {/* Tab Switcher */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+      <div className="flex gap-1 bg-(--off-white-2) p-1 rounded-xl w-fit">
         <button
           onClick={() => setActiveTab("invoices")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             activeTab === "invoices"
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+              ? "bg-(--bg-surface) text-(--text-primary) shadow-sm"
+              : "text-(--text-tertiary) hover:text-(--text-secondary)"
           }`}
         >
           <Receipt className="w-4 h-4" />
@@ -201,8 +201,8 @@ export default function AdminInvoicesPage() {
           onClick={() => setActiveTab("accounting")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             activeTab === "accounting"
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+              ? "bg-(--bg-surface) text-(--text-primary) shadow-sm"
+              : "text-(--text-tertiary) hover:text-(--text-secondary)"
           }`}
         >
           <BookOpen className="w-4 h-4" />
@@ -217,15 +217,15 @@ export default function AdminInvoicesPage() {
         {statCards.map((s) => (
           <div
             key={s.label}
-            className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"
+            className="bg-(--bg-surface) border border-(--border-light) rounded-2xl p-4 shadow-sm"
           >
             <div className="flex items-center gap-3">
               <div className={`${s.bg} p-2 rounded-lg`}>
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
               <div>
-                <p className="text-xs text-gray-500">{s.label}</p>
-                <p className="text-lg font-semibold text-gray-900">{s.value}</p>
+                <p className="text-xs text-(--text-tertiary)">{s.label}</p>
+                <p className="text-lg font-semibold text-(--text-primary)">{s.value}</p>
               </div>
             </div>
           </div>
@@ -233,20 +233,20 @@ export default function AdminInvoicesPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-3">
+      <div className="bg-(--bg-surface) border border-(--border-light) rounded-2xl shadow-sm">
+        <div className="p-4 border-b border-(--border-light) flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-tertiary)" />
             <Input
               placeholder="Search by invoice number or customer..."
-              className="pl-9 rounded-xl border-gray-200"
+              className="pl-9 rounded-xl border-(--border-mid)"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <Select value={merchantFilter} onValueChange={setMerchantFilter}>
-            <SelectTrigger className="w-44 rounded-xl border-gray-200">
-              <Building2 className="w-4 h-4 mr-2 text-gray-400" />
+            <SelectTrigger className="w-44 rounded-xl border-(--border-mid)">
+              <Building2 className="w-4 h-4 mr-2 text-(--text-tertiary)" />
               <SelectValue placeholder="All Merchants" />
             </SelectTrigger>
             <SelectContent>
@@ -257,29 +257,29 @@ export default function AdminInvoicesPage() {
 
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead className="font-semibold text-gray-600 text-xs uppercase">
+            <TableRow className="bg-(--bg-sunken)">
+              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
                 Invoice #
               </TableHead>
-              <TableHead className="font-semibold text-gray-600 text-xs uppercase">
+              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
                 Merchant
               </TableHead>
-              <TableHead className="font-semibold text-gray-600 text-xs uppercase">
+              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
                 Customer
               </TableHead>
-              <TableHead className="font-semibold text-gray-600 text-xs uppercase">
+              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
                 Subtotal
               </TableHead>
-              <TableHead className="font-semibold text-gray-600 text-xs uppercase">
+              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
                 VAT
               </TableHead>
-              <TableHead className="font-semibold text-gray-600 text-xs uppercase">
+              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
                 Total
               </TableHead>
-              <TableHead className="font-semibold text-gray-600 text-xs uppercase">
+              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
                 Date
               </TableHead>
-              <TableHead className="font-semibold text-gray-600 text-xs uppercase">
+              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
                 PDF
               </TableHead>
             </TableRow>
@@ -298,27 +298,27 @@ export default function AdminInvoicesPage() {
               : (invoices ?? []).map((inv) => (
                   <TableRow
                     key={inv.id}
-                    className="hover:bg-gray-50 transition-colors"
+                    className="hover:bg-(--bg-sunken) transition-colors"
                   >
-                    <TableCell className="font-mono text-xs font-semibold text-gray-700">
+                    <TableCell className="font-mono text-xs font-semibold text-(--text-secondary)">
                       {inv.invoiceNumber}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-700">
+                    <TableCell className="text-sm text-(--text-secondary)">
                       {inv.merchantName}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-700">
+                    <TableCell className="text-sm text-(--text-secondary)">
                       {inv.customerName}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-700">
+                    <TableCell className="text-sm text-(--text-secondary)">
                       ${(inv.subTotal / 100).toFixed(2)}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-500">
+                    <TableCell className="text-sm text-(--text-tertiary)">
                       ${(inv.vatAmount / 100).toFixed(2)}
                     </TableCell>
-                    <TableCell className="text-sm font-semibold text-gray-900">
+                    <TableCell className="text-sm font-semibold text-(--text-primary)">
                       ${(inv.totalAmount / 100).toFixed(2)}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-500">
+                    <TableCell className="text-sm text-(--text-tertiary)">
                       {new Date(inv.issuedAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
@@ -335,7 +335,7 @@ export default function AdminInvoicesPage() {
                           PDF
                         </Button>
                       ) : (
-                        <span className="text-xs text-gray-400">Pending</span>
+                        <span className="text-xs text-(--text-tertiary)">Pending</span>
                       )}
                     </TableCell>
                   </TableRow>
@@ -344,7 +344,7 @@ export default function AdminInvoicesPage() {
         </Table>
 
         {!isLoading && (invoices ?? []).length === 0 && (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-16 text-(--text-tertiary)">
             <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
             <p className="text-sm">No invoices found</p>
           </div>
@@ -354,11 +354,11 @@ export default function AdminInvoicesPage() {
 
       {/* Accounting Ledger Tab */}
       {activeTab === "accounting" && (
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="bg-(--bg-surface) border border-(--border-light) rounded-2xl shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-(--border-light)">
             <div>
-              <h2 className="text-base font-semibold text-gray-900">Accounting Ledger</h2>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <h2 className="text-base font-semibold text-(--text-primary)">Accounting Ledger</h2>
+              <p className="text-xs text-(--text-tertiary) mt-0.5">
                 Tam muhasebe izi — sipariş/fatura/ödeme bağlantılı tüm kayıtlar
               </p>
             </div>
@@ -377,14 +377,14 @@ export default function AdminInvoicesPage() {
 
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="font-semibold text-gray-600 text-xs uppercase">Invoice #</TableHead>
-                <TableHead className="font-semibold text-gray-600 text-xs uppercase">Merchant</TableHead>
-                <TableHead className="font-semibold text-gray-600 text-xs uppercase">Type</TableHead>
-                <TableHead className="font-semibold text-gray-600 text-xs uppercase">Amount</TableHead>
-                <TableHead className="font-semibold text-gray-600 text-xs uppercase">Description</TableHead>
-                <TableHead className="font-semibold text-gray-600 text-xs uppercase">Payment Ref</TableHead>
-                <TableHead className="font-semibold text-gray-600 text-xs uppercase">Date</TableHead>
+              <TableRow className="bg-(--bg-sunken)">
+                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">Invoice #</TableHead>
+                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">Merchant</TableHead>
+                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">Type</TableHead>
+                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">Amount</TableHead>
+                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">Description</TableHead>
+                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">Payment Ref</TableHead>
+                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">Date</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -397,19 +397,19 @@ export default function AdminInvoicesPage() {
                     </TableRow>
                   ))
                 : accountingEntries.map((entry) => (
-                    <TableRow key={entry.id} className="hover:bg-gray-50 transition-colors">
-                      <TableCell className="font-mono text-xs font-semibold text-gray-700">
+                    <TableRow key={entry.id} className="hover:bg-(--bg-sunken) transition-colors">
+                      <TableCell className="font-mono text-xs font-semibold text-(--text-secondary)">
                         {entry.invoiceNumber}
                       </TableCell>
-                      <TableCell className="text-sm text-gray-700">{entry.merchantStoreName}</TableCell>
+                      <TableCell className="text-sm text-(--text-secondary)">{entry.merchantStoreName}</TableCell>
                       <TableCell>
                         <span
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                             entry.entryType === "SALE"
-                              ? "bg-green-50 text-green-700"
+                              ? "bg-(--success-bg) text-(--success)"
                               : entry.entryType === "REFUND"
-                              ? "bg-red-50 text-red-700"
-                              : "bg-orange-50 text-orange-700"
+                              ? "bg-red-50 text-(--danger)"
+                              : "bg-(--warning-bg) text-(--warning)"
                           }`}
                         >
                           {entry.entryType === "SALE" ? (
@@ -422,18 +422,18 @@ export default function AdminInvoicesPage() {
                       </TableCell>
                       <TableCell
                         className={`text-sm font-semibold ${
-                          entry.amount >= 0 ? "text-green-700" : "text-red-700"
+                          entry.amount >= 0 ? "text-(--success)" : "text-(--danger)"
                         }`}
                       >
                         {entry.amount >= 0 ? "+" : ""}₺{entry.amount.toFixed(2)}
                       </TableCell>
-                      <TableCell className="text-sm text-gray-600 max-w-xs truncate">
+                      <TableCell className="text-sm text-(--text-secondary) max-w-xs truncate">
                         {entry.description}
                       </TableCell>
-                      <TableCell className="font-mono text-xs text-gray-400">
+                      <TableCell className="font-mono text-xs text-(--text-tertiary)">
                         {entry.paymentReference ?? "—"}
                       </TableCell>
-                      <TableCell className="text-sm text-gray-500">
+                      <TableCell className="text-sm text-(--text-tertiary)">
                         {new Date(entry.createdAt).toLocaleDateString()}
                       </TableCell>
                     </TableRow>
@@ -442,7 +442,7 @@ export default function AdminInvoicesPage() {
           </Table>
 
           {!accountingLoading && accountingEntries.length === 0 && (
-            <div className="text-center py-16 text-gray-400">
+            <div className="text-center py-16 text-(--text-tertiary)">
               <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
               <p className="text-sm">No accounting entries found</p>
             </div>
