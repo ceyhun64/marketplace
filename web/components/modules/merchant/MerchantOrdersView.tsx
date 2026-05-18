@@ -43,8 +43,8 @@ export default function MerchantOrdersView() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Orders</h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-1">
+        <h1 className="text-2xl font-semibold text-(--text-primary)]">Orders</h1>
+        <p className="text-sm text-(--text-secondary)] mt-1">
           Manage and fulfill incoming orders
         </p>
       </div>
@@ -56,64 +56,64 @@ export default function MerchantOrdersView() {
             label: "Total",
             value: stats.total,
             icon: ShoppingCart,
-            color: "text-[var(--info)]",
-            bg: "bg-[var(--info-bg)]",
+            color: "text-(--info)]",
+            bg: "bg-(--info-bg)]",
           },
           {
             label: "Pending",
             value: stats.pending,
             icon: Clock,
-            color: "text-[var(--warning)]",
-            bg: "bg-[var(--warning-bg)]",
+            color: "text-(--warning)]",
+            bg: "bg-(--warning-bg)]",
           },
           {
             label: "Processing",
             value: stats.processing,
             icon: Package,
-            color: "text-[var(--charcoal-mid)]",
-            bg: "bg-[var(--off-white-2)]",
+            color: "text-(--charcoal-mid)]",
+            bg: "bg-(--off-white-2)]",
           },
           {
             label: "Delivered",
             value: stats.delivered,
             icon: CheckCircle,
-            color: "text-[var(--success)]",
-            bg: "bg-[var(--success-bg)]",
+            color: "text-(--success)]",
+            bg: "bg-(--success-bg)]",
           },
         ].map((s) => (
           <div
             key={s.label}
-            className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-light)] p-5"
+            className="bg-(--bg-surface)] rounded-xl border border-(--border-light)] p-5"
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-[var(--text-tertiary)] font-medium uppercase tracking-wider">
+              <p className="text-xs text-(--text-tertiary)] font-medium uppercase tracking-wider">
                 {s.label}
               </p>
               <div className={`p-1.5 rounded-lg ${s.bg}`}>
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
             </div>
-            <p className="text-2xl font-bold text-[var(--text-primary)]">{s.value}</p>
+            <p className="text-2xl font-bold text-(--text-primary)]">{s.value}</p>
           </div>
         ))}
       </div>
 
       {/* Table */}
-      <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-light)]">
-        <div className="px-5 py-4 border-b border-[var(--border-light)] flex items-center justify-between">
-          <p className="text-sm font-semibold text-[var(--text-primary)]">
+      <div className="bg-(--bg-surface)] rounded-xl border border-(--border-light)]">
+        <div className="px-5 py-4 border-b border-(--border-light)] flex items-center justify-between">
+          <p className="text-sm font-semibold text-(--text-primary)]">
             All Orders
-            <span className="ml-2 text-sm font-normal text-[var(--text-tertiary)]">
+            <span className="ml-2 text-sm font-normal text-(--text-tertiary)]">
               ({paginationTotal} orders)
             </span>
           </p>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-44 h-8 border-[var(--border-mid)] text-xs">
+            <SelectTrigger className="w-44 h-8 border-(--border-mid)] text-xs">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="PENDING">Beklemede</SelectItem>
+              <SelectItem value="PENDING">Pending</SelectItem>
               <SelectItem value="PAYMENT_CONFIRMED">Payment Confirmed</SelectItem>
               <SelectItem value="LABEL_GENERATED">Label Generated</SelectItem>
               <SelectItem value="COURIER_ASSIGNED">Courier Assigned</SelectItem>

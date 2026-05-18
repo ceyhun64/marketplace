@@ -31,9 +31,9 @@ const PLANS = [
     label: "Basic",
     price: "Free",
     icon: Star,
-    color: "text-[var(--text-secondary)]",
-    bg: "bg-[var(--bg-sunken)]",
-    activeBorder: "border-[var(--charcoal)]",
+    color: "text-(--text-secondary)",
+    bg: "bg-(--bg-sunken)",
+    activeBorder: "border-(--charcoal)",
     features: [
       { label: "Independent E-Store", ok: true },
       { label: "Up to 50 products", ok: true },
@@ -49,9 +49,9 @@ const PLANS = [
     label: "Pro",
     price: "$29/mo",
     icon: Zap,
-    color: "text-[var(--info)]",
-    bg: "bg-[var(--info-bg)]",
-    activeBorder: "border-[var(--info)]",
+    color: "text-(--info)",
+    bg: "bg-(--info-bg)",
+    activeBorder: "border-(--info)",
     features: [
       { label: "Independent E-Store", ok: true },
       { label: "Unlimited products", ok: true },
@@ -67,9 +67,9 @@ const PLANS = [
     label: "Enterprise",
     price: "Custom",
     icon: Building2,
-    color: "text-[var(--charcoal-mid)]",
-    bg: "bg-[var(--off-white-2)]",
-    activeBorder: "border-[var(--border-strong)]",
+    color: "text-(--charcoal-mid)",
+    bg: "bg-(--off-white-2)",
+    activeBorder: "border-(--border-strong)",
     features: [
       { label: "Independent E-Store", ok: true },
       { label: "Unlimited products", ok: true },
@@ -104,10 +104,10 @@ export default function MerchantSubscriptionView() {
   return (
     <div className="space-y-6 max-w-5xl">
       <div>
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
+        <h1 className="text-2xl font-semibold text-(--text-primary)">
           My Subscription
         </h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-1">
+        <p className="text-sm text-(--text-secondary) mt-1">
           View and manage your current plan
         </p>
       </div>
@@ -125,13 +125,13 @@ export default function MerchantSubscriptionView() {
         >
           <CardContent className="py-5 px-6 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-widest">
+              <p className="text-xs font-medium text-(--text-tertiary) uppercase tracking-widest">
                 Current Plan
               </p>
               <p className="text-xl font-bold mt-0.5">{currentPlan}</p>
               {/* Subscription uses endDate, not expiresAt */}
               {subscription?.endDate && (
-                <p className="text-xs text-[var(--text-tertiary)] mt-1">
+                <p className="text-xs text-(--text-tertiary) mt-1">
                   Renews:{" "}
                   {new Date(subscription.endDate).toLocaleDateString("en-US", {
                     year: "numeric",
@@ -148,8 +148,8 @@ export default function MerchantSubscriptionView() {
               <span
                 className={`text-xs px-2 py-0.5 rounded-full font-medium mt-1 inline-block ${
                   subscription?.isActive
-                    ? "bg-[var(--success)]/20 text-[var(--success)]"
-                    : "bg-[var(--bg-surface)]/10 text-white"
+                    ? "bg-(--success)/20 text-(--success)"
+                    : "bg-(--bg-surface)/10 text-white"
                 }`}
               >
                 {subscription?.isActive ? "Active" : "Inactive"}
@@ -176,7 +176,7 @@ export default function MerchantSubscriptionView() {
             <Card
               key={plan.key}
               className={`border-2 shadow-none rounded-2xl ${
-                isActive ? "" : "border-[var(--border-light)]"
+                isActive ? "" : "border-(--border-light)"
               }`}
               style={activeBorderStyle}
             >
@@ -186,7 +186,7 @@ export default function MerchantSubscriptionView() {
                     <div className={`p-1.5 rounded-lg ${plan.bg}`}>
                       <Icon className={`w-4 h-4 ${plan.color}`} />
                     </div>
-                    <CardTitle className="text-base font-bold text-[var(--text-primary)]">
+                    <CardTitle className="text-base font-bold text-(--text-primary)">
                       {plan.label}
                     </CardTitle>
                   </div>
@@ -199,19 +199,19 @@ export default function MerchantSubscriptionView() {
                     </span>
                   )}
                 </div>
-                <p className="text-2xl font-bold text-[var(--text-primary)]">{plan.price}</p>
+                <p className="text-2xl font-bold text-(--text-primary)">{plan.price}</p>
               </CardHeader>
               <CardContent className="space-y-3">
                 <ul className="space-y-2">
                   {plan.features.map((f) => (
                     <li key={f.label} className="flex items-center gap-2">
                       {f.ok ? (
-                        <CheckCircle className="w-3.5 h-3.5 text-[var(--success)] flex-shrink-0" />
+                        <CheckCircle className="w-3.5 h-3.5 text-(--success) shrink-0" />
                       ) : (
-                        <XCircle className="w-3.5 h-3.5 text-[var(--text-tertiary)] flex-shrink-0" />
+                        <XCircle className="w-3.5 h-3.5 text-(--text-tertiary) shrink-0" />
                       )}
                       <span
-                        className={`text-xs ${f.ok ? "text-[var(--text-secondary)]" : "text-[var(--text-tertiary)]"}`}
+                        className={`text-xs ${f.ok ? "text-(--text-secondary)" : "text-(--text-tertiary)"}`}
                       >
                         {f.label}
                       </span>
@@ -221,7 +221,7 @@ export default function MerchantSubscriptionView() {
 
                 {plan.key === "ENTERPRISE" ? (
                   <button
-                    className="w-full mt-2 px-4 py-2 rounded-lg text-xs font-semibold border border-[var(--border-mid)] text-[var(--text-secondary)] hover:bg-[var(--bg-sunken)] transition-colors"
+                    className="w-full mt-2 px-4 py-2 rounded-lg text-xs font-semibold border border-(--border-mid) text-(--text-secondary) hover:bg-(--bg-sunken) transition-colors"
                     onClick={() =>
                       toast.info("Contact us for Enterprise pricing")
                     }
@@ -234,9 +234,9 @@ export default function MerchantSubscriptionView() {
                     disabled={isActive || upgradePlan.isPending}
                     className={`w-full mt-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
                       isActive
-                        ? "bg-[var(--off-white-2)] text-[var(--text-tertiary)] cursor-default"
+                        ? "bg-(--off-white-2) text-(--text-tertiary) cursor-default"
                         : isDowngrade
-                          ? "border border-[var(--border-mid)] text-[var(--text-secondary)] hover:bg-[var(--bg-sunken)]"
+                          ? "border border-(--border-mid) text-(--text-secondary) hover:bg-(--bg-sunken)"
                           : "text-white"
                     }`}
                     style={
@@ -271,9 +271,9 @@ export default function MerchantSubscriptionView() {
       </div>
 
       {/* FAQ */}
-      <Card className="border border-[var(--border-light)] shadow-none rounded-2xl">
+      <Card className="border border-(--border-light) shadow-none rounded-2xl">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-[var(--text-primary)]">
+          <CardTitle className="text-base font-semibold text-(--text-primary)">
             Frequently Asked Questions
           </CardTitle>
         </CardHeader>
@@ -281,10 +281,10 @@ export default function MerchantSubscriptionView() {
           {FAQ_ITEMS.map((item) => (
             <div
               key={item.q}
-              className="border-b border-[var(--border-light)] pb-4 last:border-0 last:pb-0"
+              className="border-b border-(--border-light) pb-4 last:border-0 last:pb-0"
             >
-              <p className="text-sm font-semibold text-[var(--text-primary)]">{item.q}</p>
-              <p className="text-sm text-[var(--text-secondary)] mt-1">{item.a}</p>
+              <p className="text-sm font-semibold text-(--text-primary)">{item.q}</p>
+              <p className="text-sm text-(--text-secondary) mt-1">{item.a}</p>
             </div>
           ))}
         </CardContent>

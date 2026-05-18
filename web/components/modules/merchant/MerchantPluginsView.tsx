@@ -22,12 +22,12 @@ interface Plugin {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  analytics: "bg-[var(--info-bg)] text-[var(--info)]",
-  marketing: "bg-[var(--red-muted)] text-[var(--red)]",
-  fulfillment: "bg-[var(--warning-bg)] text-[var(--warning)]",
-  payment: "bg-[var(--success-bg)] text-(--success)",
-  inventory: "bg-[var(--off-white-2)] text-[var(--charcoal-mid)]",
-  crm: "bg-[var(--warning-bg)] text-[var(--warning)]",
+  analytics: "bg-(--info-bg) text-(--info)",
+  marketing: "bg-(--red-muted) text-(--red)",
+  fulfillment: "bg-(--warning-bg) text-(--warning)",
+  payment: "bg-(--success-bg) text-(--success)",
+  inventory: "bg-(--off-white-2) text-(--charcoal-mid)",
+  crm: "bg-(--warning-bg) text-(--warning)",
 };
 
 export default function MerchantPluginsView() {
@@ -69,10 +69,10 @@ export default function MerchantPluginsView() {
   return (
     <div className="space-y-6 max-w-5xl">
       <div>
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
+        <h1 className="text-2xl font-semibold text-(--text-primary)">
           Plugin Marketplace
         </h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-1">
+        <p className="text-sm text-(--text-secondary) mt-1">
           Extend your store with powerful add-ons
         </p>
       </div>
@@ -80,33 +80,33 @@ export default function MerchantPluginsView() {
       {/* Active Plugins */}
       {activePlugins.length > 0 && (
         <div>
-          <h2 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2">
-            <Zap className="w-4 h-4 text-[var(--success)]" />
+          <h2 className="text-sm font-semibold text-(--text-secondary) mb-3 flex items-center gap-2">
+            <Zap className="w-4 h-4 text-(--success)" />
             Active Plugins ({activePlugins.length})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {activePlugins.map((p) => (
               <div
                 key={p.id}
-                className="bg-[var(--bg-surface)] border border-[var(--success-border)] rounded-2xl p-5 shadow-sm"
+                className="bg-(--bg-surface) border border-(--success-border) rounded-2xl p-5 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 flex-1">
-                    <div className="w-10 h-10 rounded-xl bg-[var(--success-bg)] flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-(--success-bg) flex items-center justify-center shrink-0">
                       <Puzzle className="w-5 h-5 text-(--success)" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-semibold text-[var(--text-primary)]">
+                        <p className="text-sm font-semibold text-(--text-primary)">
                           {p.name}
                         </p>
                         <span
-                          className={`text-xs px-2 py-0.5 rounded-full capitalize ${CATEGORY_COLORS[p.category] ?? "bg-[var(--off-white-2)] text-[var(--text-secondary)]"}`}
+                          className={`text-xs px-2 py-0.5 rounded-full capitalize ${CATEGORY_COLORS[p.category] ?? "bg-(--off-white-2) text-(--text-secondary)"}`}
                         >
                           {p.category}
                         </span>
                       </div>
-                      <p className="text-xs text-[var(--text-secondary)] mt-1 line-clamp-2">
+                      <p className="text-xs text-(--text-secondary) mt-1 line-clamp-2">
                         {p.description}
                       </p>
                       {p.createdAt && (
@@ -117,9 +117,9 @@ export default function MerchantPluginsView() {
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  <div className="flex flex-col items-end gap-2 shrink-0">
                     <div className="flex items-center gap-1">
-                      <Check className="w-4 h-4 text-[var(--success)]" />
+                      <Check className="w-4 h-4 text-(--success)" />
                       <span className="text-xs font-semibold text-(--success)">
                         Active
                       </span>
@@ -150,8 +150,8 @@ export default function MerchantPluginsView() {
 
       {/* Available Plugins */}
       <div>
-        <h2 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2">
-          <Package className="w-4 h-4 text-[var(--text-tertiary)]" />
+        <h2 className="text-sm font-semibold text-(--text-secondary) mb-3 flex items-center gap-2">
+          <Package className="w-4 h-4 text-(--text-tertiary)" />
           Available Plugins
         </h2>
 
@@ -160,7 +160,7 @@ export default function MerchantPluginsView() {
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-2xl p-5"
+                className="bg-(--bg-surface) border border-(--border-light) rounded-2xl p-5"
               >
                 <Skeleton className="h-10 w-10 rounded-xl mb-3" />
                 <Skeleton className="h-4 w-32 mb-2" />
@@ -170,9 +170,9 @@ export default function MerchantPluginsView() {
             ))}
           </div>
         ) : availablePlugins.length === 0 ? (
-          <div className="bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-2xl p-12 text-center">
-            <Puzzle className="w-10 h-10 mx-auto mb-3 text-[var(--text-tertiary)]" />
-            <p className="text-sm text-[var(--text-secondary)]">
+          <div className="bg-(--bg-surface) border border-(--border-light) rounded-2xl p-12 text-center">
+            <Puzzle className="w-10 h-10 mx-auto mb-3 text-(--text-tertiary)" />
+            <p className="text-sm text-(--text-secondary)">
               You have activated all available plugins!
             </p>
           </div>
@@ -181,30 +181,30 @@ export default function MerchantPluginsView() {
             {availablePlugins.map((p) => (
               <div
                 key={p.id}
-                className="bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-2xl p-5 shadow-sm hover:border-[var(--border-mid)] transition-colors"
+                className="bg-(--bg-surface) border border-(--border-light) rounded-2xl p-5 shadow-sm hover:border-(--border-mid) transition-colors"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[var(--off-white-2)] flex items-center justify-center flex-shrink-0">
-                    <Puzzle className="w-5 h-5 text-[var(--text-secondary)]" />
+                  <div className="w-10 h-10 rounded-xl bg-(--off-white-2) flex items-center justify-center shrink-0">
+                    <Puzzle className="w-5 h-5 text-(--text-secondary)" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">
+                      <p className="text-sm font-semibold text-(--text-primary)">
                         {p.name}
                       </p>
                       <span
-                        className={`text-xs px-2 py-0.5 rounded-full capitalize ${CATEGORY_COLORS[p.category] ?? "bg-[var(--off-white-2)] text-[var(--text-secondary)]"}`}
+                        className={`text-xs px-2 py-0.5 rounded-full capitalize ${CATEGORY_COLORS[p.category] ?? "bg-(--off-white-2) text-(--text-secondary)"}`}
                       >
                         {p.category}
                       </span>
                     </div>
-                    <p className="text-xs text-[var(--text-secondary)] mt-1 line-clamp-2">
+                    <p className="text-xs text-(--text-secondary) mt-1 line-clamp-2">
                       {p.description}
                     </p>
                     <div className="flex items-center justify-between mt-3">
                       <div className="flex items-center gap-1">
-                        <DollarSign className="w-3.5 h-3.5 text-[var(--text-tertiary)]" />
-                        <span className="text-sm font-semibold text-[var(--text-primary)]">
+                        <DollarSign className="w-3.5 h-3.5 text-(--text-tertiary)" />
+                        <span className="text-sm font-semibold text-(--text-primary)">
                           {p.monthlyPrice === 0
                             ? "Free"
                             : `$${p.monthlyPrice}/mo`}
@@ -243,7 +243,7 @@ export default function MerchantPluginsView() {
         style={{ background: "var(--charcoal)", color: "#fff" }}
       >
         <Lock
-          className="w-8 h-8 flex-shrink-0"
+          className="w-8 h-8 shrink-0"
           style={{ color: "rgba(255,255,255,0.35)" }}
         />
         <div className="flex-1">

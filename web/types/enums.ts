@@ -139,9 +139,9 @@ export const PLAN_LABELS: Record<PlanType, string> = {
 };
 
 export const PLAN_COLORS: Record<PlanType, string> = {
-  BASIC: "bg-gray-100 text-gray-800",
-  PRO: "bg-blue-100 text-blue-800",
-  ENTERPRISE: "bg-purple-100 text-purple-800",
+  BASIC:      "bg-(--off-white-2) text-(--text-secondary)",
+  PRO:        "bg-(--info-bg) text-(--info)",
+  ENTERPRISE: "bg-(--off-white-2) text-(--text-primary) border border-(--border-mid)",
 };
 
 export const PLAN_LIMITS: Record<

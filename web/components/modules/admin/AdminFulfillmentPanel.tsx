@@ -113,7 +113,7 @@ export default function AdminFulfillmentPanel() {
         >
           {isConnected ? (
             <>
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "var(--success)" }}" />
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "var(--success)" }} />
               <Radio className="w-3 h-3" />
               <span>Canlı</span>
             </>

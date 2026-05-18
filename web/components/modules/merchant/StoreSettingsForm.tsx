@@ -85,7 +85,7 @@ export default function StoreSettingsForm({ store }: Props) {
           <div className="space-y-2">
             <p className={labelCls}>Store Logo</p>
             <div className="flex items-center gap-3">
-              <div className="relative w-14 h-14 rounded-2xl border border-[var(--border-mid)] bg-[var(--bg-sunken)] overflow-hidden shrink-0 flex items-center justify-center">
+              <div className="relative w-14 h-14 rounded-2xl border border-(--border-mid) bg-(--bg-sunken) overflow-hidden shrink-0 flex items-center justify-center">
                 {form.logoUrl ? (
                   <Image
                     src={form.logoUrl}
@@ -94,7 +94,7 @@ export default function StoreSettingsForm({ store }: Props) {
                     className="object-cover"
                   />
                 ) : (
-                  <span className="text-xl font-bold text-[var(--text-tertiary)] select-none">
+                  <span className="text-xl font-bold text-(--text-tertiary) select-none">
                     {store.storeName.charAt(0).toUpperCase()}
                   </span>
                 )}
@@ -111,7 +111,7 @@ export default function StoreSettingsForm({ store }: Props) {
           <div className="space-y-2">
             <p className={labelCls}>Store Banner</p>
             {form.bannerUrl ? (
-              <div className="relative h-14 rounded-2xl overflow-hidden border border-[var(--border-mid)]">
+              <div className="relative h-14 rounded-2xl overflow-hidden border border-(--border-mid)">
                 <Image
                   src={form.bannerUrl}
                   alt="banner"
@@ -120,8 +120,8 @@ export default function StoreSettingsForm({ store }: Props) {
                 />
               </div>
             ) : (
-              <div className="h-14 rounded-2xl border border-dashed border-[var(--border-mid)] bg-[var(--bg-sunken)] flex items-center justify-center">
-                <span className="text-xs text-[var(--text-tertiary)]">No banner yet</span>
+              <div className="h-14 rounded-2xl border border-dashed border-(--border-mid) bg-(--bg-sunken) flex items-center justify-center">
+                <span className="text-xs text-(--text-tertiary)">No banner yet</span>
               </div>
             )}
             <ImageUploader
@@ -132,7 +132,7 @@ export default function StoreSettingsForm({ store }: Props) {
           </div>
         </div>
 
-        <hr className="border-[var(--border-light)]" />
+        <hr className="border-(--border-light)" />
 
         {/* Store Name */}
         <Field label="Store Name" required>
@@ -187,9 +187,9 @@ export default function StoreSettingsForm({ store }: Props) {
               }
               className={`${inputCls} w-28 text-center`}
             />
-            <span className="text-sm text-[var(--text-tertiary)]">hours per order</span>
+            <span className="text-sm text-(--text-tertiary)">hours per order</span>
           </div>
-          <p className="text-xs text-[var(--text-tertiary)] mt-1.5">
+          <p className="text-xs text-(--text-tertiary) mt-1.5">
             Used to calculate estimated delivery dates. Default is 24 hours.
           </p>
         </Field>
@@ -202,7 +202,7 @@ export default function StoreSettingsForm({ store }: Props) {
         description="Connect a subdomain or your own custom domain."
         badge={
           store.domainVerified ? (
-            <span className="flex items-center gap-1 text-xs bg-[var(--success-bg)] text-[var(--success)] border border-emerald-100 px-2.5 py-1 rounded-full font-medium">
+            <span className="flex items-center gap-1 text-xs bg-(--success-bg) text-(--success) border border-emerald-100 px-2.5 py-1 rounded-full font-medium">
               <BadgeCheck className="w-3.5 h-3.5" />
               Verified
             </span>
@@ -234,33 +234,33 @@ export default function StoreSettingsForm({ store }: Props) {
                 }
                 className={`relative p-4 rounded-xl border text-left transition-all ${
                   active
-                    ? "border-blue-400 bg-[var(--info-bg)]/40 shadow-sm"
-                    : "border-[var(--border-mid)] hover:border-[var(--border-mid)] bg-[var(--bg-surface)]"
+                    ? "border-blue-400 bg-(--info-bg)/40 shadow-sm"
+                    : "border-(--border-mid) hover:border-(--border-mid) bg-(--bg-surface)"
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p
-                      className={`text-sm font-semibold ${active ? "text-[var(--info)]" : "text-[var(--text-primary)]"}`}
+                      className={`text-sm font-semibold ${active ? "text-(--info)" : "text-(--text-primary)"}`}
                     >
                       {label}
                     </p>
-                    <p className="text-xs font-mono text-[var(--text-tertiary)] mt-0.5">
+                    <p className="text-xs font-mono text-(--text-tertiary) mt-0.5">
                       {desc}
                     </p>
                   </div>
                   <span
                     className={`shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded ${
                       active
-                        ? "bg-[var(--info-bg)] text-[var(--info)]"
-                        : "bg-[var(--off-white-2)] text-[var(--text-secondary)]"
+                        ? "bg-(--info-bg) text-(--info)"
+                        : "bg-(--off-white-2) text-(--text-secondary)"
                     }`}
                   >
                     {plan}
                   </span>
                 </div>
                 {active && (
-                  <CheckCircle2 className="absolute bottom-3 right-3 w-4 h-4 text-[var(--info)]" />
+                  <CheckCircle2 className="absolute bottom-3 right-3 w-4 h-4 text-(--info)" />
                 )}
               </button>
             );
@@ -288,7 +288,7 @@ export default function StoreSettingsForm({ store }: Props) {
               }`}
             />
             {domainForm.isSubdomain && (
-              <span className="inline-flex items-center border border-[var(--border-mid)] rounded-r-xl bg-[var(--bg-sunken)] px-3 text-sm text-[var(--text-tertiary)] whitespace-nowrap">
+              <span className="inline-flex items-center border border-(--border-mid) rounded-r-xl bg-(--bg-sunken) px-3 text-sm text-(--text-tertiary) whitespace-nowrap">
                 .platform.com
               </span>
             )}
@@ -297,14 +297,14 @@ export default function StoreSettingsForm({ store }: Props) {
 
         {/* DNS instructions */}
         {!domainForm.isSubdomain && (
-          <div className="rounded-xl border border-amber-100 bg-[var(--warning-bg)] p-4 space-y-2">
-            <p className="text-xs font-semibold text-[var(--warning)]">
+          <div className="rounded-xl border border-amber-100 bg-(--warning-bg) p-4 space-y-2">
+            <p className="text-xs font-semibold text-(--warning)">
               DNS Setup Required
             </p>
-            <p className="text-xs text-[var(--warning)]">
+            <p className="text-xs text-(--warning)">
               Add this CNAME record at your domain registrar:
             </p>
-            <code className="block bg-[var(--bg-surface)] border border-amber-100 rounded-lg px-3 py-2 text-xs font-mono text-[var(--info)]">
+            <code className="block bg-(--bg-surface) border border-amber-100 rounded-lg px-3 py-2 text-xs font-mono text-(--info)">
               @ → platform.com
             </code>
           </div>
@@ -349,15 +349,15 @@ function SettingsSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-[var(--bg-surface)] rounded-2xl border border-[var(--border-light)] overflow-hidden">
-      <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-[var(--border-light)] bg-[var(--bg-sunken)]/60">
+    <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) overflow-hidden">
+      <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-(--border-light) bg-(--bg-sunken)/60">
         <div className="flex items-start gap-3">
-          <div className="mt-0.5 p-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-mid)] text-[var(--text-secondary)] shrink-0">
+          <div className="mt-0.5 p-2 rounded-lg bg-(--bg-surface) border border-(--border-mid) text-(--text-secondary) shrink-0">
             {icon}
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h3>
-            <p className="text-xs text-[var(--text-tertiary)] mt-0.5">{description}</p>
+            <h3 className="text-sm font-semibold text-(--text-primary)">{title}</h3>
+            <p className="text-xs text-(--text-tertiary) mt-0.5">{description}</p>
           </div>
         </div>
         {badge}
@@ -382,7 +382,7 @@ function SaveButton({
       disabled={loading}
       className={`flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-xl transition-all disabled:opacity-50 ${
         saved
-          ? "bg-[var(--success-bg)] text-[var(--success)] border border-[var(--success-border)]"
+          ? "bg-(--success-bg) text-(--success) border border-(--success-border)"
           : "text-white"
       }`}
       style={!saved ? { background: "var(--red)" } : {}}
@@ -430,11 +430,11 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="flex items-center gap-1.5 text-sm font-medium text-[var(--text-secondary)]">
+      <label className="flex items-center gap-1.5 text-sm font-medium text-(--text-secondary)">
         {label}
         {required && <span className="text-red-400 text-xs">*</span>}
         {hint && (
-          <span className="text-[var(--text-tertiary)] font-normal text-xs">— {hint}</span>
+          <span className="text-(--text-tertiary) font-normal text-xs">— {hint}</span>
         )}
       </label>
       {children}
@@ -442,7 +442,7 @@ function Field({
   );
 }
 
-const labelCls = "block text-sm font-medium text-[var(--text-secondary)]";
+const labelCls = "block text-sm font-medium text-(--text-secondary)";
 
 const inputCls =
-  "w-full border border-[var(--border-mid)] rounded-xl px-3 py-2.5 text-sm bg-[var(--bg-surface)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-colors";
+  "w-full border border-(--border-mid) rounded-xl px-3 py-2.5 text-sm bg-(--bg-surface) placeholder:text-(--text-tertiary) focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-colors";

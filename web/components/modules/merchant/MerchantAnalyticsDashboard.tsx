@@ -92,8 +92,8 @@ export default function MerchantAnalyticsDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Analytics</h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-1">
+        <h1 className="text-2xl font-semibold text-(--text-primary)]">Analytics</h1>
+        <p className="text-sm text-(--text-secondary)] mt-1">
           Sales performance by channel
         </p>
       </div>
@@ -107,34 +107,34 @@ export default function MerchantAnalyticsDashboard() {
           : kpis.map((k) => (
               <div
                 key={k.label}
-                className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-light)] p-5"
+                className="bg-(--bg-surface)] rounded-xl border border-(--border-light)] p-5"
               >
-                <p className="text-xs text-[var(--text-tertiary)] font-medium uppercase tracking-wider">
+                <p className="text-xs text-(--text-tertiary)] font-medium uppercase tracking-wider">
                   {k.label}
                 </p>
-                <p className="text-2xl font-bold text-[var(--text-primary)] mt-2">
+                <p className="text-2xl font-bold text-(--text-primary)] mt-2">
                   {k.value}
                 </p>
-                <p className="text-xs text-[var(--text-tertiary)] mt-1">{k.sub}</p>
+                <p className="text-xs text-(--text-tertiary)] mt-1">{k.sub}</p>
               </div>
             ))}
       </div>
 
       {/* Sales Chart */}
-      <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-light)] p-5">
+      <div className="bg-(--bg-surface)] rounded-xl border border-(--border-light)] p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-[var(--text-secondary)]">
+          <h2 className="text-sm font-semibold text-(--text-secondary)]">
             Marketplace vs E-Store Revenue (₺)
           </h2>
-          <div className="flex gap-1 bg-[var(--off-white-2)] p-1 rounded-lg">
+          <div className="flex gap-1 bg-(--off-white-2)] p-1 rounded-lg">
             {PERIODS.map((p) => (
               <button
                 key={p.value}
                 onClick={() => setPeriod(p.value)}
                 className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
                   period === p.value
-                    ? "bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm"
-                    : "text-[var(--text-secondary)] hover:text-[var(--text-secondary)]"
+                    ? "bg-(--bg-surface)] text-(--text-primary)] shadow-sm"
+                    : "text-(--text-secondary)] hover:text-(--text-secondary)]"
                 }`}
               >
                 {p.label}
@@ -148,18 +148,18 @@ export default function MerchantAnalyticsDashboard() {
         ) : chartData.length > 0 ? (
           <MerchantSalesChart data={chartData} />
         ) : (
-          <div className="h-[220px] flex items-center justify-center text-sm text-[var(--text-tertiary)]">
+          <div className="h-[220px] flex items-center justify-center text-sm text-(--text-tertiary)]">
             No sales data for this period
           </div>
         )}
 
         <div className="flex gap-4 mt-3 justify-end">
-          <span className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
-            <span className="w-2.5 h-2.5 rounded-full bg-[var(--info)] inline-block" />
+          <span className="flex items-center gap-1.5 text-xs text-(--text-secondary)]">
+            <span className="w-2.5 h-2.5 rounded-full bg-(--info)] inline-block" />
             Marketplace
           </span>
-          <span className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
-            <span className="w-2.5 h-2.5 rounded-full bg-[var(--success)] inline-block" />
+          <span className="flex items-center gap-1.5 text-xs text-(--text-secondary)]">
+            <span className="w-2.5 h-2.5 rounded-full bg-(--success)] inline-block" />
             E-Store
           </span>
         </div>
@@ -167,8 +167,8 @@ export default function MerchantAnalyticsDashboard() {
 
       {/* Channel Comparison + Top Products */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-light)] p-5">
-          <h2 className="text-sm font-semibold text-[var(--text-secondary)] mb-4">
+        <div className="bg-(--bg-surface)] rounded-xl border border-(--border-light)] p-5">
+          <h2 className="text-sm font-semibold text-(--text-secondary)] mb-4">
             Channel Comparison
           </h2>
           {compLoading ? (
@@ -183,8 +183,8 @@ export default function MerchantAnalyticsDashboard() {
               <ComparisonChart data={comparison} className="mb-4" />
 
 {/* Numeric comparison table */}
-              <div className="divide-y divide-[var(--border-light)]">
-                <div className="grid grid-cols-3 pb-2 text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">
+              <div className="divide-y divide-(--border-light)">
+                <div className="grid grid-cols-3 pb-2 text-xs font-semibold text-(--text-tertiary)] uppercase tracking-wide">
                   <span>Metric</span>
                   <span className="text-center">Marketplace</span>
                   <span className="text-right">E-Store</span>
@@ -223,11 +223,11 @@ export default function MerchantAnalyticsDashboard() {
                   },
                 ].map((row) => (
                   <div key={row.label} className="grid grid-cols-3 py-3 text-sm">
-                    <span className="text-[var(--text-secondary)]">{row.label}</span>
-                    <span className="text-center font-semibold text-[var(--info)]">
+                    <span className="text-(--text-secondary)]">{row.label}</span>
+                    <span className="text-center font-semibold text-(--info)]">
                       {row.mk}
                     </span>
-                    <span className="text-right font-semibold text-[var(--success)]">
+                    <span className="text-right font-semibold text-(--success)]">
                       {row.es}
                     </span>
                   </div>
@@ -235,14 +235,14 @@ export default function MerchantAnalyticsDashboard() {
               </div>
             </>
           ) : (
-            <p className="text-sm text-[var(--text-tertiary)] text-center py-8">
+            <p className="text-sm text-(--text-tertiary)] text-center py-8">
               No data available
             </p>
           )}
         </div>
 
-        <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-light)] p-5">
-          <h2 className="text-sm font-semibold text-[var(--text-secondary)] mb-4">
+        <div className="bg-(--bg-surface)] rounded-xl border border-(--border-light)] p-5">
+          <h2 className="text-sm font-semibold text-(--text-secondary)] mb-4">
             Top Products
           </h2>
           {topLoading ? (
@@ -255,22 +255,22 @@ export default function MerchantAnalyticsDashboard() {
             <div className="space-y-3">
               {topProducts.map((p, i) => (
                 <div key={p.productId} className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-[var(--text-tertiary)] w-4">
+                  <span className="text-xs font-bold text-(--text-tertiary)] w-4">
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[var(--text-primary)] truncate">
+                    <p className="text-sm font-medium text-(--text-primary)] truncate">
                       {p.productName}
                     </p>
-                    <p className="text-xs text-[var(--text-secondary)]">
+                    <p className="text-xs text-(--text-secondary)]">
                       {p.totalQuantity} sold · {formatPrice(p.totalRevenue)}
                     </p>
                   </div>
                   <div className="text-right text-xs shrink-0">
-                    <p className="text-[var(--info)]">
+                    <p className="text-(--info)]">
                       MKT {formatCompactNumber(p.marketplaceRevenue)}
                     </p>
-                    <p className="text-[var(--success)]">
+                    <p className="text-(--success)]">
                       Store {formatCompactNumber(p.estoreRevenue)}
                     </p>
                   </div>
@@ -278,7 +278,7 @@ export default function MerchantAnalyticsDashboard() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-[var(--text-tertiary)] text-center py-8">
+            <p className="text-sm text-(--text-tertiary)] text-center py-8">
               No product data yet
             </p>
           )}
@@ -287,10 +287,10 @@ export default function MerchantAnalyticsDashboard() {
 
       {/* Summary Banner */}
       {stats && (
-        <div className="bg-[var(--charcoal)] text-white rounded-xl p-5">
+        <div className="bg-(--charcoal)] text-white rounded-xl p-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <p className="text-xs font-mono uppercase tracking-widest text-[var(--text-tertiary)] mb-1">
+              <p className="text-xs font-mono uppercase tracking-widest text-(--text-tertiary)] mb-1">
                 Avg. Order Value
               </p>
               <p className="text-2xl font-bold">
@@ -298,13 +298,13 @@ export default function MerchantAnalyticsDashboard() {
               </p>
             </div>
             <div>
-              <p className="text-xs font-mono uppercase tracking-widest text-[var(--text-tertiary)] mb-1">
+              <p className="text-xs font-mono uppercase tracking-widest text-(--text-tertiary)] mb-1">
                 Active Products
               </p>
               <p className="text-2xl font-bold">{stats.totalProducts}</p>
             </div>
             <div>
-              <p className="text-xs font-mono uppercase tracking-widest text-[var(--text-tertiary)] mb-1">
+              <p className="text-xs font-mono uppercase tracking-widest text-(--text-tertiary)] mb-1">
                 Total Orders
               </p>
               <p className="text-2xl font-bold">{stats.totalOrders}</p>

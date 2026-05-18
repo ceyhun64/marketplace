@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import {
   Bell,
   ShoppingCart,
@@ -22,12 +24,12 @@ const TYPE_META: Record<
   NotifType,
   { icon: React.ElementType; bg: string; color: string }
 > = {
-  order: { icon: ShoppingCart, bg: "rgba(200,16,46,0.08)", color: "var(--red)" },
-  deal: { icon: Tag, bg: "rgba(234,179,8,0.08)", color: "#ca8a04" },
-  store: { icon: Store, bg: "rgba(59,130,246,0.08)", color: "#2563eb" },
-  shipping: { icon: Truck, bg: "rgba(34,197,94,0.08)", color: "#16a34a" },
-  review: { icon: Star, bg: "rgba(168,85,247,0.08)", color: "#7c3aed" },
-  system: { icon: Bell, bg: "rgba(51,51,51,0.06)", color: "var(--charcoal-soft)" },
+  order:    { icon: ShoppingCart, bg: "bg-(--red-muted)",     color: "text-(--red)" },
+  deal:     { icon: Tag,          bg: "bg-(--warning-bg)",    color: "text-(--warning)" },
+  store:    { icon: Store,        bg: "bg-(--info-bg)",       color: "text-(--info)" },
+  shipping: { icon: Truck,        bg: "bg-(--success-bg)",    color: "text-(--success)" },
+  review:   { icon: Star,         bg: "bg-(--off-white-2)",   color: "text-(--text-secondary)" },
+  system:   { icon: Bell,         bg: "bg-(--off-white-2)",   color: "text-(--text-tertiary)" },
 };
 
 const FILTERS = ["All", "Unread", "Orders", "Shipping", "Deals", "Reviews"];
@@ -135,10 +137,21 @@ export default function NotificationsPage() {
 
         {/* Notifications list */}
         <div className="space-y-2">
+          {/* Loading skeletons using the Skeleton primitive */}
           {isLoading && (
             <div className="space-y-2">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 rounded-2xl animate-pulse bg-white border border-black/5" />
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-4 p-4 rounded-2xl bg-white border border-(--border-light)"
+                >
+                  <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-1/3" />
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -175,12 +188,11 @@ export default function NotificationsPage() {
                 }}
               >
                 {/* Unread dot */}
-                <div className="flex-shrink-0 mt-1 relative">
+                <div className="shrink-0 mt-1 relative">
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ background: meta.bg }}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center ${meta.bg}`}
                   >
-                    <Icon className="w-4.5 h-4.5" style={{ color: meta.color }} />
+                    <Icon className={`w-4 h-4 ${meta.color}`} />
                   </div>
                   {!notif.read && (
                     <div
@@ -202,7 +214,7 @@ export default function NotificationsPage() {
                       {notif.title}
                     </h3>
                     <span
-                      className="text-[11px] flex-shrink-0"
+                      className="text-[11px] shrink-0"
                       style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-body)" }}
                     >
                       {notif.time}
@@ -218,7 +230,7 @@ export default function NotificationsPage() {
 
                 {/* Delete */}
                 <button
-                  className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg"
+                  className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg"
                   style={{ color: "var(--charcoal-mist)" }}
                   onClick={(e) => {
                     e.stopPropagation();

@@ -25,7 +25,7 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
     return (
       <div className="overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-[var(--bg-sunken)] border-b border-[var(--border-light)]">
+          <thead className="bg-(--bg-sunken)] border-b border-(--border-light)]">
             <tr>
               {[
                 "Order No.",
@@ -38,14 +38,14 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
               ].map((h) => (
                 <th
                   key={h}
-                  className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide"
+                  className="px-5 py-3 text-left text-xs font-semibold text-(--text-secondary)] uppercase tracking-wide"
                 >
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--border-subtle)]">
+          <tbody className="divide-y divide-(--border-subtle)">
             {Array.from({ length: 5 }).map((_, i) => (
               <tr key={i}>
                 {Array.from({ length: 7 }).map((_, j) => (
@@ -63,7 +63,7 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
 
   if (!orders.length) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-[var(--text-tertiary)]">
+      <div className="flex flex-col items-center justify-center py-16 text-(--text-tertiary)]">
         <p className="text-sm font-medium">No orders yet</p>
         <p className="text-xs mt-1">Orders will appear here.</p>
       </div>
@@ -73,7 +73,7 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
   return (
     <div className="overflow-hidden">
       <table className="w-full text-sm">
-        <thead className="bg-[var(--bg-sunken)] border-b border-[var(--border-light)]">
+        <thead className="bg-(--bg-sunken)] border-b border-(--border-light)]">
           <tr>
             {[
               "Order No.",
@@ -86,14 +86,14 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
             ].map((h) => (
               <th
                 key={h}
-                className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide"
+                className="px-5 py-3 text-left text-xs font-semibold text-(--text-secondary)] uppercase tracking-wide"
               >
                 {h}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-[var(--border-subtle)]">
+        <tbody className="divide-y divide-(--border-subtle)">
           {orders.map((order) => {
             const isExpanded = expandedId === order.id;
             const canPack = order.status === "PAYMENT_CONFIRMED";
@@ -101,25 +101,25 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
             return (
               <Fragment key={order.id}>
                 <tr
-                  className="hover:bg-[var(--bg-sunken)] transition-colors cursor-pointer"
+                  className="hover:bg-(--bg-sunken)] transition-colors cursor-pointer"
                   onClick={() => setExpandedId(isExpanded ? null : order.id)}
                 >
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-1.5">
                       {isExpanded ? (
-                        <ChevronDown className="w-3 h-3 text-[var(--text-tertiary)]" />
+                        <ChevronDown className="w-3 h-3 text-(--text-tertiary)]" />
                       ) : (
-                        <ChevronRight className="w-3 h-3 text-[var(--text-tertiary)]" />
+                        <ChevronRight className="w-3 h-3 text-(--text-tertiary)]" />
                       )}
-                      <span className="font-mono text-xs text-[var(--info)] font-semibold">
+                      <span className="font-mono text-xs text-(--info)] font-semibold">
                         #{order.id.slice(0, 8).toUpperCase()}
                       </span>
                     </div>
                   </td>
-                  <td className="px-5 py-3 text-[var(--text-secondary)]">
+                  <td className="px-5 py-3 text-(--text-secondary)]">
                     {order.customerName ?? "—"}
                   </td>
-                  <td className="px-5 py-3 font-semibold text-[var(--text-primary)]">
+                  <td className="px-5 py-3 font-semibold text-(--text-primary)]">
                     {formatPrice(order.totalAmount)}
                   </td>
                   <td className="px-5 py-3">
@@ -133,14 +133,14 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
                     <span
                       className={`text-xs px-2 py-0.5 rounded-md font-medium ${
                         order.source === "MARKETPLACE"
-                          ? "bg-[var(--info-bg)] text-[var(--info)]"
-                          : "bg-[var(--off-white-2)] text-[var(--charcoal-mid)]"
+                          ? "bg-(--info-bg)] text-(--info)]"
+                          : "bg-(--off-white-2)] text-(--charcoal-mid)]"
                       }`}
                     >
                       {ORDER_SOURCE_LABELS[order.source]}
                     </span>
                   </td>
-                  <td className="px-5 py-3 text-xs text-[var(--text-tertiary)]">
+                  <td className="px-5 py-3 text-xs text-(--text-tertiary)]">
                     {formatShortDate(order.createdAt)}
                   </td>
                   <td
@@ -151,51 +151,51 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
                       <button
                         onClick={() => packMutation.mutate(order.id)}
                         disabled={packMutation.isPending}
-                        className="text-xs bg-[var(--success)] text-white px-3 py-1.5 rounded-lg hover:bg-[var(--success)] disabled:opacity-50 transition-colors font-medium"
+                        className="text-xs bg-(--success)] text-white px-3 py-1.5 rounded-lg hover:bg-(--success)] disabled:opacity-50 transition-colors font-medium"
                       >
                         {packMutation.isPending ? "..." : "Mark Packed"}
                       </button>
                     ) : (
-                      <span className="text-xs text-[var(--text-tertiary)]">—</span>
+                      <span className="text-xs text-(--text-tertiary)]">—</span>
                     )}
                   </td>
                 </tr>
 
                 {/* Expanded: order items */}
                 {isExpanded && (
-                  <tr className="bg-[var(--bg-sunken)]/80">
+                  <tr className="bg-(--bg-sunken)]/80">
                     <td colSpan={7} className="px-5 py-4">
-                      <p className="text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wider mb-2">
+                      <p className="text-xs font-semibold text-(--text-tertiary)] uppercase tracking-wider mb-2">
                         Order Items
                       </p>
                       <div className="space-y-1.5">
                         {order.items.map((item) => (
                           <div
                             key={item.id}
-                            className="flex items-center justify-between bg-[var(--bg-surface)] rounded-lg px-4 py-2.5 border border-[var(--border-light)]"
+                            className="flex items-center justify-between bg-(--bg-surface)] rounded-lg px-4 py-2.5 border border-(--border-light)]"
                           >
-                            <span className="font-medium text-[var(--text-primary)] text-sm">
+                            <span className="font-medium text-(--text-primary)] text-sm">
                               {item.productName}
                             </span>
-                            <div className="flex items-center gap-4 text-[var(--text-secondary)] text-sm">
+                            <div className="flex items-center gap-4 text-(--text-secondary)] text-sm">
                               <span>{item.quantity} pcs</span>
-                              <span className="font-semibold text-[var(--text-primary)]">
+                              <span className="font-semibold text-(--text-primary)]">
                                 {formatPrice(item.lineTotal)}
                               </span>
                             </div>
                           </div>
                         ))}
                       </div>
-                      <div className="flex justify-between items-center mt-3 pt-3 border-t border-[var(--border-mid)] text-sm">
-                        <span className="text-[var(--text-secondary)]">
+                      <div className="flex justify-between items-center mt-3 pt-3 border-t border-(--border-mid)] text-sm">
+                        <span className="text-(--text-secondary)]">
                           Shipping:{" "}
-                          <strong className="text-[var(--text-primary)]">
+                          <strong className="text-(--text-primary)]">
                             {order.shippingRate === "EXPRESS"
                               ? "Express"
                               : "Standard"}
                           </strong>
                         </span>
-                        <span className="font-semibold text-[var(--text-primary)]">
+                        <span className="font-semibold text-(--text-primary)]">
                           Total: {formatPrice(order.totalAmount)}
                         </span>
                       </div>
