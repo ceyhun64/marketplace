@@ -44,7 +44,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ServiceRe
     {
         var req = request.Request;
         if (await _db.Users.AnyAsync(u => u.Email == req.Email.ToLower(), ct))
-            return ServiceResult<AuthResponse>.Fail("Bu e-posta adresi zaten kullanılıyor.");
+            return ServiceResult<AuthResponse>.Fail("This email address is already in use.");
 
         var user = new User
         {
@@ -60,7 +60,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ServiceRe
 
         _db.Users.Add(user);
         await _db.SaveChangesAsync(ct);
-        _logger.LogInformation("Yeni kullanıcı kaydoldu: {Email}", user.Email);
+        _logger.LogInformation("New user registered: {Email}", user.Email);
 
         var frontendUrl = _config["FRONTEND_URL"] ?? "http://localhost:3000";
         var verifyUrl = $"{frontendUrl}/auth/verify-email?token={user.VerificationToken}";
@@ -71,13 +71,13 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ServiceRe
             {
                 await _notification.SendEmailAsync(
                     user.Email,
-                    "E-posta adresinizi doğrulayın",
-                    $"Merhaba {user.FirstName},\n\nHesabınızı doğrulamak için:\n{verifyUrl}\n\nBu bağlantı 24 saat geçerlidir."
+                    "Verify your email address",
+                    $"Hi {user.FirstName},\n\nTo verify your account, click the link below:\n{verifyUrl}\n\nThis link is valid for 24 hours."
                 );
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Doğrulama e-postası gönderilemedi: {Email}", user.Email);
+                _logger.LogError(ex, "Failed to send verification email: {Email}", user.Email);
             }
         });
 
@@ -158,30 +158,30 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, ServiceResult<A
 
         if (user is null || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
         {
-            _logger.LogWarning("Başarısız giriş denemesi: {Email}", req.Email);
-            return ServiceResult<AuthResponse>.Fail("E-posta veya şifre hatalı.");
+            _logger.LogWarning("Failed login attempt: {Email}", req.Email);
+            return ServiceResult<AuthResponse>.Fail("Invalid email or password.");
         }
 
-        // Hesap durumu kontrolü — askıya alınmış veya reddedilmiş hesaplar giriş yapamaz
+        // Account status check — suspended or rejected accounts cannot log in
         if (user.AccountStatus == AccountStatus.Suspended)
         {
-            _logger.LogWarning("Askıya alınmış hesap giriş denemesi: {Email}", user.Email);
+            _logger.LogWarning("Suspended account login attempt: {Email}", user.Email);
             return ServiceResult<AuthResponse>.Fail(
-                "Hesabınız askıya alınmıştır. Destek ekibiyle iletişime geçin.");
+                "Your account has been suspended. Please contact support.");
         }
 
         if (user.AccountStatus == AccountStatus.Rejected)
         {
-            _logger.LogWarning("Reddedilmiş hesap giriş denemesi: {Email}", user.Email);
+            _logger.LogWarning("Rejected account login attempt: {Email}", user.Email);
             return ServiceResult<AuthResponse>.Fail(
-                "Hesap başvurunuz reddedilmiştir.");
+                "Your account application has been rejected.");
         }
 
         if (user.AccountStatus == AccountStatus.PendingApproval)
         {
-            _logger.LogWarning("Onay bekleyen hesap giriş denemesi: {Email}", user.Email);
+            _logger.LogWarning("Pending account login attempt: {Email}", user.Email);
             return ServiceResult<AuthResponse>.Fail(
-                "Hesabınız henüz onaylanmamıştır. Onay e-postası bekleniyor.");
+                "Your account is pending approval. Please wait for the confirmation email.");
         }
 
         var accessToken = _tokenService.GenerateAccessToken(user);
@@ -195,7 +195,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, ServiceResult<A
         user.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
 
-        _logger.LogInformation("Kullanıcı giriş yaptı: {Email} [{Role}]", user.Email, user.Role);
+        _logger.LogInformation("User logged in: {Email} [{Role}]", user.Email, user.Role);
 
         return ServiceResult<AuthResponse>.Ok(
             new AuthResponse(
@@ -231,7 +231,7 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, ServiceResult
     {
         var user = await _db.Users.FindAsync([request.UserId], ct);
         if (user is null)
-            return ServiceResult<bool>.Fail("Kullanıcı bulunamadı.");
+            return ServiceResult<bool>.Fail("User not found.");
 
         user.RefreshToken = null;
         user.RefreshTokenExpiry = null;
@@ -283,7 +283,7 @@ public class ForgotPasswordCommandHandler
             user.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync(ct);
 
-            _logger.LogInformation("Şifre sıfırlama isteği: {Email}", user.Email);
+            _logger.LogInformation("Password reset requested: {Email}", user.Email);
 
             var frontendUrl = _config["FRONTEND_URL"] ?? "http://localhost:3000";
             var resetUrl = $"{frontendUrl}/auth/reset-password?token={user.PasswordResetToken}";
@@ -293,15 +293,15 @@ public class ForgotPasswordCommandHandler
                 {
                     await _notification.SendEmailAsync(
                         user.Email,
-                        "Şifre Sıfırlama Talebi",
-                        $"Merhaba {user.FirstName},\n\nŞifrenizi sıfırlamak için:\n{resetUrl}\n\nBu bağlantı 2 saat geçerlidir."
+                        "Password Reset Request",
+                        $"Hi {user.FirstName},\n\nTo reset your password, click the link below:\n{resetUrl}\n\nThis link is valid for 2 hours."
                     );
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(
                         ex,
-                        "Şifre sıfırlama e-postası gönderilemedi: {Email}",
+                        "Failed to send password reset email: {Email}",
                         user.Email
                     );
                 }
@@ -349,7 +349,7 @@ public class ResetPasswordCommandHandler
         );
 
         if (user is null)
-            return ServiceResult<bool>.Fail("Geçersiz veya süresi dolmuş token.");
+            return ServiceResult<bool>.Fail("Invalid or expired token.");
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
         user.PasswordResetToken = null;
@@ -365,15 +365,15 @@ public class ResetPasswordCommandHandler
             {
                 await _notification.SendEmailAsync(
                     user.Email,
-                    "Şifreniz Başarıyla Değiştirildi",
-                    $"Merhaba {user.FirstName},\n\nŞifreniz başarıyla güncellendi."
+                    "Your Password Has Been Changed",
+                    $"Hi {user.FirstName},\n\nYour password has been updated successfully."
                 );
             }
             catch (Exception ex)
             {
                 _logger.LogError(
                     ex,
-                    "Şifre değişiklik bildirimi gönderilemedi: {Email}",
+                    "Failed to send password change notification: {Email}",
                     user.Email
                 );
             }
@@ -406,7 +406,7 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Ser
         );
 
         if (user is null)
-            return ServiceResult<bool>.Fail("Geçersiz doğrulama token'ı.");
+            return ServiceResult<bool>.Fail("Invalid verification token.");
         if (user.IsVerified)
             return ServiceResult<bool>.Ok(true);
 
@@ -415,7 +415,7 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Ser
         user.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
 
-        _logger.LogInformation("E-posta doğrulandı: {Email}", user.Email);
+        _logger.LogInformation("Email verified: {Email}", user.Email);
         return ServiceResult<bool>.Ok(true);
     }
 }
@@ -440,7 +440,7 @@ public class GetMeQueryHandler : IRequestHandler<GetMeQuery, ServiceResult<UserI
             .FirstOrDefaultAsync(u => u.Id == request.UserId && !u.IsDeleted, ct);
 
         if (user is null)
-            return ServiceResult<UserInfoResponse>.Fail("Kullanıcı bulunamadı.");
+            return ServiceResult<UserInfoResponse>.Fail("User not found.");
 
         return ServiceResult<UserInfoResponse>.Ok(
             new UserInfoResponse(
@@ -495,14 +495,14 @@ public class RefreshTokenCommandHandler
             );
 
         if (user is null)
-            return ServiceResult<RefreshTokenResponse>.Fail("Geçersiz veya süresi dolmuş token.");
+            return ServiceResult<RefreshTokenResponse>.Fail("Invalid or expired token.");
 
         var accessToken = _tokenService.GenerateAccessToken(user);
         var expiresAt = DateTime.UtcNow.AddMinutes(
             int.TryParse(_config["JWT_EXPIRES_MINUTES"], out var m) ? m : 15
         );
 
-        // Token rotation — eski refresh token geçersiz kılınır, yeni token verilir
+        // Token rotation — old refresh token is invalidated, new token is issued
         var newRefreshToken = _tokenService.GenerateRefreshToken();
         var expiresDays = int.TryParse(_config["REFRESH_EXPIRES_DAYS"], out var d) ? d : 7;
         user.RefreshToken = newRefreshToken;

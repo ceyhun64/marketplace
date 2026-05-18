@@ -10,9 +10,9 @@ using Twilio.Types;
 namespace api.Infrastructure.Services;
 
 /// <summary>
-/// Milestone 2 — Tam NotificationService implementasyonu.
-/// SendGrid (e-posta) ve Twilio (SMS) gerçek entegrasyonu.
-/// Tüm anahtarlar appsettings.json / ortam değişkenlerinden okunur.
+/// Milestone 2 — Full NotificationService implementation.
+/// Real SendGrid (email) and Twilio (SMS) integration.
+/// All keys are read from appsettings.json / environment variables.
 /// </summary>
 public class NotificationService : INotificationService
 {
@@ -31,7 +31,7 @@ public class NotificationService : INotificationService
         _config = config;
     }
 
-    // ── E-posta (SendGrid) ──────────────────────────────────────────────────
+    // ── Email (SendGrid) ────────────────────────────────────────────────────
 
     public async Task SendEmailAsync(string to, string subject, string body)
     {
@@ -41,7 +41,7 @@ public class NotificationService : INotificationService
 
         if (string.IsNullOrWhiteSpace(apiKey))
         {
-            _logger.LogWarning("⚠️  SENDGRID_API_KEY tanımlı değil — e-posta atlandı: {To}", to);
+            _logger.LogWarning("⚠️  SENDGRID_API_KEY not configured — email skipped: {To}", to);
             return;
         }
 
@@ -51,15 +51,15 @@ public class NotificationService : INotificationService
             var from = new EmailAddress(fromEmail, fromName);
             var recipient = new EmailAddress(to);
 
-            // HTML body: düz metni basit bir HTML şablona sar
+            // HTML body: wrap plain text in a simple HTML template
             var htmlBody = $"""
                 <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
                   <h2 style="color:#0d0d0d;border-bottom:2px solid #c84b2f;padding-bottom:8px">
-                    Marketplace Bildirimi
+                    Marketplace Notification
                   </h2>
                   <p style="font-size:15px;line-height:1.7;color:#333">{body}</p>
                   <hr style="border:none;border-top:1px solid #eee;margin:24px 0"/>
-                  <p style="font-size:12px;color:#999">Bu e-posta otomatik olarak gönderilmiştir.</p>
+                  <p style="font-size:12px;color:#999">This email was sent automatically.</p>
                 </div>
                 """;
 
@@ -70,14 +70,14 @@ public class NotificationService : INotificationService
             {
                 var responseBody = await response.Body.ReadAsStringAsync();
                 _logger.LogError(
-                    "❌ SendGrid hata: {Status} — {Body}",
+                    "❌ SendGrid error: {Status} — {Body}",
                     (int)response.StatusCode,
                     responseBody
                 );
             }
             else
             {
-                _logger.LogInformation("📧 E-posta gönderildi: {To} | {Subject}", to, subject);
+                _logger.LogInformation("📧 Email sent: {To} | {Subject}", to, subject);
             }
         }
         catch (Exception ex)
@@ -86,7 +86,7 @@ public class NotificationService : INotificationService
         }
     }
 
-    // ── SMS (Twilio) ────────────────────────────────────────────────────────
+    // ── SMS (Twilio) ─────────────────────────────────────────────────────────
 
     public async Task SendSmsAsync(string toPhoneNumber, string message)
     {
@@ -101,17 +101,17 @@ public class NotificationService : INotificationService
         )
         {
             _logger.LogWarning(
-                "⚠️  Twilio yapılandırması eksik — SMS atlandı: {Phone}",
+                "⚠️  Twilio configuration missing — SMS skipped: {Phone}",
                 toPhoneNumber
             );
             return;
         }
 
-        // Telefon numarasını normalize et: +90 ile başlamalı
+        // Normalize phone number: must start with +90
         var normalizedPhone = NormalizePhone(toPhoneNumber);
         if (string.IsNullOrEmpty(normalizedPhone))
         {
-            _logger.LogWarning("⚠️  Geçersiz telefon numarası: {Phone}", toPhoneNumber);
+            _logger.LogWarning("⚠️  Invalid phone number: {Phone}", toPhoneNumber);
             return;
         }
 
@@ -124,7 +124,7 @@ public class NotificationService : INotificationService
             );
 
             _logger.LogInformation(
-                "📱 SMS gönderildi: {Phone} | SID={Sid} | Status={Status}",
+                "📱 SMS sent: {Phone} | SID={Sid} | Status={Status}",
                 normalizedPhone,
                 smsMessage.Sid,
                 smsMessage.Status
@@ -136,7 +136,7 @@ public class NotificationService : INotificationService
         }
     }
 
-    // ── Kargo durum değişikliği bildirimi ───────────────────────────────────
+    // ── Shipment status change notification ──────────────────────────────────
 
     public async Task SendShipmentStatusNotificationAsync(
         Guid shipmentId,
@@ -163,39 +163,39 @@ public class NotificationService : INotificationService
             if (emailBody == null)
                 return;
 
-            // E-posta
+            // Email
             await SendEmailAsync(customer.Email, emailSubject!, emailBody);
 
-            // SMS (opsiyonel)
+            // SMS (optional)
             if (!string.IsNullOrEmpty(customer.Phone))
                 await SendSmsAsync(customer.Phone, smsText!);
 
             _logger.LogInformation(
-                "✅ Kargo bildirimi gönderildi: ShipmentId={Id} Status={Status}",
+                "✅ Shipment notification sent: ShipmentId={Id} Status={Status}",
                 shipmentId,
                 newStatus
             );
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Kargo bildirimi gönderilemedi: ShipmentId={Id}", shipmentId);
+            _logger.LogError(ex, "❌ Failed to send shipment notification: ShipmentId={Id}", shipmentId);
         }
     }
 
-    // ── Kurye atandı bildirimi ──────────────────────────────────────────────
+    // ── Courier assigned notification ────────────────────────────────────────
 
     public async Task SendCourierAssignedNotificationAsync(api.Domain.Entities.Shipment shipment)
     {
-        _logger.LogInformation("🚚 Kurye atandı bildirimi: ShipmentId={Id}", shipment.Id);
+        _logger.LogInformation("🚚 Courier assigned notification: ShipmentId={Id}", shipment.Id);
 
-        // Müşteriye kargo durumu bildirimi
+        // Customer shipment status notification
         await SendShipmentStatusNotificationAsync(shipment.Id, ShipmentStatus.CourierAssigned);
 
-        // Kuryeye etiket hazır SMS
+        // Label ready SMS to courier
         await SendLabelReadySmsAsync(shipment.Id);
     }
 
-    // ── Genel sipariş durum bildirimi ───────────────────────────────────────
+    // ── General order status notification ────────────────────────────────────
 
     public async Task SendOrderStatusNotificationAsync(Guid orderId, string message)
     {
@@ -210,7 +210,7 @@ public class NotificationService : INotificationService
 
             await SendEmailAsync(
                 order.Customer.Email,
-                $"Sipariş Güncelleme — #{orderId.ToString()[..8].ToUpper()}",
+                $"Order Update — #{orderId.ToString()[..8].ToUpper()}",
                 message
             );
 
@@ -219,19 +219,19 @@ public class NotificationService : INotificationService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Sipariş bildirimi gönderilemedi: OrderId={Id}", orderId);
+            _logger.LogError(ex, "❌ Failed to send order notification: OrderId={Id}", orderId);
         }
     }
 
     public Task SendOrderUpdateNotificationAsync(string userId, string message)
     {
-        // SignalR üzerinden anlık push — FulfillmentService TrackingHub'ı doğrudan çağırıyor.
-        // Burada sadece loglama yeterli; duplikasyon önlemek için e-posta/SMS yok.
-        _logger.LogInformation("🔔 Push bildirimi: UserId={User} Mesaj={Message}", userId, message);
+        // Real-time push via SignalR — FulfillmentService calls TrackingHub directly.
+        // Logging only here; no email/SMS to avoid duplication.
+        _logger.LogInformation("🔔 Push notification: UserId={User} Message={Message}", userId, message);
         return Task.CompletedTask;
     }
 
-    // ── Fatura e-postası ────────────────────────────────────────────────────
+    // ── Invoice email ─────────────────────────────────────────────────────────
 
     public async Task SendInvoiceEmailAsync(Guid orderId, string invoicePdfUrl)
     {
@@ -246,31 +246,31 @@ public class NotificationService : INotificationService
                 return;
 
             var shortId = orderId.ToString()[..8].ToUpper();
-            var subject = $"Faturanız Hazır — Sipariş #{shortId}";
+            var subject = $"Your Invoice is Ready — Order #{shortId}";
             var body = $"""
-                Merhaba {order.Customer.FirstName},
+                Hi {order.Customer.FirstName},
 
-                #{shortId} numaralı siparişinize ait fatura hazırlandı.
+                Your invoice for order #{shortId} is ready.
 
-                Faturanızı aşağıdaki bağlantıdan indirebilirsiniz:
+                Download your invoice here:
                 {invoicePdfUrl}
 
-                Sipariş Özeti:
-                - Toplam Tutar: {order.TotalAmount:C2}
-                - Kargo: {order.ShippingRate}
+                Order Summary:
+                - Total: {order.TotalAmount:C2}
+                - Shipping: {order.ShippingRate}
 
-                İyi alışverişler!
+                Thank you for shopping with us!
                 """;
 
             await SendEmailAsync(order.Customer.Email, subject, body);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Fatura e-postası gönderilemedi: OrderId={Id}", orderId);
+            _logger.LogError(ex, "❌ Failed to send invoice email: OrderId={Id}", orderId);
         }
     }
 
-    // ── Kargo etiketi SMS (kuryeye) ─────────────────────────────────────────
+    // ── Shipping label SMS (to courier) ──────────────────────────────────────
 
     public async Task SendLabelReadySmsAsync(Guid shipmentId)
     {
@@ -290,16 +290,16 @@ public class NotificationService : INotificationService
             if (string.IsNullOrEmpty(courierPhone))
             {
                 _logger.LogWarning(
-                    "⚠️  Kurye telefonu yok: CourierId={Id}",
+                    "⚠️  Courier has no phone number: CourierId={Id}",
                     shipment.Courier.Id
                 );
                 return;
             }
 
             var message =
-                $"Merhaba {courierName}, yeni kargo atamanız hazır. "
-                + $"Takip No: {shipment.TrackingNumber}. "
-                + "Etiketi kurye panelinizden görüntüleyebilirsiniz.";
+                $"Hi {courierName}, you have a new shipment assignment. "
+                + $"Tracking: {shipment.TrackingNumber}. "
+                + "View the label in your courier panel.";
 
             await SendSmsAsync(courierPhone, message);
         }
@@ -307,17 +307,17 @@ public class NotificationService : INotificationService
         {
             _logger.LogError(
                 ex,
-                "❌ Kurye SMS gönderilemedi: ShipmentId={Id}",
+                "❌ Failed to send courier SMS: ShipmentId={Id}",
                 shipmentId
             );
         }
     }
 
-    // ── Yardımcı metodlar ───────────────────────────────────────────────────
+    // ── Helper methods ────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Her durum için e-posta konusu, e-posta gövdesi ve SMS metnini döner.
-    /// null dönerse bildirim gönderilmez.
+    /// Returns the email subject, email body, and SMS text for each status.
+    /// Returns null to skip the notification.
     /// </summary>
     private static (string? Subject, string? Body, string? Sms) BuildStatusMessages(
         api.Domain.Entities.Shipment shipment,
@@ -326,131 +326,131 @@ public class NotificationService : INotificationService
     )
     {
         var trackingNo = shipment.TrackingNumber;
-        var recipientName = shipment.Order?.RecipientName ?? "Müşteri";
+        var recipientName = shipment.Order?.RecipientName ?? "Customer";
         var shortOrderId = shipment.OrderId.ToString()[..8].ToUpper();
         var eta = shipment.EstimatedDelivery.ToLocalTime().ToString("dd.MM.yyyy");
-        var noteText = string.IsNullOrEmpty(note) ? "" : $"\nNot: {note}";
+        var noteText = string.IsNullOrEmpty(note) ? "" : $"\nNote: {note}";
 
         return status switch
         {
             ShipmentStatus.LabelGenerated => (
-                Subject: $"Kargo Etiketi Oluşturuldu — #{shortOrderId}",
+                Subject: $"Shipping Label Generated — #{shortOrderId}",
                 Body: $"""
-                    Merhaba {recipientName},
+                    Hi {recipientName},
 
-                    Siparişiniz ({shortOrderId}) paketlendi ve kargo etiketi oluşturuldu.
-                    Takip Numaranız: {trackingNo}
-                    Tahmini Teslim: {eta}{noteText}
+                    Your order ({shortOrderId}) has been packed and a shipping label has been created.
+                    Tracking Number: {trackingNo}
+                    Estimated Delivery: {eta}{noteText}
 
-                    Kargo durumunuzu takip etmek için: /track/{trackingNo}
+                    Track your shipment at: /track/{trackingNo}
                     """,
-                Sms: $"Siparişiniz paketlendi! Takip: {trackingNo} — ETA: {eta}"
+                Sms: $"Your order is packed! Tracking: {trackingNo} — ETA: {eta}"
             ),
             ShipmentStatus.CourierAssigned => (
-                Subject: $"Kurye Atandı — #{shortOrderId}",
+                Subject: $"Courier Assigned — #{shortOrderId}",
                 Body: $"""
-                    Merhaba {recipientName},
+                    Hi {recipientName},
 
-                    Siparişiniz ({shortOrderId}) için kurye atandı.
-                    Kurye yakında paketi teslim alacak.
-                    Takip Numaranız: {trackingNo}
-                    Tahmini Teslim: {eta}{noteText}
+                    A courier has been assigned to your order ({shortOrderId}).
+                    The courier will pick up your package shortly.
+                    Tracking Number: {trackingNo}
+                    Estimated Delivery: {eta}{noteText}
                     """,
-                Sms: $"Kuryeniz atandı! Takip: {trackingNo} — ETA: {eta}"
+                Sms: $"Your courier is assigned! Tracking: {trackingNo} — ETA: {eta}"
             ),
             ShipmentStatus.PickedUp => (
-                Subject: $"Kargonuz Alındı — #{shortOrderId}",
+                Subject: $"Package Picked Up — #{shortOrderId}",
                 Body: $"""
-                    Merhaba {recipientName},
+                    Hi {recipientName},
 
-                    Harika haber! Siparişiniz ({shortOrderId}) kurye tarafından teslim alındı.
-                    Takip Numaranız: {trackingNo}
-                    Tahmini Teslim: {eta}{noteText}
+                    Great news! Your order ({shortOrderId}) has been picked up by the courier.
+                    Tracking Number: {trackingNo}
+                    Estimated Delivery: {eta}{noteText}
 
-                    Anlık takip için: /track/{trackingNo}
+                    Track in real time: /track/{trackingNo}
                     """,
-                Sms: $"Kargonuz yola çıktı! Takip: {trackingNo} — ETA: {eta}"
+                Sms: $"Your package is on its way! Tracking: {trackingNo} — ETA: {eta}"
             ),
             ShipmentStatus.InTransit => (
-                Subject: $"Kargonuz Yolda — #{shortOrderId}",
+                Subject: $"Your Package is In Transit — #{shortOrderId}",
                 Body: $"""
-                    Merhaba {recipientName},
+                    Hi {recipientName},
 
-                    Siparişiniz ({shortOrderId}) taşıma sürecinde.
-                    Takip Numaranız: {trackingNo}
-                    Tahmini Teslim: {eta}{noteText}
+                    Your order ({shortOrderId}) is currently in transit.
+                    Tracking Number: {trackingNo}
+                    Estimated Delivery: {eta}{noteText}
 
-                    Canlı takip: /track/{trackingNo}
+                    Live tracking: /track/{trackingNo}
                     """,
-                Sms: $"Kargonuz yolda! Takip: {trackingNo}"
+                Sms: $"Your package is in transit! Tracking: {trackingNo}"
             ),
             ShipmentStatus.OutForDelivery => (
-                Subject: $"Kargonuz Bugün Geliyor! — #{shortOrderId}",
+                Subject: $"Your Package is Out for Delivery Today! — #{shortOrderId}",
                 Body: $"""
-                    Merhaba {recipientName},
+                    Hi {recipientName},
 
-                    Harika haber! Siparişiniz ({shortOrderId}) bugün teslim edilecek.
-                    Kurye yakında kapınızda olacak.
-                    Takip Numaranız: {trackingNo}{noteText}
+                    Great news! Your order ({shortOrderId}) will be delivered today.
+                    The courier is on their way.
+                    Tracking Number: {trackingNo}{noteText}
 
-                    Durumu takip edin: /track/{trackingNo}
+                    Track delivery: /track/{trackingNo}
                     """,
-                Sms: $"Kargonuz bugün teslim edilecek! Kurye yolda. Takip: {trackingNo}"
+                Sms: $"Your package will be delivered today! Courier is on the way. Tracking: {trackingNo}"
             ),
             ShipmentStatus.Delivered => (
-                Subject: $"Teslim Edildi — #{shortOrderId}",
+                Subject: $"Delivered — #{shortOrderId}",
                 Body: $"""
-                    Merhaba {recipientName},
+                    Hi {recipientName},
 
-                    Siparişiniz ({shortOrderId}) başarıyla teslim edildi. 🎉
-                    İyi alışverişler!{noteText}
+                    Your order ({shortOrderId}) has been successfully delivered. 🎉
+                    Thank you for shopping with us!{noteText}
 
-                    Sipariş geçmişiniz için hesabınıza giriş yapabilirsiniz.
+                    Sign in to your account to view your order history.
                     """,
-                Sms: $"Siparişiniz teslim edildi! 🎉 #{shortOrderId}"
+                Sms: $"Your order has been delivered! 🎉 #{shortOrderId}"
             ),
             ShipmentStatus.Failed => (
-                Subject: $"Teslimat Başarısız — #{shortOrderId}",
+                Subject: $"Delivery Failed — #{shortOrderId}",
                 Body: $"""
-                    Merhaba {recipientName},
+                    Hi {recipientName},
 
-                    Siparişiniz ({shortOrderId}) için teslimat gerçekleştirilemedi.
-                    Takip Numaranız: {trackingNo}{noteText}
+                    Unfortunately, delivery for your order ({shortOrderId}) could not be completed.
+                    Tracking Number: {trackingNo}{noteText}
 
-                    Lütfen destek hattımızla iletişime geçin.
-                    Durumu takip edin: /track/{trackingNo}
+                    Please contact our support team.
+                    Track status: /track/{trackingNo}
                     """,
-                Sms: $"Teslimat başarısız oldu. Detay: /track/{trackingNo} — Destek için bize ulaşın."
+                Sms: $"Delivery failed. Details: /track/{trackingNo} — Please contact support."
             ),
             _ => (null, null, null),
         };
     }
 
     /// <summary>
-    /// Telefon numarasını E.164 formatına çevirir (+905XXXXXXXXX).
-    /// Geçersiz ise null döner.
+    /// Normalizes a phone number to E.164 format (+905XXXXXXXXX).
+    /// Returns null for invalid numbers.
     /// </summary>
     private static string? NormalizePhone(string phone)
     {
         if (string.IsNullOrWhiteSpace(phone))
             return null;
 
-        // Sadece rakam ve + karakterini bırak
+        // Keep only digits and + character
         var digits = new string(phone.Where(c => char.IsDigit(c) || c == '+').ToArray());
 
-        // Zaten E.164 formatında ise doğrudan kullan
+        // Already in E.164 format
         if (digits.StartsWith('+') && digits.Length >= 10)
             return digits;
 
-        // Türk numaraları: 05XXXXXXXXX → +905XXXXXXXXX
+        // Turkish numbers: 05XXXXXXXXX → +905XXXXXXXXX
         if (digits.StartsWith("05") && digits.Length == 11)
             return $"+9{digits}";
 
-        // Uluslararası formatsız: 905XXXXXXXXX → +905XXXXXXXXX
+        // International without plus: 905XXXXXXXXX → +905XXXXXXXXX
         if (digits.StartsWith("90") && digits.Length == 12)
             return $"+{digits}";
 
-        // 10 haneli: 5XXXXXXXXX → +905XXXXXXXXX
+        // 10-digit: 5XXXXXXXXX → +905XXXXXXXXX
         if (digits.Length == 10 && digits.StartsWith('5'))
             return $"+90{digits}";
 

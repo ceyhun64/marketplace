@@ -20,8 +20,8 @@ public class PaymentsController : ControllerBase
 
     // ── POST /api/payments/checkout — Customer ────────────────────────────────
     /// <summary>
-    /// Stripe Payment Intent oluşturur ve client_secret döndürür.
-    /// Frontend bu secret ile Stripe.js üzerinden ödemeyi tamamlar.
+    /// Creates a Stripe Payment Intent and returns the client_secret.
+    /// The frontend uses this secret to complete payment via Stripe.js.
     /// </summary>
     [HttpPost("checkout")]
     [Authorize(Policy = "CustomerOnly")]
@@ -35,8 +35,8 @@ public class PaymentsController : ControllerBase
 
     // ── POST /api/payments/confirm — Customer ─────────────────────────────────
     /// <summary>
-    /// Frontend Stripe.js ile ödemeyi tamamladıktan sonra bu endpoint çağrılır.
-    /// PaymentIntent durumu doğrulanır ve sipariş onaylanır.
+    /// Called after the frontend completes payment via Stripe.js.
+    /// Verifies PaymentIntent status and confirms the order.
     /// </summary>
     [HttpPost("confirm")]
     [Authorize(Policy = "CustomerOnly")]
@@ -46,15 +46,15 @@ public class PaymentsController : ControllerBase
         if (!result.Success)
             return BadRequest(new ApiResponse<string>(result.Message));
         return Ok(
-            new ApiResponse<object>(new { orderId = result.Data, message = "Ödeme onaylandı." })
+            new ApiResponse<object>(new { orderId = result.Data, message = "Payment confirmed." })
         );
     }
 
     // ── POST /api/payments/webhook — Stripe webhook (System) ─────────────────
     /// <summary>
-    /// Stripe'ın gönderdiği webhook event'lerini işler.
-    /// payment_intent.succeeded → siparişi otomatik onayla.
-    /// Stripe imzası header'dan okunarak doğrulanır.
+    /// Processes webhook events sent by Stripe.
+    /// payment_intent.succeeded → automatically confirms the order.
+    /// Stripe signature is read from the header and verified.
     /// </summary>
     [HttpPost("webhook")]
     [AllowAnonymous]
@@ -65,7 +65,7 @@ public class PaymentsController : ControllerBase
 
         if (string.IsNullOrEmpty(stripeSignature))
         {
-            _logger.LogWarning("Stripe-Signature header eksik.");
+            _logger.LogWarning("Missing Stripe-Signature header.");
             return BadRequest("Missing Stripe-Signature header.");
         }
 
@@ -76,12 +76,12 @@ public class PaymentsController : ControllerBase
         }
         catch (Stripe.StripeException ex)
         {
-            _logger.LogError(ex, "Stripe webhook imza doğrulama başarısız.");
+            _logger.LogError(ex, "Stripe webhook signature verification failed.");
             return BadRequest("Invalid webhook signature.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Stripe webhook işlenirken beklenmeyen hata.");
+            _logger.LogError(ex, "Unexpected error processing Stripe webhook.");
             return StatusCode(500);
         }
     }
@@ -94,7 +94,7 @@ public class PaymentsController : ControllerBase
         var result = await _paymentService.RefundAsync(id, request);
         if (!result.Success)
             return BadRequest(new ApiResponse<string>(result.Message));
-        return Ok(new ApiResponse<string>("İade işlemi başlatıldı."));
+        return Ok(new ApiResponse<string>("Refund initiated."));
     }
 
     // ── GET /api/payments/{id}/status — Customer/Admin ────────────────────────
@@ -104,7 +104,7 @@ public class PaymentsController : ControllerBase
     {
         var status = await _paymentService.GetPaymentStatusAsync(id);
         if (status == null)
-            return NotFound(new ApiResponse<string>("Ödeme bulunamadı."));
+            return NotFound(new ApiResponse<string>("Payment not found."));
         return Ok(new ApiResponse<PaymentStatusDto>(status));
     }
 }

@@ -30,8 +30,8 @@ public class OrdersController(
         Order order = null!;
         List<OrderItem> orderItems = new();
 
-        // IsolationLevel.Serializable ile race condition önlenir — aynı stok eş zamanlı
-        // iki siparişe dağıtılamaz.
+        // Serializable isolation prevents race conditions — same stock cannot be allocated
+        // to two concurrent orders.
         await using var transaction = await db.Database.BeginTransactionAsync(
             IsolationLevel.Serializable);
         try
@@ -44,7 +44,7 @@ public class OrdersController(
             if (products.Count != dto.Items.Count)
             {
                 await transaction.RollbackAsync();
-                return BadRequest(new { message = "Bazı ürünler bulunamadı." });
+                return BadRequest(new { message = "Some products were not found." });
             }
 
             decimal total = 0;
@@ -56,7 +56,7 @@ public class OrdersController(
                 if (product.Stock < item.Quantity)
                 {
                     await transaction.RollbackAsync();
-                    return BadRequest(new { message = $"'{product.Name}' için yeterli stok yok." });
+                    return BadRequest(new { message = $"Insufficient stock for '{product.Name}'." });
                 }
 
                 orderItems.Add(
@@ -80,13 +80,13 @@ public class OrdersController(
             if (!Enum.TryParse<OrderSource>(dto.Source, ignoreCase: true, out var parsedSource))
             {
                 await transaction.RollbackAsync();
-                return BadRequest(new { message = $"Geçersiz sipariş kaynağı: {dto.Source}" });
+                return BadRequest(new { message = $"Invalid order source: {dto.Source}" });
             }
 
             if (!Enum.TryParse<ShippingRate>(dto.ShippingRate, ignoreCase: true, out var parsedRate))
             {
                 await transaction.RollbackAsync();
-                return BadRequest(new { message = $"Geçersiz kargo tipi: {dto.ShippingRate}" });
+                return BadRequest(new { message = $"Invalid shipping rate: {dto.ShippingRate}" });
             }
 
             order = new Order
@@ -118,7 +118,7 @@ public class OrdersController(
             throw;
         }
 
-        // Kargo kaydını transaction dışında oluştur (external servis çağrısı)
+        // Create shipment record outside transaction (external service call)
         await fulfillmentService.CreateShipmentForOrderAsync(order);
 
         return CreatedAtAction(
@@ -266,13 +266,13 @@ public class OrdersController(
             return NotFound();
 
         if (!new[] { OrderStatus.Pending, OrderStatus.PaymentConfirmed }.Contains(order.Status))
-            return BadRequest(new { message = "Bu aşamada sipariş iptal edilemez." });
+            return BadRequest(new { message = "Order cannot be cancelled at this stage." });
 
         order.Status = OrderStatus.Cancelled;
         order.CancellationReason = dto.Reason;
         order.UpdatedAt = DateTime.UtcNow;
 
-        // Stok iadesi — iptal edilen siparişteki ürünlerin stoğunu geri yükle
+        // Restore stock for all items in the cancelled order
         var productIds = order.Items.Select(i => i.ProductId).ToList();
         var products = await db.Products
             .Where(p => productIds.Contains(p.Id))
@@ -289,7 +289,7 @@ public class OrdersController(
         }
 
         await db.SaveChangesAsync();
-        return Ok(new { message = "Sipariş iptal edildi." });
+        return Ok(new { message = "Order cancelled." });
     }
 
     // ─── ADMIN ─────────────────────────────────────────────────
@@ -342,7 +342,7 @@ public class OrdersController(
 
     // ─── MERCHANT ──────────────────────────────────────────────
 
-    /// <summary>GET /api/orders/merchant/incoming — Merchant'a gelen siparişler</summary>
+    /// <summary>GET /api/orders/merchant/incoming — Incoming orders for the merchant</summary>
     [HttpGet("merchant/incoming")]
     [Authorize(Policy = "MerchantOnly")]
     public async Task<IActionResult> GetMerchantIncoming(
@@ -389,7 +389,7 @@ public class OrdersController(
         );
     }
 
-    /// <summary>PATCH /api/orders/{id}/pack — Merchant: sipariş hazırlandı (LabelGenerated durumuna geç)</summary>
+    /// <summary>PATCH /api/orders/{id}/pack — Merchant: order packed (transition to LabelGenerated)</summary>
     [HttpPatch("{id:guid}/pack")]
     [Authorize(Policy = "MerchantOnly")]
     public async Task<IActionResult> PackOrder(Guid id)
@@ -408,11 +408,11 @@ public class OrdersController(
             .FirstOrDefaultAsync(o => o.Id == id && o.Items.Any(i => i.MerchantId == merchant.Id));
 
         if (order == null)
-            return NotFound(new { message = "Sipariş bulunamadı veya yetkiniz yok." });
+            return NotFound(new { message = "Order not found or access denied." });
 
         if (order.Status != OrderStatus.PaymentConfirmed && order.Status != OrderStatus.Pending)
             return BadRequest(
-                new { message = $"Bu sipariş hazırlanamaz. Mevcut durum: {order.Status}" }
+                new { message = $"This order cannot be packed. Current status: {order.Status}" }
             );
 
         order.Status = OrderStatus.LabelGenerated;
@@ -422,7 +422,7 @@ public class OrdersController(
         return Ok(
             new
             {
-                message = "Sipariş hazırlandı. Kargo etiketi oluşturulabilir.",
+                message = "Order packed. Shipping label can now be generated.",
                 status = order.Status.ToString(),
                 orderId = order.Id,
             }
@@ -438,13 +438,13 @@ public class OrdersController(
             return NotFound();
 
         if (!Enum.TryParse<OrderStatus>(dto.Status, out var newStatus))
-            return BadRequest(new { message = "Geçersiz sipariş durumu." });
+            return BadRequest(new { message = "Invalid order status." });
 
         order.Status = newStatus;
         order.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
 
-        return Ok(new { message = "Sipariş durumu güncellendi.", status = newStatus.ToString() });
+        return Ok(new { message = "Order status updated.", status = newStatus.ToString() });
     }
 
     // ─── HELPER ────────────────────────────────────────────────
@@ -500,7 +500,7 @@ public class OrdersController(
                         EstimatedDelivery = order.Shipment.EstimatedDelivery,
                         LabelUrl = order.Shipment.LabelUrl,
                     },
-            // Milestone 3: Otomatik QuestPDF fatura — ödeme onaylandığında oluşturulur
+            // Milestone 3: Auto QuestPDF invoice — generated when payment is confirmed
             InvoiceId = order.Invoice?.Id,
             InvoiceNumber = order.Invoice?.InvoiceNumber,
             InvoicePdfUrl = order.Invoice?.PdfUrl,

@@ -66,12 +66,12 @@ interface Shipment {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const STATUS_LABEL: Record<ShipmentStatus, string> = {
-  COURIER_ASSIGNED: "Teslim Alınacak",
-  PICKED_UP: "Alındı",
-  IN_TRANSIT: "Yolda",
-  OUT_FOR_DELIVERY: "Dağıtımda",
-  DELIVERED: "Teslim Edildi",
-  FAILED: "Başarısız",
+  COURIER_ASSIGNED: "Awaiting Pickup",
+  PICKED_UP: "Picked Up",
+  IN_TRANSIT: "In Transit",
+  OUT_FOR_DELIVERY: "Out for Delivery",
+  DELIVERED: "Delivered",
+  FAILED: "Failed",
 };
 
 const STATUS_TOKENS: Record<

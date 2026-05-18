@@ -100,15 +100,15 @@ public class FulfillmentController(
     {
         var shipment = await db.Shipments.FindAsync(dto.ShipmentId);
         if (shipment == null)
-            return NotFound(new { message = "Shipment bulunamadı." });
+            return NotFound(new { message = "Shipment not found." });
 
         var courier = await db
             .Couriers.Include(c => c.User)
             .FirstOrDefaultAsync(c => c.Id == dto.CourierId);
         if (courier == null)
-            return NotFound(new { message = "Kurye bulunamadı." });
+            return NotFound(new { message = "Courier not found." });
         if (!courier.IsActive)
-            return BadRequest(new { message = "Kurye aktif değil." });
+            return BadRequest(new { message = "Courier is not active." });
 
         shipment.CourierId = courier.Id;
         shipment.Status = ShipmentStatus.CourierAssigned;
@@ -119,13 +119,13 @@ public class FulfillmentController(
             {
                 ShipmentId = shipment.Id,
                 Status = ShipmentStatus.CourierAssigned,
-                Note = $"Kurye atandı: {courier.User.FirstName} {courier.User.LastName}",
+                Note = $"Courier assigned: {courier.User.FirstName} {courier.User.LastName}",
                 ChangedAt = DateTime.UtcNow,
             }
         );
 
         await db.SaveChangesAsync();
-        return Ok(new { message = "Kurye başarıyla atandı." });
+        return Ok(new { message = "Courier assigned successfully." });
     }
 
     [HttpPatch("{id:guid}/status")]
@@ -140,10 +140,10 @@ public class FulfillmentController(
             return NotFound();
 
         if (!Enum.TryParse<ShipmentStatus>(dto.Status, out var newStatus))
-            return BadRequest(new { message = "Geçersiz shipment durumu." });
+            return BadRequest(new { message = "Invalid shipment status." });
 
         await fulfillmentService.TransitionStatusAsync(shipment, newStatus, dto.Note);
-        return Ok(new { message = "Durum güncellendi.", status = newStatus.ToString() });
+        return Ok(new { message = "Status updated.", status = newStatus.ToString() });
     }
 
     [HttpGet("{id:guid}/label")]
@@ -185,7 +185,7 @@ public class FulfillmentController(
     {
         var courier = await db.Couriers.FirstOrDefaultAsync(c => c.UserId == currentUser.UserId);
         if (courier == null)
-            return NotFound(new { message = "Kurye profili bulunamadı." });
+            return NotFound(new { message = "Courier profile not found." });
 
         var query = db
             .Shipments.Include(s => s.StatusHistory)
@@ -217,10 +217,10 @@ public class FulfillmentController(
         await fulfillmentService.TransitionStatusAsync(
             shipment,
             ShipmentStatus.PickedUp,
-            dto?.Signature != null ? $"İmza alındı: {dto.Signature}" : "Teslim alındı"
+            dto?.Signature != null ? $"Signature received: {dto.Signature}" : "Picked up"
         );
 
-        return Ok(new { message = "Teslim alındı olarak işaretlendi." });
+        return Ok(new { message = "Marked as picked up." });
     }
 
     [HttpPost("{id:guid}/delivered")]
@@ -244,10 +244,10 @@ public class FulfillmentController(
         await fulfillmentService.TransitionStatusAsync(
             shipment,
             ShipmentStatus.Delivered,
-            dto?.RecipientName != null ? $"Teslim alan: {dto.RecipientName}" : "Teslim edildi"
+            dto?.RecipientName != null ? $"Received by: {dto.RecipientName}" : "Delivered"
         );
 
-        return Ok(new { message = "Teslim edildi olarak işaretlendi." });
+        return Ok(new { message = "Marked as delivered." });
     }
 
     [HttpGet("calculate-eta")]
@@ -261,7 +261,7 @@ public class FulfillmentController(
     {
         var merchant = await db.MerchantProfiles.FindAsync(merchantId);
         if (merchant == null)
-            return NotFound(new { message = "Merchant bulunamadı." });
+            return NotFound(new { message = "Merchant not found." });
 
         var rate = Enum.TryParse<ShippingRate>(shippingRate, out var pr)
             ? pr
@@ -326,7 +326,7 @@ public class FulfillmentController(
             .FirstOrDefaultAsync(s => s.TrackingNumber == trackingNo);
 
         if (shipment == null)
-            return NotFound(new { message = "Takip numarası bulunamadı." });
+            return NotFound(new { message = "Tracking number not found." });
 
         return Ok(
             new

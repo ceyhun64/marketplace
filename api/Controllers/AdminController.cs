@@ -1,4 +1,4 @@
-using api.Common.DTOs; // ← BU SATIRI EKLEYİN
+using api.Common.DTOs;
 using api.Domain.Entities;
 using api.Domain.Enums;
 using api.Infrastructure.Persistence;
@@ -105,7 +105,7 @@ public class AdminController : ControllerBase
 
     // ── MERCHANT APPLICATIONS (Option B) ────────────────────────────────────
 
-    /// <summary>Onay bekleyen merchant başvurularını listeler.</summary>
+    /// <summary>Lists pending merchant applications.</summary>
     [HttpGet("merchants/pending")]
     public async Task<IActionResult> GetPendingMerchants()
     {
@@ -140,7 +140,7 @@ public class AdminController : ControllerBase
         return Ok(pending);
     }
 
-    /// <summary>Merchant başvurusunu onaylar — hesap aktifleşir, JWT alabilir.</summary>
+    /// <summary>Approves a merchant application — account becomes active, can obtain JWT.</summary>
     [HttpPost("merchants/{userId:guid}/approve")]
     public async Task<IActionResult> ApproveMerchant(Guid userId)
     {
@@ -149,14 +149,14 @@ public class AdminController : ControllerBase
             .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
 
         if (user is null)
-            return NotFound(new { message = "Kullanıcı bulunamadı." });
+            return NotFound(new { message = "User not found." });
 
         if (user.Role != UserRole.Merchant)
-            return BadRequest(new { message = "Bu kullanıcı merchant değil." });
+            return BadRequest(new { message = "This user is not a merchant." });
 
         if (user.AccountStatus != AccountStatus.PendingApproval)
             return BadRequest(
-                new { message = $"Başvuru zaten işleme alınmış: {user.AccountStatus}" }
+                new { message = $"Application has already been processed: {user.AccountStatus}" }
             );
 
         user.AccountStatus = AccountStatus.Active;
@@ -171,9 +171,9 @@ public class AdminController : ControllerBase
         user.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        _logger.LogInformation("Merchant onaylandı: {Email}", user.Email);
+        _logger.LogInformation("Merchant approved: {Email}", user.Email);
 
-        // Başvuru sahibine onay e-postası
+        // Send approval email to applicant
         var frontendUrl = _config["FRONTEND_URL"] ?? "http://localhost:3000";
         _ = Task.Run(async () =>
         {
@@ -181,27 +181,27 @@ public class AdminController : ControllerBase
             {
                 await _notification.SendEmailAsync(
                     user.Email,
-                    "Merchant başvurunuz onaylandı 🎉",
+                    "Your merchant application has been approved!",
                     $"""
-                    Merhaba {user.FirstName},
+                    Hi {user.FirstName},
 
-                    Merchant başvurunuz onaylandı. Artık hesabınıza giriş yapabilirsiniz:
+                    Your merchant application has been approved. You can now sign in to your account:
                     {frontendUrl}/auth/login
 
-                    İyi satışlar!
+                    Happy selling!
                     """
                 );
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Onay e-postası gönderilemedi: {Email}", user.Email);
+                _logger.LogError(ex, "Failed to send approval email: {Email}", user.Email);
             }
         });
 
-        return Ok(new { message = "Merchant başvurusu onaylandı.", userId });
+        return Ok(new { message = "Merchant application approved.", userId });
     }
 
-    /// <summary>Merchant başvurusunu reddeder.</summary>
+    /// <summary>Rejects a merchant application.</summary>
     [HttpPost("merchants/{userId:guid}/reject")]
     public async Task<IActionResult> RejectMerchant(Guid userId, [FromBody] RejectMerchantDto dto)
     {
@@ -210,11 +210,11 @@ public class AdminController : ControllerBase
             .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
 
         if (user is null)
-            return NotFound(new { message = "Kullanıcı bulunamadı." });
+            return NotFound(new { message = "User not found." });
 
         if (user.AccountStatus != AccountStatus.PendingApproval)
             return BadRequest(
-                new { message = $"Başvuru zaten işleme alınmış: {user.AccountStatus}" }
+                new { message = $"Application has already been processed: {user.AccountStatus}" }
             );
 
         user.AccountStatus = AccountStatus.Rejected;
@@ -230,37 +230,37 @@ public class AdminController : ControllerBase
         await _db.SaveChangesAsync();
 
         _logger.LogInformation(
-            "Merchant başvurusu reddedildi: {Email} — {Reason}",
+            "Merchant application rejected: {Email} — {Reason}",
             user.Email,
             dto.Reason
         );
 
-        // Başvuru sahibine red e-postası
+        // Send rejection email to applicant
         _ = Task.Run(async () =>
         {
             try
             {
                 await _notification.SendEmailAsync(
                     user.Email,
-                    "Merchant başvurunuz hakkında",
+                    "Regarding your merchant application",
                     $"""
-                    Merhaba {user.FirstName},
+                    Hi {user.FirstName},
 
-                    Maalesef merchant başvurunuz bu aşamada kabul edilemedi.
+                    Unfortunately, your merchant application could not be approved at this time.
 
-                    Sebep: {dto.Reason}
+                    Reason: {dto.Reason}
 
-                    Daha fazla bilgi için bizimle iletişime geçebilirsiniz.
+                    Please contact us if you have any questions.
                     """
                 );
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Red e-postası gönderilemedi: {Email}", user.Email);
+                _logger.LogError(ex, "Failed to send rejection email: {Email}", user.Email);
             }
         });
 
-        return Ok(new { message = "Başvuru reddedildi.", userId });
+        return Ok(new { message = "Application rejected.", userId });
     }
 
     // ── MERCHANTS ────────────────────────────────────────────────────────────
@@ -329,10 +329,10 @@ public class AdminController : ControllerBase
             return BadRequest(ModelState);
 
         if (await _db.Users.AnyAsync(u => u.Email == dto.Email.ToLower()))
-            return BadRequest(new { message = "Bu e-posta zaten kayıtlı." });
+            return BadRequest(new { message = "This email is already registered." });
 
         if (await _db.MerchantProfiles.AnyAsync(m => m.Slug == dto.Slug))
-            return BadRequest(new { message = "Bu slug zaten kullanımda." });
+            return BadRequest(new { message = "This slug is already in use." });
 
         var user = new User
         {
@@ -388,7 +388,7 @@ public class AdminController : ControllerBase
         merchant.HandlingHours = dto.HandlingHours ?? merchant.HandlingHours;
         merchant.UpdatedAt = DateTime.UtcNow;
 
-        // Plan değişikliği — Subscription tablosunu güncelle veya oluştur
+        // Plan change — update or create Subscription record
         if (
             !string.IsNullOrEmpty(dto.Plan)
             && Enum.TryParse<PlanType>(dto.Plan, ignoreCase: true, out var newPlan)
@@ -445,7 +445,7 @@ public class AdminController : ControllerBase
             {
                 merchant.Id,
                 merchant.IsActive,
-                message = $"Merchant {(merchant.IsActive ? "aktifleştirildi" : "askıya alındı")}.",
+                message = $"Merchant {(merchant.IsActive ? "activated" : "suspended")}.",
             }
         );
     }
@@ -504,7 +504,7 @@ public class AdminController : ControllerBase
             return NotFound();
 
         if (!Enum.TryParse<OrderStatus>(dto.Status, true, out var newStatus))
-            return BadRequest(new { message = "Geçersiz sipariş durumu." });
+            return BadRequest(new { message = "Invalid order status." });
 
         order.Status = newStatus;
         order.UpdatedAt = DateTime.UtcNow;
@@ -559,7 +559,7 @@ public class AdminController : ControllerBase
         product.IsApproved = true;
         product.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
-        return Ok(new { message = "Ürün onaylandı.", product.Id });
+        return Ok(new { message = "Product approved.", product.Id });
     }
 
     [HttpPatch("products/{id:guid}/reject")]
@@ -569,11 +569,11 @@ public class AdminController : ControllerBase
         if (product == null || product.IsDeleted)
             return NotFound();
 
-        // Ürünü onaylı olmayan şekilde işaretle (zaten IsApproved=false, sadece loglama/bildirim)
+        // Mark product as not approved (IsApproved=false, logging/notification only)
         product.IsApproved = false;
         product.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
-        return Ok(new { message = "Ürün reddedildi.", product.Id });
+        return Ok(new { message = "Product rejected.", product.Id });
     }
 
     // ── STORE SETUP ───────────────────────────────────────────────────────────
@@ -586,7 +586,7 @@ public class AdminController : ControllerBase
     {
         var merchant = await _db.MerchantProfiles.FindAsync(merchantId);
         if (merchant == null)
-            return NotFound(new { message = "Merchant bulunamadı." });
+            return NotFound(new { message = "Merchant not found." });
 
         if (dto.StoreName is not null)
             merchant.StoreName = dto.StoreName;
@@ -608,7 +608,7 @@ public class AdminController : ControllerBase
         merchant.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = "Mağaza kurulumu tamamlandı.", merchantId });
+        return Ok(new { message = "Store setup complete.", merchantId });
     }
 
     // ── ANALYTICS ────────────────────────────────────────────────────────────
@@ -658,7 +658,7 @@ public class AdminController : ControllerBase
 
     // ── COMMISSION SETTINGS ──────────────────────────────────────────────────
 
-    /// <summary>Platform komisyon ve ücret yapılandırmasını döner.</summary>
+    /// <summary>Returns platform commission and fee configuration.</summary>
     [HttpGet("settings/commission")]
     public IActionResult GetCommissionSettings()
     {
@@ -679,8 +679,8 @@ public class AdminController : ControllerBase
     // ── AUDIT LOGS ────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Son platform aktivitelerinden derlenen denetim kaydı.
-    /// Ayrı bir log tablosu olmadan mevcut DB'den türetilir.
+    /// Audit log derived from recent platform activity.
+    /// Derived from the existing DB without a separate log table.
     /// </summary>
     [HttpGet("logs")]
     public async Task<IActionResult> GetAuditLogs(
@@ -691,7 +691,7 @@ public class AdminController : ControllerBase
     {
         var events = new List<AuditLogEntry>();
 
-        // Sipariş olayları
+        // Order events
         if (eventType is null or "order")
         {
             var orders = await _db.Orders
@@ -714,7 +714,7 @@ public class AdminController : ControllerBase
             }
         }
 
-        // Kullanıcı kayıt olayları
+        // User registration events
         if (eventType is null or "user")
         {
             var users = await _db.Users
@@ -738,7 +738,7 @@ public class AdminController : ControllerBase
             }
         }
 
-        // Merchant başvuru / durum olayları
+        // Merchant application / status events
         if (eventType is null or "merchant")
         {
             var merchants = await _db.MerchantProfiles
@@ -765,7 +765,7 @@ public class AdminController : ControllerBase
             }
         }
 
-        // Ürün onay/red olayları
+        // Product approval/rejection events
         if (eventType is null or "product")
         {
             var products = await _db.Products
@@ -789,7 +789,7 @@ public class AdminController : ControllerBase
             }
         }
 
-        // Tarihe göre sırala, sayfalandır
+        // Sort by date and paginate
         var sorted = events
             .OrderByDescending(e => e.OccurredAt)
             .Skip((page - 1) * limit)

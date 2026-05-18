@@ -22,43 +22,43 @@ public class CreatePluginValidator : AbstractValidator<CreatePluginDto>
     {
         RuleFor(x => x.Name)
             .NotEmpty()
-            .WithMessage("Plugin adı zorunludur.")
+            .WithMessage("Plugin name is required.")
             .MaximumLength(100)
-            .WithMessage("Plugin adı en fazla 100 karakter olabilir.");
+            .WithMessage("Plugin name cannot exceed 100 characters.");
 
         RuleFor(x => x.Slug)
             .NotEmpty()
-            .WithMessage("Slug zorunludur.")
+            .WithMessage("Slug is required.")
             .MaximumLength(80)
-            .WithMessage("Slug en fazla 80 karakter olabilir.")
+            .WithMessage("Slug cannot exceed 80 characters.")
             .Matches(@"^[a-z0-9\-]+$")
-            .WithMessage("Slug yalnızca küçük harf, rakam ve tire içerebilir.");
+            .WithMessage("Slug can only contain lowercase letters, digits, and hyphens.");
 
         RuleFor(x => x.Description)
             .NotEmpty()
-            .WithMessage("Açıklama zorunludur.")
+            .WithMessage("Description is required.")
             .MaximumLength(500)
-            .WithMessage("Açıklama en fazla 500 karakter olabilir.");
+            .WithMessage("Description cannot exceed 500 characters.");
 
         RuleFor(x => x.Category)
             .Must(c => ValidCategories.Contains(c))
-            .WithMessage($"Geçerli kategoriler: {string.Join(", ", ValidCategories)}");
+            .WithMessage($"Valid categories: {string.Join(", ", ValidCategories)}");
 
         RuleFor(x => x.MonthlyPrice)
             .GreaterThanOrEqualTo(0)
-            .WithMessage("Aylık ücret 0 veya üzeri olmalıdır.");
+            .WithMessage("Monthly price must be 0 or greater.");
 
         RuleFor(x => x.MinimumPlan)
             .Must(p => ValidPlans.Contains(p))
-            .WithMessage($"Geçerli planlar: {string.Join(", ", ValidPlans)}");
+            .WithMessage($"Valid plans: {string.Join(", ", ValidPlans)}");
 
         RuleFor(x => x.DocumentationUrl)
             .Must(url => url == null || Uri.TryCreate(url, UriKind.Absolute, out _))
-            .WithMessage("Geçerli bir dokümantasyon URL'si giriniz.");
+            .WithMessage("Please enter a valid documentation URL.");
 
         RuleFor(x => x.DeveloperName)
             .MaximumLength(100)
-            .WithMessage("Geliştirici adı en fazla 100 karakter olabilir.")
+            .WithMessage("Developer name cannot exceed 100 characters.")
             .When(x => x.DeveloperName != null);
     }
 }
@@ -69,7 +69,7 @@ public class UpdatePluginConfigValidator : AbstractValidator<UpdatePluginConfigD
     {
         RuleFor(x => x.Config)
             .MaximumLength(4000)
-            .WithMessage("Config JSON en fazla 4000 karakter olabilir.")
+            .WithMessage("Config JSON cannot exceed 4000 characters.")
             .When(x => x.Config != null);
     }
 }

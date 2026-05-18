@@ -27,12 +27,12 @@ import { Button } from "@/components/ui/button";
 // ── Status helpers ──────────────────────────────────────────────────────────
 
 const STATUS_LABEL: Record<string, string> = {
-  COURIER_ASSIGNED: "Teslim Alınacak",
-  PICKED_UP: "Alındı",
-  IN_TRANSIT: "Yolda",
-  OUT_FOR_DELIVERY: "Dağıtımda",
-  DELIVERED: "Teslim Edildi",
-  FAILED: "Başarısız",
+  COURIER_ASSIGNED: "Awaiting Pickup",
+  PICKED_UP: "Picked Up",
+  IN_TRANSIT: "In Transit",
+  OUT_FOR_DELIVERY: "Out for Delivery",
+  DELIVERED: "Delivered",
+  FAILED: "Failed",
 };
 
 const STATUS_TOKENS: Record<
@@ -143,38 +143,38 @@ export default function CourierDashboardPage() {
       await toggleAvailability.mutateAsync();
       toast.success(
         profile?.isAvailable
-          ? "Çevrimdışı olarak işaretlendiniz"
-          : "Çevrimiçi olarak işaretlendiniz",
+          ? "You are now offline"
+          : "You are now online",
       );
     } catch {
-      toast.error("Durum güncellenemedi");
+      toast.error("Failed to update status");
     }
   };
 
   const stats = [
     {
-      label: "Aktif",
+      label: "Active",
       value: active.length,
       icon: Truck,
       text: "text-(--info)",
       bg: "bg-(--info-bg)",
     },
     {
-      label: "Teslim Bekliyor",
+      label: "Pending Pickup",
       value: pending.length,
       icon: Clock,
       text: "text-(--warning)",
       bg: "bg-(--warning-bg)",
     },
     {
-      label: "Yolda",
+      label: "In Transit",
       value: inTransit.length,
       icon: Package,
       text: "text-(--info)",
       bg: "bg-(--info-bg)",
     },
     {
-      label: "Bugün Teslim",
+      label: "Delivered Today",
       value: todayDelivered,
       icon: CheckCircle2,
       text: "text-(--success)",
@@ -191,11 +191,11 @@ export default function CourierDashboardPage() {
             {profileLoading ? (
               <Skeleton className="h-7 w-40" />
             ) : (
-              `Merhaba, ${profile?.fullName?.split(" ")[0] ?? "Kurye"} 👋`
+              `Hi, ${profile?.fullName?.split(" ")[0] ?? "Courier"} 👋`
             )}
           </h1>
           <p className="text-sm text-(--text-tertiary) mt-1">
-            Teslimat panonuz ve aktif görevleriniz
+            Your delivery dashboard and active tasks
           </p>
         </div>
 
@@ -213,12 +213,12 @@ export default function CourierDashboardPage() {
             {profile.isAvailable ? (
               <>
                 <ToggleRight className="w-4 h-4" />
-                Çevrimiçi
+                Online
               </>
             ) : (
               <>
                 <ToggleLeft className="w-4 h-4" />
-                Çevrimdışı
+                Offline
               </>
             )}
           </button>
@@ -253,16 +253,16 @@ export default function CourierDashboardPage() {
       <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) overflow-hidden">
         <div className="px-5 py-4 border-b border-(--border-light) flex items-center justify-between">
           <p className="text-sm font-semibold text-(--text-primary)">
-            Aktif Görevler
+            Active Tasks
             <span className="ml-2 text-sm font-normal text-(--text-tertiary)">
-              ({active.length} paket)
+              ({active.length} packages)
             </span>
           </p>
           <Link
             href="/courier/shipments"
             className="text-xs text-(--text-secondary) hover:text-(--text-primary) font-semibold flex items-center gap-1 transition-colors"
           >
-            Tümünü Gör <ArrowRight className="w-3.5 h-3.5" />
+            View All <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
@@ -276,10 +276,10 @@ export default function CourierDashboardPage() {
           <div className="p-12 text-center">
             <Package className="w-10 h-10 text-(--text-tertiary) opacity-20 mx-auto mb-3" />
             <p className="text-sm text-(--text-secondary) font-medium">
-              Aktif görev bulunmuyor
+              No active tasks
             </p>
             <p className="text-xs text-(--text-tertiary) mt-1">
-              Yeni görevler burada görünecek
+              New tasks will appear here
             </p>
           </div>
         ) : (
@@ -332,7 +332,7 @@ export default function CourierDashboardPage() {
                       className="flex-1 h-11 text-sm font-semibold bg-(--charcoal) hover:bg-(--charcoal-2) text-white rounded-xl"
                     >
                       <Truck className="w-4 h-4 mr-2" />
-                      {confirmPickup.isPending ? "..." : "Paketi Aldım ✓"}
+                      {confirmPickup.isPending ? "..." : "Package Picked Up ✓"}
                     </Button>
                   )}
                   {(s.status === "PICKED_UP" ||
@@ -345,14 +345,14 @@ export default function CourierDashboardPage() {
                       style={{ backgroundColor: "var(--success)" }}
                     >
                       <CheckCircle2 className="w-4 h-4 mr-2" />
-                      {confirmDelivery.isPending ? "..." : "Teslim Ettim ✓"}
+                      {confirmDelivery.isPending ? "..." : "Delivered ✓"}
                     </Button>
                   )}
                   <Link
                     href={`/courier/shipments/${s.id}`}
                     className="flex items-center justify-center h-11 px-4 rounded-xl border border-(--border-mid) text-(--text-secondary) hover:bg-(--bg-sunken) transition-colors text-sm font-medium shrink-0"
                   >
-                    Detay
+                    Details
                   </Link>
                 </div>
               </div>
@@ -370,10 +370,10 @@ export default function CourierDashboardPage() {
             </div>
             <div>
               <p className="text-sm font-semibold text-(--text-primary)">
-                Tüm Görevler
+                All Tasks
               </p>
               <p className="text-xs text-(--text-tertiary)">
-                {shipments.length} toplam
+                {shipments.length} total
               </p>
             </div>
           </div>
@@ -385,9 +385,9 @@ export default function CourierDashboardPage() {
             </div>
             <div>
               <p className="text-sm font-semibold text-(--text-primary)">
-                Kazançlarım
+                My Earnings
               </p>
-              <p className="text-xs text-(--text-tertiary)">Geçmiş & toplam</p>
+              <p className="text-xs text-(--text-tertiary)">History & total</p>
             </div>
           </div>
         </Link>

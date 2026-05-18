@@ -11,13 +11,13 @@ public class SubscribeRequestValidator : AbstractValidator<SubscribeRequestDto>
     {
         RuleFor(x => x.PlanType)
             .NotEmpty()
-            .WithMessage("Plan tipi zorunludur.")
+            .WithMessage("Plan type is required.")
             .Must(p => ValidPlans.Contains(p))
-            .WithMessage($"Geçerli plan tipleri: {string.Join(", ", ValidPlans)}");
+            .WithMessage($"Valid plan types: {string.Join(", ", ValidPlans)}");
 
         RuleFor(x => x.PaymentToken)
             .MaximumLength(500)
-            .WithMessage("Ödeme token'ı en fazla 500 karakter olabilir.")
+            .WithMessage("Payment token cannot exceed 500 characters.")
             .When(x => x.PaymentToken != null);
     }
 }

@@ -50,7 +50,7 @@ public class FulfillmentService : IFulfillmentService
             || !allowed.Contains(newStatus)
         )
             throw new InvalidOperationException(
-                $"'{shipment.Status}' durumundan '{newStatus}' durumuna geçiş yapılamaz."
+                $"Cannot transition from '{shipment.Status}' to '{newStatus}'."
             );
 
         var previousStatus = shipment.Status;
@@ -98,7 +98,7 @@ public class FulfillmentService : IFulfillmentService
                 }
             );
 
-        // Güvenli fire-and-forget — unobserved exception gizlenmez
+        // Safe fire-and-forget — unobserved exceptions are not swallowed
         var shipmentIdForLog = shipment.Id;
         var orderIdForNotif = shipment.OrderId.ToString();
         var statusForNotif = newStatus.ToString();
@@ -108,14 +108,14 @@ public class FulfillmentService : IFulfillmentService
             {
                 await _notificationService.SendOrderUpdateNotificationAsync(
                     orderIdForNotif,
-                    $"Kargo durumu güncellendi: {statusForNotif}"
+                    $"Shipment status updated: {statusForNotif}"
                 );
             }
             catch (Exception ex)
             {
                 _logger.LogError(
                     ex,
-                    "Kargo durum bildirimi gönderilemedi: ShipmentId={Id}",
+                    "Failed to send shipment status notification: ShipmentId={Id}",
                     shipmentIdForLog
                 );
             }
@@ -148,7 +148,7 @@ public class FulfillmentService : IFulfillmentService
                 Id = Guid.NewGuid(),
                 ShipmentId = shipment.Id,
                 Status = ShipmentStatus.Pending,
-                Note = "Kargo kaydı oluşturuldu.",
+                Note = "Shipment record created.",
                 ChangedAt = DateTime.UtcNow,
             }
         );

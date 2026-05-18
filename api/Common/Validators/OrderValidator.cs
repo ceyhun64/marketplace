@@ -9,9 +9,9 @@ public class CreateOrderValidator : AbstractValidator<CreateOrderDto>
     {
         RuleFor(x => x.Items)
             .NotEmpty()
-            .WithMessage("Sipariş en az bir ürün içermelidir.")
+            .WithMessage("Order must contain at least one item.")
             .Must(items => items.Count <= 50)
-            .WithMessage("Tek siparişte en fazla 50 ürün olabilir.");
+            .WithMessage("A single order cannot contain more than 50 items.");
 
         RuleForEach(x => x.Items).SetValidator(new CreateOrderItemValidator());
 
@@ -19,11 +19,11 @@ public class CreateOrderValidator : AbstractValidator<CreateOrderDto>
 
         RuleFor(x => x.ShippingRate)
             .Must(r => r == "EXPRESS" || r == "REGULAR")
-            .WithMessage("Kargo tipi EXPRESS veya REGULAR olmalıdır.");
+            .WithMessage("Shipping rate must be EXPRESS or REGULAR.");
 
         RuleFor(x => x.Source)
             .Must(s => s == "MARKETPLACE" || s == "ESTORE")
-            .WithMessage("Sipariş kaynağı MARKETPLACE veya ESTORE olmalıdır.");
+            .WithMessage("Order source must be MARKETPLACE or ESTORE.");
     }
 }
 
@@ -31,13 +31,13 @@ public class CreateOrderItemValidator : AbstractValidator<CreateOrderItemDto>
 {
     public CreateOrderItemValidator()
     {
-        RuleFor(x => x.ProductId).NotEmpty().WithMessage("Ürün ID boş olamaz.");
+        RuleFor(x => x.ProductId).NotEmpty().WithMessage("Product ID is required.");
 
         RuleFor(x => x.Quantity)
             .GreaterThan(0)
-            .WithMessage("Miktar 0'dan büyük olmalıdır.")
+            .WithMessage("Quantity must be greater than 0.")
             .LessThanOrEqualTo(999)
-            .WithMessage("Miktar 999'dan fazla olamaz.");
+            .WithMessage("Quantity cannot exceed 999.");
     }
 }
 
@@ -47,31 +47,31 @@ public class ShippingAddressValidator : AbstractValidator<ShippingAddressDto>
     {
         RuleFor(x => x.FullName)
             .NotEmpty()
-            .WithMessage("Ad soyad boş olamaz.")
+            .WithMessage("Full name is required.")
             .MaximumLength(100)
-            .WithMessage("Ad soyad 100 karakterden uzun olamaz.");
+            .WithMessage("Full name cannot exceed 100 characters.");
 
         RuleFor(x => x.Phone)
             .NotEmpty()
-            .WithMessage("Telefon boş olamaz.")
+            .WithMessage("Phone number is required.")
             .Matches(@"^(\+90|0)?[5][0-9]{9}$")
-            .WithMessage("Geçerli bir Türkiye telefon numarası giriniz.");
+            .WithMessage("Please enter a valid phone number.");
 
         RuleFor(x => x.AddressLine)
             .NotEmpty()
-            .WithMessage("Adres satırı boş olamaz.")
+            .WithMessage("Address line is required.")
             .MaximumLength(250)
-            .WithMessage("Adres 250 karakterden uzun olamaz.");
+            .WithMessage("Address cannot exceed 250 characters.");
 
-        RuleFor(x => x.City).NotEmpty().WithMessage("Şehir boş olamaz.").MaximumLength(50);
+        RuleFor(x => x.City).NotEmpty().WithMessage("City is required.").MaximumLength(50);
 
-        RuleFor(x => x.District).NotEmpty().WithMessage("İlçe boş olamaz.").MaximumLength(50);
+        RuleFor(x => x.District).NotEmpty().WithMessage("District is required.").MaximumLength(50);
 
         RuleFor(x => x.PostalCode)
             .NotEmpty()
-            .WithMessage("Posta kodu boş olamaz.")
+            .WithMessage("Postal code is required.")
             .Matches(@"^\d{5}$")
-            .WithMessage("Posta kodu 5 haneli olmalıdır.");
+            .WithMessage("Postal code must be 5 digits.");
     }
 }
 
@@ -95,8 +95,8 @@ public class UpdateOrderStatusValidator : AbstractValidator<UpdateOrderStatusDto
     {
         RuleFor(x => x.Status)
             .NotEmpty()
-            .WithMessage("Durum boş olamaz.")
+            .WithMessage("Status is required.")
             .Must(s => ValidStatuses.Contains(s))
-            .WithMessage($"Geçersiz durum. Geçerli değerler: {string.Join(", ", ValidStatuses)}");
+            .WithMessage($"Invalid status. Valid values: {string.Join(", ", ValidStatuses)}");
     }
 }

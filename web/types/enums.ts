@@ -28,16 +28,16 @@ export type OrderStatus =
   | "CANCELLED";
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  PENDING: "Beklemede",
-  PAYMENT_CONFIRMED: "Ödeme Onaylandı",
-  LABEL_GENERATED: "Etiket Oluşturuldu",
-  COURIER_ASSIGNED: "Kurye Atandı",
-  PICKED_UP: "Kurye Teslim Aldı",
-  IN_TRANSIT: "Yolda",
-  OUT_FOR_DELIVERY: "Dağıtımda",
-  DELIVERED: "Teslim Edildi",
-  FAILED: "Başarısız",
-  CANCELLED: "İptal Edildi",
+  PENDING: "Pending",
+  PAYMENT_CONFIRMED: "Payment Confirmed",
+  LABEL_GENERATED: "Label Generated",
+  COURIER_ASSIGNED: "Courier Assigned",
+  PICKED_UP: "Picked Up",
+  IN_TRANSIT: "In Transit",
+  OUT_FOR_DELIVERY: "Out for Delivery",
+  DELIVERED: "Delivered",
+  FAILED: "Failed",
+  CANCELLED: "Cancelled",
 };
 
 export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
@@ -76,14 +76,14 @@ export type ShipmentStatus =
   | "FAILED";
 
 export const SHIPMENT_STATUS_LABELS: Record<ShipmentStatus, string> = {
-  PENDING: "Beklemede",
-  LABEL_GENERATED: "Etiket Oluşturuldu",
-  COURIER_ASSIGNED: "Kurye Atandı",
-  PICKED_UP: "Kurye Teslim Aldı",
-  IN_TRANSIT: "Yolda",
-  OUT_FOR_DELIVERY: "Dağıtımda",
-  DELIVERED: "Teslim Edildi",
-  FAILED: "Başarısız",
+  PENDING: "Pending",
+  LABEL_GENERATED: "Label Generated",
+  COURIER_ASSIGNED: "Courier Assigned",
+  PICKED_UP: "Picked Up",
+  IN_TRANSIT: "In Transit",
+  OUT_FOR_DELIVERY: "Out for Delivery",
+  DELIVERED: "Delivered",
+  FAILED: "Failed",
 };
 
 export const SHIPMENT_STATUS_COLORS: Record<ShipmentStatus, string> = {
@@ -117,14 +117,14 @@ export const SHIPPING_RATE_LABELS: Record<ShippingRate, string> = {
   REGULAR: "Standard (3-5 days)",
 };
 
-// Not: SHIPPING_COSTS sabiti @/lib/constants içinde tanımlıdır. Oradan import edin.
+// Note: SHIPPING_COSTS constant is defined in @/lib/constants. Import from there.
 
 // ── OrderSource ───────────────────────────────────────────────────────────────
 
 export type OrderSource = "MARKETPLACE" | "ESTORE";
 
 export const ORDER_SOURCE_LABELS: Record<OrderSource, string> = {
-  MARKETPLACE: "Pazaryeri",
+  MARKETPLACE: "Marketplace",
   ESTORE: "E-Store",
 };
 
@@ -135,7 +135,7 @@ export type PlanType = "BASIC" | "PRO" | "ENTERPRISE";
 export const PLAN_LABELS: Record<PlanType, string> = {
   BASIC: "Starter",
   PRO: "Pro",
-  ENTERPRISE: "Kurumsal",
+  ENTERPRISE: "Enterprise",
 };
 
 export const PLAN_COLORS: Record<PlanType, string> = {

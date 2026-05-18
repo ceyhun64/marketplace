@@ -8,10 +8,10 @@ public class AssignCourierDtoValidator : AbstractValidator<AssignCourierDto>
     public AssignCourierDtoValidator()
     {
         RuleFor(x => x.ShipmentId)
-            .NotEmpty().WithMessage("ShipmentId zorunludur.");
+            .NotEmpty().WithMessage("ShipmentId is required.");
 
         RuleFor(x => x.CourierId)
-            .NotEmpty().WithMessage("CourierId zorunludur.");
+            .NotEmpty().WithMessage("CourierId is required.");
     }
 }
 
@@ -26,14 +26,14 @@ public class UpdateShipmentStatusDtoValidator : AbstractValidator<UpdateShipment
     public UpdateShipmentStatusDtoValidator()
     {
         RuleFor(x => x.Status)
-            .NotEmpty().WithMessage("Durum zorunludur.")
+            .NotEmpty().WithMessage("Status is required.")
             .Must(s => ValidStatuses.Contains(s, StringComparer.OrdinalIgnoreCase))
             .WithMessage(
-                $"Geçersiz durum. Geçerli değerler: {string.Join(", ", ValidStatuses)}"
+                $"Invalid status. Valid values: {string.Join(", ", ValidStatuses)}"
             );
 
         RuleFor(x => x.Note)
-            .MaximumLength(500).WithMessage("Not en fazla 500 karakter olabilir.")
+            .MaximumLength(500).WithMessage("Note cannot exceed 500 characters.")
             .When(x => x.Note != null);
     }
 }
@@ -43,7 +43,7 @@ public class PickupConfirmDtoValidator : AbstractValidator<PickupConfirmDto>
     public PickupConfirmDtoValidator()
     {
         RuleFor(x => x.Signature)
-            .MaximumLength(200).WithMessage("İmza bilgisi en fazla 200 karakter olabilir.")
+            .MaximumLength(200).WithMessage("Signature cannot exceed 200 characters.")
             .When(x => x.Signature != null);
     }
 }
@@ -53,12 +53,12 @@ public class DeliveredConfirmDtoValidator : AbstractValidator<DeliveredConfirmDt
     public DeliveredConfirmDtoValidator()
     {
         RuleFor(x => x.RecipientName)
-            .MaximumLength(150).WithMessage("Alıcı adı en fazla 150 karakter olabilir.")
+            .MaximumLength(150).WithMessage("Recipient name cannot exceed 150 characters.")
             .When(x => x.RecipientName != null);
 
         RuleFor(x => x.PhotoUrl)
             .Must(url => url == null || Uri.IsWellFormedUriString(url, UriKind.Absolute))
-            .WithMessage("Fotoğraf URL'si geçerli bir URI olmalıdır.")
+            .WithMessage("Photo URL must be a valid URI.")
             .When(x => x.PhotoUrl != null);
     }
 }

@@ -7,11 +7,11 @@ using Stripe;
 namespace api.Infrastructure.Services;
 
 /// <summary>
-/// Stripe Payment Intent akışı:
-///   1. InitiateCheckoutAsync  → PaymentIntent oluştur, client_secret döndür
-///   2. Frontend               → Stripe.js / Elements ile kartı gir, confirmCardPayment()
-///   3. ConfirmPaymentAsync    → PaymentIntent durumunu doğrula, siparişi onayla
-///   4. HandleWebhookAsync     → Stripe webhook ile asenkron onay (güvenilir yedek yol)
+/// Stripe Payment Intent flow:
+///   1. InitiateCheckoutAsync  → Create PaymentIntent, return client_secret
+///   2. Frontend               → Enter card via Stripe.js / Elements, confirmCardPayment()
+///   3. ConfirmPaymentAsync    → Verify PaymentIntent status, confirm order
+///   4. HandleWebhookAsync     → Asynchronous confirmation via Stripe webhook (reliable fallback)
 /// </summary>
 public class PaymentService : IPaymentService
 {
@@ -39,7 +39,7 @@ public class PaymentService : IPaymentService
         _currentUser = currentUser;
     }
 
-    // ── 1. Payment Intent oluştur ─────────────────────────────────────────────
+    // ── 1. Create Payment Intent ──────────────────────────────────────────────
 
     public async Task<ServiceResult<PaymentCheckoutResponseDto>> InitiateCheckoutAsync(
         PaymentCheckoutRequestDto request
@@ -53,12 +53,12 @@ public class PaymentService : IPaymentService
                 .FirstOrDefaultAsync(o => o.Id == request.OrderId);
 
             if (order is null)
-                return ServiceResult<PaymentCheckoutResponseDto>.Fail("Sipariş bulunamadı.");
+                return ServiceResult<PaymentCheckoutResponseDto>.Fail("Order not found.");
 
             if (order.IsPaid)
-                return ServiceResult<PaymentCheckoutResponseDto>.Fail("Bu sipariş zaten ödenmiş.");
+                return ServiceResult<PaymentCheckoutResponseDto>.Fail("This order has already been paid.");
 
-            // Tutar kuruş cinsinden (Stripe için)
+            // Amount in cents (for Stripe)
             var amountInCents = (long)(order.TotalAmount * 100);
 
             var options = new PaymentIntentCreateOptions
@@ -74,20 +74,20 @@ public class PaymentService : IPaymentService
                     ["orderId"] = order.Id.ToString(),
                     ["customerId"] = order.CustomerId.ToString(),
                 },
-                Description = $"Marketplace Siparişi #{order.Id.ToString()[..8].ToUpper()}",
+                Description = $"Marketplace Order #{order.Id.ToString()[..8].ToUpper()}",
                 ReceiptEmail = order.Customer?.Email,
             };
 
             var service = new PaymentIntentService();
             var intent = await service.CreateAsync(options);
 
-            // PaymentIntent ID'sini siparişe kaydet
+            // Save PaymentIntent ID to the order
             order.PaymentToken = intent.Id;
             order.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
 
             _logger.LogInformation(
-                "✅ Stripe PaymentIntent oluşturuldu: OrderId={OrderId} IntentId={IntentId} Amount={Amount}",
+                "✅ Stripe PaymentIntent created: OrderId={OrderId} IntentId={IntentId} Amount={Amount}",
                 order.Id,
                 intent.Id,
                 order.TotalAmount
@@ -106,19 +106,19 @@ public class PaymentService : IPaymentService
         }
         catch (StripeException ex)
         {
-            _logger.LogError(ex, "❌ Stripe PaymentIntent oluşturma hatası: {Message}", ex.Message);
+            _logger.LogError(ex, "❌ Stripe PaymentIntent creation error: {Message}", ex.Message);
             return ServiceResult<PaymentCheckoutResponseDto>.Fail(
-                $"Ödeme başlatılamadı: {ex.Message}"
+                $"Payment could not be initiated: {ex.Message}"
             );
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ InitiateCheckout beklenmeyen hata");
-            return ServiceResult<PaymentCheckoutResponseDto>.Fail("Beklenmeyen bir hata oluştu.");
+            _logger.LogError(ex, "❌ InitiateCheckout unexpected error");
+            return ServiceResult<PaymentCheckoutResponseDto>.Fail("An unexpected error occurred.");
         }
     }
 
-    // ── 2. Ödeme onayı (frontend confirmCardPayment sonrası) ──────────────────
+    // ── 2. Payment confirmation (after frontend confirmCardPayment) ───────────
 
     public async Task<ServiceResult<Guid>> ConfirmPaymentAsync(ConfirmPaymentDto dto)
     {
@@ -130,55 +130,55 @@ public class PaymentService : IPaymentService
             if (intent.Status != "succeeded")
             {
                 _logger.LogWarning(
-                    "⚠️ PaymentIntent henüz tamamlanmadı: {Status} IntentId={Id}",
+                    "⚠️ PaymentIntent not yet completed: {Status} IntentId={Id}",
                     intent.Status,
                     dto.PaymentIntentId
                 );
                 return ServiceResult<Guid>.Fail(
-                    $"Ödeme durumu: {intent.Status}. Lütfen tekrar deneyin."
+                    $"Payment status: {intent.Status}. Please try again."
                 );
             }
 
-            // Stripe-imzalı metadata'dan orderId al — istemci girdisine güvenme (IDOR önlemi)
+            // Get orderId from Stripe-signed metadata — do not trust client input (IDOR prevention)
             if (!intent.Metadata.TryGetValue("orderId", out var orderIdStr)
                 || !Guid.TryParse(orderIdStr, out var orderId))
             {
                 _logger.LogError(
-                    "❌ PaymentIntent metadata'da geçerli orderId yok: IntentId={Id}",
+                    "❌ PaymentIntent metadata has no valid orderId: IntentId={Id}",
                     dto.PaymentIntentId
                 );
-                return ServiceResult<Guid>.Fail("Ödeme referansı doğrulanamadı.");
+                return ServiceResult<Guid>.Fail("Payment reference could not be verified.");
             }
 
-            // Kimlik doğrulama: bu PaymentIntent gerçekten bu müşteriye ait mi?
+            // Identity check: does this PaymentIntent really belong to this customer?
             if (intent.Metadata.TryGetValue("customerId", out var customerIdStr)
                 && Guid.TryParse(customerIdStr, out var intentCustomerId)
                 && intentCustomerId != _currentUser.UserId)
             {
                 _logger.LogWarning(
-                    "⚠️ IDOR girişimi: IntentId={IntentId} CustomerId={Claimed} vs {Actual}",
+                    "⚠️ IDOR attempt: IntentId={IntentId} CustomerId={Claimed} vs {Actual}",
                     dto.PaymentIntentId, _currentUser.UserId, intentCustomerId
                 );
-                return ServiceResult<Guid>.Fail("Bu ödeme size ait değil.");
+                return ServiceResult<Guid>.Fail("This payment does not belong to you.");
             }
 
             return await FinalizeOrderPaymentAsync(orderId, dto.PaymentIntentId);
         }
         catch (StripeException ex)
         {
-            _logger.LogError(ex, "❌ Stripe onay hatası: {Message}", ex.Message);
-            return ServiceResult<Guid>.Fail($"Ödeme doğrulanamadı: {ex.Message}");
+            _logger.LogError(ex, "❌ Stripe confirmation error: {Message}", ex.Message);
+            return ServiceResult<Guid>.Fail($"Payment could not be verified: {ex.Message}");
         }
     }
 
-    // ── 3. Stripe Webhook (güvenilir asenkron yol) ────────────────────────────
+    // ── 3. Stripe Webhook (reliable async path) ───────────────────────────────
 
     public async Task HandleWebhookAsync(string rawBody, string stripeSignature)
     {
         var webhookSecret = _config["STRIPE_WEBHOOK_SECRET"];
         if (string.IsNullOrEmpty(webhookSecret))
         {
-            _logger.LogWarning("⚠️ STRIPE_WEBHOOK_SECRET tanımlı değil — webhook işlenmedi.");
+            _logger.LogWarning("⚠️ STRIPE_WEBHOOK_SECRET not configured — webhook not processed.");
             return;
         }
 
@@ -186,7 +186,7 @@ public class PaymentService : IPaymentService
         {
             var stripeEvent = EventUtility.ConstructEvent(rawBody, stripeSignature, webhookSecret);
 
-            _logger.LogInformation("📨 Stripe webhook alındı: {EventType}", stripeEvent.Type);
+            _logger.LogInformation("📨 Stripe webhook received: {EventType}", stripeEvent.Type);
 
             switch (stripeEvent.Type)
             {
@@ -201,22 +201,22 @@ public class PaymentService : IPaymentService
                     break;
 
                 case "charge.refunded":
-                    _logger.LogInformation("💸 İade işlemi Stripe tarafından onaylandı.");
+                    _logger.LogInformation("💸 Refund confirmed by Stripe.");
                     break;
 
                 default:
-                    _logger.LogDebug("Bilinmeyen Stripe event: {Type}", stripeEvent.Type);
+                    _logger.LogDebug("Unknown Stripe event: {Type}", stripeEvent.Type);
                     break;
             }
         }
         catch (StripeException ex)
         {
-            _logger.LogError(ex, "❌ Stripe webhook imza doğrulama hatası");
+            _logger.LogError(ex, "❌ Stripe webhook signature verification error");
             throw;
         }
     }
 
-    // ── 4. İade ──────────────────────────────────────────────────────────────
+    // ── 4. Refund ─────────────────────────────────────────────────────────────
 
     public async Task<ServiceResult<bool>> RefundAsync(Guid orderId, RefundRequestDto request)
     {
@@ -224,14 +224,14 @@ public class PaymentService : IPaymentService
         {
             var order = await _db.Orders.FindAsync(orderId);
             if (order is null)
-                return ServiceResult<bool>.Fail("Sipariş bulunamadı.");
+                return ServiceResult<bool>.Fail("Order not found.");
 
             if (!order.IsPaid || string.IsNullOrEmpty(order.PaymentId))
                 return ServiceResult<bool>.Fail(
-                    "Bu sipariş için iade yapılamaz (ödeme bulunamadı)."
+                    "Cannot refund this order (payment not found)."
                 );
 
-            // PaymentIntent üzerinden iade
+            // Refund via PaymentIntent
             var chargeService = new ChargeService();
             var charges = await chargeService.ListAsync(
                 new ChargeListOptions { PaymentIntent = order.PaymentId, Limit = 1 }
@@ -239,12 +239,12 @@ public class PaymentService : IPaymentService
 
             var charge = charges.Data.FirstOrDefault();
             if (charge is null)
-                return ServiceResult<bool>.Fail("İade için ödeme kaydı bulunamadı.");
+                return ServiceResult<bool>.Fail("No payment record found for refund.");
 
             var refundOptions = new RefundCreateOptions
             {
                 Charge = charge.Id,
-                Amount = request.Amount > 0 ? (long)(request.Amount * 100) : null, // null = tam iade
+                Amount = request.Amount > 0 ? (long)(request.Amount * 100) : null, // null = full refund
                 Reason = MapRefundReason(request.Reason),
             };
 
@@ -252,15 +252,15 @@ public class PaymentService : IPaymentService
             var refund = await refundService.CreateAsync(refundOptions);
 
             _logger.LogInformation(
-                "✅ İade başlatıldı: OrderId={OrderId} RefundId={RefundId} Amount={Amount}",
+                "✅ Refund initiated: OrderId={OrderId} RefundId={RefundId} Amount={Amount}",
                 orderId,
                 refund.Id,
                 request.Amount
             );
 
-            // Sipariş durumunu güncelle
+            // Update order status
             order.Status = OrderStatus.Cancelled;
-            order.CancellationReason = request.Reason ?? "İade talep edildi.";
+            order.CancellationReason = request.Reason ?? "Refund requested.";
             order.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
 
@@ -268,12 +268,12 @@ public class PaymentService : IPaymentService
         }
         catch (StripeException ex)
         {
-            _logger.LogError(ex, "❌ Stripe iade hatası: {Message}", ex.Message);
-            return ServiceResult<bool>.Fail($"İade başlatılamadı: {ex.Message}");
+            _logger.LogError(ex, "❌ Stripe refund error: {Message}", ex.Message);
+            return ServiceResult<bool>.Fail($"Refund could not be initiated: {ex.Message}");
         }
     }
 
-    // ── 5. Ödeme durumu sorgula ───────────────────────────────────────────────
+    // ── 5. Query payment status ───────────────────────────────────────────────
 
     public async Task<PaymentStatusDto?> GetPaymentStatusAsync(Guid orderId)
     {
@@ -296,12 +296,12 @@ public class PaymentService : IPaymentService
         }
         catch (StripeException ex)
         {
-            _logger.LogError(ex, "❌ PaymentIntent sorgulama hatası: {Message}", ex.Message);
+            _logger.LogError(ex, "❌ PaymentIntent query error: {Message}", ex.Message);
             return null;
         }
     }
 
-    // ── 6. Abonelik ödemesi ───────────────────────────────────────────────────
+    // ── 6. Subscription payment ───────────────────────────────────────────────
 
     public async Task<ServiceResult<string>> ProcessSubscriptionPaymentAsync(
         string paymentMethodId,
@@ -329,7 +329,7 @@ public class PaymentService : IPaymentService
             var intent = await service.CreateAsync(options);
 
             _logger.LogInformation(
-                "✅ Abonelik ödemesi: Amount={Amount} IntentId={Id}",
+                "✅ Subscription payment: Amount={Amount} IntentId={Id}",
                 amount,
                 intent.Id
             );
@@ -338,26 +338,26 @@ public class PaymentService : IPaymentService
         }
         catch (StripeException ex)
         {
-            _logger.LogError(ex, "❌ Abonelik ödeme hatası: {Message}", ex.Message);
-            return ServiceResult<string>.Fail($"Abonelik ödemesi başarısız: {ex.Message}");
+            _logger.LogError(ex, "❌ Subscription payment error: {Message}", ex.Message);
+            return ServiceResult<string>.Fail($"Subscription payment failed: {ex.Message}");
         }
     }
 
-    // ── Geri uyumluluk (eski iyzico imzaları) ────────────────────────────────
+    // ── Backward compatibility (legacy iyzico signatures) ────────────────────
 
     public Task<ServiceResult<Guid>> HandleCallbackAsync(IyzicoCallbackDto callback)
     {
-        _logger.LogWarning("HandleCallbackAsync: iyzico callback'i artık Stripe kullanıyor.");
+        _logger.LogWarning("HandleCallbackAsync: iyzico callback is now using Stripe.");
         return Task.FromResult(
             ServiceResult<Guid>.Fail(
-                "Bu endpoint artık kullanılmıyor. /api/payments/confirm kullanın."
+                "This endpoint is no longer in use. Use /api/payments/confirm."
             )
         );
     }
 
     public Task HandleWebhookAsync(IyzicoWebhookDto webhook)
     {
-        _logger.LogWarning("IyzicoWebhookDto: artık Stripe webhook kullanılıyor.");
+        _logger.LogWarning("IyzicoWebhookDto: now using Stripe webhook.");
         return Task.CompletedTask;
     }
 
@@ -370,7 +370,7 @@ public class PaymentService : IPaymentService
             || !Guid.TryParse(orderIdStr, out var orderId)
         )
         {
-            _logger.LogWarning("PaymentIntent metadata'da orderId yok: {Id}", intent.Id);
+            _logger.LogWarning("PaymentIntent metadata has no orderId: {Id}", intent.Id);
             return;
         }
 
@@ -394,23 +394,23 @@ public class PaymentService : IPaymentService
         await _db.SaveChangesAsync();
 
         _logger.LogWarning(
-            "❌ Ödeme başarısız: OrderId={OrderId} IntentId={IntentId}",
+            "❌ Payment failed: OrderId={OrderId} IntentId={IntentId}",
             orderId,
             intent.Id
         );
 
         await _notification.SendOrderStatusNotificationAsync(
             orderId,
-            $"Siparişinizin ödemesi başarısız oldu. Lütfen tekrar deneyin. Sipariş #{orderId.ToString()[..8].ToUpper()}"
+            $"Payment for your order failed. Please try again. Order #{orderId.ToString()[..8].ToUpper()}"
         );
     }
 
     /// <summary>
-    /// Ödeme başarılı olduğunda:
-    ///   - Siparişi "Paid" olarak işaretle
-    ///   - Fatura oluştur
-    ///   - Fatura e-postası gönder
-    ///   - Shipment oluştur
+    /// On successful payment:
+    ///   - Mark order as "Paid"
+    ///   - Generate invoice
+    ///   - Send invoice email
+    ///   - Create shipment
     /// </summary>
     private async Task<ServiceResult<Guid>> FinalizeOrderPaymentAsync(
         Guid orderId,
@@ -419,7 +419,7 @@ public class PaymentService : IPaymentService
     {
         string trackingNumber;
 
-        // RepeatableRead transaction — IsPaid okuma ve yazma atomik, TOCTOU race önlenir
+        // RepeatableRead transaction — IsPaid read and write are atomic, prevents TOCTOU race
         await using var tx = await _db.Database.BeginTransactionAsync(
             System.Data.IsolationLevel.RepeatableRead);
         try
@@ -432,24 +432,24 @@ public class PaymentService : IPaymentService
             if (order is null)
             {
                 await tx.RollbackAsync();
-                return ServiceResult<Guid>.Fail("Sipariş bulunamadı.");
+                return ServiceResult<Guid>.Fail("Order not found.");
             }
 
             if (order.IsPaid)
             {
-                _logger.LogInformation("Sipariş zaten ödenmiş: {OrderId}", orderId);
+                _logger.LogInformation("Order already paid: {OrderId}", orderId);
                 await tx.RollbackAsync();
                 return ServiceResult<Guid>.Ok(orderId);
             }
 
-            // Ödeme bilgilerini kaydet
+            // Save payment details
             order.IsPaid = true;
             order.PaidAt = DateTime.UtcNow;
             order.PaymentId = paymentIntentId;
             order.Status = OrderStatus.PaymentConfirmed;
             order.UpdatedAt = DateTime.UtcNow;
 
-            // Shipment oluştur — sadece yoksa (CreateShipmentForOrderAsync zaten oluşturmuş olabilir)
+            // Create shipment — only if not already created (CreateShipmentForOrderAsync may have already done it)
             var shipment = await _db.Shipments.FirstOrDefaultAsync(s => s.OrderId == orderId);
             if (shipment == null)
             {
@@ -474,7 +474,7 @@ public class PaymentService : IPaymentService
             trackingNumber = shipment.TrackingNumber;
 
             _logger.LogInformation(
-                "✅ Sipariş ödendi: OrderId={OrderId} IntentId={IntentId} TrackingNo={Tracking}",
+                "✅ Order paid: OrderId={OrderId} IntentId={IntentId} TrackingNo={Tracking}",
                 orderId,
                 paymentIntentId,
                 trackingNumber
@@ -486,7 +486,7 @@ public class PaymentService : IPaymentService
             throw;
         }
 
-        // Yan etkiler transaction dışında — hata olsa ödeme etkilenmez
+        // Side effects outside transaction — payment is not affected if these fail
         try
         {
             var orderForInvoice = await _db.Orders
@@ -505,7 +505,7 @@ public class PaymentService : IPaymentService
         {
             _logger.LogError(
                 ex,
-                "⚠️ Fatura oluşturma hatası (sipariş etkilenmedi): OrderId={Id}",
+                "⚠️ Invoice generation error (order not affected): OrderId={Id}",
                 orderId
             );
         }
@@ -514,12 +514,12 @@ public class PaymentService : IPaymentService
         {
             await _notification.SendOrderStatusNotificationAsync(
                 orderId,
-                $"Siparişiniz #{orderId.ToString()[..8].ToUpper()} onaylandı! Takip numaranız: {trackingNumber}"
+                $"Your order #{orderId.ToString()[..8].ToUpper()} has been confirmed! Tracking number: {trackingNumber}"
             );
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "⚠️ Bildirim hatası: OrderId={Id}", orderId);
+            _logger.LogError(ex, "⚠️ Notification error: OrderId={Id}", orderId);
         }
 
         return ServiceResult<Guid>.Ok(orderId);
