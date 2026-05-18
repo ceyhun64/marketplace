@@ -136,8 +136,13 @@ export default function AdminOrdersPage() {
       const orders = (res.data?.data ?? []).map((o: any) => ({
         ...o,
         status: o.status ? normalizeStatus(o.status) : o.status,
-        customerName: o.customerName || o.customer?.email || o.shippingAddress?.fullName || "—",
-        merchantStoreName: o.merchantStoreName || o.items?.[0]?.merchantStoreName || "—",
+        customerName:
+          o.customerName ||
+          o.customer?.email ||
+          o.shippingAddress?.fullName ||
+          "—",
+        merchantStoreName:
+          o.merchantStoreName || o.items?.[0]?.merchantStoreName || "—",
       }));
       return { ...res.data, data: orders };
     },
@@ -157,7 +162,9 @@ export default function AdminOrdersPage() {
   });
 
   const orders: Order[] = data?.data ?? [];
-  const totalPages = data ? Math.ceil(data.pagination.total / 20) : 1;
+  const totalPages = data?.pagination?.total
+    ? Math.ceil(data.pagination.total / 20)
+    : 1;
   const filtered = search
     ? orders.filter(
         (o) =>
@@ -180,7 +187,9 @@ export default function AdminOrdersPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-(--text-primary)">Orders</h1>
+          <h1 className="text-2xl font-semibold text-(--text-primary)">
+            Orders
+          </h1>
           <p className="text-sm text-(--text-tertiary) mt-1">
             All orders across the platform
           </p>
@@ -415,7 +424,9 @@ export default function AdminOrdersPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <p className="text-xs text-(--text-tertiary) mb-0.5">Customer</p>
+                  <p className="text-xs text-(--text-tertiary) mb-0.5">
+                    Customer
+                  </p>
                   <p className="font-medium">
                     {selectedOrder.customerName ?? "—"}
                   </p>
@@ -427,13 +438,17 @@ export default function AdminOrdersPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-(--text-tertiary) mb-0.5">Amount</p>
+                  <p className="text-xs text-(--text-tertiary) mb-0.5">
+                    Amount
+                  </p>
                   <p className="font-semibold">
                     {formatCurrency(selectedOrder.totalAmount)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-(--text-tertiary) mb-0.5">Shipping</p>
+                  <p className="text-xs text-(--text-tertiary) mb-0.5">
+                    Shipping
+                  </p>
                   <p>
                     {selectedOrder.shippingRate === "EXPRESS"
                       ? "⚡ Express"
@@ -442,7 +457,9 @@ export default function AdminOrdersPage() {
                 </div>
                 {selectedOrder.shipment?.trackingNumber && (
                   <div className="col-span-2">
-                    <p className="text-xs text-(--text-tertiary) mb-0.5">Tracking No.</p>
+                    <p className="text-xs text-(--text-tertiary) mb-0.5">
+                      Tracking No.
+                    </p>
                     <p className="font-mono text-sm">
                       {selectedOrder.shipment.trackingNumber}
                     </p>
@@ -470,7 +487,9 @@ export default function AdminOrdersPage() {
                 </div>
               )}
               <div>
-                <p className="text-xs text-(--text-tertiary) mb-2">Update Status</p>
+                <p className="text-xs text-(--text-tertiary) mb-2">
+                  Update Status
+                </p>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${ORDER_STATUS_COLORS[selectedOrder.status] ?? ""}`}
