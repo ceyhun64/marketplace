@@ -222,7 +222,7 @@ export default function MerchantReviewsView() {
                     </span>
                     <div className="flex-1 h-1.5 bg-[var(--off-white-2)] rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-yellow-400 rounded-full transition-all"
+                        className="h-full bg-(--warning) rounded-full transition-all"
                         style={{ width: `${pct}%` }}
                       />
                     </div>

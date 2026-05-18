@@ -243,7 +243,7 @@ export default function CourierEarningsPage() {
       {/* Weekly earnings highlight */}
       {!isLoading && weeklyEarnings > 0 && (
         <div className="rounded-xl border border-(--success-border) bg-(--success-bg) px-5 py-4 flex items-center gap-4">
-          <div className="p-2.5 rounded-xl bg-white/60">
+          <div className="p-2.5 rounded-xl bg-(--bg-surface)/80">
             <Wallet className="w-5 h-5" style={{ color: "var(--success)" }} />
           </div>
           <div>

@@ -113,7 +113,7 @@ const STATUS_CONFIG: Record<
 function RoleBadge({ role }: { role: UserRole }) {
   const cfg = ROLE_CONFIG[role] ?? {
     label: role,
-    color: "bg-gray-100 text-(--text-secondary)",
+    color: "bg-(--off-white-2) text-(--text-secondary)",
     icon: null,
   };
   return (
@@ -129,7 +129,7 @@ function RoleBadge({ role }: { role: UserRole }) {
 function StatusBadge({ status }: { status: AccountStatus }) {
   const cfg = STATUS_CONFIG[status] ?? {
     label: status,
-    color: "bg-gray-100 text-(--text-secondary)",
+    color: "bg-(--off-white-2) text-(--text-secondary)",
   };
   return (
     <span
@@ -236,7 +236,7 @@ export default function AdminUsersPage() {
             label: "Total Users",
             value: stats.total,
             icon: Users,
-            color: "text-blue-600",
+            color: "text-(--info)",
             bg: "bg-(--info-bg)",
           },
           {
@@ -371,7 +371,7 @@ export default function AdminUsersPage() {
                 >
                   <TableCell>
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white text-xs font-bold">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-(--charcoal-2) to-(--charcoal) flex items-center justify-center text-white text-xs font-bold">
                         {(user.firstName?.charAt(0) || user.email?.charAt(0) || "?").toUpperCase()}
                       </div>
                       <div>
@@ -498,7 +498,7 @@ export default function AdminUsersPage() {
             <div className="space-y-4">
               {/* Avatar + Name */}
               <div className="flex items-center gap-4 pb-4 border-b border-(--border-light)">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white text-xl font-bold">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-(--charcoal-2) to-(--charcoal) flex items-center justify-center text-white text-xl font-bold">
                   {(
                     selectedUser.firstName?.charAt(0) ||
                     selectedUser.email?.charAt(0) ||

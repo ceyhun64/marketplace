@@ -41,16 +41,16 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 };
 
 export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  PAYMENT_CONFIRMED: "bg-blue-100 text-blue-800",
-  LABEL_GENERATED: "bg-indigo-100 text-indigo-800",
-  COURIER_ASSIGNED: "bg-purple-100 text-purple-800",
-  PICKED_UP: "bg-orange-100 text-orange-800",
-  IN_TRANSIT: "bg-cyan-100 text-cyan-800",
-  OUT_FOR_DELIVERY: "bg-teal-100 text-teal-800",
-  DELIVERED: "bg-green-100 text-green-800",
-  FAILED: "bg-red-100 text-red-800",
-  CANCELLED: "bg-gray-100 text-gray-800",
+  PENDING: "bg-(--warning-bg) text-(--warning) border border-(--warning-border)",
+  PAYMENT_CONFIRMED: "bg-(--info-bg) text-(--info) border border-(--info-border)",
+  LABEL_GENERATED: "bg-(--info-bg) text-(--info) border border-(--info-border)",
+  COURIER_ASSIGNED: "bg-(--warning-bg) text-(--warning) border border-(--warning-border)",
+  PICKED_UP: "bg-(--info-bg) text-(--info) border border-(--info-border)",
+  IN_TRANSIT: "bg-(--info-bg) text-(--info) border border-(--info-border)",
+  OUT_FOR_DELIVERY: "bg-(--danger-bg) text-(--danger) border border-(--danger-border)",
+  DELIVERED: "bg-(--success-bg) text-(--success) border border-(--success-border)",
+  FAILED: "bg-(--danger-bg) text-(--danger) border border-(--danger-border)",
+  CANCELLED: "bg-(--off-white-2) text-(--text-secondary) border border-(--border-light)",
 };
 
 /** Can the order no longer be cancelled? */
@@ -87,14 +87,14 @@ export const SHIPMENT_STATUS_LABELS: Record<ShipmentStatus, string> = {
 };
 
 export const SHIPMENT_STATUS_COLORS: Record<ShipmentStatus, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  LABEL_GENERATED: "bg-indigo-100 text-indigo-800",
-  COURIER_ASSIGNED: "bg-purple-100 text-purple-800",
-  PICKED_UP: "bg-orange-100 text-orange-800",
-  IN_TRANSIT: "bg-cyan-100 text-cyan-800",
-  OUT_FOR_DELIVERY: "bg-teal-100 text-teal-800",
-  DELIVERED: "bg-green-100 text-green-800",
-  FAILED: "bg-red-100 text-red-800",
+  PENDING: "bg-(--warning-bg) text-(--warning) border border-(--warning-border)",
+  LABEL_GENERATED: "bg-(--info-bg) text-(--info) border border-(--info-border)",
+  COURIER_ASSIGNED: "bg-(--warning-bg) text-(--warning) border border-(--warning-border)",
+  PICKED_UP: "bg-(--info-bg) text-(--info) border border-(--info-border)",
+  IN_TRANSIT: "bg-(--info-bg) text-(--info) border border-(--info-border)",
+  OUT_FOR_DELIVERY: "bg-(--danger-bg) text-(--danger) border border-(--danger-border)",
+  DELIVERED: "bg-(--success-bg) text-(--success) border border-(--success-border)",
+  FAILED: "bg-(--danger-bg) text-(--danger) border border-(--danger-border)",
 };
 
 // Order for determining completed steps in the tracking timeline

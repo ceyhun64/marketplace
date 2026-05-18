@@ -161,8 +161,8 @@ export default function AdminInvoicesPage() {
       label: "Total VAT Collected",
       value: `$${((summary?.totalVat ?? 0) / 100).toFixed(2)}`,
       icon: TrendingUp,
-      color: "text-purple-600",
-      bg: "bg-purple-50",
+      color: "text-(--info)",
+      bg: "bg-(--info-bg)",
     },
     {
       label: "Pending PDF",

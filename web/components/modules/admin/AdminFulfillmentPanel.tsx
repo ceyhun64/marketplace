@@ -113,7 +113,7 @@ export default function AdminFulfillmentPanel() {
         >
           {isConnected ? (
             <>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "var(--success)" }}" />
               <Radio className="w-3 h-3" />
               <span>Canlı</span>
             </>
@@ -135,7 +135,7 @@ export default function AdminFulfillmentPanel() {
       {/* Son güncelleme bilgisi */}
       {lastUpdate && (
         <div className="text-xs text-(--text-tertiary) flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+          <span className="w-1.5 h-1.5 rounded-full bg-(--info)" />
           Son güncelleme: Takip #
           {lastUpdate.shipmentId.slice(0, 8).toUpperCase()} →{" "}
           <span className="font-medium text-(--info)">{lastUpdate.status}</span>
@@ -208,7 +208,7 @@ export default function AdminFulfillmentPanel() {
                         </span>
                         {hasLiveUpdate && (
                           <span
-                            className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+                            className="w-1.5 h-1.5 rounded-full bg-(--success)"
                             title="Canlı güncelleme alındı"
                           />
                         )}

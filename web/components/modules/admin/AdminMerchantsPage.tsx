@@ -432,7 +432,7 @@ export default function AdminMerchantsPage() {
                               {merchant.customDomain}
                             </span>
                             {merchant.domainVerified ? (
-                              <CheckCircle className="w-3 h-3 text-emerald-500 shrink-0" />
+                              <CheckCircle className="w-3 h-3 text-(--success) shrink-0" />
                             ) : (
                               <span className="text-xs text-(--warning)">!</span>
                             )}

@@ -232,7 +232,7 @@ export default function AdminPluginsPage() {
                     Minimum Plan
                   </Label>
                   <select
-                    className="w-full border border-(--border-mid) rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    className="w-full border border-(--border-mid) rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2"
                     value={form.minimumPlan}
                     onChange={(e) =>
                       setForm({ ...form, minimumPlan: e.target.value })
@@ -267,7 +267,7 @@ export default function AdminPluginsPage() {
                   Category
                 </Label>
                 <select
-                  className="w-full border border-(--border-mid) rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="w-full border border-(--border-mid) rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2"
                   value={form.category}
                   onChange={(e) =>
                     setForm({ ...form, category: e.target.value })
@@ -384,7 +384,7 @@ export default function AdminPluginsPage() {
                     </TableCell>
                     <TableCell>
                       {p.isFeatured ? (
-                        <span className="text-xs bg-yellow-50 text-yellow-600 px-2 py-1 rounded-full">
+                        <span className="text-xs bg-(--warning-bg) text-(--warning) px-2 py-1 rounded-full">
                           Featured
                         </span>
                       ) : (

@@ -25,7 +25,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   analytics: "bg-[var(--info-bg)] text-[var(--info)]",
   marketing: "bg-[var(--red-muted)] text-[var(--red)]",
   fulfillment: "bg-[var(--warning-bg)] text-[var(--warning)]",
-  payment: "bg-[var(--success-bg)] text-green-600",
+  payment: "bg-[var(--success-bg)] text-(--success)",
   inventory: "bg-[var(--off-white-2)] text-[var(--charcoal-mid)]",
   crm: "bg-[var(--warning-bg)] text-[var(--warning)]",
 };
@@ -93,7 +93,7 @@ export default function MerchantPluginsView() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 flex-1">
                     <div className="w-10 h-10 rounded-xl bg-[var(--success-bg)] flex items-center justify-center flex-shrink-0">
-                      <Puzzle className="w-5 h-5 text-green-600" />
+                      <Puzzle className="w-5 h-5 text-(--success)" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -110,7 +110,7 @@ export default function MerchantPluginsView() {
                         {p.description}
                       </p>
                       {p.createdAt && (
-                        <p className="text-xs text-green-600 mt-1">
+                        <p className="text-xs text-(--success) mt-1">
                           Active since{" "}
                           {new Date(p.createdAt).toLocaleDateString()}
                         </p>
@@ -120,7 +120,7 @@ export default function MerchantPluginsView() {
                   <div className="flex flex-col items-end gap-2 flex-shrink-0">
                     <div className="flex items-center gap-1">
                       <Check className="w-4 h-4 text-[var(--success)]" />
-                      <span className="text-xs font-semibold text-green-600">
+                      <span className="text-xs font-semibold text-(--success)">
                         Active
                       </span>
                     </div>

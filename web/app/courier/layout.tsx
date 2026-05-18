@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 const courierLinks = [
   { href: "/courier", label: "Dashboard", icon: "grid" },
   { href: "/courier/shipments", label: "Kargolarım", icon: "truck" },
+  { href: "/courier/earnings", label: "Kazançlarım", icon: "trending-up" },
   { href: "/courier/profile", label: "Profilim", icon: "user-check" },
 ];
 

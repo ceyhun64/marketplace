@@ -78,7 +78,7 @@ export default function ProductsTable({
                   className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                     p.isApproved
                       ? "bg-(--success-bg) text-(--success)"
-                      : "bg-yellow-50 text-yellow-700"
+                      : "bg-(--warning-bg) text-(--warning)"
                   }`}
                 >
                   {p.isApproved ? "Approved" : "Pending"}
