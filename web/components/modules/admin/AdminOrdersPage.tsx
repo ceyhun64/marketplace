@@ -164,7 +164,7 @@ export default function AdminOrdersPage() {
   const orders: Order[] = data?.data ?? [];
   const totalPages = data?.pagination?.total
     ? Math.ceil(data.pagination.total / 20)
-    : 1;
+    : (data?.pagination?.pages ?? 1);
   const filtered = search
     ? orders.filter(
         (o) =>

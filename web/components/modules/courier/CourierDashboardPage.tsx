@@ -1,7 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { Package, CheckCircle, Clock, Truck } from "lucide-react";
+import {
+  Package,
+  CheckCircle2,
+  Clock,
+  Truck,
+  ToggleRight,
+  ToggleLeft,
+  MapPin,
+  Phone,
+  ArrowRight,
+  TrendingUp,
+} from "lucide-react";
 import {
   useMyCourierShipments,
   useConfirmPickup,
@@ -10,40 +21,116 @@ import {
   useToggleCourierAvailability,
 } from "@/queries/useCouriers";
 import { toast } from "sonner";
-import { ToggleRight, ToggleLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+
+// ── Status helpers ──────────────────────────────────────────────────────────
 
 const STATUS_LABEL: Record<string, string> = {
-  COURIER_ASSIGNED: "Assigned — Pick Up",
-  PICKED_UP: "Picked Up",
-  IN_TRANSIT: "In Transit",
-  OUT_FOR_DELIVERY: "Out for Delivery",
-  DELIVERED: "Delivered",
+  COURIER_ASSIGNED: "Teslim Alınacak",
+  PICKED_UP: "Alındı",
+  IN_TRANSIT: "Yolda",
+  OUT_FOR_DELIVERY: "Dağıtımda",
+  DELIVERED: "Teslim Edildi",
+  FAILED: "Başarısız",
 };
 
-const STATUS_COLOR: Record<string, string> = {
-  COURIER_ASSIGNED: "bg-yellow-50 text-yellow-700 border border-yellow-200",
-  PICKED_UP: "bg-blue-50 text-blue-700 border border-blue-200",
-  IN_TRANSIT: "bg-blue-50 text-blue-700 border border-blue-200",
-  OUT_FOR_DELIVERY: "bg-violet-50 text-violet-700 border border-violet-200",
-  DELIVERED: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+const STATUS_TOKENS: Record<
+  string,
+  { text: string; bg: string; border: string }
+> = {
+  COURIER_ASSIGNED: {
+    text: "text-(--warning)",
+    bg: "bg-(--warning-bg)",
+    border: "border-(--warning-border)",
+  },
+  PICKED_UP: {
+    text: "text-(--info)",
+    bg: "bg-(--info-bg)",
+    border: "border-(--info-border)",
+  },
+  IN_TRANSIT: {
+    text: "text-(--info)",
+    bg: "bg-(--info-bg)",
+    border: "border-(--info-border)",
+  },
+  OUT_FOR_DELIVERY: {
+    text: "text-(--danger)",
+    bg: "bg-(--danger-bg)",
+    border: "border-(--danger-border)",
+  },
+  DELIVERED: {
+    text: "text-(--success)",
+    bg: "bg-(--success-bg)",
+    border: "border-(--success-border)",
+  },
+  FAILED: {
+    text: "text-(--danger)",
+    bg: "bg-(--danger-bg)",
+    border: "border-(--danger-border)",
+  },
 };
+
+function StatusPill({ status }: { status: string }) {
+  const t = STATUS_TOKENS[status] ?? {
+    text: "text-(--text-secondary)",
+    bg: "bg-(--off-white-2)",
+    border: "border-(--border-light)",
+  };
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold border ${t.text} ${t.bg} ${t.border}`}
+    >
+      {STATUS_LABEL[status] ?? status}
+    </span>
+  );
+}
+
+function StatSkeleton() {
+  return (
+    <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5">
+      <div className="flex items-center justify-between mb-3">
+        <Skeleton className="h-3 w-20" />
+        <Skeleton className="h-7 w-7 rounded-lg" />
+      </div>
+      <Skeleton className="h-8 w-12" />
+    </div>
+  );
+}
+
+function ShipmentCardSkeleton() {
+  return (
+    <div className="p-5 space-y-3">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-5 w-24 rounded-full" />
+      </div>
+      <Skeleton className="h-3.5 w-48" />
+      <Skeleton className="h-3 w-36" />
+      <Skeleton className="h-11 w-full rounded-xl" />
+    </div>
+  );
+}
+
+// ── Main Component ──────────────────────────────────────────────────────────
 
 export default function CourierDashboardPage() {
   const { data: shipments = [], isLoading } = useMyCourierShipments();
-  const { data: profile } = useMyCourierProfile();
+  const { data: profile, isLoading: profileLoading } = useMyCourierProfile();
   const toggleAvailability = useToggleCourierAvailability();
   const confirmPickup = useConfirmPickup();
   const confirmDelivery = useConfirmDelivery();
 
-  const active = shipments.filter((s: any) => s.status !== "DELIVERED" && s.status !== "FAILED");
+  const active = shipments.filter(
+    (s: any) => s.status !== "DELIVERED" && s.status !== "FAILED",
+  );
   const inTransit = shipments.filter((s: any) =>
     ["PICKED_UP", "IN_TRANSIT", "OUT_FOR_DELIVERY"].includes(s.status),
   );
   const pending = shipments.filter((s: any) => s.status === "COURIER_ASSIGNED");
 
-  // "Bugün teslim" gerçek sayıyı profile'dan al, yoksa fallback hesapla
-  const todayDelivered = profile?.stats?.todayDelivered ??
+  const todayDelivered =
+    profile?.stats?.todayDelivered ??
     shipments.filter((s: any) => {
       if (s.status !== "DELIVERED") return false;
       const updated = s.actualDeliveredAt ?? s.updatedAt;
@@ -54,7 +141,11 @@ export default function CourierDashboardPage() {
   const handleToggleAvailability = async () => {
     try {
       await toggleAvailability.mutateAsync();
-      toast.success(profile?.isAvailable ? "Çevrimdışı olarak işaretlendiniz" : "Çevrimiçi olarak işaretlendiniz");
+      toast.success(
+        profile?.isAvailable
+          ? "Çevrimdışı olarak işaretlendiniz"
+          : "Çevrimiçi olarak işaretlendiniz",
+      );
     } catch {
       toast.error("Durum güncellenemedi");
     }
@@ -62,201 +153,244 @@ export default function CourierDashboardPage() {
 
   const stats = [
     {
-      label: "Active",
+      label: "Aktif",
       value: active.length,
       icon: Truck,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
+      text: "text-(--info)",
+      bg: "bg-(--info-bg)",
     },
     {
-      label: "Pending Pickup",
+      label: "Teslim Bekliyor",
       value: pending.length,
       icon: Clock,
-      color: "text-amber-600",
-      bg: "bg-amber-50",
+      text: "text-(--warning)",
+      bg: "bg-(--warning-bg)",
     },
     {
-      label: "In Transit",
+      label: "Yolda",
       value: inTransit.length,
       icon: Package,
-      color: "text-violet-600",
-      bg: "bg-violet-50",
+      text: "text-(--info)",
+      bg: "bg-(--info-bg)",
     },
     {
       label: "Bugün Teslim",
       value: todayDelivered,
-      icon: CheckCircle,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
+      icon: CheckCircle2,
+      text: "text-(--success)",
+      bg: "bg-(--success-bg)",
     },
   ];
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      {/* Header + Availability Toggle */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
-            {profile ? `Merhaba, ${profile.fullName.split(" ")[0]}` : "Dashboard"}
+          <h1 className="text-2xl font-semibold text-(--text-primary)">
+            {profileLoading ? (
+              <Skeleton className="h-7 w-40" />
+            ) : (
+              `Merhaba, ${profile?.fullName?.split(" ")[0] ?? "Kurye"} 👋`
+            )}
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {active.length} aktif kargo · {todayDelivered} bugün teslim edildi
+          <p className="text-sm text-(--text-tertiary) mt-1">
+            Teslimat panonuz ve aktif görevleriniz
           </p>
         </div>
-        {profile && (
+
+        {!profileLoading && profile && (
           <button
             onClick={handleToggleAvailability}
             disabled={toggleAvailability.isPending}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-60 ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all min-w-[130px] justify-center ${
               profile.isAvailable
-                ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                ? "bg-(--success-bg) border-(--success-border) text-(--success)"
+                : "bg-(--off-white-2) border-(--border-mid) text-(--text-secondary)"
             }`}
+            style={{ WebkitTapHighlightColor: "transparent" }}
           >
             {profile.isAvailable ? (
-              <><ToggleRight className="w-4 h-4" />Çevrimiçi</>
+              <>
+                <ToggleRight className="w-4 h-4" />
+                Çevrimiçi
+              </>
             ) : (
-              <><ToggleLeft className="w-4 h-4" />Çevrimdışı</>
+              <>
+                <ToggleLeft className="w-4 h-4" />
+                Çevrimdışı
+              </>
             )}
           </button>
         )}
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((s) => (
-          <div
-            key={s.label}
-            className="bg-white rounded-xl border border-gray-100 p-5"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
-                {s.label}
-              </p>
-              <div className={`p-1.5 rounded-lg ${s.bg}`}>
-                <s.icon className={`w-4 h-4 ${s.color}`} />
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {isLoading
+          ? Array.from({ length: 4 }).map((_, i) => <StatSkeleton key={i} />)
+          : stats.map((s) => (
+              <div
+                key={s.label}
+                className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs text-(--text-tertiary) font-medium uppercase tracking-wider">
+                    {s.label}
+                  </p>
+                  <div className={`p-1.5 rounded-lg ${s.bg}`}>
+                    <s.icon className={`w-4 h-4 ${s.text}`} />
+                  </div>
+                </div>
+                <p className="text-2xl font-bold text-(--text-primary)">
+                  {s.value}
+                </p>
               </div>
-            </div>
-            {isLoading ? (
-              <Skeleton className="h-8 w-12" />
-            ) : (
-              <p className="text-2xl font-bold text-gray-900">{s.value}</p>
-            )}
-          </div>
-        ))}
+            ))}
       </div>
 
-      {/* Shipment List */}
-      <div className="bg-white rounded-xl border border-gray-100">
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-          <p className="text-sm font-semibold text-gray-900">
-            All Shipments
-            <span className="ml-2 text-sm font-normal text-gray-400">
-              ({shipments.length} total)
+      {/* Active Shipments */}
+      <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) overflow-hidden">
+        <div className="px-5 py-4 border-b border-(--border-light) flex items-center justify-between">
+          <p className="text-sm font-semibold text-(--text-primary)">
+            Aktif Görevler
+            <span className="ml-2 text-sm font-normal text-(--text-tertiary)">
+              ({active.length} paket)
             </span>
           </p>
           <Link
             href="/courier/shipments"
-            className="text-xs text-gray-500 hover:text-gray-900 font-medium"
+            className="text-xs text-(--text-secondary) hover:text-(--text-primary) font-semibold flex items-center gap-1 transition-colors"
           >
-            View All →
+            Tümünü Gör <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
         {isLoading ? (
-          <div className="p-5 space-y-3">
+          <div className="divide-y divide-(--border-subtle)">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-20 w-full rounded-lg" />
+              <ShipmentCardSkeleton key={i} />
             ))}
           </div>
-        ) : shipments.length === 0 ? (
+        ) : active.length === 0 ? (
           <div className="p-12 text-center">
-            <Package className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-            <p className="text-sm text-gray-400 font-medium">
-              No assigned shipments
+            <Package className="w-10 h-10 text-(--text-tertiary) opacity-20 mx-auto mb-3" />
+            <p className="text-sm text-(--text-secondary) font-medium">
+              Aktif görev bulunmuyor
             </p>
-            <p className="text-xs text-gray-300 mt-1">
-              New assignments will appear here
+            <p className="text-xs text-(--text-tertiary) mt-1">
+              Yeni görevler burada görünecek
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-50">
-            {shipments.slice(0, 8).map((s: any) => (
-              <div key={s.id} className="px-5 py-4">
-                <div className="flex items-start justify-between">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-mono text-sm font-bold text-gray-900">
-                        {s.trackingNumber}
+          <div className="divide-y divide-(--border-subtle)">
+            {active.slice(0, 8).map((s: any) => (
+              <div key={s.id} className="p-5">
+                {/* Tracking + Status */}
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm font-bold text-(--text-primary)">
+                      {s.trackingNumber}
+                    </span>
+                    {s.shippingRate === "EXPRESS" && (
+                      <span className="text-[10px] font-bold text-(--danger) bg-(--danger-bg) border border-(--danger-border) px-1.5 py-0.5 rounded-md">
+                        EXPRESS
                       </span>
-                      <span
-                        className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
-                          STATUS_COLOR[s.status] ?? "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {STATUS_LABEL[s.status] ?? s.status}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-700 font-medium">
-                      {s.customerName}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5 truncate max-w-sm">
-                      {s.deliveryAddress}
-                    </p>
-                    {s.estimatedDelivery && (
-                      <p className="text-xs text-gray-300 mt-0.5">
-                        ETA:{" "}
-                        {new Date(s.estimatedDelivery).toLocaleString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
                     )}
                   </div>
+                  <StatusPill status={s.status} />
+                </div>
 
-                  <div className="flex flex-col gap-2 items-end ml-4 flex-shrink-0">
-                    {s.labelUrl && (
-                      <a
-                        href={s.labelUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs text-blue-600 hover:underline font-medium"
-                      >
-                        Print Label
-                      </a>
-                    )}
-                    {s.status === "COURIER_ASSIGNED" && (
-                      <button
-                        onClick={() => confirmPickup.mutate(s.id)}
-                        disabled={confirmPickup.isPending}
-                        className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-                      >
-                        {confirmPickup.isPending ? "..." : "Picked Up ✓"}
-                      </button>
-                    )}
-                    {(s.status === "PICKED_UP" ||
-                      s.status === "IN_TRANSIT" ||
-                      s.status === "OUT_FOR_DELIVERY") && (
-                      <button
-                        onClick={() => confirmDelivery.mutate(s.id)}
-                        disabled={confirmDelivery.isPending}
-                        className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50"
-                      >
-                        {confirmDelivery.isPending ? "..." : "Delivered ✓"}
-                      </button>
-                    )}
-                    {s.status === "DELIVERED" && (
-                      <span className="text-xs text-emerald-600 font-medium">
-                        ✓ Done
-                      </span>
-                    )}
+                {/* Customer & Address */}
+                <div className="space-y-1.5 mb-4">
+                  <div className="flex items-center gap-2 text-sm text-(--text-primary) font-medium">
+                    <Package className="w-3.5 h-3.5 text-(--text-tertiary) shrink-0" />
+                    {s.customerName}
                   </div>
+                  <div className="flex items-start gap-2 text-xs text-(--text-secondary)">
+                    <MapPin className="w-3.5 h-3.5 text-(--text-tertiary) shrink-0 mt-0.5" />
+                    <span className="line-clamp-2">{s.deliveryAddress}</span>
+                  </div>
+                  {s.customerPhone && (
+                    <a
+                      href={`tel:${s.customerPhone}`}
+                      className="flex items-center gap-2 text-xs text-(--info) font-medium w-fit"
+                      style={{ WebkitTapHighlightColor: "transparent" }}
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                      {s.customerPhone}
+                    </a>
+                  )}
+                </div>
+
+                {/* Action buttons — large 44px touch targets */}
+                <div className="flex gap-2">
+                  {s.status === "COURIER_ASSIGNED" && (
+                    <Button
+                      onClick={() => confirmPickup.mutate(s.id)}
+                      disabled={confirmPickup.isPending}
+                      className="flex-1 h-11 text-sm font-semibold bg-(--charcoal) hover:bg-(--charcoal-2) text-white rounded-xl"
+                    >
+                      <Truck className="w-4 h-4 mr-2" />
+                      {confirmPickup.isPending ? "..." : "Paketi Aldım ✓"}
+                    </Button>
+                  )}
+                  {(s.status === "PICKED_UP" ||
+                    s.status === "IN_TRANSIT" ||
+                    s.status === "OUT_FOR_DELIVERY") && (
+                    <Button
+                      onClick={() => confirmDelivery.mutate(s.id)}
+                      disabled={confirmDelivery.isPending}
+                      className="flex-1 h-11 text-sm font-semibold text-white rounded-xl"
+                      style={{ backgroundColor: "var(--success)" }}
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      {confirmDelivery.isPending ? "..." : "Teslim Ettim ✓"}
+                    </Button>
+                  )}
+                  <Link
+                    href={`/courier/shipments/${s.id}`}
+                    className="flex items-center justify-center h-11 px-4 rounded-xl border border-(--border-mid) text-(--text-secondary) hover:bg-(--bg-sunken) transition-colors text-sm font-medium shrink-0"
+                  >
+                    Detay
+                  </Link>
                 </div>
               </div>
             ))}
           </div>
         )}
+      </div>
+
+      {/* Quick Nav */}
+      <div className="grid grid-cols-2 gap-3">
+        <Link href="/courier/shipments">
+          <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-5 hover:border-(--border-mid) hover:shadow-sm transition-all cursor-pointer flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-(--info-bg)">
+              <Package className="w-5 h-5 text-(--info)" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-(--text-primary)">
+                Tüm Görevler
+              </p>
+              <p className="text-xs text-(--text-tertiary)">
+                {shipments.length} toplam
+              </p>
+            </div>
+          </div>
+        </Link>
+        <Link href="/courier/earnings">
+          <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-5 hover:border-(--border-mid) hover:shadow-sm transition-all cursor-pointer flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-(--success-bg)">
+              <TrendingUp className="w-5 h-5 text-(--success)" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-(--text-primary)">
+                Kazançlarım
+              </p>
+              <p className="text-xs text-(--text-tertiary)">Geçmiş & toplam</p>
+            </div>
+          </div>
+        </Link>
       </div>
     </div>
   );

@@ -11,14 +11,13 @@ import {
   User,
   Phone,
   Mail,
-  MapPin,
   CheckCircle2,
   XCircle,
   Package,
   Calendar,
   ToggleLeft,
   ToggleRight,
-  Wifi,
+  MapPin,
   WifiOff,
 } from "lucide-react";
 
@@ -53,8 +52,10 @@ export default function CourierProfilePage() {
   if (!profile) {
     return (
       <div className="text-center py-20">
-        <User className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-        <p className="text-gray-500 text-sm">Profil bilgisi yüklenemedi</p>
+        <User className="w-12 h-12 mx-auto mb-3 text-(--text-tertiary) opacity-30" />
+        <p className="text-(--text-secondary) text-sm">
+          Profil bilgisi yüklenemedi
+        </p>
       </div>
     );
   }
@@ -64,7 +65,6 @@ export default function CourierProfilePage() {
     month: "long",
     day: "numeric",
   });
-
   const lastLocationTime = profile.lastLocationUpdate
     ? new Date(profile.lastLocationUpdate).toLocaleString("tr-TR", {
         day: "2-digit",
@@ -77,22 +77,23 @@ export default function CourierProfilePage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Profilim</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-semibold text-(--text-primary)">
+          Profilim
+        </h1>
+        <p className="text-sm text-(--text-tertiary) mt-1">
           Kurye bilgileriniz ve müsaitlik durumunuz
         </p>
       </div>
 
       {/* Profile Card */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        {/* Header */}
+      <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) overflow-hidden">
         <div
           className="px-6 py-5 flex items-center justify-between"
           style={{ background: "var(--charcoal)" }}
         >
           <div className="flex items-center gap-4">
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold text-white flex-shrink-0"
+              className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold text-white shrink-0"
               style={{ background: "var(--red)" }}
             >
               {profile.fullName.charAt(0).toUpperCase()}
@@ -104,17 +105,18 @@ export default function CourierProfilePage() {
               <p className="text-white/50 text-xs mt-1">Kurye</p>
             </div>
           </div>
-
-          {/* Availability Toggle */}
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-col items-end gap-1.5">
             <button
               onClick={handleToggle}
               disabled={toggleAvailability.isPending}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-60 ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-60 min-h-[44px] ${
                 profile.isAvailable
-                  ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                  ? "bg-(--success) text-white"
                   : "bg-white/10 text-white/60 hover:bg-white/20"
               }`}
+              style={
+                profile.isAvailable ? { backgroundColor: "var(--success)" } : {}
+              }
             >
               {profile.isAvailable ? (
                 <>
@@ -136,8 +138,7 @@ export default function CourierProfilePage() {
           </div>
         </div>
 
-        {/* Info rows */}
-        <div className="divide-y divide-gray-50 px-6">
+        <div className="divide-y divide-(--border-subtle) px-6">
           {[
             { icon: Mail, label: "E-posta", value: profile.email },
             { icon: Phone, label: "Telefon", value: profile.phone ?? "—" },
@@ -153,19 +154,15 @@ export default function CourierProfilePage() {
                       ? "🚲 Bisiklet"
                       : profile.vehicleType,
             },
-            {
-              icon: Truck,
-              label: "Plaka",
-              value: profile.plateNumber ?? "—",
-            },
+            { icon: Truck, label: "Plaka", value: profile.plateNumber ?? "—" },
             { icon: Calendar, label: "Üyelik Tarihi", value: memberSince },
           ].map((row) => (
             <div key={row.label} className="flex items-center gap-3 py-3.5">
-              <row.icon className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              <span className="text-sm text-gray-500 w-32 flex-shrink-0">
+              <row.icon className="w-4 h-4 text-(--text-tertiary) shrink-0" />
+              <span className="text-sm text-(--text-secondary) w-32 shrink-0">
                 {row.label}
               </span>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm font-medium text-(--text-primary)">
                 {row.value}
               </span>
             </div>
@@ -179,72 +176,78 @@ export default function CourierProfilePage() {
           {
             label: "Bugün Teslim",
             value: profile.stats.todayDelivered,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50",
+            text: "text-(--success)",
+            bg: "bg-(--success-bg)",
             icon: CheckCircle2,
           },
           {
             label: "Aktif Kargo",
             value: profile.stats.totalActive,
-            color: "text-blue-600",
-            bg: "bg-blue-50",
+            text: "text-(--info)",
+            bg: "bg-(--info-bg)",
             icon: Package,
           },
           {
             label: "Toplam Teslimat",
             value: profile.stats.totalDelivered,
-            color: "text-gray-700",
-            bg: "bg-gray-100",
+            text: "text-(--text-primary)",
+            bg: "bg-(--off-white-2)",
             icon: Truck,
           },
         ].map((s) => (
           <div
             key={s.label}
-            className="bg-white rounded-xl border border-gray-100 p-5"
+            className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5"
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+              <p className="text-xs text-(--text-tertiary) font-medium uppercase tracking-wider">
                 {s.label}
               </p>
               <div className={`p-1.5 rounded-lg ${s.bg}`}>
-                <s.icon className={`w-4 h-4 ${s.color}`} />
+                <s.icon className={`w-4 h-4 ${s.text}`} />
               </div>
             </div>
-            <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+            <p className={`text-2xl font-bold ${s.text}`}>{s.value}</p>
           </div>
         ))}
       </div>
 
-      {/* Location Status */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5">
-        <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-gray-400" />
+      {/* Location */}
+      <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-5">
+        <h3 className="text-sm font-semibold text-(--text-primary) mb-4 flex items-center gap-2">
+          <MapPin className="w-4 h-4 text-(--text-tertiary)" />
           Konum Bilgisi
         </h3>
         {profile.currentLatitude && profile.currentLongitude ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-sm text-emerald-700 font-medium">
+              <span
+                className="w-2 h-2 rounded-full bg-(--success) animate-pulse"
+                style={{ backgroundColor: "var(--success)" }}
+              />
+              <span
+                className="text-sm text-(--success) font-medium"
+                style={{ color: "var(--success)" }}
+              >
                 Konum aktif
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-3 text-xs text-gray-500">
+            <div className="grid grid-cols-2 gap-3 text-xs text-(--text-secondary)">
               <div>
-                <span className="text-gray-400">Enlem</span>
-                <p className="font-mono font-medium text-gray-700 mt-0.5">
+                <span className="text-(--text-tertiary)">Enlem</span>
+                <p className="font-mono font-medium text-(--text-primary) mt-0.5">
                   {profile.currentLatitude.toFixed(6)}
                 </p>
               </div>
               <div>
-                <span className="text-gray-400">Boylam</span>
-                <p className="font-mono font-medium text-gray-700 mt-0.5">
+                <span className="text-(--text-tertiary)">Boylam</span>
+                <p className="font-mono font-medium text-(--text-primary) mt-0.5">
                   {profile.currentLongitude.toFixed(6)}
                 </p>
               </div>
             </div>
             {lastLocationTime && (
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-(--text-tertiary)">
                 Son güncelleme: {lastLocationTime}
               </p>
             )}
@@ -252,14 +255,14 @@ export default function CourierProfilePage() {
               href={`https://maps.google.com/?q=${profile.currentLatitude},${profile.currentLongitude}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:underline font-medium mt-1"
+              className="inline-flex items-center gap-1.5 text-xs text-(--info) hover:underline font-medium"
             >
               <MapPin className="w-3.5 h-3.5" />
               Google Maps'te aç
             </a>
           </div>
         ) : (
-          <div className="flex items-center gap-3 text-gray-400">
+          <div className="flex items-center gap-3 text-(--text-tertiary)">
             <WifiOff className="w-4 h-4" />
             <p className="text-sm">
               Konum bilgisi yok — kargo detay sayfasından konum yayını
@@ -271,30 +274,26 @@ export default function CourierProfilePage() {
 
       {/* Account Status */}
       <div
-        className={`rounded-xl p-4 flex items-center gap-3 ${
-          profile.isActive
-            ? "bg-emerald-50 border border-emerald-100"
-            : "bg-red-50 border border-red-100"
-        }`}
+        className={`rounded-xl p-4 flex items-center gap-3 ${profile.isActive ? "bg-(--success-bg) border border-(--success-border)" : "bg-(--danger-bg) border border-(--danger-border)"}`}
       >
         {profile.isActive ? (
-          <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+          <CheckCircle2
+            className="w-5 h-5 shrink-0"
+            style={{ color: "var(--success)" }}
+          />
         ) : (
-          <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+          <XCircle className="w-5 h-5 text-(--danger) shrink-0" />
         )}
         <div>
           <p
-            className={`text-sm font-semibold ${
-              profile.isActive ? "text-emerald-700" : "text-red-700"
-            }`}
+            className="text-sm font-semibold"
+            style={{
+              color: profile.isActive ? "var(--success)" : "var(--danger)",
+            }}
           >
             Hesap {profile.isActive ? "Aktif" : "Pasif"}
           </p>
-          <p
-            className={`text-xs mt-0.5 ${
-              profile.isActive ? "text-emerald-600" : "text-red-600"
-            }`}
-          >
+          <p className="text-xs mt-0.5 text-(--text-secondary)">
             {profile.isActive
               ? "Hesabınız aktif, yeni görevler alabilirsiniz."
               : "Hesabınız pasif durumda. Admin ile iletişime geçin."}
