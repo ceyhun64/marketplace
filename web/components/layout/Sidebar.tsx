@@ -95,7 +95,7 @@ export function Sidebar({ links, role }: SidebarProps) {
     >
       {/* Brand */}
       <div
-        className="h-16 flex items-center px-5"
+        className="h-14 flex items-center px-4"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
       >
         <Link href="/" className="flex items-center gap-3 group">
@@ -147,7 +147,7 @@ export function Sidebar({ links, role }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-5 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
         {links.map(({ href, label, icon }) => {
           const active = isActive(href);
           const Icon = ICONS[icon] || LayoutGrid;
@@ -155,7 +155,7 @@ export function Sidebar({ links, role }: SidebarProps) {
             <Link
               key={href}
               href={href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-md text-[13px] font-medium transition-all duration-150"
+              className="flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[12.5px] font-medium transition-all duration-150"
               style={
                 active
                   ? { background: "var(--red)", color: "#fff" }
@@ -178,7 +178,7 @@ export function Sidebar({ links, role }: SidebarProps) {
                 }
               }}
             >
-              <Icon className="w-4 h-4 flex-shrink-0" />
+              <Icon className="w-3.5 h-3.5 flex-shrink-0" />
               {label}
             </Link>
           );
@@ -187,10 +187,10 @@ export function Sidebar({ links, role }: SidebarProps) {
 
       {/* User footer */}
       <div
-        className="p-3"
+        className="p-2.5"
         style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
       >
-        <div className="flex items-center gap-3 px-2 py-2.5 mb-1">
+        <div className="flex items-center gap-2.5 px-2 py-2 mb-1">
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
             style={{ background: "var(--red)" }}
@@ -208,7 +208,7 @@ export function Sidebar({ links, role }: SidebarProps) {
         </div>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 w-full px-3 py-2 rounded-md text-xs font-medium transition-colors"
+          className="flex items-center gap-2 w-full px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
           style={{ color: "rgba(244,244,242,0.45)" }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLElement).style.background =
