@@ -228,7 +228,9 @@ function DynamicVariantSelector({
   const matched = useMemo(() => {
     if (axes.length === 0) return null;
     if (axes.some((a) => !sel[a])) return null;
-    return active.find((v) => axes.every((a) => v.attributes[a] === sel[a])) ?? null;
+    return (
+      active.find((v) => axes.every((a) => v.attributes[a] === sel[a])) ?? null
+    );
   }, [sel, active, axes]);
 
   useEffect(() => {
@@ -244,7 +246,7 @@ function DynamicVariantSelector({
         v.stock > 0 &&
         axes
           .filter((a) => a !== axis)
-          .every((a) => !sel[a] || v.attributes[a] === sel[a])
+          .every((a) => !sel[a] || v.attributes[a] === sel[a]),
     );
 
   const isColorAxis = (axis: string) =>
@@ -254,7 +256,7 @@ function DynamicVariantSelector({
     <div className="space-y-5">
       {axes.map((axis) => {
         const values = Array.from(
-          new Set(active.map((v) => v.attributes[axis]).filter(Boolean))
+          new Set(active.map((v) => v.attributes[axis]).filter(Boolean)),
         );
 
         return (
@@ -262,12 +264,18 @@ function DynamicVariantSelector({
             <div className="flex items-center justify-between mb-2.5">
               <span
                 className="text-[10px] font-black uppercase tracking-[0.18em]"
-                style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}
+                style={{
+                  color: "var(--charcoal-mist)",
+                  fontFamily: "var(--font-mono)",
+                }}
               >
                 {axis}
               </span>
               {sel[axis] && (
-                <span className="text-xs font-semibold" style={{ color: "var(--charcoal)" }}>
+                <span
+                  className="text-xs font-semibold"
+                  style={{ color: "var(--charcoal)" }}
+                >
                   {sel[axis]}
                 </span>
               )}
@@ -289,17 +297,24 @@ function DynamicVariantSelector({
                       className="relative w-8 h-8 rounded-full transition-all"
                       style={{
                         background: val.startsWith("#") ? val : undefined,
-                        backgroundColor: !val.startsWith("#") ? "var(--off-white-2)" : undefined,
+                        backgroundColor: !val.startsWith("#")
+                          ? "var(--off-white-2)"
+                          : undefined,
                         border: selected
                           ? "3px solid var(--charcoal)"
                           : "2px solid var(--border-mid)",
                         opacity: available ? 1 : 0.35,
                         cursor: available ? "pointer" : "not-allowed",
-                        boxShadow: selected ? "0 0 0 2px white, 0 0 0 4px var(--charcoal)" : undefined,
+                        boxShadow: selected
+                          ? "0 0 0 2px white, 0 0 0 4px var(--charcoal)"
+                          : undefined,
                       }}
                     >
                       {!val.startsWith("#") && (
-                        <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold" style={{ color: "var(--text-secondary)" }}>
+                        <span
+                          className="absolute inset-0 flex items-center justify-center text-[9px] font-bold"
+                          style={{ color: "var(--text-secondary)" }}
+                        >
                           {val.slice(0, 2)}
                         </span>
                       )}
@@ -308,7 +323,10 @@ function DynamicVariantSelector({
                           className="absolute inset-0 flex items-center justify-center rounded-full"
                           style={{ background: "rgba(255,255,255,0.6)" }}
                         >
-                          <span className="block w-5 border-t rotate-45" style={{ borderColor: "var(--danger)" }} />
+                          <span
+                            className="block w-5 border-t rotate-45"
+                            style={{ borderColor: "var(--danger)" }}
+                          />
                         </span>
                       )}
                     </button>
@@ -324,12 +342,16 @@ function DynamicVariantSelector({
                     className="px-3.5 py-1.5 rounded-lg text-sm font-semibold border transition-all"
                     style={{
                       background: selected ? "var(--charcoal)" : "white",
-                      color: selected ? "white" : available ? "var(--charcoal)" : "var(--text-tertiary)",
+                      color: selected
+                        ? "white"
+                        : available
+                          ? "var(--charcoal)"
+                          : "var(--text-tertiary)",
                       borderColor: selected
                         ? "var(--charcoal)"
                         : available
-                        ? "var(--border-mid)"
-                        : "var(--border-light)",
+                          ? "var(--border-mid)"
+                          : "var(--border-light)",
                       opacity: available ? 1 : 0.5,
                       cursor: available ? "pointer" : "not-allowed",
                       textDecoration: available ? undefined : "line-through",
@@ -381,7 +403,8 @@ function DynamicVariantSelector({
                 <span
                   className="text-xs font-semibold"
                   style={{
-                    color: matched.stock > 0 ? "var(--success)" : "var(--danger)",
+                    color:
+                      matched.stock > 0 ? "var(--success)" : "var(--danger)",
                     fontFamily: "var(--font-body)",
                   }}
                 >
@@ -393,24 +416,34 @@ function DynamicVariantSelector({
                 </span>
                 <span
                   className="text-[10px]"
-                  style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}
+                  style={{
+                    color: "var(--charcoal-mist)",
+                    fontFamily: "var(--font-mono)",
+                  }}
                 >
                   SKU: {matched.sku}
                 </span>
               </div>
-              {matched.priceOverride !== null && matched.priceOverride !== basePrice && (
-                <span
-                  className="text-sm font-black"
-                  style={{ color: "var(--red)", fontFamily: "var(--font-display)" }}
-                >
-                  ₺{matched.priceOverride.toFixed(2)}
-                </span>
-              )}
+              {matched.priceOverride !== null &&
+                matched.priceOverride !== basePrice && (
+                  <span
+                    className="text-sm font-black"
+                    style={{
+                      color: "var(--red)",
+                      fontFamily: "var(--font-display)",
+                    }}
+                  >
+                    ₺{matched.priceOverride.toFixed(2)}
+                  </span>
+                )}
             </>
           ) : (
             <span
               className="text-xs"
-              style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-body)" }}
+              style={{
+                color: "var(--text-tertiary)",
+                fontFamily: "var(--font-body)",
+              }}
             >
               Select all options to check availability
             </span>
@@ -455,7 +488,7 @@ function DeliveryEstimate({ handlingHours = 24 }: { handlingHours?: number }) {
 
   const hoursLeft = Math.max(
     0,
-    Math.floor((cutoff.getTime() - now.getTime()) / 3_600_000)
+    Math.floor((cutoff.getTime() - now.getTime()) / 3_600_000),
   );
 
   return (
@@ -469,7 +502,10 @@ function DeliveryEstimate({ handlingHours = 24 }: { handlingHours?: number }) {
     >
       <div
         className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2"
-        style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}
+        style={{
+          color: "var(--charcoal-mist)",
+          fontFamily: "var(--font-mono)",
+        }}
       >
         <CalendarDays size={13} style={{ color: "var(--red)" }} />
         Estimated Delivery
@@ -478,10 +514,16 @@ function DeliveryEstimate({ handlingHours = 24 }: { handlingHours?: number }) {
       {isBeforeCutoff && hoursLeft > 0 && (
         <div
           className="flex items-center gap-2 px-3 py-2 rounded-lg"
-          style={{ background: "rgba(200,16,46,0.07)", border: "1px solid rgba(200,16,46,0.15)" }}
+          style={{
+            background: "rgba(200,16,46,0.07)",
+            border: "1px solid rgba(200,16,46,0.15)",
+          }}
         >
           <Clock size={12} style={{ color: "var(--red)" }} />
-          <span className="text-xs font-semibold" style={{ color: "var(--red)", fontFamily: "var(--font-body)" }}>
+          <span
+            className="text-xs font-semibold"
+            style={{ color: "var(--red)", fontFamily: "var(--font-body)" }}
+          >
             Order within {hoursLeft}h to meet today's cut-off
           </span>
         </div>
@@ -497,13 +539,27 @@ function DeliveryEstimate({ handlingHours = 24 }: { handlingHours?: number }) {
               <Package size={13} style={{ color: "var(--success)" }} />
             </div>
             <div>
-              <p className="text-xs font-bold" style={{ color: "var(--charcoal)" }}>Standard</p>
-              <p className="text-[10px]" style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}>
+              <p
+                className="text-xs font-bold"
+                style={{ color: "var(--charcoal)" }}
+              >
+                Standard
+              </p>
+              <p
+                className="text-[10px]"
+                style={{
+                  color: "var(--charcoal-mist)",
+                  fontFamily: "var(--font-mono)",
+                }}
+              >
                 3–5 business days
               </p>
             </div>
           </div>
-          <span className="text-xs font-bold" style={{ color: "var(--success)" }}>
+          <span
+            className="text-xs font-bold"
+            style={{ color: "var(--success)" }}
+          >
             by {fmt(standardDate)}
           </span>
         </div>
@@ -517,13 +573,27 @@ function DeliveryEstimate({ handlingHours = 24 }: { handlingHours?: number }) {
               <Zap size={13} style={{ color: "var(--red)" }} />
             </div>
             <div>
-              <p className="text-xs font-bold" style={{ color: "var(--charcoal)" }}>Express</p>
-              <p className="text-[10px]" style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}>
+              <p
+                className="text-xs font-bold"
+                style={{ color: "var(--charcoal)" }}
+              >
+                Express
+              </p>
+              <p
+                className="text-[10px]"
+                style={{
+                  color: "var(--charcoal-mist)",
+                  fontFamily: "var(--font-mono)",
+                }}
+              >
                 1–2 business days
               </p>
             </div>
           </div>
-          <span className="text-xs font-bold" style={{ color: "var(--charcoal)" }}>
+          <span
+            className="text-xs font-bold"
+            style={{ color: "var(--charcoal)" }}
+          >
             by {fmt(expressDate)}
           </span>
         </div>
@@ -534,7 +604,13 @@ function DeliveryEstimate({ handlingHours = 24 }: { handlingHours?: number }) {
         style={{ borderTop: "1px dashed rgba(30,30,30,0.1)" }}
       >
         <MapPin size={11} style={{ color: "var(--charcoal-mist)" }} />
-        <span className="text-[10px]" style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}>
+        <span
+          className="text-[10px]"
+          style={{
+            color: "var(--charcoal-mist)",
+            fontFamily: "var(--font-mono)",
+          }}
+        >
           Dates may vary based on your location
         </span>
       </div>
@@ -555,14 +631,31 @@ function ReturnPolicy() {
         border: "1px solid rgba(27,94,168,0.15)",
       }}
     >
-      <RotateCcw size={14} style={{ color: "var(--info)", flexShrink: 0, marginTop: 1 }} />
+      <RotateCcw
+        size={14}
+        style={{ color: "var(--info)", flexShrink: 0, marginTop: 1 }}
+      />
       <div>
-        <p className="text-xs font-bold" style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}>
+        <p
+          className="text-xs font-bold"
+          style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
+        >
           30-Day Free Returns
         </p>
-        <p className="text-[10px] mt-0.5 leading-relaxed" style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}>
-          Unused items in original packaging can be returned within 30 days at no cost.{" "}
-          <a href="/returns" className="underline font-semibold" style={{ color: "var(--info)" }}>
+        <p
+          className="text-[10px] mt-0.5 leading-relaxed"
+          style={{
+            color: "var(--charcoal-soft)",
+            fontFamily: "var(--font-body)",
+          }}
+        >
+          Unused items in original packaging can be returned within 30 days at
+          no cost.{" "}
+          <a
+            href="/returns"
+            className="underline font-semibold"
+            style={{ color: "var(--info)" }}
+          >
             View policy
           </a>
         </p>
@@ -604,10 +697,16 @@ function StickyAddToCart({
     >
       <div className="flex items-center gap-3 px-4 py-3">
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-white/60 truncate" style={{ fontFamily: "var(--font-body)" }}>
+          <p
+            className="text-xs text-white/60 truncate"
+            style={{ fontFamily: "var(--font-body)" }}
+          >
             {productTitle}
           </p>
-          <p className="text-base font-black text-white" style={{ fontFamily: "var(--font-display)" }}>
+          <p
+            className="text-base font-black text-white"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
             ₺{price.toFixed(2)}
           </p>
         </div>
@@ -645,7 +744,10 @@ function ShippingSection({ shipping }: { shipping: ProductData["shipping"] }) {
     >
       <div
         className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2"
-        style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}
+        style={{
+          color: "var(--charcoal-mist)",
+          fontFamily: "var(--font-mono)",
+        }}
       >
         <Truck size={13} style={{ color: "var(--red)" }} />
         Shipping
@@ -653,21 +755,37 @@ function ShippingSection({ shipping }: { shipping: ProductData["shipping"] }) {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-1.5 rounded-md" style={{ background: "rgba(13,122,78,0.07)" }}>
+          <div
+            className="p-1.5 rounded-md"
+            style={{ background: "rgba(13,122,78,0.07)" }}
+          >
             <Package size={14} style={{ color: "var(--success)" }} />
           </div>
           <div>
-            <p className="text-xs font-bold" style={{ color: "var(--charcoal)" }}>
-              {shipping.freeShipping ? "Free Standard Shipping" : "Standard Shipping"}
+            <p
+              className="text-xs font-bold"
+              style={{ color: "var(--charcoal)" }}
+            >
+              {shipping.freeShipping
+                ? "Free Standard Shipping"
+                : "Standard Shipping"}
             </p>
-            <p className="text-[10px]" style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}>
+            <p
+              className="text-[10px]"
+              style={{
+                color: "var(--charcoal-mist)",
+                fontFamily: "var(--font-mono)",
+              }}
+            >
               {shipping.estimatedDelivery || "3–5 business days"}
             </p>
           </div>
         </div>
         <span
           className="text-xs font-bold"
-          style={{ color: shipping.freeShipping ? "var(--success)" : "var(--charcoal)" }}
+          style={{
+            color: shipping.freeShipping ? "var(--success)" : "var(--charcoal)",
+          }}
         >
           {shipping.freeShipping
             ? "FREE"
@@ -678,17 +796,34 @@ function ShippingSection({ shipping }: { shipping: ProductData["shipping"] }) {
       {shipping.expressAvailable && (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-1.5 rounded-md" style={{ background: "rgba(200,16,46,0.07)" }}>
+            <div
+              className="p-1.5 rounded-md"
+              style={{ background: "rgba(200,16,46,0.07)" }}
+            >
               <Zap size={14} style={{ color: "var(--red)" }} />
             </div>
             <div>
-              <p className="text-xs font-bold" style={{ color: "var(--charcoal)" }}>Express Shipping</p>
-              <p className="text-[10px]" style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}>
+              <p
+                className="text-xs font-bold"
+                style={{ color: "var(--charcoal)" }}
+              >
+                Express Shipping
+              </p>
+              <p
+                className="text-[10px]"
+                style={{
+                  color: "var(--charcoal-mist)",
+                  fontFamily: "var(--font-mono)",
+                }}
+              >
                 {shipping.expressDelivery || "1–2 business days"}
               </p>
             </div>
           </div>
-          <span className="text-xs font-bold" style={{ color: "var(--charcoal)" }}>
+          <span
+            className="text-xs font-bold"
+            style={{ color: "var(--charcoal)" }}
+          >
             ₺{shipping.expressCost.toFixed(2)}
           </span>
         </div>
@@ -700,8 +835,13 @@ function ShippingSection({ shipping }: { shipping: ProductData["shipping"] }) {
           style={{ borderTop: "1px dashed rgba(30,30,30,0.1)" }}
         >
           <CheckCircle2 size={11} style={{ color: "var(--success)" }} />
-          <span className="text-[10px]" style={{ color: "var(--charcoal-soft)" }}>
-            Add items worth <strong style={{ color: "var(--success)" }}>₺500</strong> for free shipping
+          <span
+            className="text-[10px]"
+            style={{ color: "var(--charcoal-soft)" }}
+          >
+            Add items worth{" "}
+            <strong style={{ color: "var(--success)" }}>₺500</strong> for free
+            shipping
           </span>
         </div>
       )}
@@ -715,10 +855,38 @@ function ShippingSection({ shipping }: { shipping: ProductData["shipping"] }) {
 
 function TrustBadges() {
   const badges = [
-    { icon: Lock,         color: "var(--success)", bg: "rgba(13,122,78,0.07)",  border: "rgba(13,122,78,0.18)",  label: "Secure Payment",  sub: "256-bit SSL"       },
-    { icon: RotateCcw,    color: "var(--info)",    bg: "rgba(27,94,168,0.07)",  border: "rgba(27,94,168,0.18)",  label: "Easy Returns",    sub: "30-day policy"     },
-    { icon: CheckCircle2, color: "var(--red)",     bg: "rgba(200,16,46,0.07)",  border: "rgba(200,16,46,0.18)",  label: "Genuine Product", sub: "100% authentic"   },
-    { icon: Clock,        color: "var(--warning)", bg: "rgba(180,83,9,0.07)",   border: "rgba(180,83,9,0.18)",   label: "24/7 Support",    sub: "Always available"  },
+    {
+      icon: Lock,
+      color: "var(--success)",
+      bg: "rgba(13,122,78,0.07)",
+      border: "rgba(13,122,78,0.18)",
+      label: "Secure Payment",
+      sub: "256-bit SSL",
+    },
+    {
+      icon: RotateCcw,
+      color: "var(--info)",
+      bg: "rgba(27,94,168,0.07)",
+      border: "rgba(27,94,168,0.18)",
+      label: "Easy Returns",
+      sub: "30-day policy",
+    },
+    {
+      icon: CheckCircle2,
+      color: "var(--red)",
+      bg: "rgba(200,16,46,0.07)",
+      border: "rgba(200,16,46,0.18)",
+      label: "Genuine Product",
+      sub: "100% authentic",
+    },
+    {
+      icon: Clock,
+      color: "var(--warning)",
+      bg: "rgba(180,83,9,0.07)",
+      border: "rgba(180,83,9,0.18)",
+      label: "24/7 Support",
+      sub: "Always available",
+    },
   ] as const;
 
   return (
@@ -731,10 +899,22 @@ function TrustBadges() {
         >
           <Icon size={15} style={{ color, flexShrink: 0 }} />
           <div>
-            <p className="text-[11px] font-bold" style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}>
+            <p
+              className="text-[11px] font-bold"
+              style={{
+                color: "var(--charcoal)",
+                fontFamily: "var(--font-body)",
+              }}
+            >
               {label}
             </p>
-            <p className="text-[9px] uppercase tracking-wide" style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}>
+            <p
+              className="text-[9px] uppercase tracking-wide"
+              style={{
+                color: "var(--charcoal-mist)",
+                fontFamily: "var(--font-mono)",
+              }}
+            >
               {sub}
             </p>
           </div>
@@ -769,7 +949,10 @@ function RatingBar({
     >
       <div
         className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2"
-        style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}
+        style={{
+          color: "var(--charcoal-mist)",
+          fontFamily: "var(--font-mono)",
+        }}
       >
         <Star size={13} style={{ color: "var(--red)" }} />
         Customer Ratings
@@ -779,7 +962,10 @@ function RatingBar({
         <div className="shrink-0">
           <span
             className="text-4xl font-black"
-            style={{ color: "var(--charcoal)", fontFamily: "var(--font-display)" }}
+            style={{
+              color: "var(--charcoal)",
+              fontFamily: "var(--font-display)",
+            }}
           >
             {rating.toFixed(1)}
           </span>
@@ -789,13 +975,18 @@ function RatingBar({
                 key={i}
                 size={12}
                 fill={i < Math.round(rating) ? "var(--red)" : "none"}
-                color={i < Math.round(rating) ? "var(--red)" : "rgba(30,30,30,0.15)"}
+                color={
+                  i < Math.round(rating) ? "var(--red)" : "rgba(30,30,30,0.15)"
+                }
               />
             ))}
           </div>
           <p
             className="text-[9px] mt-1 uppercase tracking-wider"
-            style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}
+            style={{
+              color: "var(--charcoal-mist)",
+              fontFamily: "var(--font-mono)",
+            }}
           >
             {reviewCount} review{reviewCount !== 1 ? "s" : ""}
           </p>
@@ -807,11 +998,25 @@ function RatingBar({
             const pct = reviewCount > 0 ? (count / reviewCount) * 100 : 0;
             return (
               <div key={star} className="flex items-center gap-2">
-                <span className="text-[9px] w-3 shrink-0 text-right" style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}>
+                <span
+                  className="text-[9px] w-3 shrink-0 text-right"
+                  style={{
+                    color: "var(--charcoal-mist)",
+                    fontFamily: "var(--font-mono)",
+                  }}
+                >
                   {star}
                 </span>
-                <Star size={8} fill="var(--red)" color="var(--red)" className="shrink-0" />
-                <div className="flex-1 rounded-full overflow-hidden" style={{ height: 4, background: "var(--off-white-2)" }}>
+                <Star
+                  size={8}
+                  fill="var(--red)"
+                  color="var(--red)"
+                  className="shrink-0"
+                />
+                <div
+                  className="flex-1 rounded-full overflow-hidden"
+                  style={{ height: 4, background: "var(--off-white-2)" }}
+                >
                   <div
                     style={{
                       width: `${pct}%`,
@@ -822,7 +1027,13 @@ function RatingBar({
                     }}
                   />
                 </div>
-                <span className="text-[9px] w-5 shrink-0" style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}>
+                <span
+                  className="text-[9px] w-5 shrink-0"
+                  style={{
+                    color: "var(--charcoal-mist)",
+                    fontFamily: "var(--font-mono)",
+                  }}
+                >
                   {count}
                 </span>
               </div>
@@ -845,7 +1056,9 @@ function useCompare(productId: string) {
 
   useEffect(() => {
     try {
-      const ids: string[] = JSON.parse(localStorage.getItem(COMPARE_KEY) ?? "[]");
+      const ids: string[] = JSON.parse(
+        localStorage.getItem(COMPARE_KEY) ?? "[]",
+      );
       setInCompare(ids.includes(productId));
     } catch {}
   }, [productId]);
@@ -858,11 +1071,17 @@ function useCompare(productId: string) {
         setInCompare(false);
         toast.success(`"${title}" removed from compare list`);
       } else {
-        if (ids.length >= 4) { toast.error("You can compare up to 4 products."); return; }
+        if (ids.length >= 4) {
+          toast.error("You can compare up to 4 products.");
+          return;
+        }
         ids = [...ids, productId];
         setInCompare(true);
         toast.success(`Added to compare`, {
-          action: { label: "Compare Now", onClick: () => (window.location.href = "/compare") },
+          action: {
+            label: "Compare Now",
+            onClick: () => (window.location.href = "/compare"),
+          },
         });
       }
       localStorage.setItem(COMPARE_KEY, JSON.stringify(ids));
@@ -872,7 +1091,13 @@ function useCompare(productId: string) {
   return { inCompare, toggle };
 }
 
-function CompareButton({ productId, productTitle }: { productId: string; productTitle: string }) {
+function CompareButton({
+  productId,
+  productTitle,
+}: {
+  productId: string;
+  productTitle: string;
+}) {
   const { inCompare, toggle } = useCompare(productId);
   return (
     <button
@@ -908,7 +1133,12 @@ function ChannelBadges({
       {publishToMarket && (
         <span
           className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border"
-          style={{ background: "rgba(200,16,46,0.07)", borderColor: "rgba(200,16,46,0.18)", color: "var(--red)", fontFamily: "var(--font-mono)" }}
+          style={{
+            background: "rgba(200,16,46,0.07)",
+            borderColor: "rgba(200,16,46,0.18)",
+            color: "var(--red)",
+            fontFamily: "var(--font-mono)",
+          }}
         >
           <Globe size={9} /> Marketplace
         </span>
@@ -916,7 +1146,12 @@ function ChannelBadges({
       {publishToStore && (
         <span
           className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border"
-          style={{ background: "rgba(27,94,168,0.07)", borderColor: "rgba(27,94,168,0.18)", color: "var(--info)", fontFamily: "var(--font-mono)" }}
+          style={{
+            background: "rgba(27,94,168,0.07)",
+            borderColor: "rgba(27,94,168,0.18)",
+            color: "var(--info)",
+            fontFamily: "var(--font-mono)",
+          }}
         >
           <Store size={9} /> E-Store
         </span>
@@ -924,7 +1159,12 @@ function ChannelBadges({
       {isApproved && (
         <span
           className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border"
-          style={{ background: "rgba(13,122,78,0.07)", borderColor: "rgba(13,122,78,0.18)", color: "var(--success)", fontFamily: "var(--font-mono)" }}
+          style={{
+            background: "rgba(13,122,78,0.07)",
+            borderColor: "rgba(13,122,78,0.18)",
+            color: "var(--success)",
+            fontFamily: "var(--font-mono)",
+          }}
         >
           <BadgeCheck size={9} /> Verified
         </span>
@@ -946,7 +1186,12 @@ function TagChips({ tags }: { tags: string[] }) {
         <span
           key={tag}
           className="inline-block px-2 py-0.5 rounded-full text-[10px] font-medium tracking-wide border"
-          style={{ fontFamily: "var(--font-mono)", background: "var(--off-white-2)", borderColor: "rgba(30,30,30,0.1)", color: "var(--charcoal-soft)" }}
+          style={{
+            fontFamily: "var(--font-mono)",
+            background: "var(--off-white-2)",
+            borderColor: "rgba(30,30,30,0.1)",
+            color: "var(--charcoal-soft)",
+          }}
         >
           {tag}
         </span>
@@ -978,7 +1223,7 @@ export default function ProductDetailPage() {
     if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => setStickyVisible(!entry.isIntersecting),
-      { threshold: 0 }
+      { threshold: 0 },
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -1000,11 +1245,30 @@ export default function ProductDetailPage() {
       hasDiscount: r.hasDiscount ?? false,
       discountAmount: r.discountAmount ?? 0,
       mainImage: r.images?.[0] ?? r.mainImage ?? "",
-      images: Array.isArray(r.images) && r.images.length > 0 ? r.images : ["/placeholder.png"],
+      images:
+        Array.isArray(r.images) && r.images.length > 0
+          ? r.images
+          : ["/placeholder.png"],
       videoUrl: r.videoUrl ?? null,
-      category: { id: r.category?.id ?? 0, name: r.category?.name ?? r.categoryName ?? "", slug: r.category?.slug },
-      middleCategory: r.middleCategory ? { id: r.middleCategory.id, name: r.middleCategory.name, slug: r.middleCategory.slug } : null,
-      subCategory: r.subCategory ? { id: r.subCategory.id, name: r.subCategory.name, slug: r.subCategory.slug } : null,
+      category: {
+        id: r.category?.id ?? 0,
+        name: r.category?.name ?? r.categoryName ?? "",
+        slug: r.category?.slug,
+      },
+      middleCategory: r.middleCategory
+        ? {
+            id: r.middleCategory.id,
+            name: r.middleCategory.name,
+            slug: r.middleCategory.slug,
+          }
+        : null,
+      subCategory: r.subCategory
+        ? {
+            id: r.subCategory.id,
+            name: r.subCategory.name,
+            slug: r.subCategory.slug,
+          }
+        : null,
       tags: Array.isArray(r.tags) ? r.tags : [],
       brand: r.merchant?.storeName
         ? {
@@ -1029,7 +1293,10 @@ export default function ProductDetailPage() {
             title: rev.title ?? null,
             comment: rev.comment ?? null,
             createdAt: rev.createdAt,
-            user: rev.user ?? { name: rev.customerName ?? "Anonymous", surname: "" },
+            user: rev.user ?? {
+              name: rev.customerName ?? "Anonymous",
+              surname: "",
+            },
           }))
         : [],
       stock: {
@@ -1056,7 +1323,9 @@ export default function ProductDetailPage() {
         origin: r.specifications?.origin ?? "—",
         certifications: r.specifications?.certifications ?? [],
       },
-      relatedProducts: Array.isArray(r.relatedProducts) ? r.relatedProducts : [],
+      relatedProducts: Array.isArray(r.relatedProducts)
+        ? r.relatedProducts
+        : [],
       brandProducts: Array.isArray(r.brandProducts) ? r.brandProducts : [],
       meta: {
         views: r.meta?.views ?? 0,
@@ -1069,8 +1338,8 @@ export default function ProductDetailPage() {
         Array.isArray(r.stockMatrix) && r.stockMatrix.length > 0
           ? r.stockMatrix
           : (r.stock ?? 0) > 0
-          ? [{ id: 0, sizeId: null, stock: r.stock, priceModifier: 0 }]
-          : [],
+            ? [{ id: 0, sizeId: null, stock: r.stock, priceModifier: 0 }]
+            : [],
       bulkDiscountQty: r.bulkDiscountQty ?? null,
       bulkDiscountRate: r.bulkDiscountRate ?? null,
     };
@@ -1098,14 +1367,21 @@ export default function ProductDetailPage() {
   const selectedStock = useMemo<StockEntry | null>(() => {
     if (!product) return null;
     if (product.availableSizes.length > 0)
-      return selectedSizeId ? (product.stockMatrix.find((s) => s.sizeId === selectedSizeId) ?? null) : null;
+      return selectedSizeId
+        ? (product.stockMatrix.find((s) => s.sizeId === selectedSizeId) ?? null)
+        : null;
     return product.stockMatrix.find((s) => s.sizeId === null) ?? null;
   }, [selectedSizeId, product]);
 
   const calculateBulkDiscount = useCallback(() => {
     if (!product) return { hasDiscount: false, discountRate: 0 };
     const { bulkDiscountQty, bulkDiscountRate } = product;
-    if (!bulkDiscountQty || !bulkDiscountRate || bulkDiscountQty <= 0 || bulkDiscountRate <= 0)
+    if (
+      !bulkDiscountQty ||
+      !bulkDiscountRate ||
+      bulkDiscountQty <= 0 ||
+      bulkDiscountRate <= 0
+    )
       return { hasDiscount: false, discountRate: 0 };
     return quantity >= bulkDiscountQty
       ? { hasDiscount: true, discountRate: bulkDiscountRate }
@@ -1113,7 +1389,10 @@ export default function ProductDetailPage() {
   }, [product, quantity]);
 
   const handleAddToCart = useCallback(() => {
-    if (!product) { toast.error("Product information not found."); return; }
+    if (!product) {
+      toast.error("Product information not found.");
+      return;
+    }
 
     // Variant system: require selection if JSONB variants exist
     if (apiVariants.length > 0 && !selectedVariant) {
@@ -1125,7 +1404,11 @@ export default function ProductDetailPage() {
       return;
     }
     // Legacy size system fallback
-    if (product.availableSizes.length > 0 && !selectedSizeId && apiVariants.length === 0) {
+    if (
+      product.availableSizes.length > 0 &&
+      !selectedSizeId &&
+      apiVariants.length === 0
+    ) {
       toast.error("Please select a size.");
       return;
     }
@@ -1137,15 +1420,15 @@ export default function ProductDetailPage() {
     const bulkDiscount = calculateBulkDiscount();
     let basePrice =
       selectedVariant?.priceOverride ??
-      (product.price + (selectedStock?.priceModifier ?? 0));
+      product.price + (selectedStock?.priceModifier ?? 0);
     if (bulkDiscount.hasDiscount)
       basePrice = basePrice * (1 - bulkDiscount.discountRate / 100);
 
     const offerId = selectedVariant
       ? `${product.id}_variant_${selectedVariant.id}`
       : selectedSizeId
-      ? `${product.id}_size_${selectedSizeId}`
-      : product.id;
+        ? `${product.id}_size_${selectedSizeId}`
+        : product.id;
 
     for (let i = 0; i < quantity; i++) {
       addItem({
@@ -1157,7 +1440,10 @@ export default function ProductDetailPage() {
         merchantId: product.brand?.id ?? "marketplace",
         merchantStoreName: product.brand?.name,
         merchantSlug: product.brand?.slug,
-        stock: selectedVariant?.stock ?? selectedStock?.stock ?? product.stock.quantity,
+        stock:
+          selectedVariant?.stock ??
+          selectedStock?.stock ??
+          product.stock.quantity,
         source: "MARKETPLACE",
       });
     }
@@ -1170,7 +1456,17 @@ export default function ProductDetailPage() {
       description: !user ? "Cart saved to your account on sign in." : undefined,
       duration: !user ? 4000 : 2000,
     });
-  }, [product, selectedVariant, selectedSizeId, selectedStock, quantity, calculateBulkDiscount, addItem, user, apiVariants.length]);
+  }, [
+    product,
+    selectedVariant,
+    selectedSizeId,
+    selectedStock,
+    quantity,
+    calculateBulkDiscount,
+    addItem,
+    user,
+    apiVariants.length,
+  ]);
 
   const handleToggleFavorite = async () => {
     if (!product || favoriteLoading) return;
@@ -1182,8 +1478,14 @@ export default function ProductDetailPage() {
         price: product.price,
       });
       toast.success(
-        added ? `"${product.title}" added to wishlist` : `"${product.title}" removed from wishlist`,
-        { description: !user && added ? "Sign in to save your list." : undefined, duration: added && !user ? 4000 : 2000 }
+        added
+          ? `"${product.title}" added to wishlist`
+          : `"${product.title}" removed from wishlist`,
+        {
+          description:
+            !user && added ? "Sign in to save your list." : undefined,
+          duration: added && !user ? 4000 : 2000,
+        },
       );
     } catch {
       toast.error("An error occurred, please try again.");
@@ -1194,7 +1496,12 @@ export default function ProductDetailPage() {
 
   const handleShare = async () => {
     if (navigator.share) {
-      try { await navigator.share({ title: product?.title, url: window.location.href }); } catch {}
+      try {
+        await navigator.share({
+          title: product?.title,
+          url: window.location.href,
+        });
+      } catch {}
     } else {
       navigator.clipboard.writeText(window.location.href);
       toast.success("Link copied to clipboard!");
@@ -1207,10 +1514,23 @@ export default function ProductDetailPage() {
 
   if (!product)
     return (
-      <div className="h-screen flex items-center justify-center" style={{ background: "var(--off-white)" }}>
+      <div
+        className="h-screen flex items-center justify-center"
+        style={{ background: "var(--off-white)" }}
+      >
         <div className="text-center space-y-3">
-          <Package size={48} className="mx-auto opacity-20" style={{ color: "var(--charcoal)" }} />
-          <p className="text-xl font-bold" style={{ color: "var(--charcoal)", fontFamily: "var(--font-display)" }}>
+          <Package
+            size={48}
+            className="mx-auto opacity-20"
+            style={{ color: "var(--charcoal)" }}
+          />
+          <p
+            className="text-xl font-bold"
+            style={{
+              color: "var(--charcoal)",
+              fontFamily: "var(--font-display)",
+            }}
+          >
             Product not found
           </p>
           <p className="text-sm" style={{ color: "var(--charcoal-soft)" }}>
@@ -1223,7 +1543,7 @@ export default function ProductDetailPage() {
   const bulkDiscount = calculateBulkDiscount();
   const activePrice =
     selectedVariant?.priceOverride ??
-    (product.price + (selectedStock?.priceModifier ?? 0));
+    product.price + (selectedStock?.priceModifier ?? 0);
   const currentPrice = bulkDiscount.hasDiscount
     ? activePrice * (1 - bulkDiscount.discountRate / 100)
     : activePrice;
@@ -1236,13 +1556,23 @@ export default function ProductDetailPage() {
 
   const hasJSONBVariants = apiVariants.length > 0;
   const effectiveStock = selectedVariant
-    ? { inStock: selectedVariant.stock > 0, quantity: selectedVariant.stock, lowStock: selectedVariant.stock > 0 && selectedVariant.stock <= 5 }
+    ? {
+        inStock: selectedVariant.stock > 0,
+        quantity: selectedVariant.stock,
+        lowStock: selectedVariant.stock > 0 && selectedVariant.stock <= 5,
+      }
     : product.stock;
 
   return (
     <div
       className="min-h-screen w-full"
-      style={{ maxWidth: 1300, background: "var(--off-white)", color: "var(--charcoal)", fontFamily: "var(--font-body)", margin: "0 auto" }}
+      style={{
+        maxWidth: 1300,
+        background: "var(--off-white)",
+        color: "var(--charcoal)",
+        fontFamily: "var(--font-body)",
+        margin: "0 auto",
+      }}
     >
       {/* Sticky mobile CTA */}
       <StickyAddToCart
@@ -1258,18 +1588,39 @@ export default function ProductDetailPage() {
         <nav className="flex items-center gap-1.5 mb-6 flex-wrap">
           {[
             { label: "Home", href: "/" },
-            { label: product.category.name, href: `/category/${product.category.slug}` },
-            ...(product.subCategory ? [{ label: product.subCategory.name, href: `/category/${product.subCategory.slug}` }] : []),
+            {
+              label: product.category.name,
+              href: `/category/${product.category.slug}`,
+            },
+            ...(product.subCategory
+              ? [
+                  {
+                    label: product.subCategory.name,
+                    href: `/category/${product.subCategory.slug}`,
+                  },
+                ]
+              : []),
           ].map((crumb, i, arr) => (
             <React.Fragment key={crumb.href}>
               <a
                 href={crumb.href}
                 className="text-[11px] font-medium hover:underline"
-                style={{ color: i === arr.length - 1 ? "var(--charcoal)" : "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}
+                style={{
+                  color:
+                    i === arr.length - 1
+                      ? "var(--charcoal)"
+                      : "var(--charcoal-mist)",
+                  fontFamily: "var(--font-mono)",
+                }}
               >
                 {crumb.label}
               </a>
-              {i < arr.length - 1 && <ChevronRight size={10} style={{ color: "var(--charcoal-mist)" }} />}
+              {i < arr.length - 1 && (
+                <ChevronRight
+                  size={10}
+                  style={{ color: "var(--charcoal-mist)" }}
+                />
+              )}
             </React.Fragment>
           ))}
         </nav>
@@ -1278,7 +1629,11 @@ export default function ProductDetailPage() {
           {/* ── Gallery ─────────────────────────────────────────────────────── */}
           <div className="lg:col-span-6 lg:sticky lg:top-20 lg:self-start lg:z-40">
             <ProductImageGallery
-              images={selectedVariant?.imageUrl ? [selectedVariant.imageUrl, ...product.images] : product.images}
+              images={
+                selectedVariant?.imageUrl
+                  ? [selectedVariant.imageUrl, ...product.images]
+                  : product.images
+              }
               videoUrl={product.videoUrl}
               activeIndex={activeIndex}
               onIndexChange={setActiveIndex}
@@ -1357,46 +1712,88 @@ export default function ProductDetailPage() {
             {effectiveStock.lowStock && effectiveStock.quantity > 0 && (
               <div
                 className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl"
-                style={{ background: "rgba(200,16,46,0.07)", border: "1px solid rgba(200,16,46,0.18)" }}
+                style={{
+                  background: "rgba(200,16,46,0.07)",
+                  border: "1px solid rgba(200,16,46,0.18)",
+                }}
               >
-                <AlertTriangle size={13} style={{ color: "var(--red)", flexShrink: 0 }} />
-                <span className="text-xs font-semibold" style={{ color: "var(--red)", fontFamily: "var(--font-body)" }}>
+                <AlertTriangle
+                  size={13}
+                  style={{ color: "var(--red)", flexShrink: 0 }}
+                />
+                <span
+                  className="text-xs font-semibold"
+                  style={{
+                    color: "var(--red)",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
                   Only {effectiveStock.quantity} left in stock — order soon!
                 </span>
               </div>
             )}
 
             {/* Bulk discount opportunity */}
-            {product.bulkDiscountQty !== null && product.bulkDiscountRate !== null &&
-              product.bulkDiscountQty > 0 && product.bulkDiscountRate > 0 && (
-              <div
-                className="p-4 space-y-2 rounded-xl"
-                style={{
-                  border: `1px solid ${bulkDiscount.hasDiscount ? "rgba(13,122,78,0.18)" : "rgba(27,94,168,0.18)"}`,
-                  background: bulkDiscount.hasDiscount ? "rgba(13,122,78,0.07)" : "rgba(27,94,168,0.07)",
-                }}
-              >
+            {product.bulkDiscountQty !== null &&
+              product.bulkDiscountRate !== null &&
+              product.bulkDiscountQty > 0 &&
+              product.bulkDiscountRate > 0 && (
                 <div
-                  className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
-                  style={{ fontFamily: "var(--font-mono)", color: bulkDiscount.hasDiscount ? "var(--success)" : "var(--info)" }}
+                  className="p-4 space-y-2 rounded-xl"
+                  style={{
+                    border: `1px solid ${bulkDiscount.hasDiscount ? "rgba(13,122,78,0.18)" : "rgba(27,94,168,0.18)"}`,
+                    background: bulkDiscount.hasDiscount
+                      ? "rgba(13,122,78,0.07)"
+                      : "rgba(27,94,168,0.07)",
+                  }}
                 >
-                  <Percent size={13} />
-                  {bulkDiscount.hasDiscount ? `🎉 Bulk Discount Applied — ${bulkDiscount.discountRate}% Off!` : "Bulk Pricing Available"}
+                  <div
+                    className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      color: bulkDiscount.hasDiscount
+                        ? "var(--success)"
+                        : "var(--info)",
+                    }}
+                  >
+                    <Percent size={13} />
+                    {bulkDiscount.hasDiscount
+                      ? `🎉 Bulk Discount Applied — ${bulkDiscount.discountRate}% Off!`
+                      : "Bulk Pricing Available"}
+                  </div>
+                  <p
+                    className="text-xs leading-relaxed"
+                    style={{
+                      color: "var(--charcoal-soft)",
+                      fontFamily: "var(--font-body)",
+                    }}
+                  >
+                    {bulkDiscount.hasDiscount ? (
+                      <>
+                        You are saving{" "}
+                        <strong>{product.bulkDiscountRate}%</strong> on orders
+                        of {product.bulkDiscountQty} or more.
+                      </>
+                    ) : (
+                      <>
+                        Buy <strong>{product.bulkDiscountQty} or more</strong>{" "}
+                        for a{" "}
+                        <strong>{product.bulkDiscountRate}% discount</strong>.
+                        {remainingForBulk > 0 && (
+                          <>
+                            {" "}
+                            Add{" "}
+                            <strong style={{ color: "var(--info)" }}>
+                              {remainingForBulk} more
+                            </strong>{" "}
+                            to unlock the offer.
+                          </>
+                        )}
+                      </>
+                    )}
+                  </p>
                 </div>
-                <p className="text-xs leading-relaxed" style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}>
-                  {bulkDiscount.hasDiscount ? (
-                    <>You are saving <strong>{product.bulkDiscountRate}%</strong> on orders of {product.bulkDiscountQty} or more.</>
-                  ) : (
-                    <>
-                      Buy <strong>{product.bulkDiscountQty} or more</strong> for a <strong>{product.bulkDiscountRate}% discount</strong>.
-                      {remainingForBulk > 0 && (
-                        <> Add <strong style={{ color: "var(--info)" }}>{remainingForBulk} more</strong> to unlock the offer.</>
-                      )}
-                    </>
-                  )}
-                </p>
-              </div>
-            )}
+              )}
 
             {/* Sentinel for sticky CTA intersection observer */}
             <div ref={ctaSentinelRef} />
@@ -1415,9 +1812,18 @@ export default function ProductDetailPage() {
 
             {/* Compare + secondary actions row */}
             <div className="flex items-center justify-between">
-              <CompareButton productId={product.id} productTitle={product.title} />
+              <CompareButton
+                productId={product.id}
+                productTitle={product.title}
+              />
               {product.meta.purchaseCount > 0 && (
-                <span className="text-[11px]" style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}>
+                <span
+                  className="text-[11px]"
+                  style={{
+                    color: "var(--charcoal-mist)",
+                    fontFamily: "var(--font-mono)",
+                  }}
+                >
                   🛒 {product.meta.purchaseCount.toLocaleString()} sold
                 </span>
               )}
@@ -1428,11 +1834,20 @@ export default function ProductDetailPage() {
             {/* Price summary */}
             <div
               className="p-4 space-y-2.5 rounded-xl"
-              style={{ background: "var(--off-white-2)", border: "1px solid rgba(30,30,30,0.1)", boxShadow: "0 1px 2px rgba(30,30,30,0.05)" }}
+              style={{
+                background: "var(--off-white-2)",
+                border: "1px solid rgba(30,30,30,0.1)",
+                boxShadow: "0 1px 2px rgba(30,30,30,0.05)",
+              }}
             >
               <div className="flex justify-between text-sm">
-                <span style={{ color: "var(--charcoal-soft)" }}>Unit Price × {quantity}</span>
-                <span className="font-bold" style={{ color: "var(--charcoal)" }}>
+                <span style={{ color: "var(--charcoal-soft)" }}>
+                  Unit Price × {quantity}
+                </span>
+                <span
+                  className="font-bold"
+                  style={{ color: "var(--charcoal)" }}
+                >
                   ₺{subtotal.toFixed(2)}
                 </span>
               </div>
@@ -1441,21 +1856,52 @@ export default function ProductDetailPage() {
                   className="flex justify-between text-sm -mx-4 px-4 py-1.5"
                   style={{ background: "rgba(13,122,78,0.07)" }}
                 >
-                  <span className="font-semibold flex items-center gap-1" style={{ color: "var(--success)" }}>
-                    <Percent size={13} /> Bulk Discount ({bulkDiscount.discountRate}%)
+                  <span
+                    className="font-semibold flex items-center gap-1"
+                    style={{ color: "var(--success)" }}
+                  >
+                    <Percent size={13} /> Bulk Discount (
+                    {bulkDiscount.discountRate}%)
                   </span>
-                  <span className="font-bold" style={{ color: "var(--success)" }}>
-                    -₺{(activePrice * quantity * (bulkDiscount.discountRate / 100)).toFixed(2)}
+                  <span
+                    className="font-bold"
+                    style={{ color: "var(--success)" }}
+                  >
+                    -₺
+                    {(
+                      activePrice *
+                      quantity *
+                      (bulkDiscount.discountRate / 100)
+                    ).toFixed(2)}
                   </span>
                 </div>
               )}
               <div className="flex justify-between text-sm">
                 <span style={{ color: "var(--charcoal-soft)" }}>VAT (10%)</span>
-                <span className="font-bold" style={{ color: "var(--charcoal)" }}>₺{vatAmount.toFixed(2)}</span>
+                <span
+                  className="font-bold"
+                  style={{ color: "var(--charcoal)" }}
+                >
+                  ₺{vatAmount.toFixed(2)}
+                </span>
               </div>
-              <div className="pt-2 flex justify-between" style={{ borderTop: "1px solid rgba(30,30,30,0.18)" }}>
-                <span className="text-base font-bold" style={{ color: "var(--charcoal)" }}>Total (incl. VAT)</span>
-                <span className="text-lg font-black" style={{ color: "var(--red)", fontFamily: "var(--font-display)" }}>
+              <div
+                className="pt-2 flex justify-between"
+                style={{ borderTop: "1px solid rgba(30,30,30,0.18)" }}
+              >
+                <span
+                  className="text-base font-bold"
+                  style={{ color: "var(--charcoal)" }}
+                >
+                  Total (incl. VAT)
+                </span>
+                <span
+                  className="text-lg font-black"
+                  style={{
+                    color: "var(--red)",
+                    fontFamily: "var(--font-display)",
+                  }}
+                >
                   ₺{totalWithVat.toFixed(2)}
                 </span>
               </div>
@@ -1483,25 +1929,78 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Specifications */}
-            <div className="space-y-4 pt-2" style={{ borderTop: "1px solid rgba(30,30,30,0.06)" }}>
+            <div
+              className="space-y-4 pt-2"
+              style={{ borderTop: "1px solid rgba(30,30,30,0.06)" }}
+            >
               <div
                 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em]"
                 style={{ color: "var(--charcoal-mist)" }}
               >
-                <Info size={13} style={{ color: "var(--red)" }} /> Product Specifications
+                <Info size={13} style={{ color: "var(--red)" }} /> Product
+                Specifications
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { icon: Award,        bg: "rgba(27,94,168,0.07)",  border: "rgba(27,94,168,0.18)",  color: "var(--info)",    label: "Warranty",        value: product.specifications.warranty },
-                  { icon: BadgeCheck,   bg: "rgba(13,122,78,0.07)",  border: "rgba(13,122,78,0.18)",  color: "var(--success)", label: "Origin",          value: product.specifications.origin },
-                  { icon: ShieldCheck,  bg: "rgba(180,83,9,0.07)",   border: "rgba(180,83,9,0.18)",   color: "var(--warning)", label: "Certifications",  value: product.specifications.certifications.join(", ") || "—" },
-                  { icon: HardHat,      bg: "rgba(200,16,46,0.07)",  border: "rgba(200,16,46,0.18)",  color: "var(--red)",     label: "HSE Compliance",  value: "Approved" },
+                  {
+                    icon: Award,
+                    bg: "rgba(27,94,168,0.07)",
+                    border: "rgba(27,94,168,0.18)",
+                    color: "var(--info)",
+                    label: "Warranty",
+                    value: product.specifications.warranty,
+                  },
+                  {
+                    icon: BadgeCheck,
+                    bg: "rgba(13,122,78,0.07)",
+                    border: "rgba(13,122,78,0.18)",
+                    color: "var(--success)",
+                    label: "Origin",
+                    value: product.specifications.origin,
+                  },
+                  {
+                    icon: ShieldCheck,
+                    bg: "rgba(180,83,9,0.07)",
+                    border: "rgba(180,83,9,0.18)",
+                    color: "var(--warning)",
+                    label: "Certifications",
+                    value:
+                      product.specifications.certifications.join(", ") || "—",
+                  },
+                  {
+                    icon: HardHat,
+                    bg: "rgba(200,16,46,0.07)",
+                    border: "rgba(200,16,46,0.18)",
+                    color: "var(--red)",
+                    label: "HSE Compliance",
+                    value: "Approved",
+                  },
                 ].map(({ icon: Icon, bg, border, color, label, value }) => (
-                  <div key={label} className="p-3 flex items-center gap-3 rounded-lg" style={{ background: bg, border: `1px solid ${border}` }}>
+                  <div
+                    key={label}
+                    className="p-3 flex items-center gap-3 rounded-lg"
+                    style={{ background: bg, border: `1px solid ${border}` }}
+                  >
                     <Icon size={15} style={{ color, flexShrink: 0 }} />
                     <div>
-                      <p className="text-xs font-bold" style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}>{label}</p>
-                      <p className="text-[10px]" style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}>{value}</p>
+                      <p
+                        className="text-xs font-bold"
+                        style={{
+                          color: "var(--charcoal)",
+                          fontFamily: "var(--font-body)",
+                        }}
+                      >
+                        {label}
+                      </p>
+                      <p
+                        className="text-[10px]"
+                        style={{
+                          color: "var(--charcoal-mist)",
+                          fontFamily: "var(--font-mono)",
+                        }}
+                      >
+                        {value}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -1523,20 +2022,51 @@ export default function ProductDetailPage() {
         {/* ── Meta stats bar ─────────────────────────────────────────────────── */}
         <div className="grid grid-cols-3 gap-3 mt-8">
           {[
-            { icon: Eye,          color: "var(--red)",     value: product.meta.views,         label: "Views"     },
-            { icon: Heart,        color: "var(--red)",     value: product.meta.favorites,     label: "Wishlisted"},
-            { icon: ShoppingCart, color: "var(--success)", value: product.meta.purchaseCount, label: "Sold"      },
+            {
+              icon: Eye,
+              color: "var(--red)",
+              value: product.meta.views,
+              label: "Views",
+            },
+            {
+              icon: Heart,
+              color: "var(--red)",
+              value: product.meta.favorites,
+              label: "Wishlisted",
+            },
+            {
+              icon: ShoppingCart,
+              color: "var(--success)",
+              value: product.meta.purchaseCount,
+              label: "Sold",
+            },
           ].map(({ icon: Icon, color, value, label }) => (
             <div
               key={label}
               className="p-4 text-center rounded-xl"
-              style={{ background: "white", border: "1px solid rgba(30,30,30,0.1)", boxShadow: "0 1px 4px rgba(30,30,30,0.05)" }}
+              style={{
+                background: "white",
+                border: "1px solid rgba(30,30,30,0.1)",
+                boxShadow: "0 1px 4px rgba(30,30,30,0.05)",
+              }}
             >
               <Icon size={18} className="mx-auto mb-1.5" style={{ color }} />
-              <p className="text-lg font-bold" style={{ color: "var(--charcoal)", fontFamily: "var(--font-display)" }}>
+              <p
+                className="text-lg font-bold"
+                style={{
+                  color: "var(--charcoal)",
+                  fontFamily: "var(--font-display)",
+                }}
+              >
                 {value.toLocaleString()}
               </p>
-              <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}>
+              <p
+                className="text-[9px] uppercase tracking-wider"
+                style={{
+                  color: "var(--charcoal-mist)",
+                  fontFamily: "var(--font-mono)",
+                }}
+              >
                 {label}
               </p>
             </div>
@@ -1570,7 +2100,10 @@ export default function ProductDetailPage() {
         )}
 
         {/* ── Tabs (Description / Reviews / Q&A) ──────────────────────────────── */}
-        <div className="mt-12 pt-8" style={{ borderTop: "1px solid rgba(30,30,30,0.06)" }}>
+        <div
+          className="mt-12 pt-8"
+          style={{ borderTop: "1px solid rgba(30,30,30,0.06)" }}
+        >
           <ProductTabs
             productId={product.id}
             productTitle={product.title}
@@ -1580,7 +2113,7 @@ export default function ProductDetailPage() {
         </div>
 
         {/* ── Recently viewed ──────────────────────────────────────────────────── */}
-        <RecentlyViewedSection excludeId={product.id} />
+        <RecentlyViewedSection currentProductId={product.id} />
       </div>
     </div>
   );

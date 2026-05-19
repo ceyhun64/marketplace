@@ -18,7 +18,7 @@ interface ProductInfoProps {
   category: { id: number; name: string };
   middleCategory: { id: number; name: string } | null;
   subCategory: { id: number; name: string } | null;
-  brand: { id: number; name: string; image: string | null } | null;
+  brand: { id: string | number; name: string; image: string | null } | null;
   rating: number;
   reviewCount: number;
   currentPrice: number;
