@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
 
 const FOOTER_LINKS = {
   marketplace: {
@@ -69,50 +68,31 @@ export default function Footer() {
 
   return (
     <footer
-    className="border-b-4 border-[var(--charcoal)]"
-      style={{
-        width: "100%",
-        display: "flex",
-        flexDirection: "column" as const,
-        alignItems: "center",
-        padding: "0 1.5rem 4rem",
-        marginTop: "6rem",
-      
-      }}
+      className="w-full flex flex-col items-center px-3 sm:px-5 lg:px-6 pb-12 lg:pb-16 mt-16 md:mt-20 border-b-4 border-(--charcoal)"
     >
-      {/* Main Footer Container */}
+      {/* ── Main footer card ──────────────────────────────────────────────── */}
       <div
+        className="w-full max-w-325 p-6 sm:p-8 md:p-10 lg:p-14 rounded-[28px] overflow-hidden"
         style={{
-          width: "100%",
-          maxWidth: 1300,
           background: "var(--white)",
           border: "1px solid var(--border-light)",
-          borderRadius: 28,
           boxShadow: "var(--shadow-sm)",
-          overflow: "hidden",
-          padding: "3.5rem",
         }}
       >
-        {/* Top: brand + links */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr 1fr",
-            gap: "2rem",
-          }}
-          className="lg:grid-cols-5 grid-cols-1"
-        >
+        {/* ── Top: brand column + 5 link columns ────────────────────────── */}
+        {/*
+         * Mobile:  1 column stacked
+         * Tablet:  2 columns (sm) → 3 columns (md)
+         * Desktop: 6 columns (lg) — brand is wider via col-span-2 on xl
+         */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+
           {/* Brand */}
-          <div>
+          <div className="lg:col-span-1">
             <Link
               href="/"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.625rem",
-                marginBottom: "1.5rem",
-                textDecoration: "none",
-              }}
+              className="inline-flex items-center gap-2.5 mb-6"
+              style={{ textDecoration: "none" }}
             >
               <div
                 style={{
@@ -162,20 +142,20 @@ export default function Footer() {
             </Link>
 
             <p
+              className="mb-7 max-w-60"
               style={{
                 fontFamily: "var(--font-body)",
                 fontSize: "0.875rem",
                 color: "var(--charcoal-soft)",
                 lineHeight: 1.8,
-                marginBottom: "1.75rem",
-                maxWidth: 240,
               }}
             >
               The modern meeting point of digital commerce. Discover with
               confidence, shop with pleasure.
             </p>
 
-            <div style={{ display: "flex", gap: "0.5rem" }}>
+            {/* Social icons — 44px touch targets */}
+            <div className="flex gap-2">
               {[
                 { label: "Instagram", icon: <InstagramIcon /> },
                 { label: "Twitter", icon: <TwitterIcon /> },
@@ -184,19 +164,13 @@ export default function Footer() {
                 <a
                   key={s.label}
                   href="#"
+                  aria-label={s.label}
+                  className="flex items-center justify-center w-11 h-11 rounded-full transition-colors hover:bg-(--off-white)"
                   style={{
-                    width: 34,
-                    height: 34,
                     background: "var(--off-white-2)",
                     border: "1px solid var(--border-light)",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
                     color: "var(--charcoal-soft)",
                     textDecoration: "none",
-                    transition:
-                      "background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out)",
                   }}
                 >
                   {s.icon}
@@ -205,20 +179,17 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Link columns */}
+          {/* Link columns — each occupies 1 column in the grid */}
           {Object.values(FOOTER_LINKS).map((section) => (
             <div key={section.title}>
               <div
+                className="flex items-center gap-2 mb-5"
                 style={{
                   fontFamily: "var(--font-mono)",
                   fontSize: "0.6875rem",
                   letterSpacing: "0.18em",
-                  textTransform: "uppercase" as const,
+                  textTransform: "uppercase",
                   color: "var(--charcoal-soft)",
-                  marginBottom: "1.25rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
                 }}
               >
                 <span
@@ -231,16 +202,7 @@ export default function Footer() {
                 />
                 {section.title}
               </div>
-              <ul
-                style={{
-                  listStyle: "none",
-                  padding: 0,
-                  margin: 0,
-                  display: "flex",
-                  flexDirection: "column" as const,
-                  gap: "0.875rem",
-                }}
-              >
+              <ul className="flex flex-col gap-3.5 list-none p-0 m-0">
                 {section.links.map((link) => (
                   <li key={link.href}>
                     <Link
@@ -250,8 +212,7 @@ export default function Footer() {
                         fontSize: "0.875rem",
                         color: "var(--charcoal-soft)",
                         textDecoration: "none",
-                        transition:
-                          "color var(--duration-fast) var(--ease-out)",
+                        transition: "color var(--duration-fast) var(--ease-out)",
                       }}
                     >
                       {link.label}
@@ -263,29 +224,26 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Newsletter */}
+        {/* ── Newsletter ────────────────────────────────────────────────── */}
+        {/*
+         * Mobile:  stacked (text above input)
+         * Tablet+: side by side
+         */}
         <div
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mt-10 p-6 sm:p-8 rounded-3xl"
           style={{
-            marginTop: "3rem",
-            padding: "2rem 2.5rem",
             background: "var(--off-white)",
             border: "1px solid var(--border-light)",
-            borderRadius: 20,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "2rem",
-            flexWrap: "wrap" as const,
           }}
         >
           <div>
             <div
+              className="mb-1.5"
               style={{
                 fontFamily: "var(--font-display)",
                 fontSize: "1.375rem",
                 fontWeight: 500,
                 color: "var(--charcoal)",
-                marginBottom: "0.375rem",
               }}
             >
               Join Our Newsletter
@@ -301,26 +259,23 @@ export default function Footer() {
               Get the latest stores and exclusive deals delivered weekly.
             </p>
           </div>
+
+          {/* Input + button — full-width on mobile, constrained on sm+ */}
           <div
+            className="flex items-center w-full sm:w-auto sm:min-w-85"
             style={{
-              display: "flex",
-              alignItems: "center",
               background: "var(--white)",
               border: "1.5px solid var(--border-mid)",
               borderRadius: "0.75rem",
               padding: "5px 5px 5px 14px",
               gap: "0.5rem",
-              minWidth: 340,
             }}
           >
             <input
               type="email"
               placeholder="Your email address"
+              className="flex-1 min-w-0 border-none outline-none bg-transparent"
               style={{
-                flex: 1,
-                border: "none",
-                outline: "none",
-                background: "transparent",
                 fontFamily: "var(--font-body)",
                 fontSize: "0.875rem",
                 color: "var(--charcoal)",
@@ -328,6 +283,7 @@ export default function Footer() {
             />
             <button
               type="button"
+              className="shrink-0 transition-opacity hover:opacity-90"
               style={{
                 background: "var(--red)",
                 color: "white",
@@ -338,9 +294,7 @@ export default function Footer() {
                 fontSize: "0.8125rem",
                 fontWeight: 600,
                 cursor: "pointer",
-                flexShrink: 0,
                 boxShadow: "0 2px 8px rgba(200,16,46,0.2)",
-                transition: "background var(--duration-fast) var(--ease-out)",
               }}
             >
               Subscribe
@@ -348,16 +302,14 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Stats */}
+        {/* ── Stats ─────────────────────────────────────────────────────── */}
+        {/*
+         * Mobile:  2 columns
+         * Tablet+: 4 columns
+         */}
         <div
-          style={{
-            marginTop: "2.5rem",
-            paddingTop: "2rem",
-            borderTop: "1px solid var(--border-light)",
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: "1.5rem",
-          }}
+          className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6 mt-8 pt-8"
+          style={{ borderTop: "1px solid var(--border-light)" }}
         >
           {[
             { value: "2.4K+", label: "Active Sellers" },
@@ -382,7 +334,7 @@ export default function Footer() {
                   fontFamily: "var(--font-mono)",
                   fontSize: "0.625rem",
                   letterSpacing: "0.14em",
-                  textTransform: "uppercase" as const,
+                  textTransform: "uppercase",
                   color: "var(--charcoal-soft)",
                 }}
               >
@@ -393,20 +345,12 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Bottom legal */}
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 1100,
-          marginTop: "2rem",
-          padding: "0 0.5rem",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap" as const,
-          gap: "1rem",
-        }}
-      >
+      {/* ── Bottom legal bar ─────────────────────────────────────────────── */}
+      {/*
+       * Mobile:  stacked — copyright on top, links below, payment badges last
+       * Tablet+: single row
+       */}
+      <div className="w-full max-w-275 mt-6 px-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <p
           style={{
             fontFamily: "var(--font-mono)",
@@ -417,7 +361,8 @@ export default function Footer() {
         >
           © {currentYear} BAZR Studio. All rights reserved.
         </p>
-        <div style={{ display: "flex", gap: "1.5rem" }}>
+
+        <div className="flex gap-4 sm:gap-6 flex-wrap">
           {[
             { label: "Privacy", href: "/privacy" },
             { label: "Terms", href: "/terms" },
@@ -439,7 +384,8 @@ export default function Footer() {
             </Link>
           ))}
         </div>
-        <div style={{ display: "flex", gap: "0.75rem", opacity: 0.5 }}>
+
+        <div className="flex gap-2 opacity-50">
           {["VISA", "STRIPE", "IYZICO"].map((pay) => (
             <span
               key={pay}
@@ -463,6 +409,8 @@ export default function Footer() {
   );
 }
 
+// ── SVG icon helpers ─────────────────────────────────────────────────────────
+
 function InstagramIcon() {
   return (
     <svg
@@ -481,6 +429,7 @@ function InstagramIcon() {
     </svg>
   );
 }
+
 function TwitterIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
@@ -488,6 +437,7 @@ function TwitterIcon() {
     </svg>
   );
 }
+
 function LinkedInIcon() {
   return (
     <svg

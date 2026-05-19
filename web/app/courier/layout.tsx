@@ -1,10 +1,10 @@
-import { Sidebar } from "@/components/layout/Sidebar";
+import { PortalShell } from "@/components/layout/PortalShell";
 
 const courierLinks = [
   { href: "/courier", label: "Dashboard", icon: "grid" },
-  { href: "/courier/shipments", label: "Kargolarım", icon: "truck" },
-  { href: "/courier/earnings", label: "Kazançlarım", icon: "trending-up" },
-  { href: "/courier/profile", label: "Profilim", icon: "user-check" },
+  { href: "/courier/shipments", label: "My Shipments", icon: "truck" },
+  { href: "/courier/earnings", label: "My Earnings", icon: "trending-up" },
+  { href: "/courier/profile", label: "My Profile", icon: "user-check" },
 ];
 
 export default function CourierLayout({
@@ -13,12 +13,8 @@ export default function CourierLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div
-      className="flex min-h-screen"
-      style={{ background: "var(--off-white)" }}
-    >
-      <Sidebar links={courierLinks} role="Courier" />
-      <main className="flex-1 ml-60 p-8">{children}</main>
-    </div>
+    <PortalShell links={courierLinks} role="Courier">
+      {children}
+    </PortalShell>
   );
 }

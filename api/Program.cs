@@ -3,7 +3,6 @@ using System.Text;
 using api.Infrastructure.Hubs;
 using api.Infrastructure.Jobs;
 using api.Infrastructure.Middleware;
-using api.Infrastructure.Services;
 using api.Infrastructure.Persistence;
 using api.Infrastructure.Services;
 using AspNetCoreRateLimit;
@@ -60,8 +59,7 @@ try
     // ── Stripe — global API key, başlangıçta bir kez ayarlanır ──────────────
     Stripe.StripeConfiguration.ApiKey =
         config["STRIPE_SECRET_KEY"]
-        ?? throw new InvalidOperationException(
-            "STRIPE_SECRET_KEY ortam değişkeni tanımlı değil.");
+        ?? throw new InvalidOperationException("STRIPE_SECRET_KEY ortam değişkeni tanımlı değil.");
 
     // ── Twilio — global istemci başlatma, başlangıçta bir kez yapılır ────────
     var twilioSid = config["TWILIO_ACCOUNT_SID"];
@@ -73,7 +71,16 @@ try
     var npgsqlConn = ToNpgsql(config["DATABASE_URL"]!, builder.Environment.IsDevelopment());
     builder.Services.AddDbContext<AppDbContext>(opt =>
         opt.UseNpgsql(npgsqlConn)
-           .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
+            .ConfigureWarnings(w =>
+                w.Ignore(
+                    Microsoft
+                        .EntityFrameworkCore
+                        .Diagnostics
+                        .RelationalEventId
+                        .PendingModelChangesWarning
+                )
+            )
+    );
 
     // ── Redis Cache ───────────────────────────────────────────────────────────
     var redisConn = ToRedis(config["REDIS_URL"]!);
@@ -191,22 +198,25 @@ try
 
     // ── CORS ─────────────────────────────────────────────────────────────────
     builder.Services.AddCors(opt =>
-        opt.AddPolicy("Frontend", p =>
-        {
-            if (builder.Environment.IsDevelopment())
+        opt.AddPolicy(
+            "Frontend",
+            p =>
             {
-                p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+                if (builder.Environment.IsDevelopment())
+                {
+                    p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+                }
+                else
+                {
+                    var frontendOrigin =
+                        config["FRONTEND_URL"]
+                        ?? throw new InvalidOperationException(
+                            "FRONTEND_URL ortam değişkeni production ortamında tanımlı değil."
+                        );
+                    p.WithOrigins(frontendOrigin).AllowAnyHeader().AllowAnyMethod();
+                }
             }
-            else
-            {
-                var frontendOrigin = config["FRONTEND_URL"]
-                    ?? throw new InvalidOperationException(
-                        "FRONTEND_URL ortam değişkeni production ortamında tanımlı değil.");
-                p.WithOrigins(frontendOrigin)
-                 .AllowAnyHeader()
-                 .AllowAnyMethod();
-            }
-        })
+        )
     );
 
     // ── Application Services ──────────────────────────────────────────────────
@@ -237,8 +247,8 @@ try
     builder.Services.AddTransient<NotificationJob>();
     builder.Services.AddTransient<DelayedShipmentJob>();
     builder.Services.AddTransient<ShipmentStatusSyncJob>();
-    builder.Services.AddTransient<EscrowSettlementJob>();   // Module 2: wallet settlement
-    builder.Services.AddTransient<CourierDispatchJob>();     // Module 4: geo dispatch
+    builder.Services.AddTransient<EscrowSettlementJob>(); // Module 2: wallet settlement
+    builder.Services.AddTransient<CourierDispatchJob>(); // Module 4: geo dispatch
 
     // ── Controllers + Swagger ─────────────────────────────────────────────────
     builder
@@ -251,8 +261,11 @@ try
                 .Serialization
                 .ReferenceHandler
                 .IgnoreCycles;
-            options.JsonSerializerOptions.PropertyNamingPolicy =
-                System.Text.Json.JsonNamingPolicy.CamelCase;
+            options.JsonSerializerOptions.PropertyNamingPolicy = System
+                .Text
+                .Json
+                .JsonNamingPolicy
+                .CamelCase;
         });
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(c =>
@@ -329,17 +342,26 @@ try
     // ── Global ValidationException → 400 Bad Request ─────────────────────────
     // FluentValidation pipeline behavior tarafından fırlatılan ValidationException'ları
     // standart 400 yanıtına dönüştürür.
-    app.Use(async (ctx, next) =>
-    {
-        try { await next(); }
-        catch (FluentValidation.ValidationException ex)
+    app.Use(
+        async (ctx, next) =>
         {
-            ctx.Response.StatusCode = 400;
-            ctx.Response.ContentType = "application/json";
-            var errors = ex.Errors.Select(e => new { field = e.PropertyName, message = e.ErrorMessage });
-            await ctx.Response.WriteAsJsonAsync(new { success = false, errors });
+            try
+            {
+                await next();
+            }
+            catch (FluentValidation.ValidationException ex)
+            {
+                ctx.Response.StatusCode = 400;
+                ctx.Response.ContentType = "application/json";
+                var errors = ex.Errors.Select(e => new
+                {
+                    field = e.PropertyName,
+                    message = e.ErrorMessage,
+                });
+                await ctx.Response.WriteAsJsonAsync(new { success = false, errors });
+            }
         }
-    });
+    );
 
     // ── Middleware Pipeline ───────────────────────────────────────────────────
     app.UseSwagger();
@@ -381,7 +403,7 @@ try
     RecurringJob.AddOrUpdate<DelayedShipmentJob>(
         "check-delayed-shipments",
         job => job.RunAsync(),
-        "0 * * * *"    // every hour
+        "0 * * * *" // every hour
     );
 
     RecurringJob.AddOrUpdate<ShipmentStatusSyncJob>(

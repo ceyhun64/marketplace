@@ -2,6 +2,7 @@ using api.Application.Commands.Products;
 using api.Common.DTOs;
 using api.Domain.Entities;
 using api.Infrastructure.Persistence;
+using api.Infrastructure.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -238,7 +239,10 @@ public class ProductsController : ControllerBase
         var purchaseCount = await _db.OrderItems.CountAsync(i => i.ProductId == id);
 
         // ── Shipping info (from merchant handling hours + product price) ──────
-        var freeShippingThreshold = _config.GetValue<decimal>("Shipping:FreeShippingThreshold", 500m);
+        var freeShippingThreshold = _config.GetValue<decimal>(
+            "Shipping:FreeShippingThreshold",
+            500m
+        );
         var standardShippingCost = _config.GetValue<decimal>("Shipping:StandardCost", 29.90m);
         var expressShippingCost = _config.GetValue<decimal>("Shipping:ExpressCost", 59.90m);
         var freeShipping = product.Price >= freeShippingThreshold;
@@ -1031,10 +1035,11 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> GetVariants(Guid id)
     {
         var exists = await _db.Products.AnyAsync(p => p.Id == id);
-        if (!exists) return NotFound();
+        if (!exists)
+            return NotFound();
 
-        var variants = await _db.ProductVariants
-            .Where(v => v.ProductId == id && v.IsActive)
+        var variants = await _db
+            .ProductVariants.Where(v => v.ProductId == id && v.IsActive)
             .OrderBy(v => v.SKU)
             .Select(v => new
             {
@@ -1054,18 +1059,25 @@ public class ProductsController : ControllerBase
     /// <summary>POST /api/products/{id}/variants — Merchant: create a variant</summary>
     [HttpPost("{id:guid}/variants")]
     [Authorize(Policy = "MerchantOnly")]
-    public async Task<IActionResult> CreateVariant(Guid id, [FromBody] CreateVariantDto dto,
-        [FromServices] ICurrentUserService currentUser)
+    public async Task<IActionResult> CreateVariant(
+        Guid id,
+        [FromBody] CreateVariantDto dto,
+        [FromServices] ICurrentUserService currentUser
+    )
     {
-        var product = await _db.Products
-            .FirstOrDefaultAsync(p => p.Id == id && p.MerchantId == currentUser.MerchantId && !p.IsDeleted);
-        if (product == null) return NotFound();
+        var product = await _db.Products.FirstOrDefaultAsync(p =>
+            p.Id == id && p.MerchantId == currentUser.MerchantId && !p.IsDeleted
+        );
+        if (product == null)
+            return NotFound();
 
         if (string.IsNullOrWhiteSpace(dto.SKU))
             return BadRequest(new { message = "SKU is required." });
 
         if (await _db.ProductVariants.AnyAsync(v => v.ProductId == id && v.SKU == dto.SKU))
-            return BadRequest(new { message = "A variant with this SKU already exists for this product." });
+            return BadRequest(
+                new { message = "A variant with this SKU already exists for this product." }
+            );
 
         var variant = new ProductVariant
         {
@@ -1084,46 +1096,77 @@ public class ProductsController : ControllerBase
         _db.ProductVariants.Add(variant);
         await _db.SaveChangesAsync();
 
-        return Created($"/api/products/{id}/variants/{variant.Id}", new { variant.Id, variant.SKU });
+        return Created(
+            $"/api/products/{id}/variants/{variant.Id}",
+            new { variant.Id, variant.SKU }
+        );
     }
 
     /// <summary>PUT /api/products/{id}/variants/{variantId} — Merchant: update a variant</summary>
     [HttpPut("{id:guid}/variants/{variantId:guid}")]
     [Authorize(Policy = "MerchantOnly")]
-    public async Task<IActionResult> UpdateVariant(Guid id, Guid variantId,
+    public async Task<IActionResult> UpdateVariant(
+        Guid id,
+        Guid variantId,
         [FromBody] UpdateVariantDto dto,
-        [FromServices] ICurrentUserService currentUser)
+        [FromServices] ICurrentUserService currentUser
+    )
     {
-        var variant = await _db.ProductVariants
-            .Include(v => v.Product)
-            .FirstOrDefaultAsync(v => v.Id == variantId && v.ProductId == id
-                && v.Product.MerchantId == currentUser.MerchantId);
+        var variant = await _db
+            .ProductVariants.Include(v => v.Product)
+            .FirstOrDefaultAsync(v =>
+                v.Id == variantId
+                && v.ProductId == id
+                && v.Product.MerchantId == currentUser.MerchantId
+            );
 
-        if (variant == null) return NotFound();
+        if (variant == null)
+            return NotFound();
 
-        if (dto.Stock.HasValue) variant.Stock = dto.Stock.Value;
-        if (dto.PriceOverride.HasValue) variant.PriceOverride = dto.PriceOverride;
-        if (dto.ImageUrl != null) variant.ImageUrl = dto.ImageUrl;
-        if (dto.IsActive.HasValue) variant.IsActive = dto.IsActive.Value;
-        if (dto.Attributes != null) variant.Attributes = dto.Attributes;
+        if (dto.Stock.HasValue)
+            variant.Stock = dto.Stock.Value;
+        if (dto.PriceOverride.HasValue)
+            variant.PriceOverride = dto.PriceOverride;
+        if (dto.ImageUrl != null)
+            variant.ImageUrl = dto.ImageUrl;
+        if (dto.IsActive.HasValue)
+            variant.IsActive = dto.IsActive.Value;
+        if (dto.Attributes != null)
+            variant.Attributes = dto.Attributes;
         variant.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
-        return Ok(new { variant.Id, variant.SKU, variant.Stock, variant.PriceOverride, variant.IsActive });
+        return Ok(
+            new
+            {
+                variant.Id,
+                variant.SKU,
+                variant.Stock,
+                variant.PriceOverride,
+                variant.IsActive,
+            }
+        );
     }
 
     /// <summary>DELETE /api/products/{id}/variants/{variantId} — Merchant: deactivate a variant</summary>
     [HttpDelete("{id:guid}/variants/{variantId:guid}")]
     [Authorize(Policy = "MerchantOnly")]
-    public async Task<IActionResult> DeleteVariant(Guid id, Guid variantId,
-        [FromServices] ICurrentUserService currentUser)
+    public async Task<IActionResult> DeleteVariant(
+        Guid id,
+        Guid variantId,
+        [FromServices] ICurrentUserService currentUser
+    )
     {
-        var variant = await _db.ProductVariants
-            .Include(v => v.Product)
-            .FirstOrDefaultAsync(v => v.Id == variantId && v.ProductId == id
-                && v.Product.MerchantId == currentUser.MerchantId);
+        var variant = await _db
+            .ProductVariants.Include(v => v.Product)
+            .FirstOrDefaultAsync(v =>
+                v.Id == variantId
+                && v.ProductId == id
+                && v.Product.MerchantId == currentUser.MerchantId
+            );
 
-        if (variant == null) return NotFound();
+        if (variant == null)
+            return NotFound();
 
         variant.IsActive = false;
         variant.UpdatedAt = DateTime.UtcNow;

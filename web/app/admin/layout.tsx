@@ -1,4 +1,4 @@
-import { Sidebar } from "@/components/layout/Sidebar";
+import { PortalShell } from "@/components/layout/PortalShell";
 
 const adminLinks = [
   { href: "/admin", label: "Dashboard", icon: "grid" },
@@ -23,12 +23,8 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div
-      className="flex min-h-screen"
-      style={{ background: "var(--off-white)" }}
-    >
-      <Sidebar links={adminLinks} role="Admin" />
-      <main className="flex-1 ml-60 p-8">{children}</main>
-    </div>
+    <PortalShell links={adminLinks} role="Admin">
+      {children}
+    </PortalShell>
   );
 }

@@ -3,6 +3,7 @@ using api.Domain.Enums;
 using api.Infrastructure.Hubs;
 using api.Infrastructure.Persistence;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace api.Infrastructure.Services;
@@ -80,13 +81,18 @@ public class FulfillmentService : IFulfillmentService
 
         await _db.SaveChangesAsync();
 
-        _logger.LogInformation("Shipment {Id} {From} → {To}", shipment.Id, previousStatus, newStatus);
+        _logger.LogInformation(
+            "Shipment {Id} {From} → {To}",
+            shipment.Id,
+            previousStatus,
+            newStatus
+        );
 
         // On DELIVERED: move VendorOrder funds into escrow (pending settlement)
         if (newStatus == ShipmentStatus.Delivered)
         {
-            var vendorOrders = await _db.VendorOrders
-                .Where(vo => vo.OrderId == shipment.OrderId && vo.SettledAt == null)
+            var vendorOrders = await _db
+                .VendorOrders.Where(vo => vo.OrderId == shipment.OrderId && vo.SettledAt == null)
                 .ToListAsync();
 
             foreach (var vo in vendorOrders)
@@ -101,7 +107,10 @@ public class FulfillmentService : IFulfillmentService
             {
                 foreach (var vo in vendorOrders)
                 {
-                    try { await _walletService.HoldEscrowAsync(vo); }
+                    try
+                    {
+                        await _walletService.HoldEscrowAsync(vo);
+                    }
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Escrow hold failed: VendorOrderId={Id}", vo.Id);
