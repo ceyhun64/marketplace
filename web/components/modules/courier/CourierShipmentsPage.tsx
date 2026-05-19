@@ -51,16 +51,17 @@ type ShipmentStatus =
 interface Shipment {
   id: string;
   trackingNumber: string;
-  status: ShipmentStatus;
+  /** Backend may return any ShipmentStatus value; narrowed at render time */
+  status: string;
   customerName: string;
   customerPhone?: string;
   deliveryAddress: string;
   merchantStoreName: string;
-  merchantAddress: string;
+  merchantAddress?: string;
   estimatedDelivery: string;
   labelUrl?: string;
-  productSummary: string;
-  orderNumber: string;
+  productSummary?: string;
+  orderNumber?: string;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -374,7 +375,7 @@ export default function CourierShipmentsPage() {
                   <span className="font-mono text-sm font-bold text-(--text-primary)">
                     {shipment.trackingNumber}
                   </span>
-                  <StatusPill status={shipment.status} />
+                  <StatusPill status={shipment.status as ShipmentStatus} />
                 </div>
 
                 {/* Details */}

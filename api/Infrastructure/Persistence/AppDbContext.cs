@@ -39,6 +39,10 @@ public class AppDbContext : DbContext
     public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
     public DbSet<ProductQuestion> ProductQuestions => Set<ProductQuestion>();
 
+    // ── Site Settings ─────────────────────────────────────────────────────────
+    public DbSet<AnnouncementItem> Announcements => Set<AnnouncementItem>();
+    public DbSet<HeroSettings>     HeroSettings  => Set<HeroSettings>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -328,6 +332,70 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Invoice>().Property(i => i.TotalAmount).HasColumnType("decimal(18,2)");
         modelBuilder.Entity<Invoice>().Property(i => i.ShippingAmount).HasColumnType("decimal(18,2)");
         modelBuilder.Entity<AccountingEntry>().Property(a => a.Amount).HasColumnType("decimal(18,2)");
+
+        // ── Site Settings ─────────────────────────────────────────────────────
+        // HeroSettings is a single-row config — enforce via unique index on Id and
+        // seed the default record so it always exists.
+        modelBuilder.Entity<HeroSettings>()
+            .HasKey(h => h.Id);
+
+        modelBuilder.Entity<HeroSettings>()
+            .Property(h => h.Tags)
+            .HasColumnType("jsonb");
+
+        modelBuilder.Entity<HeroSettings>()
+            .HasData(new HeroSettings
+            {
+                Id              = 1,
+                BadgeText       = "Next-Gen Commerce",
+                Headline        = "Premium Marketplace\nMeets Fast Delivery.",
+                HeadlineAccent  = "Marketplace",
+                Subtitle        = "We redefine digital commerce with independent stores and an integrated courier engine — everything under one roof.",
+                SearchPlaceholder = "Search products, stores...",
+                PrimaryCtaText  = "Search",
+                PrimaryCtaHref  = "/products",
+                Tags            = ["Electronics", "Fashion", "Home & Living", "Fast Delivery"],
+                IsActive        = true,
+                UpdatedAt       = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            });
+
+        modelBuilder.Entity<AnnouncementItem>()
+            .HasIndex(a => a.SortOrder);
+
+        // Seed default announcements so the bar is populated on first run
+        modelBuilder.Entity<AnnouncementItem>()
+            .HasData(
+                new AnnouncementItem
+                {
+                    Id = new Guid("11111111-0000-0000-0000-000000000001"),
+                    Text = "Free shipping on orders over ₺500 — ",
+                    CtaText = "Shop now",
+                    CtaUrl = "/products",
+                    IsActive = true, SortOrder = 0,
+                    CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                },
+                new AnnouncementItem
+                {
+                    Id = new Guid("11111111-0000-0000-0000-000000000002"),
+                    Text = "New sellers welcome! Start your store today — ",
+                    CtaText = "Apply now",
+                    CtaUrl = "/auth/apply-merchant",
+                    IsActive = true, SortOrder = 1,
+                    CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                },
+                new AnnouncementItem
+                {
+                    Id = new Guid("11111111-0000-0000-0000-000000000003"),
+                    Text = "Flash deals updated daily — ",
+                    CtaText = "See today's deals",
+                    CtaUrl = "/deals",
+                    IsActive = true, SortOrder = 2,
+                    CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                }
+            );
 
         // ── Global query filters ──────────────────────────────────────────────
         // Deleted products and inactive merchants are hidden from all standard queries.

@@ -106,6 +106,30 @@ function TableCaption({
   );
 }
 
+/**
+ * Wraps a <Table> in a constrained scroll area for use inside cards/panels
+ * where the table must not break out of its parent.  The outer div provides
+ * horizontal scroll on small viewports; `maxHeight` is optional.
+ */
+function ResponsiveTableWrapper({
+  children,
+  maxHeight,
+  className,
+}: {
+  children: React.ReactNode;
+  maxHeight?: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn("w-full overflow-x-auto", className)}
+      style={maxHeight ? { maxHeight, overflowY: "auto" } : undefined}
+    >
+      {children}
+    </div>
+  );
+}
+
 export {
   Table,
   TableHeader,
@@ -115,4 +139,5 @@ export {
   TableRow,
   TableCell,
   TableCaption,
+  ResponsiveTableWrapper,
 };

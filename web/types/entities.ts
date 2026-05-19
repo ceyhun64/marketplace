@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// types/entities.ts — Backend domain modelleriyle birebir eşleşen TS tipleri
+// types/entities.ts — TypeScript types that mirror the backend domain models
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type {
@@ -36,18 +36,21 @@ export interface MerchantProfile {
   bannerUrl?: string;
   description?: string;
   customDomain?: string;
-  domainVerified: boolean;
+  domainVerified?: boolean;
   latitude: number;
   longitude: number;
   handlingHours: number;
   isSuspended: boolean;
-  subscriptionPlan: PlanType;
+  isActive?: boolean;
+  /** Canonical field name from backend MerchantResponse/MerchantProfileResponse */
+  currentPlan?: string;
+  /** Alias — mapped from currentPlan for backward compatibility */
+  subscriptionPlan?: PlanType;
   subscriptionId?: string;
-
+  planExpiresAt?: string;
   createdAt: string;
 }
 
-//divane gönül
 // ── Category ─────────────────────────────────────────────────────────────────
 
 export interface Category {
@@ -89,11 +92,18 @@ export interface Product {
 export interface OrderItem {
   id: string;
   productId: string;
-  productName: string; // snapshot — ürün silinse bile korunur
+  productName: string;
+  /** Canonical field name — matches backend OrderItemDto.ProductImageUrl (camelCase: productImageUrl) */
+  productImageUrl?: string;
+  /** Alias kept for backward compatibility with components using productImage */
   productImage?: string;
-  unitPrice: number; // snapshot
+  merchantId?: string;
+  merchantStoreName?: string;
+  unitPrice: number;
   quantity: number;
+  /** Computed: unitPrice × quantity — always present in server responses */
   lineTotal: number;
+  variantAttributes?: Record<string, string>;
 }
 
 export interface ShippingAddress {
@@ -110,7 +120,8 @@ export interface Order {
   id: string;
   customerId: string;
   customerName?: string;
-  merchantId: string;
+  /** Nullable — multi-merchant orders have items from multiple merchants */
+  merchantId?: string | null;
   merchantStoreName?: string;
   source: OrderSource;
   status: OrderStatus;
@@ -118,7 +129,7 @@ export interface Order {
   vatAmount: number;
   shippingCost: number;
   shippingRate: ShippingRate;
-  shippingAddress: ShippingAddress | string; // API string(JSON) dönebilir
+  shippingAddress: ShippingAddress;
   paymentId?: string;
   invoiceId?: string;
   invoiceNumber?: string;
@@ -159,12 +170,22 @@ export interface ShipmentStatusEvent {
 export interface Shipment {
   id: string;
   orderId: string;
+  /** Short reference number (first 8 chars of orderId) */
+  orderNumber?: string;
+  /** Customer full name — populated in admin/courier views */
+  customerName?: string;
+  /** Formatted delivery address — populated in admin/courier views */
+  customerAddress?: string;
+  /** Merchant store name — populated in admin/courier views */
+  merchantName?: string;
   courierId?: string;
   courierName?: string;
   courierPhone?: string;
   courierVehicle?: string;
   status: ShipmentStatus;
   trackingNumber: string;
+  shippingRate?: ShippingRate | string;
+  estimatedDelivery?: string;
   estimatedPickupStart?: string;
   estimatedPickupEnd?: string;
   estimatedDeliveryStart?: string;
@@ -213,9 +234,9 @@ export interface Plugin {
   slug: string;
   description: string;
   iconUrl?: string;
-  /** Aylık fiyat — backend PluginDto.MonthlyPrice */
+  /** Monthly price — from backend PluginDto.MonthlyPrice */
   monthlyPrice: number;
-  /** Geriye dönük uyumluluk için alias */
+  /** Backward compatibility alias */
   price?: number;
   category: string;
   isActive: boolean;
@@ -223,7 +244,7 @@ export interface Plugin {
   minimumPlan: string;
   developerName?: string;
   documentationUrl?: string;
-  /** Mevcut merchant bu plugin'e abone mi? */
+  /** Whether the current merchant has subscribed to this plugin */
   isSubscribed: boolean;
   createdAt: string;
 }
@@ -243,17 +264,15 @@ export interface MerchantPlugin {
 
 // ── AccountingEntry ───────────────────────────────────────────────────────────
 
-/** Muhasebe kaydı — sipariş/fatura/ödeme tam iz (M3) */
 export interface AccountingEntry {
   id: string;
   invoiceNumber: string;
   merchantStoreName: string;
   /** SALE | REFUND | ADJUSTMENT */
   entryType: "SALE" | "REFUND" | "ADJUSTMENT" | string;
-  /** Pozitif = gelir, Negatif = iade/düzeltme */
+  /** Positive = income, Negative = refund/adjustment */
   amount: number;
   description: string;
   paymentReference?: string;
   createdAt: string;
 }
-

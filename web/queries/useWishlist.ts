@@ -13,10 +13,7 @@ export interface WishlistProduct {
   price: number;
   stock: number;
   category: string | null;
-  merchant: {
-    storeName: string;
-    slug: string;
-  };
+  merchant: { storeName: string; slug: string };
 }
 
 export interface WishlistItem {
@@ -34,14 +31,13 @@ export interface WishlistResponse {
 // ── Query Keys ────────────────────────────────────────────────────────────────
 
 export const wishlistKeys = {
-  all: ["wishlist"] as const,
-  list: () => [...wishlistKeys.all, "list"] as const,
+  all:   ["wishlist"] as const,
+  list:  ()               => [...wishlistKeys.all, "list"]  as const,
   check: (productId: string) => [...wishlistKeys.all, "check", productId] as const,
 };
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
-/** Müşterinin istek listesini getirir — sadece giriş yapılmışsa */
 export function useWishlist() {
   const { user } = useAuth();
   return useQuery({
@@ -50,57 +46,113 @@ export function useWishlist() {
       const { data } = await api.get<WishlistResponse>("/api/wishlist");
       return data;
     },
-    enabled: !!user, // ✅ Giriş yapılmamışsa API çağrısı yapılmaz
-    staleTime: 1000 * 60 * 2,
+    enabled: !!user,
+    staleTime: 2 * 60_000,
   });
 }
 
-/** Belirli bir ürünün istek listesinde olup olmadığını kontrol eder */
 export function useWishlistCheck(productId: string) {
   const { user } = useAuth();
   return useQuery({
     queryKey: wishlistKeys.check(productId),
     queryFn: async () => {
       const { data } = await api.get<{ productId: string; inWishlist: boolean }>(
-        `/api/wishlist/check/${productId}`
+        `/api/wishlist/check/${productId}`,
       );
       return data;
     },
-    enabled: !!user && !!productId, // ✅ Sadece giriş yapılmışsa
-    staleTime: 1000 * 60,
+    enabled: !!user && !!productId,
+    staleTime: 60_000,
   });
 }
 
-/** İstek listesine ürün ekler */
 export function useAddToWishlist() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (productId: string) =>
-      api.post(`/api/wishlist/${productId}`, {}),
-    onSuccess: () => {
+    mutationFn: (productId: string) => api.post(`/api/wishlist/${productId}`, {}),
+
+    // Optimistic: mark the check-cache as "in wishlist" immediately
+    onMutate: async (productId) => {
+      await queryClient.cancelQueries({ queryKey: wishlistKeys.check(productId) });
+      const prevCheck = queryClient.getQueryData<{ inWishlist: boolean }>(
+        wishlistKeys.check(productId),
+      );
+      queryClient.setQueryData(wishlistKeys.check(productId), {
+        productId,
+        inWishlist: true,
+      });
+      return { prevCheck };
+    },
+    onError: (_err, productId, ctx) => {
+      queryClient.setQueryData(wishlistKeys.check(productId), ctx?.prevCheck);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: wishlistKeys.all });
     },
   });
 }
 
-/** İstek listesinden ürün çıkarır */
 export function useRemoveFromWishlist() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (productId: string) =>
-      api.delete(`/api/wishlist/${productId}`),
-    onSuccess: () => {
+    mutationFn: (productId: string) => api.delete(`/api/wishlist/${productId}`),
+
+    // Optimistic: remove the item from the list and flip the check flag
+    onMutate: async (productId) => {
+      await queryClient.cancelQueries({ queryKey: wishlistKeys.list() });
+      await queryClient.cancelQueries({ queryKey: wishlistKeys.check(productId) });
+
+      const prevList  = queryClient.getQueryData<WishlistResponse>(wishlistKeys.list());
+      const prevCheck = queryClient.getQueryData<{ inWishlist: boolean }>(
+        wishlistKeys.check(productId),
+      );
+
+      // Remove from list cache
+      queryClient.setQueryData<WishlistResponse>(wishlistKeys.list(), (old) =>
+        old
+          ? {
+              ...old,
+              items: old.items.filter((i) => i.productId !== productId),
+              total: Math.max(0, old.total - 1),
+            }
+          : old,
+      );
+
+      // Flip check flag
+      queryClient.setQueryData(wishlistKeys.check(productId), {
+        productId,
+        inWishlist: false,
+      });
+
+      return { prevList, prevCheck };
+    },
+    onError: (_err, productId, ctx) => {
+      queryClient.setQueryData(wishlistKeys.list(),           ctx?.prevList);
+      queryClient.setQueryData(wishlistKeys.check(productId), ctx?.prevCheck);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: wishlistKeys.all });
     },
   });
 }
 
-/** İstek listesini tamamen temizler */
 export function useClearWishlist() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => api.delete("/api/wishlist"),
-    onSuccess: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: wishlistKeys.list() });
+      const prev = queryClient.getQueryData<WishlistResponse>(wishlistKeys.list());
+      queryClient.setQueryData<WishlistResponse>(wishlistKeys.list(), {
+        total: 0,
+        items: [],
+      });
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      queryClient.setQueryData(wishlistKeys.list(), ctx?.prev);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: wishlistKeys.all });
     },
   });

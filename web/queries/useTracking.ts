@@ -1,32 +1,17 @@
-// queries/useTracking.ts
+// queries/useTracking.ts — Courier-portal and public tracking helpers.
+// useOrderTracking re-exports from useOrders.ts so all callers share the same
+// TanStack Query cache key and receive SignalR-driven optimistic updates.
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
+import type { ShipmentStatus } from "@/types/enums";
+import type { CalculateEtaResponse } from "@/types/api";
 
-// ── Types ──────────────────────────────────────────────────────────────────
-
-type ShipmentStatus =
-  | "COURIER_ASSIGNED"
-  | "PICKED_UP"
-  | "IN_TRANSIT"
-  | "OUT_FOR_DELIVERY"
-  | "DELIVERED"
-  | "FAILED";
-
-export interface Shipment {
-  id: string;
-  trackingNumber: string;
-  status: ShipmentStatus;
-  customerName: string;
-  customerPhone?: string;
-  deliveryAddress: string;
-  merchantStoreName: string;
-  merchantAddress: string;
-  estimatedDelivery: string;
-  labelUrl?: string;
-  productSummary: string;
-  orderNumber: string;
-}
+// ── Re-export — shared cache key ────────────────────────────────────────────
+// Components that previously imported from this file continue to work.
+// The underlying cache key is now orderKeys.tracking(id) so SignalR invalidation
+// in use-signalr-tracking.ts reaches these components too.
+export { useOrderTracking } from "./useOrders";
 
 export interface ShipmentStatusHistory {
   id?: string;
@@ -39,50 +24,83 @@ export interface ShipmentStatusHistory {
   timestamp?: string;
 }
 
+/**
+ * Shape returned by GET /api/orders/{id}/tracking after the normalizer in useOrders.ts.
+ * Components should prefer importing NormalizedTracking from useOrders.ts directly.
+ */
 export interface TrackingDetail {
   orderId: string;
-  trackingNumber: string;
-  status: ShipmentStatus;
-  estimatedDelivery: string;
+  orderStatus: string;
+  trackingNumber?: string;
+  /** Shipment status — maps from backend ShipmentStatus field */
+  status?: ShipmentStatus;
+  estimatedDelivery?: string;
+  estimatedDeliveryEnd?: string;
   labelUrl?: string;
-  courier?: {
-    id: string;
-    name: string;
-    phone?: string;
-  };
-  history: ShipmentStatusHistory[];
+  courierName?: string;
+  courierPhone?: string;
+  events: ShipmentStatusHistory[];
+  actualDeliveredAt?: string;
 }
 
-export interface EtaResult {
+/** Courier-portal shipment card shape from GET /api/fulfillment/courier/my-shipments */
+export interface CourierShipment {
+  id: string;
+  trackingNumber: string;
+  /** string rather than the full enum so components can narrow it locally */
+  status: string;
+  customerName: string;
+  /** Formatted delivery address — normalized from backend customerAddress */
+  deliveryAddress: string;
+  /** Original backend field name kept as alias */
+  customerAddress?: string;
+  /** Merchant store name — normalized from backend merchantName */
+  merchantStoreName: string;
+  /** Original backend field name kept as alias */
+  merchantName?: string;
+  /** Not in backend response */
+  merchantAddress?: string;
+  /** Not in backend response */
+  productSummary?: string;
+  orderNumber?: string;
   estimatedDelivery: string;
-  distanceKm: number;
-  handlingHours: number;
-  transitHours: number;
-  // Yeni alanlar (calculate-eta genişletilmiş response)
+  labelUrl?: string;
+  courierName?: string;
+  courierPhone?: string;
   shippingRate?: string;
-  estimatedPickupStart?: string;
-  estimatedPickupEnd?: string;
-  estimatedDeliveryStart?: string;
-  estimatedDeliveryEnd?: string;
-  shippingCost?: number;
-  estimatedHours?: number;
-  estimatedDeliveryDate?: string;
+  events: ShipmentStatusHistory[];
+}
+
+/** @deprecated Use CourierShipment */
+export type Shipment = CourierShipment;
+
+export interface EtaResult extends CalculateEtaResponse {
+  /** Backward-compat alias: same as estimatedDeliveryEnd */
+  estimatedDelivery?: string;
 }
 
 // ── Queries ────────────────────────────────────────────────────────────────
 
 /**
- * Kurye kendi atanmış shipment'larını getirir.
- * GET /api/fulfillment/courier/my-shipments?status=active|delivered|all
+ * Fetches shipments assigned to the current courier.
+ * GET /api/fulfillment/courier/my-shipments
  */
 export function useCourierShipments(filter: "active" | "delivered" | "all") {
-  return useQuery<Shipment[]>({
+  return useQuery<CourierShipment[]>({
     queryKey: ["courier-shipments", filter],
     queryFn: async () => {
       const { data } = await api.get("/api/fulfillment/courier/my-shipments", {
         params: { status: filter },
       });
-      return data;
+      const raw: any[] = Array.isArray(data) ? data : ((data as any).data ?? data);
+      // Normalize backend field names to the interface contract consumed by the courier portal
+      return raw.map((s) => ({
+        ...s,
+        // Backend sends customerAddress; component reads deliveryAddress
+        deliveryAddress: s.customerAddress ?? s.deliveryAddress ?? "",
+        // Backend sends merchantName; component reads merchantStoreName
+        merchantStoreName: s.merchantName ?? s.merchantStoreName ?? "",
+      })) as CourierShipment[];
     },
     refetchInterval: 30_000,
     staleTime: 15_000,
@@ -90,25 +108,9 @@ export function useCourierShipments(filter: "active" | "delivered" | "all") {
 }
 
 /**
- * Sipariş tracking detayını getirir.
- * GET /api/orders/{id}/tracking
- */
-export function useOrderTracking(orderId: string | null) {
-  return useQuery<TrackingDetail>({
-    queryKey: ["tracking", orderId],
-    queryFn: async () => {
-      const { data } = await api.get(`/api/orders/${orderId}/tracking`);
-      return data;
-    },
-    enabled: !!orderId,
-    refetchInterval: 30_000,
-    staleTime: 15_000,
-  });
-}
-
-/**
- * Checkout sırasında ETA önizlemesi hesaplar.
+ * Checkout-time ETA preview.
  * GET /api/fulfillment/calculate-eta
+ * Params: merchantId, destLat, destLng, shippingRate
  */
 export function useCalculateEta(params: {
   merchantId: string | null;
@@ -121,9 +123,14 @@ export function useCalculateEta(params: {
   return useQuery<EtaResult>({
     queryKey: ["eta", merchantId, destLat, destLng, shippingRate],
     queryFn: async () => {
-      const { data } = await api.get("/api/fulfillment/calculate-eta", {
-        params: { merchantId, destLat, destLng, shippingRate },
-      });
+      const { data } = await api.get<EtaResult>(
+        "/api/fulfillment/calculate-eta",
+        { params: { merchantId, destLat, destLng, shippingRate } },
+      );
+      // Backward-compat: populate estimatedDelivery from end of window
+      if (!data.estimatedDelivery && data.estimatedDeliveryEnd) {
+        data.estimatedDelivery = data.estimatedDeliveryEnd;
+      }
       return data;
     },
     enabled:
@@ -135,12 +142,11 @@ export function useCalculateEta(params: {
 // ── Mutations ──────────────────────────────────────────────────────────────
 
 /**
- * Kurye: kargo teslim alındı onayla.
+ * Courier: confirm package pickup.
  * POST /api/fulfillment/{id}/pickup-confirm
  */
 export function usePickupConfirm() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async ({ id }: { id: string }) => {
       const { data } = await api.post(`/api/fulfillment/${id}/pickup-confirm`);
@@ -153,12 +159,11 @@ export function usePickupConfirm() {
 }
 
 /**
- * Kurye: teslim edildi onayla.
+ * Courier: confirm delivery.
  * POST /api/fulfillment/{id}/delivered
  */
 export function useDelivered() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async ({
       id,

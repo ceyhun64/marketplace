@@ -15,7 +15,7 @@ export interface PaginatedOrders {
 }
 
 export interface CreateOrderDto {
-  items: { productId: string; quantity: number }[];
+  items: { productId: string; quantity: number; variantId?: string }[];
   shippingAddress: {
     fullName: string;
     phone: string;
@@ -31,14 +31,22 @@ export interface CreateOrderDto {
 // ── Query Keys ────────────────────────────────────────────────────────────────
 
 export const orderKeys = {
-  all: ["orders"] as const,
-  myOrders: (status?: string) => [...orderKeys.all, "mine", status] as const,
-  detail: (id: string) => [...orderKeys.all, "detail", id] as const,
-  tracking: (id: string) => [...orderKeys.all, "tracking", id] as const,
-  merchantIncoming: (status?: string) =>
-    [...orderKeys.all, "merchant", status] as const,
-  adminAll: (filters?: object) => [...orderKeys.all, "admin", filters] as const,
+  all:              ["orders"] as const,
+  myOrders:        (status?: string) => [...orderKeys.all, "mine", status] as const,
+  detail:          (id: string)      => [...orderKeys.all, "detail", id] as const,
+  tracking:        (id: string)      => [...orderKeys.all, "tracking", id] as const,
+  merchantIncoming:(status?: string) => [...orderKeys.all, "merchant", status] as const,
+  adminAll:        (filters?: object)=> [...orderKeys.all, "admin", filters] as const,
 };
+
+// ── Normalizer ────────────────────────────────────────────────────────────────
+
+interface PaginatedOrdersBackend {
+  data?: Order[];
+  pagination?: { page: number; limit: number; total: number };
+  items?: Order[];
+  totalCount?: number;
+}
 
 // ── Customer Hooks ────────────────────────────────────────────────────────────
 
@@ -74,38 +82,63 @@ export function useOrder(id: string) {
   });
 }
 
-export function useOrderTracking(id: string) {
+// ── Order Tracking ────────────────────────────────────────────────────────────
+
+export interface NormalizedTracking {
+  orderId: string;
+  orderStatus: string;
+  trackingNumber?: string;
+  status?: string;
+  estimatedDelivery?: string;
+  estimatedDeliveryEnd?: string;
+  labelUrl?: string;
+  courierName?: string;
+  courierPhone?: string;
+  events: Array<{
+    id?: string;
+    status: string;
+    note?: string;
+    location?: string;
+    createdAt: string;
+  }>;
+  actualDeliveredAt?: string;
+}
+
+export function useOrderTracking(
+  id: string,
+  options?: {
+    /**
+     * Set to true when SignalR is actively connected to this shipment.
+     * Disabling polling when real-time is available avoids redundant network requests.
+     */
+    disablePolling?: boolean;
+  },
+) {
   return useQuery({
     queryKey: orderKeys.tracking(id),
-    queryFn: async () => {
+    queryFn: async (): Promise<NormalizedTracking> => {
       const { data } = await api.get(`/api/orders/${id}/tracking`);
-      // API returns OrderTrackingDto — normalize to match OrderTrackingPage field access
       const raw = data ?? {};
       return {
-        orderId: raw.orderId as string,
-        orderStatus: raw.orderStatus as string,
-        trackingNumber: raw.trackingNumber as string | undefined,
-        // Page uses "status" — API returns "shipmentStatus"
-        status: (raw.shipmentStatus ?? raw.status) as string | undefined,
-        estimatedDelivery: raw.estimatedDelivery as string | undefined,
-        estimatedDeliveryEnd: raw.estimatedDelivery as string | undefined,
-        labelUrl: raw.labelUrl as string | undefined,
-        courierName: raw.courierName as string | undefined,
-        courierPhone: raw.courierPhone as string | undefined,
-        // Page uses "events" — API returns "history"
-        events: (raw.history ?? raw.events ?? []) as Array<{
-          id?: string;
-          status: string;
-          note?: string;
-          location?: string;
-          createdAt: string;
-        }>,
-        actualDeliveredAt: raw.actualDeliveredAt as string | undefined,
+        orderId:              raw.orderId as string,
+        orderStatus:          raw.orderStatus as string,
+        trackingNumber:       raw.trackingNumber as string | undefined,
+        status:               (raw.shipmentStatus ?? raw.status) as string | undefined,
+        estimatedDelivery:    raw.estimatedDelivery as string | undefined,
+        // estimatedDeliveryEnd comes from the window-based ETA; fall back to estimatedDelivery
+        estimatedDeliveryEnd: (raw.estimatedDeliveryEnd ?? raw.estimatedDelivery) as string | undefined,
+        labelUrl:             raw.labelUrl as string | undefined,
+        courierName:          raw.courierName as string | undefined,
+        courierPhone:         raw.courierPhone as string | undefined,
+        events:               (raw.history ?? raw.events ?? []) as NormalizedTracking["events"],
+        actualDeliveredAt:    raw.actualDeliveredAt as string | undefined,
       };
     },
     enabled: !!id,
-    // SignalR yokken polling fallback — 30 saniye
-    refetchInterval: 1000 * 30,
+    // Polling fallback when SignalR is not connected.
+    // Components can pass disablePolling=true when they have an active SignalR connection
+    // to avoid wasteful double-fetching.
+    refetchInterval: options?.disablePolling ? false : 30_000,
   });
 }
 
@@ -124,7 +157,28 @@ export function useCancelOrder() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (orderId: string) => api.post(`/api/orders/${orderId}/cancel`),
-    onSuccess: (_, orderId) => {
+
+    // Optimistic: flip the status to CANCELLED immediately so the list updates
+    onMutate: async (orderId) => {
+      await queryClient.cancelQueries({ queryKey: orderKeys.myOrders() });
+      const snapshots = queryClient.getQueriesData<Order[]>({
+        queryKey: orderKeys.myOrders(),
+      });
+      queryClient.setQueriesData<Order[]>(
+        { queryKey: orderKeys.myOrders() },
+        (old) =>
+          old?.map((o) =>
+            o.id === orderId ? { ...o, status: "CANCELLED" as OrderStatus } : o,
+          ),
+      );
+      return { snapshots };
+    },
+    onError: (_err, _id, ctx) => {
+      ctx?.snapshots.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+    },
+    onSettled: (_data, _err, orderId) => {
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(orderId) });
       queryClient.invalidateQueries({ queryKey: orderKeys.myOrders() });
     },
@@ -155,7 +209,30 @@ export function usePackOrder() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (orderId: string) => api.patch(`/api/orders/${orderId}/pack`),
-    onSuccess: (_, orderId) => {
+
+    // Optimistic: order card immediately shows "Label Generated" status
+    onMutate: async (orderId) => {
+      await queryClient.cancelQueries({ queryKey: orderKeys.merchantIncoming() });
+      const snapshots = queryClient.getQueriesData<Order[]>({
+        queryKey: orderKeys.merchantIncoming(),
+      });
+      queryClient.setQueriesData<Order[]>(
+        { queryKey: orderKeys.merchantIncoming() },
+        (old) =>
+          old?.map((o) =>
+            o.id === orderId
+              ? { ...o, status: "LABEL_GENERATED" as OrderStatus }
+              : o,
+          ),
+      );
+      return { snapshots };
+    },
+    onError: (_err, _id, ctx) => {
+      ctx?.snapshots.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+    },
+    onSettled: (_data, _err, orderId) => {
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(orderId) });
       queryClient.invalidateQueries({ queryKey: orderKeys.merchantIncoming() });
     },
@@ -174,30 +251,22 @@ export function useAdminOrders(filters?: {
     queryKey: orderKeys.adminAll(filters),
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (filters?.page) params.set("page", String(filters.page));
-      if (filters?.limit) params.set("limit", String(filters.limit));
-      if (filters?.status) params.set("status", filters.status);
+      if (filters?.page)       params.set("page",       String(filters.page));
+      if (filters?.limit)      params.set("limit",      String(filters.limit));
+      if (filters?.status)     params.set("status",     filters.status);
       if (filters?.merchantId) params.set("merchantId", filters.merchantId);
-      const { data } = await api.get<PaginatedOrders>(
+      const { data } = await api.get<PaginatedOrdersBackend>(
         `/api/orders/admin/all?${params}`,
       );
-      // API returns { data: orders[], pagination: { page, limit, total, pages } }
-      // Normalize to PaginatedOrders: { items, totalCount, page, limit }
-      const raw = data as unknown as {
-        data?: Order[];
-        pagination?: { page: number; limit: number; total: number };
-        items?: Order[];
-        totalCount?: number;
-      };
-      if (raw.data !== undefined) {
+      if (data.data !== undefined) {
         return {
-          items: raw.data,
-          totalCount: raw.pagination?.total ?? 0,
-          page: raw.pagination?.page ?? 1,
-          limit: raw.pagination?.limit ?? 20,
+          items:      data.data,
+          totalCount: data.pagination?.total ?? 0,
+          page:       data.pagination?.page  ?? 1,
+          limit:      data.pagination?.limit ?? 20,
         } as PaginatedOrders;
       }
-      return data;
+      return data as unknown as PaginatedOrders;
     },
   });
 }
@@ -213,7 +282,7 @@ export function useUpdateOrderStatus() {
   });
 }
 
-// ── Public Tracking (QR erişimli, token gerektirmez) ─────────────────────────
+// ── Public Tracking (unauthenticated QR-code access) ─────────────────────────
 
 export function usePublicTracking(trackingNo: string) {
   return useQuery({
@@ -223,6 +292,6 @@ export function usePublicTracking(trackingNo: string) {
       return data;
     },
     enabled: !!trackingNo,
-    refetchInterval: 1000 * 60, // 1 dakika polling
+    refetchInterval: 60_000, // 1-minute polling fallback
   });
 }

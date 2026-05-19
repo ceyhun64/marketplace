@@ -176,7 +176,7 @@ export default function AdminDashboardPage() {
         <h2 className="text-sm font-semibold text-(--text-primary) mb-4">
           Quick Actions
         </h2>
-        <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2 md:gap-3">
           {quickLinks.map((link) => (
             <Link key={link.href} href={link.href}>
               <div className="flex flex-col items-center justify-center p-4 border border-dashed border-(--border-mid) rounded-xl hover:border-(--border-strong) hover:bg-(--bg-sunken) transition-all cursor-pointer gap-2">
@@ -192,9 +192,9 @@ export default function AdminDashboardPage() {
 
       {/* Pending Merchants Alert */}
       {(s.pendingMerchants ?? 0) > 0 && (
-        <div className="flex items-center justify-between px-4 py-3.5 rounded-xl border border-(--warning-border) bg-(--warning-bg)">
-          <div className="flex items-center gap-3">
-            <Store className="w-5 h-5 text-(--warning) shrink-0" />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3.5 rounded-xl border border-(--warning-border) bg-(--warning-bg)">
+          <div className="flex items-start sm:items-center gap-3">
+            <Store className="w-5 h-5 text-(--warning) shrink-0 mt-0.5 sm:mt-0" />
             <div>
               <p className="font-medium text-(--text-primary) text-sm">
                 {s.pendingMerchants} merchant application
@@ -206,8 +206,8 @@ export default function AdminDashboardPage() {
               </p>
             </div>
           </div>
-          <Link href="/admin/merchants?tab=pending">
-            <span className="text-xs font-semibold text-(--warning) bg-(--warning-bg) hover:opacity-80 border border-(--warning-border) px-3 py-1.5 rounded-lg transition-opacity cursor-pointer whitespace-nowrap">
+          <Link href="/admin/merchants?tab=pending" className="self-start sm:self-auto shrink-0">
+            <span className="text-xs font-semibold text-(--warning) bg-(--warning-bg) hover:opacity-80 border border-(--warning-border) px-3 py-1.5 rounded-lg transition-opacity cursor-pointer whitespace-nowrap inline-block">
               Review →
             </span>
           </Link>
@@ -216,9 +216,9 @@ export default function AdminDashboardPage() {
 
       {/* Pending Products Alert */}
       {(s.pendingProducts ?? 0) > 0 && (
-        <div className="flex items-center justify-between px-4 py-3.5 rounded-xl border border-(--border-mid) bg-(--bg-sunken)">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-(--text-tertiary) shrink-0" />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3.5 rounded-xl border border-(--border-mid) bg-(--bg-sunken)">
+          <div className="flex items-start sm:items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-(--text-tertiary) shrink-0 mt-0.5 sm:mt-0" />
             <div>
               <p className="font-medium text-(--text-primary) text-sm">
                 {s.pendingProducts} products awaiting review
@@ -228,8 +228,8 @@ export default function AdminDashboardPage() {
               </p>
             </div>
           </div>
-          <Link href="/admin/products">
-            <span className="text-xs font-semibold text-(--text-secondary) hover:text-(--text-primary) px-3 py-1.5 rounded-lg border border-(--border-mid) hover:border-(--border-strong) transition-colors cursor-pointer whitespace-nowrap">
+          <Link href="/admin/products" className="self-start sm:self-auto shrink-0">
+            <span className="text-xs font-semibold text-(--text-secondary) hover:text-(--text-primary) px-3 py-1.5 rounded-lg border border-(--border-mid) hover:border-(--border-strong) transition-colors cursor-pointer whitespace-nowrap inline-block">
               Review →
             </span>
           </Link>

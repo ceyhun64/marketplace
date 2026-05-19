@@ -19,6 +19,7 @@ export interface ProductsResponse {
   totalCount: number;
   page: number;
   limit: number;
+  totalPages?: number;
   stats?: ProductStats;
 }
 
@@ -51,6 +52,17 @@ export interface PublishToggleDto {
   publishToStore?: boolean;
 }
 
+// ── Raw backend shape ─────────────────────────────────────────────────────────
+
+interface RawProductsBackend {
+  items?: Product[];
+  totalCount?: number;
+  total?: number;
+  page?: number;
+  limit?: number;
+  stats?: ProductStats;
+}
+
 // ── Query Keys ────────────────────────────────────────────────────────────────
 
 export const productKeys = {
@@ -58,17 +70,33 @@ export const productKeys = {
   lists: () => [...productKeys.all, "list"] as const,
   list: (filters: ProductFilters) => [...productKeys.lists(), filters] as const,
   detail: (id: string) => [...productKeys.all, "detail", id] as const,
-  featured: (limit?: number) =>
-    [...productKeys.all, "featured", limit] as const,
+  featured: (limit?: number) => [...productKeys.all, "featured", limit] as const,
   search: (q: string, filters?: ProductFilters) =>
     [...productKeys.all, "search", q, filters] as const,
   merchantProducts: (filters?: ProductFilters) =>
     [...productKeys.all, "merchant", filters] as const,
   storeProducts: (slug: string, filters?: ProductFilters) =>
     [...productKeys.all, "store", slug, filters] as const,
-  pending: (filters?: object) =>
-    [...productKeys.all, "pending", filters] as const,
+  pending: (filters?: object) => [...productKeys.all, "pending", filters] as const,
 };
+
+// ── Normalizer ────────────────────────────────────────────────────────────────
+
+function normalizeProductsResponse(
+  raw: RawProductsBackend,
+  fallbackFilters?: ProductFilters,
+): ProductsResponse {
+  const totalCount = raw.totalCount ?? raw.total ?? 0;
+  const limit = raw.limit ?? fallbackFilters?.limit ?? 20;
+  return {
+    items:      raw.items ?? [],
+    totalCount,
+    page:       raw.page ?? fallbackFilters?.page ?? 1,
+    limit,
+    totalPages: Math.ceil(totalCount / limit),
+    stats:      raw.stats,
+  };
+}
 
 // ── Public / Marketplace Hooks ────────────────────────────────────────────────
 
@@ -77,34 +105,19 @@ export function useProducts(filters: ProductFilters = {}) {
     queryKey: productKeys.list(filters),
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (filters.page) params.set("page", String(filters.page));
-      if (filters.limit) params.set("limit", String(filters.limit));
-      if (filters.category) params.set("category", filters.category);
+      if (filters.page)        params.set("page", String(filters.page));
+      if (filters.limit)       params.set("limit", String(filters.limit));
+      if (filters.category)    params.set("category", filters.category);
       if (filters.subcategory) params.set("subcategory", filters.subcategory);
-      if (filters.tags?.length)
-        filters.tags.forEach((t) => params.append("tags[]", t));
-      if (filters.search) params.set("search", filters.search);
-      if (filters.minPrice) params.set("minPrice", String(filters.minPrice));
-      if (filters.maxPrice) params.set("maxPrice", String(filters.maxPrice));
-      if (filters.sort) params.set("sort", filters.sort);
-      const { data } = await api.get<ProductsResponse>(
-        `/api/products?${params}`,
-      );
-      // Backend { total, items, page, limit } → normalize to ProductsResponse shape
-      const raw = data as unknown as Record<string, unknown>;
-      const totalCount =
-        (raw.totalCount as number) ?? (raw.total as number) ?? 0;
-      const limit = (raw.limit as number) ?? filters.limit ?? 20;
-      return {
-        ...raw,
-        items: (raw.items as Product[]) ?? [],
-        totalCount,
-        page: (raw.page as number) ?? filters.page ?? 1,
-        limit,
-        totalPages: Math.ceil(totalCount / limit),
-      } as ProductsResponse;
+      if (filters.tags?.length) filters.tags.forEach((t) => params.append("tags[]", t));
+      if (filters.search)      params.set("search", filters.search);
+      if (filters.minPrice)    params.set("minPrice", String(filters.minPrice));
+      if (filters.maxPrice)    params.set("maxPrice", String(filters.maxPrice));
+      if (filters.sort)        params.set("sort", filters.sort);
+      const { data } = await api.get<RawProductsBackend>(`/api/products?${params}`);
+      return normalizeProductsResponse(data, filters);
     },
-    staleTime: 1000 * 60,
+    staleTime: 60_000,
   });
 }
 
@@ -123,12 +136,10 @@ export function useFeaturedProducts(limit = 8) {
   return useQuery({
     queryKey: productKeys.featured(limit),
     queryFn: async () => {
-      const { data } = await api.get<Product[]>(
-        `/api/products/featured?limit=${limit}`,
-      );
+      const { data } = await api.get<Product[]>(`/api/products/featured?limit=${limit}`);
       return data;
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -137,28 +148,14 @@ export function useSearchProducts(q: string, filters?: ProductFilters) {
     queryKey: productKeys.search(q, filters),
     queryFn: async () => {
       const params = new URLSearchParams({ q });
-      if (filters?.category) params.set("category", filters.category);
+      if (filters?.category)    params.set("category", filters.category);
       if (filters?.subcategory) params.set("subcategory", filters.subcategory);
-      if (filters?.tags?.length)
-        filters.tags.forEach((t) => params.append("tags[]", t));
-      const { data } = await api.get<ProductsResponse>(
-        `/api/products/search?${params}`,
-      );
-      const raw = data as unknown as Record<string, unknown>;
-      const totalCount =
-        (raw.totalCount as number) ?? (raw.total as number) ?? 0;
-      const limit = (raw.limit as number) ?? 20;
-      return {
-        ...raw,
-        items: (raw.items as Product[]) ?? [],
-        totalCount,
-        page: (raw.page as number) ?? 1,
-        limit,
-        totalPages: Math.ceil(totalCount / limit),
-      } as ProductsResponse;
+      if (filters?.tags?.length) filters.tags!.forEach((t) => params.append("tags[]", t));
+      const { data } = await api.get<RawProductsBackend>(`/api/products/search?${params}`);
+      return normalizeProductsResponse(data, filters);
     },
     enabled: q.trim().length > 1,
-    staleTime: 1000 * 30,
+    staleTime: 30_000,
   });
 }
 
@@ -169,17 +166,15 @@ export function useStoreProducts(slug: string, filters?: ProductFilters) {
     queryKey: productKeys.storeProducts(slug, filters),
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (filters?.page) params.set("page", String(filters.page));
-      if (filters?.limit) params.set("limit", String(filters.limit));
+      if (filters?.page)   params.set("page", String(filters.page));
+      if (filters?.limit)  params.set("limit", String(filters.limit));
       if (filters?.category) params.set("category", filters.category);
       if (filters?.search) params.set("search", filters.search);
-      const { data } = await api.get<ProductsResponse>(
-        `/api/store/${slug}/products?${params}`,
-      );
+      const { data } = await api.get<ProductsResponse>(`/api/store/${slug}/products?${params}`);
       return data;
     },
     enabled: !!slug,
-    staleTime: 1000 * 60,
+    staleTime: 60_000,
   });
 }
 
@@ -187,9 +182,7 @@ export function useStoreProduct(slug: string, productId: string) {
   return useQuery({
     queryKey: [...productKeys.storeProducts(slug), "detail", productId],
     queryFn: async () => {
-      const { data } = await api.get<Product>(
-        `/api/store/${slug}/products/${productId}`,
-      );
+      const { data } = await api.get<Product>(`/api/store/${slug}/products/${productId}`);
       return data;
     },
     enabled: !!slug && !!productId,
@@ -203,26 +196,13 @@ export function useMerchantProducts(filters?: ProductFilters) {
     queryKey: productKeys.merchantProducts(filters),
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (filters?.page) params.set("page", String(filters.page));
-      if (filters?.limit) params.set("limit", String(filters.limit));
+      if (filters?.page)   params.set("page", String(filters.page));
+      if (filters?.limit)  params.set("limit", String(filters.limit));
       if (filters?.search) params.set("search", filters.search);
-      const { data } = await api.get<ProductsResponse>(
-        `/api/merchants/catalogue?${params}`,
-      );
-      // Backend { total, totalCount, page, limit, items, stats } döndürüyor
-      const raw = data as any;
-      const totalCount = raw.totalCount ?? raw.total ?? 0;
-      const limit = raw.limit ?? filters?.limit ?? 20;
-      return {
-        ...raw,
-        items: raw.items ?? [],
-        totalCount,
-        page: raw.page ?? filters?.page ?? 1,
-        limit,
-        totalPages: Math.ceil(totalCount / limit),
-        stats: raw.stats,
-      } as ProductsResponse;
+      const { data } = await api.get<RawProductsBackend>(`/api/merchants/catalogue?${params}`);
+      return normalizeProductsResponse(data, filters);
     },
+    staleTime: 30_000,
   });
 }
 
@@ -233,9 +213,7 @@ export function useCreateProduct() {
       api.post<Product>("/api/merchants/catalogue", body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
-      queryClient.invalidateQueries({
-        queryKey: productKeys.merchantProducts(),
-      });
+      queryClient.invalidateQueries({ queryKey: productKeys.merchantProducts() });
     },
   });
 }
@@ -247,9 +225,7 @@ export function useUpdateProduct() {
       api.put<Product>(`/api/merchants/catalogue/${id}`, body),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: productKeys.detail(id) });
-      queryClient.invalidateQueries({
-        queryKey: productKeys.merchantProducts(),
-      });
+      queryClient.invalidateQueries({ queryKey: productKeys.merchantProducts() });
     },
   });
 }
@@ -258,31 +234,90 @@ export function useDeleteProduct() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.delete(`/api/merchants/catalogue/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
-      queryClient.invalidateQueries({
+    // Optimistic remove: product disappears immediately from the list
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: productKeys.merchantProducts() });
+      const snapshots = queryClient.getQueriesData<ProductsResponse>({
         queryKey: productKeys.merchantProducts(),
       });
+      queryClient.setQueriesData<ProductsResponse>(
+        { queryKey: productKeys.merchantProducts() },
+        (old) =>
+          old
+            ? { ...old, items: old.items.filter((p) => p.id !== id), totalCount: Math.max(0, old.totalCount - 1) }
+            : old,
+      );
+      return { snapshots };
+    },
+    onError: (_err, _id, ctx) => {
+      ctx?.snapshots.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: productKeys.merchantProducts() });
     },
   });
 }
 
-/** publishToMarket / publishToStore toggle */
+/**
+ * Optimistic publish toggle — the toggle switch flips immediately, giving
+ * instant tactile feedback before the server confirms.
+ */
 export function useTogglePublish() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, ...dto }: { id: string } & PublishToggleDto) =>
       api.patch(`/api/merchants/catalogue/${id}/publish`, dto),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: productKeys.detail(id) });
-      queryClient.invalidateQueries({
+
+    onMutate: async ({ id, publishToMarket, publishToStore }) => {
+      // Cancel in-flight queries so they don't overwrite the optimistic state
+      await queryClient.cancelQueries({ queryKey: productKeys.merchantProducts() });
+
+      // Snapshot all matching cache entries for rollback
+      const snapshots = queryClient.getQueriesData<ProductsResponse>({
         queryKey: productKeys.merchantProducts(),
       });
+
+      // Flip the toggle in every merchant product list cache entry
+      queryClient.setQueriesData<ProductsResponse>(
+        { queryKey: productKeys.merchantProducts() },
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            items: old.items.map((p) =>
+              p.id === id
+                ? {
+                    ...p,
+                    publishToMarket: publishToMarket ?? p.publishToMarket,
+                    publishToStore:  publishToStore  ?? p.publishToStore,
+                  }
+                : p,
+            ),
+          };
+        },
+      );
+
+      return { snapshots };
+    },
+
+    onError: (_err, _vars, ctx) => {
+      // Rollback every affected cache entry
+      ctx?.snapshots.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+    },
+
+    onSettled: (_data, _err, { id }) => {
+      // Sync with server truth after the mutation resolves (success or error)
+      queryClient.invalidateQueries({ queryKey: productKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: productKeys.merchantProducts() });
     },
   });
 }
 
-/** Marketplace'teki tüm tag'leri getirir — filtre seçimi için */
 export function useProductTags() {
   return useQuery({
     queryKey: [...productKeys.all, "tags"] as const,
@@ -290,6 +325,6 @@ export function useProductTags() {
       const { data } = await api.get<string[]>("/api/products/tags");
       return data ?? [];
     },
-    staleTime: 1000 * 60 * 10,
+    staleTime: 10 * 60_000,
   });
 }

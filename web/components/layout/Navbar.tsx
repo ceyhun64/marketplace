@@ -30,7 +30,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,10 +37,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { useAuth as useAuthStore } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useNotifications } from "@/queries/useNotifications";
 import type { NotifType } from "@/queries/useNotifications";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 type UserRole = "customer" | "merchant" | "admin" | "courier";
 
@@ -52,6 +60,8 @@ interface CurrentUser {
   role: UserRole;
   avatarUrl?: string;
 }
+
+// ── Hooks ─────────────────────────────────────────────────────────────────────
 
 function useAuth() {
   const { user: storeUser, logout } = useAuthStore();
@@ -70,6 +80,8 @@ function useCartCount(): number {
   const cart = useCart();
   return cart.totalItems();
 }
+
+// ── Constants ─────────────────────────────────────────────────────────────────
 
 const PUBLIC_NAV = [
   { label: "Categories", href: "/categories" },
@@ -97,14 +109,13 @@ const DASHBOARD_HREF: Record<UserRole, string> = {
   customer: "/profile",
 };
 
+// ── Sub-components ────────────────────────────────────────────────────────────
+
 function LogoMark() {
   return (
-    <div
-      className="flex items-center gap-2.5 group"
-      style={{ textDecoration: "none" }}
-    >
+    <div className="flex items-center gap-2.5 group" style={{ textDecoration: "none" }}>
       <div
-        className="group-hover:scale-105"
+        className="group-hover:scale-105 transition-transform"
         style={{
           width: 28,
           height: 28,
@@ -113,29 +124,13 @@ function LogoMark() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          transition:
-            "transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out)",
           boxShadow: "0 2px 8px rgba(200,16,46,0.25)",
         }}
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <rect x="1" y="1" width="5" height="5" fill="white" rx="1" />
-          <rect
-            x="8"
-            y="1"
-            width="5"
-            height="5"
-            fill="rgba(255,255,255,0.5)"
-            rx="1"
-          />
-          <rect
-            x="1"
-            y="8"
-            width="5"
-            height="5"
-            fill="rgba(255,255,255,0.5)"
-            rx="1"
-          />
+          <rect x="8" y="1" width="5" height="5" fill="rgba(255,255,255,0.5)" rx="1" />
+          <rect x="1" y="8" width="5" height="5" fill="rgba(255,255,255,0.5)" rx="1" />
           <rect x="8" y="8" width="5" height="5" fill="white" rx="1" />
         </svg>
       </div>
@@ -176,24 +171,13 @@ function AvatarCircle({ user }: { user: CurrentUser }) {
   );
 }
 
-const NOTIF_META: Record<
-  NotifType,
-  { icon: React.ElementType; bg: string; color: string }
-> = {
-  order: {
-    icon: ShoppingCart,
-    bg: "rgba(200,16,46,0.08)",
-    color: "var(--red)",
-  },
-  deal: { icon: Tag, bg: "rgba(234,179,8,0.08)", color: "#ca8a04" },
-  store: { icon: Store, bg: "rgba(59,130,246,0.08)", color: "#2563eb" },
-  shipping: { icon: Truck, bg: "rgba(34,197,94,0.08)", color: "#16a34a" },
-  review: { icon: Star, bg: "rgba(168,85,247,0.08)", color: "#7c3aed" },
-  system: {
-    icon: Bell,
-    bg: "rgba(51,51,51,0.06)",
-    color: "var(--charcoal-soft)",
-  },
+const NOTIF_META: Record<NotifType, { icon: React.ElementType; bg: string; color: string }> = {
+  order:    { icon: ShoppingCart, bg: "rgba(200,16,46,0.08)",  color: "var(--red)"           },
+  deal:     { icon: Tag,          bg: "rgba(234,179,8,0.08)",  color: "#ca8a04"               },
+  store:    { icon: Store,        bg: "rgba(59,130,246,0.08)", color: "#2563eb"               },
+  shipping: { icon: Truck,        bg: "rgba(34,197,94,0.08)",  color: "#16a34a"               },
+  review:   { icon: Star,         bg: "rgba(168,85,247,0.08)", color: "#7c3aed"               },
+  system:   { icon: Bell,         bg: "rgba(51,51,51,0.06)",   color: "var(--charcoal-soft)"  },
 };
 
 function NotificationDropdown() {
@@ -210,10 +194,10 @@ function NotificationDropdown() {
           style={{ color: "var(--charcoal-soft)", background: "transparent" }}
           aria-label="Notifications"
         >
-          <Bell className="w-4.25 h-4.25" strokeWidth={2} />
+          <Bell className="w-[17px] h-[17px]" strokeWidth={2} />
           {unreadCount > 0 && (
             <span
-              className="absolute top-1 right-1 min-w-3.5 h-3.5 px-0.5 text-[8px] font-bold rounded-full flex items-center justify-center"
+              className="absolute top-1 right-1 min-w-[14px] h-3.5 px-0.5 text-[8px] font-bold rounded-full flex items-center justify-center"
               style={{
                 background: "var(--red)",
                 color: "white",
@@ -246,10 +230,7 @@ function NotificationDropdown() {
             <Bell className="w-4 h-4" style={{ color: "var(--charcoal)" }} />
             <span
               className="text-sm font-semibold"
-              style={{
-                color: "var(--charcoal)",
-                fontFamily: "var(--font-body)",
-              }}
+              style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
             >
               Notifications
             </span>
@@ -268,11 +249,8 @@ function NotificationDropdown() {
           </div>
           {unreadCount > 0 && (
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                markAllRead();
-              }}
-              className="text-[11px] font-semibold transition-colors"
+              onClick={(e) => { e.preventDefault(); markAllRead(); }}
+              className="text-[11px] font-semibold"
               style={{ color: "var(--red)", fontFamily: "var(--font-body)" }}
             >
               Mark all read
@@ -281,46 +259,31 @@ function NotificationDropdown() {
         </div>
 
         {/* List */}
-        <div className="max-h-90 overflow-y-auto">
+        <div className="max-h-[360px] overflow-y-auto">
           {isLoading && (
             <div className="py-8 flex flex-col items-center gap-2">
               <div className="w-6 h-6 rounded-full border-2 border-gray-200 border-t-red-500 animate-spin" />
-              <p className="text-xs" style={{ color: "var(--charcoal-mist)" }}>
-                Loading…
-              </p>
+              <p className="text-xs" style={{ color: "var(--charcoal-mist)" }}>Loading…</p>
             </div>
           )}
-
           {!isLoading && preview.length === 0 && (
             <div className="py-10 flex flex-col items-center gap-2">
-              <Bell
-                className="w-8 h-8"
-                style={{ color: "rgba(51,51,51,0.15)" }}
-              />
-              <p
-                className="text-xs"
-                style={{
-                  color: "var(--charcoal-soft)",
-                  fontFamily: "var(--font-body)",
-                }}
-              >
+              <Bell className="w-8 h-8" style={{ color: "rgba(51,51,51,0.15)" }} />
+              <p className="text-xs" style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}>
                 No notifications yet
               </p>
             </div>
           )}
-
           {preview.map((notif) => {
             const meta = NOTIF_META[notif.type];
             const Icon = meta.icon;
             return (
               <div
                 key={notif.id}
-                className="flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50"
+                className="flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-(--off-white)"
                 style={{
                   borderBottom: "1px solid rgba(51,51,51,0.04)",
-                  background: notif.read
-                    ? "transparent"
-                    : "rgba(200,16,46,0.02)",
+                  background: notif.read ? "transparent" : "rgba(200,16,46,0.02)",
                 }}
                 onClick={() => {
                   markRead(notif.id);
@@ -332,10 +295,7 @@ function NotificationDropdown() {
                     className="w-8 h-8 rounded-xl flex items-center justify-center"
                     style={{ background: meta.bg }}
                   >
-                    <Icon
-                      className="w-3.5 h-3.5"
-                      style={{ color: meta.color }}
-                    />
+                    <Icon className="w-3.5 h-3.5" style={{ color: meta.color }} />
                   </div>
                   {!notif.read && (
                     <div
@@ -347,29 +307,20 @@ function NotificationDropdown() {
                 <div className="flex-1 min-w-0">
                   <p
                     className="text-xs font-semibold leading-snug truncate"
-                    style={{
-                      color: "var(--charcoal)",
-                      fontFamily: "var(--font-body)",
-                    }}
+                    style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
                   >
                     {notif.title}
                   </p>
                   <p
                     className="text-[11px] leading-relaxed mt-0.5 line-clamp-2"
-                    style={{
-                      color: "var(--charcoal-soft)",
-                      fontFamily: "var(--font-body)",
-                    }}
+                    style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
                   >
                     {notif.message}
                   </p>
                 </div>
                 <span
                   className="text-[10px] shrink-0 mt-0.5"
-                  style={{
-                    color: "var(--charcoal-mist)",
-                    fontFamily: "var(--font-body)",
-                  }}
+                  style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-body)" }}
                 >
                   {notif.time}
                 </span>
@@ -379,17 +330,11 @@ function NotificationDropdown() {
         </div>
 
         {/* Footer */}
-        <div
-          className="border-t"
-          style={{ borderColor: "var(--border-light)" }}
-        >
+        <div className="border-t" style={{ borderColor: "var(--border-light)" }}>
           <a
             href="/notifications"
-            className="flex items-center justify-center w-full py-3 text-xs font-semibold transition-colors hover:bg-gray-50"
-            style={{
-              color: "var(--charcoal-soft)",
-              fontFamily: "var(--font-body)",
-            }}
+            className="flex items-center justify-center w-full py-3 text-xs font-semibold transition-colors hover:bg-(--off-white)"
+            style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
           >
             View all notifications →
           </a>
@@ -399,24 +344,36 @@ function NotificationDropdown() {
   );
 }
 
+// ── Divider helper for the mobile sheet ──────────────────────────────────────
+
+function SheetDivider() {
+  return (
+    <div
+      className="mx-1 my-1.5"
+      style={{ height: 1, background: "var(--border-light)" }}
+    />
+  );
+}
+
+// ── Navbar ────────────────────────────────────────────────────────────────────
+
 export default function Navbar() {
-  const pathname = usePathname();
-  const router = useRouter();
+  const pathname  = usePathname();
+  const router    = useRouter();
   const { user, logout } = useAuth();
   const cartCount = useCartCount();
+  const isMobile  = useIsMobile();
 
-  const [mounted, setMounted] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [mounted,      setMounted]      = useState(false);
+  const [scrolled,     setScrolled]     = useState(false);
+  const [searchOpen,   setSearchOpen]   = useState(false);
+  const [searchQuery,  setSearchQuery]  = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [headerBottom, setHeaderBottom] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
-  const headerRef = useRef<HTMLElement>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // ── Lifecycle ───────────────────────────────────────────────────────────────
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -424,21 +381,7 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    const updateBottom = () => {
-      if (headerRef.current)
-        setHeaderBottom(headerRef.current.getBoundingClientRect().bottom);
-    };
-    updateBottom();
-    window.addEventListener("scroll", updateBottom, { passive: true });
-    window.addEventListener("resize", updateBottom);
-    return () => {
-      window.removeEventListener("scroll", updateBottom);
-      window.removeEventListener("resize", updateBottom);
-    };
-  }, []);
-
-  // Close mobile menu on route change
+  // Close mobile Sheet on route change
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname]);
@@ -446,6 +389,8 @@ export default function Navbar() {
   useEffect(() => {
     if (searchOpen) setTimeout(() => searchRef.current?.focus(), 100);
   }, [searchOpen]);
+
+  // ── Handlers ────────────────────────────────────────────────────────────────
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -461,46 +406,43 @@ export default function Navbar() {
     router.push("/auth/login");
   };
 
+  // ── Render ───────────────────────────────────────────────────────────────────
+
   return (
     <>
       {/*
-        data-fixed-header is used by globals.css to compensate for the
-        scrollbar-width shift that Radix adds when a dropdown opens.
-      */}
+       * data-fixed-header: used by globals.css to compensate for the
+       * scrollbar-width shift that Radix adds when a dropdown opens.
+       *
+       * Outer padding uses Tailwind classes (not inline style) so responsive
+       * breakpoints work correctly.
+       */}
       <header
-        ref={headerRef}
         data-fixed-header
-        className="flex flex-col items-center pointer-events-none"
-        style={{ padding: "0.75rem 0.75rem sm:1rem sm:1.25rem" }}
+        className="flex flex-col items-center pointer-events-none px-3 pt-3 sm:px-5 sm:pt-4"
       >
         <div
-          className={cn("w-full pointer-events-auto transition-all")}
+          className={cn("w-full pointer-events-auto transition-all rounded-2xl")}
           style={{
             maxWidth: 1300,
-            background: scrolled
-              ? "rgba(255,255,255,0.92)"
-              : "rgba(255,255,255,0)",
+            background: scrolled ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0)",
             backdropFilter: scrolled ? "blur(16px)" : "blur(0px)",
             WebkitBackdropFilter: scrolled ? "blur(16px)" : "blur(0px)",
-            border: "1px solid transparent",
+            border: "1px solid",
             borderColor: scrolled ? "var(--border-light)" : "transparent",
-            borderRadius: "2rem",
             boxShadow: scrolled ? "var(--shadow-md)" : "none",
-            padding:  "0.75rem 1.25rem",
+            padding: "0.75rem 1.25rem",
             transition: "all 300ms cubic-bezier(0.4, 0, 0.2, 1)",
           }}
         >
-          <div className="flex items-center h-10 gap-3 md:gap-4">
-            {/* Logo */}
-            <Link
-              href="/"
-              style={{ textDecoration: "none" }}
-              className="shrink-0"
-            >
+          <div className="flex items-center h-10 gap-2 md:gap-3">
+
+            {/* ── Logo ─────────────────────────────────────────────────────── */}
+            <Link href="/" style={{ textDecoration: "none" }} className="shrink-0">
               <LogoMark />
             </Link>
 
-            {/* Desktop Nav — hidden below lg */}
+            {/* ── Desktop nav — hidden below lg ────────────────────────────── */}
             <nav className="hidden lg:flex items-center gap-0.5 ml-4">
               {PUBLIC_NAV.map((link) => (
                 <Link
@@ -512,18 +454,12 @@ export default function Navbar() {
                     fontWeight: pathname === link.href ? 600 : 500,
                     color: link.highlight
                       ? "var(--red)"
-                      : pathname === link.href
-                        ? "var(--charcoal)"
-                        : "var(--charcoal-soft)",
+                      : pathname === link.href ? "var(--charcoal)" : "var(--charcoal-soft)",
                     padding: "0.5rem 0.875rem",
                     borderRadius: "0.5rem",
-                    background:
-                      pathname === link.href
-                        ? "var(--off-white-2)"
-                        : "transparent",
+                    background: pathname === link.href ? "var(--off-white-2)" : "transparent",
                     textDecoration: "none",
-                    transition:
-                      "color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out)",
+                    transition: "color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out)",
                     letterSpacing: "0.01em",
                     display: "inline-flex",
                     alignItems: "center",
@@ -536,7 +472,6 @@ export default function Navbar() {
                 </Link>
               ))}
 
-              {/* More dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -555,10 +490,8 @@ export default function Navbar() {
                       alignItems: "center",
                       gap: "0.25rem",
                       letterSpacing: "0.01em",
-                      transition:
-                        "color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out)",
                     }}
-                    className="hover:text-(--charcoal) hover:bg-(--off-white-2)"
+                    className="hover:text-(--charcoal) hover:bg-(--off-white-2) transition-all"
                   >
                     More
                     <ChevronDown className="w-3 h-3" />
@@ -597,26 +530,21 @@ export default function Navbar() {
 
             <div className="flex-1" />
 
-            {/* Action icons */}
-            <div className="flex items-center gap-1">
-              {/* Search — expands inline on md+, hidden behind mobile menu on xs/sm */}
-              <div className="relative flex items-center">
+            {/* ── Action cluster ────────────────────────────────────────────── */}
+            <div className="flex items-center gap-0.5">
+
+              {/* Desktop inline search — hidden on mobile (lives inside Sheet instead) */}
+              <div className="hidden md:flex relative items-center">
                 <form
                   onSubmit={handleSearch}
                   className={cn(
-                    "hidden md:flex items-center transition-all rounded-lg overflow-hidden",
-                    searchOpen ? "w-50 px-3" : "w-0 px-0",
+                    "flex items-center transition-all rounded-lg overflow-hidden",
+                    searchOpen ? "w-48 px-3" : "w-0 px-0",
                   )}
                   style={{
-                    background: searchOpen
-                      ? "var(--off-white-2)"
-                      : "transparent",
-                    border: searchOpen
-                      ? "1.5px solid var(--border-mid)"
-                      : "1.5px solid transparent",
-                    boxShadow: searchOpen
-                      ? "inset 0 1px 3px rgba(51,51,51,0.05)"
-                      : "none",
+                    background: searchOpen ? "var(--off-white-2)" : "transparent",
+                    border: searchOpen ? "1.5px solid var(--border-mid)" : "1.5px solid transparent",
+                    boxShadow: searchOpen ? "inset 0 1px 3px rgba(51,51,51,0.05)" : "none",
                     transition: "width var(--duration-slow) var(--ease-out)",
                   }}
                 >
@@ -626,10 +554,7 @@ export default function Navbar() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search..."
                     className="border-0 bg-transparent text-xs focus-visible:ring-0 h-8 p-0"
-                    style={{
-                      fontFamily: "var(--font-body)",
-                      color: "var(--charcoal)",
-                    }}
+                    style={{ fontFamily: "var(--font-body)", color: "var(--charcoal)" }}
                   />
                   <button
                     type="button"
@@ -645,29 +570,23 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={() => setSearchOpen(true)}
-                    className="hidden md:flex p-2.5 rounded-lg transition-all"
-                    style={{
-                      color: "var(--charcoal-soft)",
-                      background: "transparent",
-                    }}
+                    className="p-2.5 rounded-lg transition-all"
+                    style={{ color: "var(--charcoal-soft)" }}
                     aria-label="Search"
                   >
-                    <Search className="w-4.25 h-4.25" strokeWidth={2} />
+                    <Search className="w-[17px] h-[17px]" strokeWidth={2} />
                   </button>
                 )}
               </div>
 
-              {/* Wishlist — hidden on xs, shown sm+ */}
+              {/* Wishlist — hidden on xs, visible sm+ */}
               <Link
                 href="/wishlist"
                 className="hidden sm:flex p-2.5 rounded-lg transition-all"
-                style={{
-                  color: "var(--charcoal-soft)",
-                  textDecoration: "none",
-                }}
+                style={{ color: "var(--charcoal-soft)", textDecoration: "none" }}
                 aria-label="Wishlist"
               >
-                <Heart className="w-4.25 h-4.25" strokeWidth={2} />
+                <Heart className="w-[17px] h-[17px]" strokeWidth={2} />
               </Link>
 
               {/* Notifications — logged-in only */}
@@ -677,13 +596,10 @@ export default function Navbar() {
               <Link
                 href="/cart"
                 className="relative p-2.5 rounded-lg transition-all"
-                style={{
-                  color: "var(--charcoal-soft)",
-                  textDecoration: "none",
-                }}
+                style={{ color: "var(--charcoal-soft)", textDecoration: "none" }}
                 aria-label="Cart"
               >
-                <ShoppingBag className="w-4.25 h-4.25" strokeWidth={2} />
+                <ShoppingBag className="w-[17px] h-[17px]" strokeWidth={2} />
                 {mounted && cartCount > 0 && (
                   <span
                     className="absolute top-1 right-1 w-3.5 h-3.5 text-[8px] font-bold rounded-full flex items-center justify-center"
@@ -699,23 +615,23 @@ export default function Navbar() {
                 )}
               </Link>
 
-              {/* Hamburger — shown below lg, min 44px tap area */}
+              {/*
+               * Hamburger — visible below lg only.
+               * w-11 h-11 guarantees 44×44 px touch target.
+               */}
               <button
                 type="button"
                 className="lg:hidden flex items-center justify-center w-11 h-11 rounded-lg transition-all"
                 style={{ color: "var(--charcoal-soft)" }}
-                onClick={() => setMobileMenuOpen((v) => !v)}
-                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+                onClick={() => setMobileMenuOpen(true)}
+                aria-label="Open navigation menu"
+                aria-expanded={mobileMenuOpen}
               >
-                {mobileMenuOpen ? (
-                  <X className="w-4.25 h-4.25" strokeWidth={2} />
-                ) : (
-                  <Menu className="w-4.25 h-4.25" strokeWidth={2} />
-                )}
+                <Menu className="w-[17px] h-[17px]" strokeWidth={2} />
               </button>
             </div>
 
-            {/* Auth — desktop only */}
+            {/* ── Desktop auth ─────────────────────────────────────────────── */}
             <div
               className="hidden lg:block pl-2 ml-1"
               style={{ borderLeft: "1px solid var(--border-light)" }}
@@ -728,10 +644,7 @@ export default function Navbar() {
                       className="outline-none flex items-center gap-1.5 hover:opacity-80 transition-opacity"
                     >
                       <AvatarCircle user={user} />
-                      <ChevronDown
-                        className="w-3 h-3"
-                        style={{ color: "var(--charcoal-soft)" }}
-                      />
+                      <ChevronDown className="w-3 h-3" style={{ color: "var(--charcoal-soft)" }} />
                     </button>
                   </DropdownMenuTrigger>
 
@@ -757,26 +670,19 @@ export default function Navbar() {
                       >
                         {user.name}
                       </p>
-                      <p
-                        className="text-[10px] truncate mt-0.5"
-                        style={{ color: "var(--charcoal-soft)" }}
-                      >
+                      <p className="text-[10px] truncate mt-0.5" style={{ color: "var(--charcoal-soft)" }}>
                         {user.email}
                       </p>
                     </div>
 
                     {[
-                      { href: "/profile", icon: User, label: "Profile" },
-                      { href: "/orders", icon: ClipboardList, label: "Orders" },
-                      { href: "/track", icon: MapPin, label: "Track Order" },
-                      { href: "/wallet", icon: Wallet, label: "Wallet" },
-                      { href: "/loyalty", icon: Award, label: "Loyalty" },
-                      { href: "/referral", icon: Users, label: "Referral" },
-                      {
-                        href: "/help-center",
-                        icon: HelpCircle,
-                        label: "Help Center",
-                      },
+                      { href: "/profile",     icon: User,         label: "Profile"     },
+                      { href: "/orders",      icon: ClipboardList,label: "Orders"      },
+                      { href: "/track",       icon: MapPin,        label: "Track Order" },
+                      { href: "/wallet",      icon: Wallet,        label: "Wallet"      },
+                      { href: "/loyalty",     icon: Award,         label: "Loyalty"     },
+                      { href: "/referral",    icon: Users,         label: "Referral"    },
+                      { href: "/help-center", icon: HelpCircle,    label: "Help Center" },
                     ].map(({ href, icon: Icon, label }) => (
                       <DropdownMenuItem key={href} asChild>
                         <Link
@@ -815,10 +721,7 @@ export default function Navbar() {
                       </DropdownMenuItem>
                     )}
 
-                    <DropdownMenuSeparator
-                      className="my-1"
-                      style={{ background: "var(--border-light)" }}
-                    />
+                    <DropdownMenuSeparator className="my-1" style={{ background: "var(--border-light)" }} />
 
                     <DropdownMenuItem asChild>
                       <button
@@ -841,23 +744,14 @@ export default function Navbar() {
               ) : (
                 <Link
                   href="/auth/login"
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-[0.8125rem] font-semibold transition-all hover:opacity-90 active:scale-95"
                   style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                    padding: "0.5rem 1.25rem",
-                    borderRadius: "0.5rem",
                     background: "var(--charcoal)",
                     color: "var(--white)",
-                    fontSize: "0.8125rem",
                     fontFamily: "var(--font-body)",
-                    fontWeight: 600,
                     letterSpacing: "0.02em",
                     textDecoration: "none",
-                    transition:
-                      "background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out)",
                   }}
-                  className="hover:bg-(--charcoal-mid) active:scale-95"
                 >
                   Sign In
                 </Link>
@@ -867,266 +761,227 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* ── Mobile Navigation Drawer ─────────────────────────────────────── */}
-      {/*
-       * Positioned just below the header using headerBottom.
-       * max-h-[85dvh] + overflow-y-auto prevents overflow on short screens.
-       * The inner nav uses padding-bottom to clear iOS home-indicator.
+      {/* ── Mobile navigation Sheet ───────────────────────────────────────────
+       *
+       * Replaces the old `headerBottom`-positioned floating div.
+       * shadcn Sheet handles:
+       *   - Slide-in animation from the right
+       *   - Click-outside / swipe-to-close
+       *   - Focus trap + ARIA roles
+       *   - Scroll lock on the body
+       *
+       * `isMobile` from use-mobile.ts drives the conditional Sheet width
+       * (w-full on very small screens, w-[320px] on larger phones).
        */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed left-0 right-0 z-40 pointer-events-auto"
-          style={{ top: headerBottom }}
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <SheetContent
+          side="right"
+          className={cn(
+            "p-0 flex flex-col overflow-hidden border-l",
+            isMobile ? "w-full" : "w-80",
+          )}
+          style={{
+            background: "rgba(255,255,255,0.98)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            borderColor: "var(--border-light)",
+          }}
         >
-          <div
-            className="mx-3 sm:mx-5 rounded-2xl overflow-hidden"
-            style={{
-              background: "rgba(255,255,255,0.98)",
-              backdropFilter: "blur(16px)",
-              border: "1px solid var(--border-light)",
-              boxShadow: "var(--shadow-lg)",
-              maxHeight: "85dvh",
-              overflowY: "auto",
-            }}
-          >
-            <nav className="flex flex-col p-3 pb-safe">
-              {/* ── Mobile search ────────────────────────────────────────── */}
-              <form onSubmit={handleSearch} className="relative mb-2">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
-                  style={{ color: "var(--charcoal-soft)" }}
-                />
-                <input
-                  type="search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search products, stores..."
-                  className="w-full pl-9 pr-4 py-3 rounded-xl text-sm outline-none"
-                  style={{
-                    background: "var(--off-white-2)",
-                    border: "1.5px solid var(--border-mid)",
-                    fontFamily: "var(--font-body)",
-                    color: "var(--charcoal)",
-                  }}
-                />
-              </form>
-
-              {/* ── Primary nav ──────────────────────────────────────────── */}
-              {PUBLIC_NAV.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: "0.9375rem",
-                    fontWeight: pathname === link.href ? 600 : 500,
-                    color: link.highlight
-                      ? "var(--red)"
-                      : pathname === link.href
-                        ? "var(--charcoal)"
-                        : "var(--charcoal-soft)",
-                    padding: "0.75rem 1rem",
-                    borderRadius: "0.75rem",
-                    background:
-                      pathname === link.href
-                        ? "var(--off-white-2)"
-                        : "transparent",
-                    textDecoration: "none",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                    minHeight: 44,
-                  }}
-                >
-                  {link.highlight && <Zap className="w-4 h-4" />}
-                  {link.label}
+          {/* Sheet header */}
+          <SheetHeader className="px-4 pt-4 pb-3 border-b shrink-0" style={{ borderColor: "var(--border-light)" }}>
+            <div className="flex items-center justify-between">
+              <SheetTitle asChild>
+                <Link href="/" onClick={() => setMobileMenuOpen(false)} style={{ textDecoration: "none" }}>
+                  <LogoMark />
                 </Link>
-              ))}
+              </SheetTitle>
+            </div>
 
-              {/* ── Secondary nav ─────────────────────────────────────────── */}
-              <div
+            {/* Mobile search — always visible in the sheet */}
+            <form onSubmit={handleSearch} className="relative mt-3">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                style={{ color: "var(--charcoal-soft)" }}
+              />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products, stores..."
+                className="w-full pl-9 pr-4 py-3 rounded-xl text-sm outline-none min-h-11"
                 style={{
-                  height: 1,
-                  background: "var(--border-light)",
-                  margin: "0.5rem 0",
+                  background: "var(--off-white-2)",
+                  border: "1.5px solid var(--border-mid)",
+                  fontFamily: "var(--font-body)",
+                  color: "var(--charcoal)",
                 }}
               />
-              {SECONDARY_NAV.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: "0.875rem",
-                    fontWeight: 500,
-                    color: "var(--charcoal-soft)",
-                    padding: "0.625rem 1rem",
-                    borderRadius: "0.75rem",
-                    textDecoration: "none",
-                    display: "block",
-                    minHeight: 44,
-                  }}
-                >
-                  {link.label}
-                </Link>
-              ))}
+            </form>
+          </SheetHeader>
 
-              {/* ── Utility links ─────────────────────────────────────────── */}
-              <div
+          {/* Scrollable nav content */}
+          <nav className="flex-1 overflow-y-auto overscroll-contain px-3 py-2 pb-safe">
+
+            {/* Primary nav links */}
+            {PUBLIC_NAV.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-3 rounded-xl min-h-11 transition-colors"
                 style={{
-                  height: 1,
-                  background: "var(--border-light)",
-                  margin: "0.5rem 0",
+                  fontFamily: "var(--font-body)",
+                  fontSize: "0.9375rem",
+                  fontWeight: pathname === link.href ? 600 : 500,
+                  color: link.highlight
+                    ? "var(--red)"
+                    : pathname === link.href ? "var(--charcoal)" : "var(--charcoal-soft)",
+                  background: pathname === link.href ? "var(--off-white-2)" : "transparent",
+                  textDecoration: "none",
                 }}
-              />
-              {[
-                { href: "/wishlist", icon: Heart, label: "Wishlist" },
-                { href: "/cart", icon: ShoppingBag, label: "Cart" },
-                { href: "/wallet", icon: Wallet, label: "Wallet" },
-                { href: "/loyalty", icon: Award, label: "Loyalty" },
-                { href: "/referral", icon: Users, label: "Referral" },
-                { href: "/gift-cards", icon: Gift, label: "Gift Cards" },
-                { href: "/track", icon: MapPin, label: "Track Order" },
-                {
-                  href: "/help-center",
-                  icon: HelpCircle,
-                  label: "Help Center",
-                },
-              ].map(({ href, icon: Icon, label }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: "0.9375rem",
-                    fontWeight: 500,
-                    color: "var(--charcoal-soft)",
-                    padding: "0.75rem 1rem",
-                    borderRadius: "0.75rem",
-                    textDecoration: "none",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                    minHeight: 44,
-                  }}
-                >
-                  <Icon className="w-4 h-4" strokeWidth={2} />
-                  {label}
-                  {/* Cart badge in mobile menu */}
-                  {href === "/cart" && mounted && cartCount > 0 && (
-                    <span
-                      className="w-5 h-5 text-[10px] font-bold rounded-full flex items-center justify-center"
-                      style={{
-                        background: "var(--red)",
-                        color: "white",
-                        fontFamily: "var(--font-mono)",
-                      }}
+              >
+                {link.highlight && <Zap className="w-4 h-4 shrink-0" />}
+                {link.label}
+              </Link>
+            ))}
+
+            <SheetDivider />
+
+            {/* Secondary nav links */}
+            {SECONDARY_NAV.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl min-h-11 transition-colors"
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  color: "var(--charcoal-soft)",
+                  textDecoration: "none",
+                }}
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            <SheetDivider />
+
+            {/* Utility links */}
+            {[
+              { href: "/wishlist",   icon: Heart,       label: "Wishlist"    },
+              { href: "/wallet",     icon: Wallet,       label: "Wallet"      },
+              { href: "/loyalty",    icon: Award,        label: "Loyalty"     },
+              { href: "/referral",   icon: Users,        label: "Referral"    },
+              { href: "/gift-cards", icon: Gift,         label: "Gift Cards"  },
+              { href: "/track",      icon: MapPin,        label: "Track Order" },
+              { href: "/help-center",icon: HelpCircle,   label: "Help Center" },
+            ].map(({ href, icon: Icon, label }) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-3 rounded-xl min-h-11 transition-colors"
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "0.9375rem",
+                  fontWeight: 500,
+                  color: "var(--charcoal-soft)",
+                  textDecoration: "none",
+                }}
+              >
+                <Icon className="w-4 h-4 shrink-0" strokeWidth={2} />
+                {label}
+              </Link>
+            ))}
+
+            <SheetDivider />
+
+            {/* Auth section */}
+            {user ? (
+              <>
+                {/* User identity row */}
+                <div className="flex items-center gap-3 px-3 py-3">
+                  <AvatarCircle user={user} />
+                  <div className="min-w-0">
+                    <p
+                      className="text-sm font-semibold truncate"
+                      style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
                     >
-                      {cartCount}
-                    </span>
-                  )}
-                </Link>
-              ))}
-
-              {/* ── Auth section ──────────────────────────────────────────── */}
-              <div
-                style={{
-                  height: 1,
-                  background: "var(--border-light)",
-                  margin: "0.5rem 0",
-                }}
-              />
-              {user ? (
-                <>
-                  {/* Logged-in: user info row */}
-                  <div className="flex items-center gap-3 px-4 py-3">
-                    <AvatarCircle user={user} />
-                    <div className="min-w-0">
-                      <p
-                        className="text-sm font-semibold truncate"
-                        style={{
-                          color: "var(--charcoal)",
-                          fontFamily: "var(--font-body)",
-                        }}
-                      >
-                        {user.name}
-                      </p>
-                      <p
-                        className="text-xs truncate"
-                        style={{ color: "var(--charcoal-soft)" }}
-                      >
-                        {user.email}
-                      </p>
-                    </div>
+                      {user.name}
+                    </p>
+                    <p
+                      className="text-[11px] truncate"
+                      style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
+                    >
+                      {user.email}
+                    </p>
                   </div>
+                </div>
 
-                  {/* Dashboard link for non-customers */}
-                  {user.role !== "customer" && (
-                    <Link
-                      href={DASHBOARD_HREF[user.role]}
-                      onClick={() => setMobileMenuOpen(false)}
-                      style={{
-                        fontFamily: "var(--font-body)",
-                        fontSize: "0.9375rem",
-                        fontWeight: 500,
-                        color: "var(--charcoal-soft)",
-                        padding: "0.75rem 1rem",
-                        borderRadius: "0.75rem",
-                        textDecoration: "none",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.75rem",
-                        minHeight: 44,
-                      }}
-                    >
-                      <LayoutDashboard className="w-4 h-4" strokeWidth={2} />
-                      Dashboard
-                    </Link>
-                  )}
-
-                  {/* Sign out */}
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="flex items-center gap-3 w-full px-4 rounded-xl text-[0.9375rem] font-medium transition-colors"
+                {/* Profile links */}
+                {[
+                  { href: "/profile", icon: User,          label: "My Profile"  },
+                  { href: "/orders",  icon: ClipboardList, label: "My Orders"   },
+                  ...(user.role !== "customer"
+                    ? [{ href: DASHBOARD_HREF[user.role], icon: LayoutDashboard, label: "Dashboard" }]
+                    : []),
+                ].map(({ href, icon: Icon, label }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl min-h-11 transition-colors"
                     style={{
-                      color: "var(--red)",
                       fontFamily: "var(--font-body)",
-                      padding: "0.75rem 1rem",
-                      minHeight: 44,
-                      background: "transparent",
-                      border: "none",
+                      fontSize: "0.9375rem",
+                      fontWeight: 500,
+                      color: "var(--charcoal-soft)",
+                      textDecoration: "none",
                     }}
                   >
-                    <LogOut className="w-4 h-4" strokeWidth={2} />
-                    Sign Out
-                  </button>
-                </>
-              ) : (
-                /* Guest: Sign In CTA */
+                    <Icon className="w-4 h-4 shrink-0" />
+                    {label}
+                  </Link>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                  className="flex items-center gap-3 w-full px-3 py-3 rounded-xl min-h-11 transition-colors mt-1"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.9375rem",
+                    fontWeight: 500,
+                    color: "var(--red)",
+                  }}
+                >
+                  <LogOut className="w-4 h-4 shrink-0" />
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              /* Guest: Sign In CTA */
+              <div className="px-2 pt-1 pb-2">
                 <Link
                   href="/auth/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 mx-1 my-1 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                  className="flex items-center justify-center gap-2 w-full min-h-11 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95"
                   style={{
                     background: "var(--charcoal)",
-                    padding: "0.875rem 1.5rem",
-                    minHeight: 48,
+                    color: "var(--white)",
                     fontFamily: "var(--font-body)",
                     textDecoration: "none",
                   }}
                 >
-                  <User className="w-4 h-4" />
                   Sign In
                 </Link>
-              )}
-            </nav>
-          </div>
-        </div>
-      )}
+              </div>
+            )}
+          </nav>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

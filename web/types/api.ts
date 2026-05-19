@@ -103,7 +103,12 @@ export interface CreateCategoryRequest {
 // ── Order DTOs ────────────────────────────────────────────────────────────────
 
 export interface CreateOrderRequest {
-  items: { productId: string; quantity: number }[];
+  items: {
+    productId: string;
+    quantity: number;
+    /** Optional — selects a specific product variant (size/color combination) */
+    variantId?: string;
+  }[];
   shippingAddress: {
     fullName: string;
     phone: string;
@@ -114,7 +119,8 @@ export interface CreateOrderRequest {
   };
   shippingRate: "EXPRESS" | "REGULAR";
   source: "MARKETPLACE" | "ESTORE";
-  merchantSlug?: string; // ESTORE siparişi için
+  /** Required for ESTORE orders to identify which merchant's store */
+  merchantSlug?: string;
 }
 
 export interface CreateOrderResponse {
@@ -145,24 +151,31 @@ export interface UpdateShipmentStatusRequest {
   location?: string;
 }
 
+/**
+ * Matches backend FulfillmentController.CalculateEta query params.
+ * The backend resolves the merchant's lat/lng from the DB using merchantId.
+ */
 export interface CalculateEtaRequest {
-  merchantLatitude: number;
-  merchantLongitude: number;
-  customerLatitude: number;
-  customerLongitude: number;
+  merchantId: string;
+  destLat: number;
+  destLng: number;
   shippingRate: "EXPRESS" | "REGULAR";
-  handlingHours?: number;
 }
 
 export interface CalculateEtaResponse {
+  shippingRate: string;
   distanceKm: number;
   handlingHours: number;
   transitHours: number;
-  totalHours: number;
+  shippingCost: number;
   estimatedPickupStart: string;
   estimatedPickupEnd: string;
   estimatedDeliveryStart: string;
   estimatedDeliveryEnd: string;
+  /** Backward-compat: total hours (handling + transit) */
+  estimatedHours?: number;
+  /** Backward-compat: single estimated delivery date */
+  estimatedDeliveryDate?: string;
 }
 
 // ── Payment DTOs ──────────────────────────────────────────────────────────────

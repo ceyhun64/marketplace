@@ -1,11 +1,9 @@
 /**
  * __tests__/enumMapping.test.ts
  *
- * BUG FIX #1 (Frontend tarafı) — Enum Serialization Mismatch
- *
- * Backend artık UPPER_SNAKE_CASE gönderiyor.
- * Bu testler frontend enum sabitleri, label map'leri ve
- * renk map'lerinin UPPER_SNAKE_CASE değerleri doğru ele aldığını doğrular.
+ * Verifies that frontend enum constants, label maps, and color maps
+ * correctly handle all SCREAMING_SNAKE_CASE values produced by the backend's
+ * ToApiString() / ScreamingSnakeCaseNamingPolicy serialization.
  */
 
 import {
@@ -19,7 +17,8 @@ import {
   type ShipmentStatus,
 } from "@/types/enums";
 
-// ── Yardımcı: backend'in gönderdiği tüm ShipmentStatus değerleri ──────────────
+// ── All status values the backend sends ──────────────────────────────────────
+
 const BACKEND_SHIPMENT_STATUSES: ShipmentStatus[] = [
   "PENDING",
   "LABEL_GENERATED",
@@ -44,11 +43,11 @@ const BACKEND_ORDER_STATUSES: OrderStatus[] = [
   "CANCELLED",
 ];
 
-// ── ShipmentStatus testleri ───────────────────────────────────────────────────
+// ── ShipmentStatus ────────────────────────────────────────────────────────────
 
-describe("ShipmentStatus — UPPER_SNAKE_CASE uyumluluğu", () => {
+describe("ShipmentStatus — SCREAMING_SNAKE_CASE mapping", () => {
   test.each(BACKEND_SHIPMENT_STATUSES)(
-    "SHIPMENT_STATUS_LABELS['%s'] tanımlı olmalı",
+    "SHIPMENT_STATUS_LABELS['%s'] must be defined",
     (status) => {
       expect(SHIPMENT_STATUS_LABELS[status]).toBeDefined();
       expect(typeof SHIPMENT_STATUS_LABELS[status]).toBe("string");
@@ -57,23 +56,21 @@ describe("ShipmentStatus — UPPER_SNAKE_CASE uyumluluğu", () => {
   );
 
   test.each(BACKEND_SHIPMENT_STATUSES)(
-    "SHIPMENT_STATUS_COLORS['%s'] tanımlı olmalı",
+    "SHIPMENT_STATUS_COLORS['%s'] must be defined",
     (status) => {
       expect(SHIPMENT_STATUS_COLORS[status]).toBeDefined();
       expect(SHIPMENT_STATUS_COLORS[status]).toMatch(/bg-\w+/);
     },
   );
 
-  it("SHIPMENT_STATUS_ORDER tüm non-failed statüleri içermeli", () => {
+  it("SHIPMENT_STATUS_ORDER must include all non-failed statuses", () => {
     const nonFailed = BACKEND_SHIPMENT_STATUSES.filter((s) => s !== "FAILED");
     nonFailed.forEach((status) => {
       expect(SHIPMENT_STATUS_ORDER).toContain(status);
     });
   });
 
-  it("Eski PascalCase değerleri ('Pending', 'LabelGenerated') map'te bulunmamalı", () => {
-    // Eğer backend fix'i olmadan eski PascalCase gelseyde, bu testler başarısız olurdu.
-    // Şimdi backend UPPER_SNAKE_CASE gönderiyor ve frontend map'i de UPPER_SNAKE_CASE bekliyor.
+  it("Legacy PascalCase values ('Pending', 'LabelGenerated') must NOT be in the maps", () => {
     const pascalCaseValues = [
       "Pending",
       "LabelGenerated",
@@ -90,25 +87,24 @@ describe("ShipmentStatus — UPPER_SNAKE_CASE uyumluluğu", () => {
   });
 });
 
-// ── OrderStatus testleri ──────────────────────────────────────────────────────
+// ── OrderStatus ───────────────────────────────────────────────────────────────
 
-describe("OrderStatus — UPPER_SNAKE_CASE uyumluluğu", () => {
+describe("OrderStatus — SCREAMING_SNAKE_CASE mapping", () => {
   test.each(BACKEND_ORDER_STATUSES)(
-    "ORDER_STATUS_LABELS['%s'] tanımlı olmalı",
+    "ORDER_STATUS_LABELS['%s'] must be defined",
     (status) => {
       expect(ORDER_STATUS_LABELS[status]).toBeDefined();
     },
   );
 
   test.each(BACKEND_ORDER_STATUSES)(
-    "ORDER_STATUS_COLORS['%s'] Tailwind class içermeli",
+    "ORDER_STATUS_COLORS['%s'] must contain a Tailwind class",
     (status) => {
       expect(ORDER_STATUS_COLORS[status]).toMatch(/bg-\w+/);
     },
   );
 
-  it("NON_CANCELLABLE_STATUSES mantıklı statüler içermeli", () => {
-    // Sipariş kargoya verildikten sonra iptal edilemez
+  it("NON_CANCELLABLE_STATUSES must include post-pickup statuses", () => {
     const mustBeNonCancellable: OrderStatus[] = [
       "PICKED_UP",
       "IN_TRANSIT",
@@ -120,31 +116,30 @@ describe("OrderStatus — UPPER_SNAKE_CASE uyumluluğu", () => {
     });
   });
 
-  it("PENDING iptal edilebilir olmalı", () => {
+  it("PENDING must be cancellable", () => {
     expect(NON_CANCELLABLE_STATUSES).not.toContain("PENDING");
   });
 });
 
-// ── TrackingTimeline step hesaplaması ─────────────────────────────────────────
+// ── Tracking timeline step logic ──────────────────────────────────────────────
 
 describe("SHIPMENT_STATUS_ORDER — timeline step logic", () => {
-  it("IN_TRANSIT için tamamlanan adım sayısı doğru olmalı", () => {
+  it("IN_TRANSIT must be at index 4", () => {
     const currentStatus: ShipmentStatus = "IN_TRANSIT";
     const currentIndex = SHIPMENT_STATUS_ORDER.indexOf(currentStatus);
-    expect(currentIndex).toBe(4); // 0-indexed: PENDING=0, LABEL=1, COURIER=2, PICKED=3, IN_TRANSIT=4
+    expect(currentIndex).toBe(4); // PENDING=0, LABEL=1, COURIER=2, PICKED=3, IN_TRANSIT=4
   });
 
-  it("DELIVERED en son adım olmalı", () => {
+  it("DELIVERED must be the last step", () => {
     const lastStatus = SHIPMENT_STATUS_ORDER[SHIPMENT_STATUS_ORDER.length - 1];
     expect(lastStatus).toBe("DELIVERED");
   });
 
-  it("PENDING ilk adım olmalı", () => {
+  it("PENDING must be the first step", () => {
     expect(SHIPMENT_STATUS_ORDER[0]).toBe("PENDING");
   });
 
-  it("Tüm statüler ardışık sıralanmış olmalı", () => {
-    // FAILED timeline'a dahil değil (ayrı durum)
+  it("Status order must match the delivery lifecycle sequence", () => {
     const expectedOrder: ShipmentStatus[] = [
       "PENDING",
       "LABEL_GENERATED",
@@ -158,31 +153,27 @@ describe("SHIPMENT_STATUS_ORDER — timeline step logic", () => {
   });
 });
 
-// ── Admin store setup API çağrısı test ───────────────────────────────────────
+// ── Admin store setup endpoint ────────────────────────────────────────────────
 
 describe("Admin store setup API endpoint", () => {
-  it("Endpoint URL formatı doğru oluşturulmalı", () => {
+  it("URL must be correctly formatted", () => {
     const merchantId = "550e8400-e29b-41d4-a716-446655440000";
     const expectedUrl = `/api/admin/store/${merchantId}/setup`;
-    // URL template kontrolü
     const actualUrl = `/api/admin/store/${merchantId}/setup`;
     expect(actualUrl).toBe(expectedUrl);
     expect(actualUrl).toMatch(/^\/api\/admin\/store\/[^/]+\/setup$/);
   });
 
-  it("Setup payload doğru yapıda olmalı", () => {
+  it("Setup payload must contain required fields", () => {
     const payload = {
-      storeName: "Test Mağaza",
-      slug: "test-magaza",
-      description: "Test açıklaması",
+      storeName: "Test Store",
+      slug: "test-store",
+      description: "Test description",
       logoUrl: "https://example.com/logo.png",
       handlingHours: 24,
     };
-
-    // Gerekli alanlar mevcut
     expect(payload).toHaveProperty("storeName");
     expect(payload).toHaveProperty("slug");
-    // Opsiyonel alanlar undefined olabilir (null gönderme)
     expect(payload.description).toBeTruthy();
   });
 });

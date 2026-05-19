@@ -1,4 +1,5 @@
 using api.Common.DTOs;
+using api.Common.Extensions;
 using api.Domain.Entities;
 using api.Domain.Enums;
 using api.Infrastructure.Persistence;
@@ -143,7 +144,7 @@ public class FulfillmentController(
             return BadRequest(new { message = "Invalid shipment status." });
 
         await fulfillmentService.TransitionStatusAsync(shipment, newStatus, dto.Note);
-        return Ok(new { message = "Status updated.", status = newStatus.ToString() });
+        return Ok(new { message = "Status updated.", status = newStatus.ToApiString() });
     }
 
     [HttpGet("{id:guid}/label")]
@@ -332,12 +333,12 @@ public class FulfillmentController(
             new
             {
                 trackingNo,
-                status = shipment.Status.ToString(),
+                status = shipment.Status.ToApiString(),
                 events = shipment
                     .StatusHistory.OrderByDescending(h => h.ChangedAt)
                     .Select(h => new
                     {
-                        status = h.Status.ToString(),
+                        status = h.Status.ToApiString(),
                         h.Note,
                         h.ChangedAt,
                     }),
@@ -368,7 +369,7 @@ public class FulfillmentController(
                     : null,
             CourierPhone = s.Courier?.User?.Phone,
             CourierVehicle = s.Courier?.VehicleType,
-            Status = s.Status.ToString(),
+            Status = s.Status.ToApiString(),
             TrackingNumber = s.TrackingNumber,
             EstimatedDelivery = s.EstimatedDelivery,
             // Delivery window derived from EstimatedDelivery
@@ -376,16 +377,16 @@ public class FulfillmentController(
             EstimatedPickupEnd = s.EstimatedDelivery.AddDays(-1),
             EstimatedDeliveryStart = s.EstimatedDelivery.AddHours(-4),
             EstimatedDeliveryEnd = s.EstimatedDelivery,
-            ActualDeliveredAt = s.Status == api.Domain.Enums.ShipmentStatus.Delivered ? s.UpdatedAt : null,
+            ActualDeliveredAt = s.Status == ShipmentStatus.Delivered ? s.UpdatedAt : null,
             LabelUrl = s.LabelUrl,
-            ShippingRate = s.Order != null ? s.Order.ShippingRate.ToString() : string.Empty,
+            ShippingRate = s.Order != null ? s.Order.ShippingRate.ToApiString() : string.Empty,
             Events = s
                 .StatusHistory.OrderByDescending(h => h.ChangedAt)
                 .Select(h => new ShipmentStatusHistoryDto
                 {
                     Id = h.Id,
                     ShipmentId = h.ShipmentId,
-                    Status = h.Status.ToString(),
+                    Status = h.Status.ToApiString(),
                     Note = h.Note,
                     Location = h.Location,
                     CreatedAt = h.ChangedAt,

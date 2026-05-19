@@ -15,6 +15,7 @@ const adminLinks = [
   { href: "/admin/analytics", label: "Analytics", icon: "bar-chart-2" },
   { href: "/admin/subscription", label: "Subscriptions", icon: "credit-card" },
   { href: "/admin/logs", label: "Audit Logs", icon: "activity" },
+  { href: "/admin/site-settings", label: "Site Settings", icon: "layout" },
 ];
 
 export default function AdminLayout({

@@ -76,7 +76,9 @@ api.interceptors.response.use(
     // Önceki Object.keys().length === 1 koşulu { data: [...], total: 10 } gibi
     // iki-key response'ları kaçırıyordu. Artık yalnızca "data" key'i olan ve
     // "total/page/limit/items" gibi pagination key'leri BULUNMAYAN yanıtları açıyoruz.
-    const PAGINATION_KEYS = ["total", "page", "limit", "items", "pages", "stores"];
+    // "pagination" guards against { data: T[], pagination: {...} } shaped responses
+    // being incorrectly unwrapped to just the inner array.
+    const PAGINATION_KEYS = ["total", "page", "limit", "items", "pages", "stores", "pagination"];
     if (
       response.data !== null &&
       typeof response.data === "object" &&

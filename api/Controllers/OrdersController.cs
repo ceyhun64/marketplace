@@ -1,4 +1,6 @@
+using System.Data;
 using api.Common.DTOs;
+using api.Common.Extensions;
 using api.Domain.Entities;
 using api.Domain.Enums;
 using api.Infrastructure.Persistence;
@@ -6,7 +8,6 @@ using api.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Data;
 
 namespace api.Controllers;
 
@@ -33,7 +34,8 @@ public class OrdersController(
         // Serializable isolation prevents race conditions — same stock cannot be allocated
         // to two concurrent orders.
         await using var transaction = await db.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable);
+            IsolationLevel.Serializable
+        );
         try
         {
             var products = await db
@@ -48,9 +50,14 @@ public class OrdersController(
             }
 
             // Resolve variants (optional per item)
-            var variantIds = dto.Items.Where(i => i.VariantId.HasValue).Select(i => i.VariantId!.Value).ToList();
+            var variantIds = dto
+                .Items.Where(i => i.VariantId.HasValue)
+                .Select(i => i.VariantId!.Value)
+                .ToList();
             var variants = variantIds.Any()
-                ? await db.ProductVariants.Where(v => variantIds.Contains(v.Id) && v.IsActive).ToListAsync()
+                ? await db
+                    .ProductVariants.Where(v => variantIds.Contains(v.Id) && v.IsActive)
+                    .ToListAsync()
                 : new List<ProductVariant>();
 
             decimal total = 0;
@@ -63,16 +70,22 @@ public class OrdersController(
                 ProductVariant? variant = null;
                 if (item.VariantId.HasValue)
                 {
-                    variant = variants.FirstOrDefault(v => v.Id == item.VariantId.Value && v.ProductId == product.Id);
+                    variant = variants.FirstOrDefault(v =>
+                        v.Id == item.VariantId.Value && v.ProductId == product.Id
+                    );
                     if (variant == null)
                     {
                         await transaction.RollbackAsync();
-                        return BadRequest(new { message = $"Variant not found for '{product.Name}'." });
+                        return BadRequest(
+                            new { message = $"Variant not found for '{product.Name}'." }
+                        );
                     }
                     if (variant.Stock < item.Quantity)
                     {
                         await transaction.RollbackAsync();
-                        return BadRequest(new { message = $"Insufficient variant stock for '{product.Name}'." });
+                        return BadRequest(
+                            new { message = $"Insufficient variant stock for '{product.Name}'." }
+                        );
                     }
                     variant.Stock -= item.Quantity;
                     variant.UpdatedAt = DateTime.UtcNow;
@@ -82,25 +95,29 @@ public class OrdersController(
                     if (product.Stock < item.Quantity)
                     {
                         await transaction.RollbackAsync();
-                        return BadRequest(new { message = $"Insufficient stock for '{product.Name}'." });
+                        return BadRequest(
+                            new { message = $"Insufficient stock for '{product.Name}'." }
+                        );
                     }
                     product.Stock -= item.Quantity;
                 }
 
                 var effectivePrice = variant?.PriceOverride ?? product.Price;
 
-                orderItems.Add(new OrderItem
-                {
-                    Id = Guid.NewGuid(),
-                    ProductId = product.Id,
-                    MerchantId = product.MerchantId,
-                    VariantId = variant?.Id,
-                    VariantAttributes = variant?.Attributes,
-                    ProductName = product.Name,
-                    ProductImage = variant?.ImageUrl ?? product.Images.FirstOrDefault(),
-                    UnitPrice = effectivePrice,
-                    Quantity = item.Quantity,
-                });
+                orderItems.Add(
+                    new OrderItem
+                    {
+                        Id = Guid.NewGuid(),
+                        ProductId = product.Id,
+                        MerchantId = product.MerchantId,
+                        VariantId = variant?.Id,
+                        VariantAttributes = variant?.Attributes,
+                        ProductName = product.Name,
+                        ProductImage = variant?.ImageUrl ?? product.Images.FirstOrDefault(),
+                        UnitPrice = effectivePrice,
+                        Quantity = item.Quantity,
+                    }
+                );
 
                 total += effectivePrice * item.Quantity;
                 product.UpdatedAt = DateTime.UtcNow;
@@ -112,7 +129,9 @@ public class OrdersController(
                 return BadRequest(new { message = $"Invalid order source: {dto.Source}" });
             }
 
-            if (!Enum.TryParse<ShippingRate>(dto.ShippingRate, ignoreCase: true, out var parsedRate))
+            if (
+                !Enum.TryParse<ShippingRate>(dto.ShippingRate, ignoreCase: true, out var parsedRate)
+            )
             {
                 await transaction.RollbackAsync();
                 return BadRequest(new { message = $"Invalid shipping rate: {dto.ShippingRate}" });
@@ -288,9 +307,9 @@ public class OrdersController(
             new OrderTrackingDto
             {
                 OrderId = id,
-                OrderStatus = order.Status.ToString(),
+                OrderStatus = order.Status.ToApiString(),
                 TrackingNumber = shipment.TrackingNumber,
-                ShipmentStatus = shipment.Status.ToString(),
+                ShipmentStatus = shipment.Status.ToApiString(),
                 EstimatedDelivery = shipment.EstimatedDelivery,
                 LabelUrl = shipment.LabelUrl,
                 CourierName =
@@ -304,7 +323,7 @@ public class OrdersController(
                     {
                         Id = h.Id,
                         ShipmentId = h.ShipmentId,
-                        Status = h.Status.ToString(),
+                        Status = h.Status.ToApiString(),
                         Note = h.Note,
                         Location = h.Location,
                         CreatedAt = h.ChangedAt,
@@ -319,8 +338,8 @@ public class OrdersController(
     [Authorize(Policy = "CustomerOnly")]
     public async Task<IActionResult> CancelOrder(Guid id, [FromBody] CancelOrderDto dto)
     {
-        var order = await db.Orders
-            .Include(o => o.Items)
+        var order = await db
+            .Orders.Include(o => o.Items)
             .FirstOrDefaultAsync(o => o.Id == id && o.CustomerId == currentUser.UserId);
 
         if (order == null)
@@ -335,9 +354,7 @@ public class OrdersController(
 
         // Restore stock for all items in the cancelled order
         var productIds = order.Items.Select(i => i.ProductId).ToList();
-        var products = await db.Products
-            .Where(p => productIds.Contains(p.Id))
-            .ToListAsync();
+        var products = await db.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
 
         foreach (var item in order.Items)
         {
@@ -418,10 +435,13 @@ public class OrdersController(
         if (merchantId == null)
             return Forbid();
 
-        var query = db.VendorOrders
-            .Include(vo => vo.Order).ThenInclude(o => o.Customer)
-            .Include(vo => vo.Items).ThenInclude(i => i.Product)
-            .Include(vo => vo.Order).ThenInclude(o => o.Shipment)
+        var query = db
+            .VendorOrders.Include(vo => vo.Order)
+                .ThenInclude(o => o.Customer)
+            .Include(vo => vo.Items)
+                .ThenInclude(i => i.Product)
+            .Include(vo => vo.Order)
+                .ThenInclude(o => o.Shipment)
             .Where(vo => vo.MerchantId == merchantId.Value)
             .AsQueryable();
 
@@ -435,58 +455,64 @@ public class OrdersController(
             .Take(limit)
             .ToListAsync();
 
-        return Ok(new
-        {
-            data = vendorOrders.Select(vo => new
+        return Ok(
+            new
             {
-                vo.Id,
-                vo.OrderId,
-                vo.Status,
-                vo.SubTotal,
-                vo.PlatformFee,
-                vo.MerchantNetAmount,
-                vo.SettledAt,
-                vo.CreatedAt,
-                vo.UpdatedAt,
-                Customer = vo.Order.Customer == null ? null : new
+                data = vendorOrders.Select(vo => new
                 {
-                    vo.Order.Customer.Id,
-                    vo.Order.Customer.Email,
-                    Name = $"{vo.Order.Customer.FirstName} {vo.Order.Customer.LastName}".Trim(),
-                },
-                ShippingAddress = new
-                {
-                    vo.Order.RecipientName,
-                    vo.Order.RecipientPhone,
-                    vo.Order.AddressLine,
-                    vo.Order.City,
-                    vo.Order.PostalCode,
-                },
-                Shipment = vo.Order.Shipment == null ? null : new
-                {
-                    vo.Order.Shipment.TrackingNumber,
-                    Status = vo.Order.Shipment.Status.ToString(),
-                },
-                Items = vo.Items.Select(i => new
-                {
-                    i.Id,
-                    i.ProductId,
-                    i.ProductName,
-                    i.ProductImage,
-                    i.UnitPrice,
-                    i.Quantity,
-                    i.LineTotal,
-                    i.VariantAttributes,
+                    vo.Id,
+                    vo.OrderId,
+                    vo.Status,
+                    vo.SubTotal,
+                    vo.PlatformFee,
+                    vo.MerchantNetAmount,
+                    vo.SettledAt,
+                    vo.CreatedAt,
+                    vo.UpdatedAt,
+                    Customer = vo.Order.Customer == null
+                        ? null
+                        : new
+                        {
+                            vo.Order.Customer.Id,
+                            vo.Order.Customer.Email,
+                            Name = $"{vo.Order.Customer.FirstName} {vo.Order.Customer.LastName}".Trim(),
+                        },
+                    ShippingAddress = new
+                    {
+                        vo.Order.RecipientName,
+                        vo.Order.RecipientPhone,
+                        vo.Order.AddressLine,
+                        vo.Order.City,
+                        vo.Order.PostalCode,
+                    },
+                    Shipment = vo.Order.Shipment == null
+                        ? null
+                        : new
+                        {
+                            vo.Order.Shipment.TrackingNumber,
+                            Status = vo.Order.Shipment.Status.ToString(),
+                        },
+                    Items = vo.Items.Select(i => new
+                    {
+                        i.Id,
+                        i.ProductId,
+                        i.ProductName,
+                        i.ProductImage,
+                        i.UnitPrice,
+                        i.Quantity,
+                        i.LineTotal,
+                        i.VariantAttributes,
+                    }),
                 }),
-            }),
-            pagination = new
-            {
-                page,
-                limit,
-                total,
-                pages = (int)Math.Ceiling((double)total / limit),
-            },
-        });
+                pagination = new
+                {
+                    page,
+                    limit,
+                    total,
+                    pages = (int)Math.Ceiling((double)total / limit),
+                },
+            }
+        );
     }
 
     /// <summary>PATCH /api/orders/merchant/vendor-orders/{id}/pack — Merchant packs their sub-order</summary>
@@ -498,22 +524,27 @@ public class OrdersController(
         if (merchantId == null)
             return Forbid();
 
-        var vendorOrder = await db.VendorOrders
-            .Include(vo => vo.Order)
+        var vendorOrder = await db
+            .VendorOrders.Include(vo => vo.Order)
             .FirstOrDefaultAsync(vo => vo.Id == id && vo.MerchantId == merchantId.Value);
 
         if (vendorOrder == null)
             return NotFound(new { message = "Vendor order not found or access denied." });
 
-        if (vendorOrder.Status != OrderStatus.PaymentConfirmed && vendorOrder.Status != OrderStatus.Pending)
-            return BadRequest(new { message = $"Cannot pack. Current status: {vendorOrder.Status}" });
+        if (
+            vendorOrder.Status != OrderStatus.PaymentConfirmed
+            && vendorOrder.Status != OrderStatus.Pending
+        )
+            return BadRequest(
+                new { message = $"Cannot pack. Current status: {vendorOrder.Status}" }
+            );
 
         vendorOrder.Status = OrderStatus.LabelGenerated;
         vendorOrder.UpdatedAt = DateTime.UtcNow;
 
         // Mirror on parent order if all vendor orders for this parent are now LabelGenerated
-        var siblingStatuses = await db.VendorOrders
-            .Where(vo => vo.OrderId == vendorOrder.OrderId && vo.Id != vendorOrder.Id)
+        var siblingStatuses = await db
+            .VendorOrders.Where(vo => vo.OrderId == vendorOrder.OrderId && vo.Id != vendorOrder.Id)
             .Select(vo => vo.Status)
             .ToListAsync();
 
@@ -525,12 +556,14 @@ public class OrdersController(
 
         await db.SaveChangesAsync();
 
-        return Ok(new
-        {
-            message = "Vendor order packed. Courier dispatch will be triggered automatically.",
-            vendorOrderId = vendorOrder.Id,
-            status = vendorOrder.Status.ToString(),
-        });
+        return Ok(
+            new
+            {
+                message = "Vendor order packed. Courier dispatch will be triggered automatically.",
+                vendorOrderId = vendorOrder.Id,
+                status = vendorOrder.Status.ToApiString(),
+            }
+        );
     }
 
     /// <summary>GET /api/orders/merchant/incoming — Incoming orders for the merchant</summary>
@@ -614,7 +647,7 @@ public class OrdersController(
             new
             {
                 message = "Order packed. Shipping label can now be generated.",
-                status = order.Status.ToString(),
+                status = order.Status.ToApiString(),
                 orderId = order.Id,
             }
         );
@@ -635,7 +668,7 @@ public class OrdersController(
         order.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
 
-        return Ok(new { message = "Order status updated.", status = newStatus.ToString() });
+        return Ok(new { message = "Order status updated.", status = newStatus.ToApiString() });
     }
 
     // ─── HELPER ────────────────────────────────────────────────
@@ -645,17 +678,19 @@ public class OrdersController(
         {
             Id = order.Id,
             CustomerId = order.CustomerId,
-            CustomerName = order.Customer != null
-                ? $"{order.Customer.FirstName} {order.Customer.LastName}".Trim()
-                : order.RecipientName,
+            CustomerName =
+                order.Customer != null
+                    ? $"{order.Customer.FirstName} {order.Customer.LastName}".Trim()
+                    : order.RecipientName,
             MerchantId = order.Items.FirstOrDefault()?.MerchantId,
-            MerchantStoreName = order.Items.FirstOrDefault()?.Product?.Merchant?.StoreName ?? string.Empty,
-            Source = order.Source.ToString(),
-            Status = order.Status.ToString(),
+            MerchantStoreName =
+                order.Items.FirstOrDefault()?.Product?.Merchant?.StoreName ?? string.Empty,
+            Source = order.Source.ToApiString(),
+            Status = order.Status.ToApiString(),
             TotalAmount = order.TotalAmount,
             ShippingCost = order.ShippingAmount,
             VatAmount = order.Invoice?.VatAmount ?? 0,
-            ShippingRate = order.ShippingRate.ToString(),
+            ShippingRate = order.ShippingRate.ToApiString(),
             PaymentId = order.PaymentId,
             ShippingAddress = new ShippingAddressDto
             {
@@ -686,7 +721,7 @@ public class OrdersController(
                     : new ShipmentSummaryDto
                     {
                         Id = order.Shipment.Id,
-                        Status = order.Shipment.Status.ToString(),
+                        Status = order.Shipment.Status.ToApiString(),
                         TrackingNumber = order.Shipment.TrackingNumber,
                         EstimatedDelivery = order.Shipment.EstimatedDelivery,
                         LabelUrl = order.Shipment.LabelUrl,

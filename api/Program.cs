@@ -1,5 +1,7 @@
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization;
+using api.Common.Serialization;
 using api.Infrastructure.Hubs;
 using api.Infrastructure.Jobs;
 using api.Infrastructure.Middleware;
@@ -266,6 +268,10 @@ try
                 .Json
                 .JsonNamingPolicy
                 .CamelCase;
+            // Serialize enums as SCREAMING_SNAKE_CASE strings (matches frontend TypeScript union types).
+            // Applies to enum-typed properties in anonymous objects and DTOs that don't call .ToString() manually.
+            options.JsonSerializerOptions.Converters.Add(
+                new JsonStringEnumConverter(ScreamingSnakeCaseNamingPolicy.Instance));
         });
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(c =>

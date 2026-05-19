@@ -184,10 +184,10 @@ export default function AdminOrdersPage() {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5 md:space-y-8">
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-(--text-primary)">
+          <h1 className="text-xl md:text-2xl font-semibold text-(--text-primary)">
             Orders
           </h1>
           <p className="text-sm text-(--text-tertiary) mt-1">
@@ -198,14 +198,14 @@ export default function AdminOrdersPage() {
           variant="outline"
           size="sm"
           onClick={() => refetch()}
-          className="gap-2"
+          className="gap-2 self-start sm:self-auto"
         >
           <RefreshCw className="h-4 w-4" />
           Refresh
         </Button>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
         {[
           {
             label: "Total Orders",
@@ -248,21 +248,21 @@ export default function AdminOrdersPage() {
                 <s.icon className={`h-4 w-4 ${s.color}`} />
               </div>
             </div>
-            <p className="text-2xl font-bold text-(--text-primary)">
+            <p className="text-xl md:text-2xl font-bold text-(--text-primary)">
               {isLoading ? "—" : s.value}
             </p>
           </div>
         ))}
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-(--text-tertiary)" />
           <Input
             placeholder="Search by order ID, customer or store..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 border-(--border-mid)"
+            className="pl-9 border-(--border-mid) h-11 sm:h-9"
           />
         </div>
         <Select
@@ -272,7 +272,7 @@ export default function AdminOrdersPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="w-52 border-(--border-mid)">
+          <SelectTrigger className="w-full sm:w-52 border-(--border-mid) h-11 sm:h-9">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
