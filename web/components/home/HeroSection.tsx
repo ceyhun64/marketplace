@@ -26,16 +26,16 @@ const FALLBACK: HeroSettings = {
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
+// NOTE: ALL hooks must be called unconditionally before any early return.
+// We use conditional rendering (ternary) instead of early returns to avoid
+// the "change in hook order" error.
 
 export default function HeroSection() {
-  const { data, isError, isLoading } = useHeroSettings();
-  //  Hook'u erken dönüşün (early return) yukarısına taşıdık:
+  const { data, isLoading } = useHeroSettings();
+
+  // ✅ Hook called unconditionally — always at the top, before any branching
   const [query, setQuery] = useState("");
 
-  // Hook'lar tanımlandıktan sonra artık güvenle erken dönüş yapabiliriz.
-  if (isLoading) return <HeroSkeleton />;
-
-  // Use live data when ready; fall back if the API errored or returned inactive.
   const hero: HeroSettings = data && data.isActive ? data : FALLBACK;
 
   const handleSearch = (e: React.FormEvent) => {
@@ -44,6 +44,11 @@ export default function HeroSection() {
       window.location.href = `/search?q=${encodeURIComponent(query.trim())}`;
     }
   };
+
+  // ✅ Conditional rendering via ternary — no early return that would break hooks
+  if (isLoading) {
+    return <HeroSkeleton />;
+  }
 
   // Split headline on literal \n (from DB) or JS newline
   const headlineLines = hero.headline.split(/\\n|\n/);
@@ -159,7 +164,7 @@ export default function HeroSection() {
               </div>
             )}
 
-            {/* Dynamic headline — apply accent colour to the matching word */}
+            {/* Dynamic headline */}
             <h1
               style={{
                 fontFamily: "var(--font-display)",
@@ -337,7 +342,7 @@ export default function HeroSection() {
             )}
           </div>
 
-          {/* ── Right: Decorative cards (static visual — unchanged) ── */}
+          {/* ── Right: Decorative cards ── */}
           <div
             className="hidden lg:flex"
             style={{
@@ -609,7 +614,7 @@ export default function HeroSection() {
   );
 }
 
-// ── Shape-matched skeleton — mirrors the real hero layout ─────────────────────
+// ── Shape-matched skeleton ─────────────────────────────────────────────────────
 
 function HeroSkeleton() {
   return (
@@ -642,7 +647,6 @@ function HeroSkeleton() {
           }}
           className="lg:grid-cols-2 grid-cols-1"
         >
-          {/* Left — text skeleton */}
           <div className="space-y-5">
             <Skeleton className="h-6 w-40 rounded-full" />
             <div className="space-y-3">
@@ -665,8 +669,6 @@ function HeroSkeleton() {
               ))}
             </div>
           </div>
-
-          {/* Right — visual placeholder */}
           <div
             className="hidden lg:flex items-center justify-center"
             style={{ height: 520 }}
