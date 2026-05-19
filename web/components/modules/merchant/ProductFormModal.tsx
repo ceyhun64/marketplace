@@ -6,6 +6,9 @@ import { useCreateProduct, useUpdateProduct } from "@/queries/useProducts";
 import MultiImageUploader from "@/components/ui/multiImageUploader";
 import type { Product } from "@/types/entities";
 import { X, Loader2 } from "lucide-react";
+import ProductVariantEditor, { type VariantRow } from "./ProductVariantEditor";
+import api from "@/lib/api";
+import { toast } from "sonner";
 
 interface Props {
   product?: Product | null;
@@ -51,6 +54,10 @@ export default function ProductFormModal({
 
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"details" | "variants">("details");
+  const [variants, setVariants] = useState<VariantRow[]>([]);
+  const [variantAxes, setVariantAxes] = useState<string[]>([]);
+  const [savingVariants, setSavingVariants] = useState(false);
 
   useEffect(() => {
     if (product) {
@@ -99,11 +106,35 @@ export default function ProductFormModal({
     };
 
     try {
+      let savedProductId = product?.id;
       if (isEdit && product) {
         await updateMutation.mutateAsync({ id: product.id, ...payload });
       } else {
-        await createMutation.mutateAsync(payload);
+        const result = await createMutation.mutateAsync(payload) as any;
+        savedProductId = result?.id ?? result?.data?.id;
       }
+
+      // Persist new variants if any were added
+      if (savedProductId && variants.length > 0) {
+        setSavingVariants(true);
+        for (const v of variants) {
+          if (v.id) continue; // already persisted
+          if (!v.sku) continue;
+          try {
+            await api.post(`/api/products/${savedProductId}/variants`, {
+              sku: v.sku,
+              attributes: v.attributes,
+              priceOverride: v.priceOverride ? Number(v.priceOverride) : null,
+              stock: Number(v.stock) || 0,
+              imageUrl: v.imageUrl || null,
+            });
+          } catch {
+            toast.error(`Failed to save variant ${v.sku}`);
+          }
+        }
+        setSavingVariants(false);
+      }
+
       onSuccess();
       onClose();
     } catch (e: unknown) {
@@ -112,7 +143,7 @@ export default function ProductFormModal({
     }
   };
 
-  const submitting = createMutation.isPending || updateMutation.isPending;
+  const submitting = createMutation.isPending || updateMutation.isPending || savingVariants;
 
   return (
     <div
@@ -140,8 +171,44 @@ export default function ProductFormModal({
           </button>
         </div>
 
+        {/* Tab switcher */}
+        <div className="flex border-b border-(--border-light) px-6">
+          {(["details", "variants"] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={`py-3 px-1 mr-6 text-sm font-semibold border-b-2 -mb-px transition-colors ${
+                activeTab === tab
+                  ? "border-(--charcoal) text-(--text-primary)"
+                  : "border-transparent text-(--text-tertiary) hover:text-(--text-secondary)"
+              }`}
+            >
+              {tab === "details" ? "Product Details" : "Variant Matrix"}
+              {tab === "variants" && variants.length > 0 && (
+                <span className="ml-1.5 text-[11px] bg-(--info-bg) text-(--info) rounded-full px-1.5 py-0.5 font-bold">
+                  {variants.length}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
         {/* Body */}
         <div className="p-6 flex flex-col gap-5">
+          {/* Variants tab */}
+          {activeTab === "variants" && (
+            <ProductVariantEditor
+              productId={product?.id}
+              variants={variants}
+              onChange={setVariants}
+              axes={variantAxes}
+              onAxesChange={setVariantAxes}
+              basePrice={Number(form.price) || 0}
+            />
+          )}
+
+          {activeTab === "details" && <>
           {/* Images */}
           <MultiImageUploader
             label="Product Images"
@@ -254,10 +321,11 @@ export default function ProductFormModal({
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+            <p className="text-sm text-(--danger) bg-(--danger-bg) rounded-lg px-3 py-2 border border-(--danger-border)">
               {error}
             </p>
           )}
+          </> }
         </div>
 
         {/* Footer */}

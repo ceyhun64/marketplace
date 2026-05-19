@@ -1022,4 +1022,131 @@ public class ProductsController : ControllerBase
 
         return Ok(result);
     }
+
+    // ── VARIANT MATRIX ──────────────────────────────────────────────────────────
+
+    /// <summary>GET /api/products/{id}/variants — Public: list active variants</summary>
+    [HttpGet("{id:guid}/variants")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetVariants(Guid id)
+    {
+        var exists = await _db.Products.AnyAsync(p => p.Id == id);
+        if (!exists) return NotFound();
+
+        var variants = await _db.ProductVariants
+            .Where(v => v.ProductId == id && v.IsActive)
+            .OrderBy(v => v.SKU)
+            .Select(v => new
+            {
+                v.Id,
+                v.SKU,
+                v.Attributes,
+                v.PriceOverride,
+                v.Stock,
+                v.ImageUrl,
+                v.IsActive,
+            })
+            .ToListAsync();
+
+        return Ok(variants);
+    }
+
+    /// <summary>POST /api/products/{id}/variants — Merchant: create a variant</summary>
+    [HttpPost("{id:guid}/variants")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<IActionResult> CreateVariant(Guid id, [FromBody] CreateVariantDto dto,
+        [FromServices] ICurrentUserService currentUser)
+    {
+        var product = await _db.Products
+            .FirstOrDefaultAsync(p => p.Id == id && p.MerchantId == currentUser.MerchantId && !p.IsDeleted);
+        if (product == null) return NotFound();
+
+        if (string.IsNullOrWhiteSpace(dto.SKU))
+            return BadRequest(new { message = "SKU is required." });
+
+        if (await _db.ProductVariants.AnyAsync(v => v.ProductId == id && v.SKU == dto.SKU))
+            return BadRequest(new { message = "A variant with this SKU already exists for this product." });
+
+        var variant = new ProductVariant
+        {
+            Id = Guid.NewGuid(),
+            ProductId = id,
+            SKU = dto.SKU.Trim().ToUpperInvariant(),
+            Attributes = dto.Attributes ?? new Dictionary<string, string>(),
+            PriceOverride = dto.PriceOverride,
+            Stock = dto.Stock,
+            ImageUrl = dto.ImageUrl,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+
+        _db.ProductVariants.Add(variant);
+        await _db.SaveChangesAsync();
+
+        return Created($"/api/products/{id}/variants/{variant.Id}", new { variant.Id, variant.SKU });
+    }
+
+    /// <summary>PUT /api/products/{id}/variants/{variantId} — Merchant: update a variant</summary>
+    [HttpPut("{id:guid}/variants/{variantId:guid}")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<IActionResult> UpdateVariant(Guid id, Guid variantId,
+        [FromBody] UpdateVariantDto dto,
+        [FromServices] ICurrentUserService currentUser)
+    {
+        var variant = await _db.ProductVariants
+            .Include(v => v.Product)
+            .FirstOrDefaultAsync(v => v.Id == variantId && v.ProductId == id
+                && v.Product.MerchantId == currentUser.MerchantId);
+
+        if (variant == null) return NotFound();
+
+        if (dto.Stock.HasValue) variant.Stock = dto.Stock.Value;
+        if (dto.PriceOverride.HasValue) variant.PriceOverride = dto.PriceOverride;
+        if (dto.ImageUrl != null) variant.ImageUrl = dto.ImageUrl;
+        if (dto.IsActive.HasValue) variant.IsActive = dto.IsActive.Value;
+        if (dto.Attributes != null) variant.Attributes = dto.Attributes;
+        variant.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return Ok(new { variant.Id, variant.SKU, variant.Stock, variant.PriceOverride, variant.IsActive });
+    }
+
+    /// <summary>DELETE /api/products/{id}/variants/{variantId} — Merchant: deactivate a variant</summary>
+    [HttpDelete("{id:guid}/variants/{variantId:guid}")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<IActionResult> DeleteVariant(Guid id, Guid variantId,
+        [FromServices] ICurrentUserService currentUser)
+    {
+        var variant = await _db.ProductVariants
+            .Include(v => v.Product)
+            .FirstOrDefaultAsync(v => v.Id == variantId && v.ProductId == id
+                && v.Product.MerchantId == currentUser.MerchantId);
+
+        if (variant == null) return NotFound();
+
+        variant.IsActive = false;
+        variant.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
+
+// ── Variant DTOs ────────────────────────────────────────────────────────────────
+
+public record CreateVariantDto(
+    string SKU,
+    Dictionary<string, string>? Attributes,
+    decimal? PriceOverride,
+    int Stock,
+    string? ImageUrl
+);
+
+public record UpdateVariantDto(
+    int? Stock,
+    decimal? PriceOverride,
+    string? ImageUrl,
+    bool? IsActive,
+    Dictionary<string, string>? Attributes
+);

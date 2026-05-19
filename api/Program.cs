@@ -3,6 +3,7 @@ using System.Text;
 using api.Infrastructure.Hubs;
 using api.Infrastructure.Jobs;
 using api.Infrastructure.Middleware;
+using api.Infrastructure.Services;
 using api.Infrastructure.Persistence;
 using api.Infrastructure.Services;
 using AspNetCoreRateLimit;
@@ -128,8 +129,10 @@ try
     builder.Services.AddMediatR(cfg =>
     {
         cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-        // FluentValidation pipeline: her Send() çağrısında validator'lar otomatik tetiklenir
+        // Validation: fires FluentValidation validators on every Send()
         cfg.AddOpenBehavior(typeof(api.Application.Behaviours.ValidationBehaviour<,>));
+        // Cache invalidation: after commands implementing IInvalidatesCache succeed, Redis keys are deleted
+        cfg.AddOpenBehavior(typeof(api.Application.Behaviours.CacheInvalidationBehaviour<,>));
     });
 
     // ── AutoMapper ────────────────────────────────────────────────────────────
@@ -215,10 +218,12 @@ try
     builder.Services.AddScoped<ILabelGeneratorService, LabelGeneratorService>();
     builder.Services.AddScoped<INotificationService, NotificationService>();
     builder.Services.AddScoped<IPaymentService, PaymentService>();
-    builder.Services.AddScoped<ICourierService, CourierService>(); // ← EKLE
-    builder.Services.AddScoped<IAnalyticsService, AnalyticsService>(); // Milestone 2
-    builder.Services.AddScoped<ISubscriptionService, SubscriptionService>(); // Milestone 2
-    builder.Services.AddScoped<IInvoiceGeneratorService, InvoiceGeneratorService>(); // Milestone 2
+    builder.Services.AddScoped<ICourierService, CourierService>();
+    builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+    builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+    builder.Services.AddScoped<IInvoiceGeneratorService, InvoiceGeneratorService>();
+    // Module 2: Wallet & Escrow
+    builder.Services.AddScoped<IWalletService, WalletService>();
 
     // ── Milestone 2: Webhook Service ─────────────────────────────────────────
     builder.Services.AddHttpClient("webhook");
@@ -230,8 +235,10 @@ try
     // ── Hangfire Jobs ─────────────────────────────────────────────────────────
     builder.Services.AddTransient<OrderStatusJob>();
     builder.Services.AddTransient<NotificationJob>();
-    builder.Services.AddTransient<DelayedShipmentJob>(); // Milestone 2
-    builder.Services.AddTransient<ShipmentStatusSyncJob>(); // Milestone 2
+    builder.Services.AddTransient<DelayedShipmentJob>();
+    builder.Services.AddTransient<ShipmentStatusSyncJob>();
+    builder.Services.AddTransient<EscrowSettlementJob>();   // Module 2: wallet settlement
+    builder.Services.AddTransient<CourierDispatchJob>();     // Module 4: geo dispatch
 
     // ── Controllers + Swagger ─────────────────────────────────────────────────
     builder
@@ -348,6 +355,8 @@ try
     app.UseCustomDomain(); // Milestone 2: custom domain → merchant slug resolution
     app.UseAuthentication();
     app.UseAuthorization();
+    // Module 5: idempotency key deduplication on critical POST endpoints
+    app.UseIdempotency();
 
     app.MapControllers();
     app.MapHub<TrackingHub>("/hubs/tracking");
@@ -369,17 +378,30 @@ try
         "* * * * *"
     );
 
-    // ── Milestone 2 Recurring Jobs ────────────────────────────────────────────
     RecurringJob.AddOrUpdate<DelayedShipmentJob>(
         "check-delayed-shipments",
         job => job.RunAsync(),
-        "0 * * * *" // Her saat başı
+        "0 * * * *"    // every hour
     );
 
     RecurringJob.AddOrUpdate<ShipmentStatusSyncJob>(
         "sync-shipment-statuses",
         job => job.RunAsync(),
-        "*/30 * * * *" // Her 30 dakikada bir
+        "*/30 * * * *" // every 30 minutes
+    );
+
+    // Module 2: settle escrow daily at 02:00 UTC
+    RecurringJob.AddOrUpdate<EscrowSettlementJob>(
+        "escrow-settlement",
+        job => job.RunAsync(),
+        "0 2 * * *"
+    );
+
+    // Module 4: auto-dispatch couriers every 2 minutes
+    RecurringJob.AddOrUpdate<CourierDispatchJob>(
+        "courier-auto-dispatch",
+        job => job.RunAsync(),
+        "*/2 * * * *"
     );
 
     await app.RunAsync();

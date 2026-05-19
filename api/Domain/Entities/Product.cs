@@ -10,8 +10,17 @@ public class Product
     public Guid CategoryId { get; set; }
     public List<string> Images { get; set; } = new();
     public List<string> Tags { get; set; } = new();
+
+    /// <summary>Base price; may be overridden per-variant.</summary>
     public decimal Price { get; set; }
+
+    /// <summary>
+    /// Aggregate stock for the base product (no variants).
+    /// When variants exist, per-variant stock is canonical; this field is maintained
+    /// as a convenience sum for backwards-compatible list queries.
+    /// </summary>
     public int Stock { get; set; }
+
     public bool PublishToMarket { get; set; } = false;
     public bool PublishToStore { get; set; } = true;
     public bool IsApproved { get; set; } = false;
@@ -19,12 +28,11 @@ public class Product
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation — many-to-one
+    // ── Navigation ─────────────────────────────────────────────────────────────
     public MerchantProfile Merchant { get; set; } = null!;
     public Category Category { get; set; } = null!;
-
-    // Navigation — one-to-many
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
     public ICollection<WishlistItem> WishlistItems { get; set; } = new List<WishlistItem>();
     public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+    public ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
 }

@@ -12,18 +12,21 @@ public class FulfillmentService : IFulfillmentService
     private readonly AppDbContext _db;
     private readonly IHubContext<TrackingHub> _hub;
     private readonly INotificationService _notificationService;
+    private readonly IWalletService _walletService;
     private readonly ILogger<FulfillmentService> _logger;
 
     public FulfillmentService(
         AppDbContext db,
         IHubContext<TrackingHub> hub,
         INotificationService notificationService,
+        IWalletService walletService,
         ILogger<FulfillmentService> logger
     )
     {
         _db = db;
         _hub = hub;
         _notificationService = notificationService;
+        _walletService = walletService;
         _logger = logger;
     }
 
@@ -77,12 +80,35 @@ public class FulfillmentService : IFulfillmentService
 
         await _db.SaveChangesAsync();
 
-        _logger.LogInformation(
-            "Shipment {Id} {From} → {To}",
-            shipment.Id,
-            previousStatus,
-            newStatus
-        );
+        _logger.LogInformation("Shipment {Id} {From} → {To}", shipment.Id, previousStatus, newStatus);
+
+        // On DELIVERED: move VendorOrder funds into escrow (pending settlement)
+        if (newStatus == ShipmentStatus.Delivered)
+        {
+            var vendorOrders = await _db.VendorOrders
+                .Where(vo => vo.OrderId == shipment.OrderId && vo.SettledAt == null)
+                .ToListAsync();
+
+            foreach (var vo in vendorOrders)
+            {
+                vo.Status = OrderStatus.Delivered;
+                vo.UpdatedAt = DateTime.UtcNow;
+            }
+            await _db.SaveChangesAsync();
+
+            // Fire-and-forget: hold escrow per vendor order
+            _ = Task.Run(async () =>
+            {
+                foreach (var vo in vendorOrders)
+                {
+                    try { await _walletService.HoldEscrowAsync(vo); }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Escrow hold failed: VendorOrderId={Id}", vo.Id);
+                    }
+                }
+            });
+        }
 
         await _hub
             .Clients.Group($"shipment-{shipment.Id}")

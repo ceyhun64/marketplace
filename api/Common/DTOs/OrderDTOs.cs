@@ -40,8 +40,10 @@ public class OrderItemDto
 
 public class CreateOrderItemDto
 {
-    public Guid ProductId { get; set; } // OfferId → ProductId
+    public Guid ProductId { get; set; }
     public int Quantity { get; set; }
+    /// <summary>Optional — selects a specific variant (Size/Color combination).</summary>
+    public Guid? VariantId { get; set; }
 }
 
 public class ShippingAddressDto

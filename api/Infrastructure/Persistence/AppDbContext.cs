@@ -8,18 +8,31 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options) { }
 
+    // ── Core ──────────────────────────────────────────────────────────────────
     public DbSet<User> Users => Set<User>();
     public DbSet<MerchantProfile> MerchantProfiles => Set<MerchantProfile>();
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
     public DbSet<Category> Categories => Set<Category>();
+
+    // ── Orders ────────────────────────────────────────────────────────────────
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<VendorOrder> VendorOrders => Set<VendorOrder>();
+
+    // ── Fulfilment ────────────────────────────────────────────────────────────
     public DbSet<Shipment> Shipments => Set<Shipment>();
     public DbSet<ShipmentStatusHistory> ShipmentStatusHistories => Set<ShipmentStatusHistory>();
     public DbSet<Courier> Couriers => Set<Courier>();
+
+    // ── Wallet / Finance ──────────────────────────────────────────────────────
+    public DbSet<MerchantWallet> MerchantWallets => Set<MerchantWallet>();
+    public DbSet<WalletTransaction> WalletTransactions => Set<WalletTransaction>();
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<AccountingEntry> AccountingEntries => Set<AccountingEntry>();
+
+    // ── Extras ────────────────────────────────────────────────────────────────
     public DbSet<Plugin> Plugins => Set<Plugin>();
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<MerchantPlugin> MerchantPlugins => Set<MerchantPlugin>();
@@ -30,7 +43,7 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // ── Unique indexler ──────────────────────────────────────────────────
+        // ── Unique indexes ────────────────────────────────────────────────────
         modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
         modelBuilder.Entity<MerchantProfile>().HasIndex(m => m.Slug).IsUnique();
         modelBuilder.Entity<MerchantProfile>().HasIndex(m => m.UserId).IsUnique();
@@ -40,245 +53,285 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Invoice>().HasIndex(i => i.InvoiceNumber).IsUnique();
         modelBuilder.Entity<Invoice>().HasIndex(i => i.OrderId).IsUnique();
         modelBuilder.Entity<Subscription>().HasIndex(s => s.MerchantId).IsUnique();
+        modelBuilder.Entity<MerchantWallet>().HasIndex(w => w.MerchantId).IsUnique();
+        modelBuilder.Entity<ProductVariant>().HasIndex(v => new { v.ProductId, v.SKU }).IsUnique();
 
-        // ── Enum → string ────────────────────────────────────────────────────
+        // ── VendorOrder composite index (merchant looks up their sub-orders) ─
+        modelBuilder.Entity<VendorOrder>().HasIndex(vo => new { vo.MerchantId, vo.Status });
+        modelBuilder.Entity<VendorOrder>().HasIndex(vo => vo.OrderId);
+
+        // ── Enum → string ─────────────────────────────────────────────────────
         modelBuilder.Entity<User>().Property(u => u.Role).HasConversion<string>();
         modelBuilder.Entity<User>().Property(u => u.AccountStatus).HasConversion<string>();
         modelBuilder.Entity<Order>().Property(o => o.Status).HasConversion<string>();
         modelBuilder.Entity<Order>().Property(o => o.Source).HasConversion<string>();
         modelBuilder.Entity<Order>().Property(o => o.ShippingRate).HasConversion<string>();
+        modelBuilder.Entity<VendorOrder>().Property(vo => vo.Status).HasConversion<string>();
         modelBuilder.Entity<Shipment>().Property(s => s.Status).HasConversion<string>();
-        modelBuilder
-            .Entity<ShipmentStatusHistory>()
-            .Property(h => h.Status)
-            .HasConversion<string>();
+        modelBuilder.Entity<ShipmentStatusHistory>().Property(h => h.Status).HasConversion<string>();
 
-        // ── Subscription → MerchantProfile (1:1) ────────────────────────────
-        modelBuilder
-            .Entity<Subscription>()
+        // ── JSONB columns ─────────────────────────────────────────────────────
+        modelBuilder.Entity<ProductVariant>()
+            .Property(v => v.Attributes)
+            .HasColumnType("jsonb");
+
+        modelBuilder.Entity<OrderItem>()
+            .Property(i => i.VariantAttributes)
+            .HasColumnType("jsonb");
+
+        // ── Subscription → MerchantProfile (1:1) ─────────────────────────────
+        modelBuilder.Entity<Subscription>()
             .HasOne(s => s.Merchant)
             .WithOne(m => m.Subscription)
             .HasForeignKey<Subscription>(s => s.MerchantId);
 
-        // ── MerchantProfile → Products (1:N) ─────────────────────────────────
-        modelBuilder
-            .Entity<Product>()
+        // ── MerchantProfile → Products (1:N) ──────────────────────────────────
+        modelBuilder.Entity<Product>()
             .HasOne(p => p.Merchant)
             .WithMany(m => m.Products)
             .HasForeignKey(p => p.MerchantId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ── Category self-referencing ────────────────────────────────────────
-        modelBuilder
-            .Entity<Category>()
+        // ── Product → ProductVariants (1:N) ───────────────────────────────────
+        modelBuilder.Entity<ProductVariant>()
+            .HasOne(v => v.Product)
+            .WithMany(p => p.Variants)
+            .HasForeignKey(v => v.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ── Category self-referencing ─────────────────────────────────────────
+        modelBuilder.Entity<Category>()
             .HasMany(c => c.SubCategories)
             .WithOne(c => c.Parent)
             .HasForeignKey(c => c.ParentId);
 
-        // ── Order → OrderItems (1:N) ─────────────────────────────────────────
-        modelBuilder
-            .Entity<Order>()
+        // ── Order → OrderItems (1:N) ──────────────────────────────────────────
+        modelBuilder.Entity<Order>()
             .HasMany(o => o.Items)
             .WithOne(i => i.Order)
             .HasForeignKey(i => i.OrderId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // ── Order → VendorOrders (1:N) ────────────────────────────────────────
+        modelBuilder.Entity<VendorOrder>()
+            .HasOne(vo => vo.Order)
+            .WithMany()
+            .HasForeignKey(vo => vo.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<VendorOrder>()
+            .HasOne(vo => vo.Merchant)
+            .WithMany()
+            .HasForeignKey(vo => vo.MerchantId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ── VendorOrder → OrderItems (1:N, nullable FK) ───────────────────────
+        modelBuilder.Entity<OrderItem>()
+            .HasOne(i => i.VendorOrder)
+            .WithMany(vo => vo.Items)
+            .HasForeignKey(i => i.VendorOrderId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // ── OrderItem → ProductVariant (N:1, nullable) ────────────────────────
+        modelBuilder.Entity<OrderItem>()
+            .HasOne(i => i.Variant)
+            .WithMany()
+            .HasForeignKey(i => i.VariantId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // ── Order → Shipment (1:1) ────────────────────────────────────────────
-        modelBuilder
-            .Entity<Order>()
+        modelBuilder.Entity<Order>()
             .HasOne(o => o.Shipment)
             .WithOne(s => s.Order)
             .HasForeignKey<Shipment>(s => s.OrderId);
 
         // ── Order → Invoice (1:1) ─────────────────────────────────────────────
-        modelBuilder
-            .Entity<Order>()
+        modelBuilder.Entity<Order>()
             .HasOne(o => o.Invoice)
             .WithOne(i => i.Order)
             .HasForeignKey<Invoice>(i => i.OrderId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // ── Invoice → AccountingEntries (1:N) ────────────────────────────────
-        modelBuilder
-            .Entity<AccountingEntry>()
+        // ── Invoice → AccountingEntries (1:N) ─────────────────────────────────
+        modelBuilder.Entity<AccountingEntry>()
             .HasOne(a => a.Invoice)
             .WithMany(i => i.AccountingEntries)
             .HasForeignKey(a => a.InvoiceId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ── AccountingEntry → Order (N:1) ─────────────────────────────────────
-        modelBuilder
-            .Entity<AccountingEntry>()
+        modelBuilder.Entity<AccountingEntry>()
             .HasOne(a => a.Order)
             .WithMany()
             .HasForeignKey(a => a.OrderId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // ── AccountingEntry → MerchantProfile (N:1) ──────────────────────────
-        modelBuilder
-            .Entity<AccountingEntry>()
+        modelBuilder.Entity<AccountingEntry>()
             .HasOne(a => a.Merchant)
             .WithMany()
             .HasForeignKey(a => a.MerchantId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // ── Invoice → MerchantProfile (N:1) ──────────────────────────────────
-        modelBuilder
-            .Entity<Invoice>()
+        modelBuilder.Entity<Invoice>()
             .HasOne(i => i.Merchant)
             .WithMany()
             .HasForeignKey(i => i.MerchantId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // ── Invoice → Customer/User (N:1) ─────────────────────────────────────
-        modelBuilder
-            .Entity<Invoice>()
+        modelBuilder.Entity<Invoice>()
             .HasOne(i => i.Customer)
             .WithMany()
             .HasForeignKey(i => i.CustomerId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // ── Plugin → MerchantPlugin (1:N) ────────────────────────────────────
-        modelBuilder
-            .Entity<MerchantPlugin>()
+        // ── MerchantWallet (1:1 per merchant) ─────────────────────────────────
+        modelBuilder.Entity<MerchantWallet>()
+            .HasOne(w => w.Merchant)
+            .WithMany()
+            .HasForeignKey(w => w.MerchantId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ── WalletTransaction (N:1 → MerchantWallet) ─────────────────────────
+        modelBuilder.Entity<WalletTransaction>()
+            .HasOne(t => t.Wallet)
+            .WithMany(w => w.Transactions)
+            .HasForeignKey(t => t.WalletId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WalletTransaction>()
+            .HasOne(t => t.Merchant)
+            .WithMany()
+            .HasForeignKey(t => t.MerchantId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ── Plugin → MerchantPlugin (1:N) ─────────────────────────────────────
+        modelBuilder.Entity<MerchantPlugin>()
             .HasOne(mp => mp.Plugin)
             .WithMany(p => p.MerchantPlugins)
             .HasForeignKey(mp => mp.PluginId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ── MerchantProfile → MerchantPlugin (1:N) ───────────────────────────
-        modelBuilder
-            .Entity<MerchantPlugin>()
+        modelBuilder.Entity<MerchantPlugin>()
             .HasOne(mp => mp.Merchant)
             .WithMany()
             .HasForeignKey(mp => mp.MerchantId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ── Shipment → ShipmentStatusHistory (1:N) ───────────────────────────
-        modelBuilder
-            .Entity<Shipment>()
+        // ── Shipment → ShipmentStatusHistory (1:N) ────────────────────────────
+        modelBuilder.Entity<Shipment>()
             .HasMany(s => s.StatusHistory)
             .WithOne(h => h.Shipment)
             .HasForeignKey(h => h.ShipmentId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ── Shipment → Courier (N:1, nullable) ──────────────────────────────
-        modelBuilder
-            .Entity<Shipment>()
+        // ── Shipment → Courier (N:1, nullable) ────────────────────────────────
+        modelBuilder.Entity<Shipment>()
             .HasOne(s => s.Courier)
             .WithMany(c => c.Shipments)
             .HasForeignKey(s => s.CourierId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
-        // ── Review → Product (N:1) ────────────────────────────────────────────────
-        modelBuilder
-            .Entity<Review>()
+
+        // ── Review → Product / Customer ───────────────────────────────────────
+        modelBuilder.Entity<Review>()
             .HasOne(r => r.Product)
             .WithMany(p => p.Reviews)
             .HasForeignKey(r => r.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ── Review → Customer/User (N:1) ─────────────────────────────────────────
-        modelBuilder
-            .Entity<Review>()
+        modelBuilder.Entity<Review>()
             .HasOne(r => r.Customer)
             .WithMany()
             .HasForeignKey(r => r.CustomerId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ── Bir kullanıcı aynı ürüne yalnızca bir yorum yapabilir ────────────────
-        modelBuilder.Entity<Review>().HasIndex(r => new { r.CustomerId, r.ProductId }).IsUnique();
+        modelBuilder.Entity<Review>()
+            .HasIndex(r => new { r.CustomerId, r.ProductId }).IsUnique();
 
-        // ── Courier → User (1:1) ─────────────────────────────────────────────
-        modelBuilder
-            .Entity<Courier>()
+        // ── Courier → User (1:1) ──────────────────────────────────────────────
+        modelBuilder.Entity<Courier>()
             .HasOne(c => c.User)
             .WithOne(u => u.Courier)
             .HasForeignKey<Courier>(c => c.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // ── OrderItem → Product (N:1) ─────────────────────────────────────────
-        modelBuilder
-            .Entity<OrderItem>()
+        modelBuilder.Entity<OrderItem>()
             .HasOne(i => i.Product)
             .WithMany(p => p.OrderItems)
             .HasForeignKey(i => i.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // ── WishlistItem → Product (N:1) ──────────────────────────────────────
-        modelBuilder
-            .Entity<WishlistItem>()
+        // ── WishlistItem ──────────────────────────────────────────────────────
+        modelBuilder.Entity<WishlistItem>()
             .HasOne(w => w.Product)
             .WithMany(p => p.WishlistItems)
             .HasForeignKey(w => w.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ── decimal precision ─────────────────────────────────────────────────
-        modelBuilder.Entity<Order>().Property(o => o.TotalAmount).HasColumnType("decimal(18,2)");
-        modelBuilder.Entity<Order>().Property(o => o.ShippingAmount).HasColumnType("decimal(18,2)");
-        modelBuilder.Entity<OrderItem>().Property(i => i.UnitPrice).HasColumnType("decimal(18,2)");
-        modelBuilder.Entity<Product>().Property(p => p.Price).HasColumnType("decimal(18,2)");
-        modelBuilder.Entity<Invoice>().Property(i => i.SubTotal).HasColumnType("decimal(18,2)");
-        modelBuilder.Entity<Invoice>().Property(i => i.VatRate).HasColumnType("decimal(5,4)");
-        modelBuilder.Entity<Invoice>().Property(i => i.VatAmount).HasColumnType("decimal(18,2)");
-        modelBuilder.Entity<Invoice>().Property(i => i.TotalAmount).HasColumnType("decimal(18,2)");
-        modelBuilder
-            .Entity<Invoice>()
-            .Property(i => i.ShippingAmount)
-            .HasColumnType("decimal(18,2)");
-        modelBuilder
-            .Entity<AccountingEntry>()
-            .Property(a => a.Amount)
-            .HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<WishlistItem>()
+            .HasIndex(w => new { w.CustomerId, w.ProductId }).IsUnique();
 
-        // ── Soft-delete + aktif merchant filtresi ─────────────────────────────
-        // Silinmiş ürünler ve askıya alınmış merchant'ların ürünleri hiçbir sorguda görünmez.
-        // Yönetici sorgularında bu filtreyi .IgnoreQueryFilters() ile devre dışı bırakabilirsiniz.
-        modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted && p.Merchant.IsActive);
+        modelBuilder.Entity<WishlistItem>()
+            .HasOne(w => w.Customer)
+            .WithMany()
+            .HasForeignKey(w => w.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // ── ProductQuestion → Product (N:1) ───────────────────────────────────
-        modelBuilder
-            .Entity<ProductQuestion>()
+        modelBuilder.Entity<WishlistItem>()
+            .HasOne(w => w.Product)
+            .WithMany()
+            .HasForeignKey(w => w.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ── ProductQuestion ───────────────────────────────────────────────────
+        modelBuilder.Entity<ProductQuestion>()
             .HasOne(q => q.Product)
             .WithMany()
             .HasForeignKey(q => q.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ── ProductQuestion → Customer/User (N:1) ────────────────────────────
-        modelBuilder
-            .Entity<ProductQuestion>()
+        modelBuilder.Entity<ProductQuestion>()
             .HasOne(q => q.Customer)
             .WithMany()
             .HasForeignKey(q => q.CustomerId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ── ProductQuestion → MerchantProfile (answerer, nullable) ──────────
-        modelBuilder
-            .Entity<ProductQuestion>()
+        modelBuilder.Entity<ProductQuestion>()
             .HasOne(q => q.AnsweredByMerchant)
             .WithMany()
             .HasForeignKey(q => q.AnsweredByMerchantId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // ── WishlistItem ──────────────────────────────────────────────────────
-        modelBuilder
-            .Entity<WishlistItem>()
-            .HasIndex(w => new { w.CustomerId, w.ProductId })
-            .IsUnique();
+        // ── decimal precision ─────────────────────────────────────────────────
+        modelBuilder.Entity<Order>().Property(o => o.TotalAmount).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<Order>().Property(o => o.ShippingAmount).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<OrderItem>().Property(i => i.UnitPrice).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<Product>().Property(p => p.Price).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<ProductVariant>().Property(v => v.PriceOverride).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<VendorOrder>().Property(vo => vo.SubTotal).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<VendorOrder>().Property(vo => vo.PlatformFee).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<VendorOrder>().Property(vo => vo.MerchantNetAmount).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<MerchantWallet>().Property(w => w.PendingBalance).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<MerchantWallet>().Property(w => w.AvailableBalance).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<MerchantWallet>().Property(w => w.TotalWithdrawn).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<WalletTransaction>().Property(t => t.Amount).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<WalletTransaction>().Property(t => t.PendingBefore).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<WalletTransaction>().Property(t => t.PendingAfter).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<WalletTransaction>().Property(t => t.AvailableBefore).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<WalletTransaction>().Property(t => t.AvailableAfter).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<Invoice>().Property(i => i.SubTotal).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<Invoice>().Property(i => i.VatRate).HasColumnType("decimal(5,4)");
+        modelBuilder.Entity<Invoice>().Property(i => i.VatAmount).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<Invoice>().Property(i => i.TotalAmount).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<Invoice>().Property(i => i.ShippingAmount).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<AccountingEntry>().Property(a => a.Amount).HasColumnType("decimal(18,2)");
 
-        modelBuilder
-            .Entity<WishlistItem>()
-            .HasOne(w => w.Customer)
-            .WithMany()
-            .HasForeignKey(w => w.CustomerId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder
-            .Entity<WishlistItem>()
-            .HasOne(w => w.Product)
-            .WithMany()
-            .HasForeignKey(w => w.ProductId)
-            .OnDelete(DeleteBehavior.Cascade);
+        // ── Global query filters ──────────────────────────────────────────────
+        // Deleted products and inactive merchants are hidden from all standard queries.
+        // Use .IgnoreQueryFilters() in admin-scoped queries.
+        modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted && p.Merchant.IsActive);
     }
 }
