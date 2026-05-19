@@ -30,13 +30,13 @@ const FALLBACK: HeroSettings = {
 export default function HeroSection() {
   const { data, isError, isLoading } = useHeroSettings();
 
-  // ✅ Rules of Hooks: useState her render'da çağrılmalı — erken return'den ÖNCE.
+  // ✅ Hooks must be called unconditionally — before any early return
   const [query, setQuery] = useState("");
 
   // While loading show a shape-matched skeleton so layout never shifts.
   if (isLoading) return <HeroSkeleton />;
 
-  // Use live data when ready; fall back if the API errored or returned inactive.
+  // ✅ API hata verirse veya veri yoksa FALLBACK kullan
   const hero: HeroSettings = data && data.isActive ? data : FALLBACK;
 
   const handleSearch = (e: React.FormEvent) => {
@@ -160,7 +160,7 @@ export default function HeroSection() {
               </div>
             )}
 
-            {/* Dynamic headline — apply accent colour to the matching word */}
+            {/* Dynamic headline */}
             <h1
               style={{
                 fontFamily: "var(--font-display)",
@@ -173,7 +173,6 @@ export default function HeroSection() {
               }}
             >
               {headlineLines.map((line, i) => {
-                // Split each line so the accent word gets its own styled span
                 if (accentWord && line.includes(accentWord)) {
                   const parts = line.split(accentWord);
                   return (
@@ -339,7 +338,7 @@ export default function HeroSection() {
             )}
           </div>
 
-          {/* ── Right: Decorative cards (static visual — unchanged) ── */}
+          {/* ── Right: Decorative cards ── */}
           <div
             className="hidden lg:flex"
             style={{
@@ -611,9 +610,7 @@ export default function HeroSection() {
   );
 }
 
-// ── Shape-matched skeleton — mirrors the real hero layout ─────────────────────
-// Renders while `useHeroSettings()` is fetching so the page height is stable
-// from the very first paint and there is no layout shift on hydration.
+// ── Shape-matched skeleton ────────────────────────────────────────────────────
 
 function HeroSkeleton() {
   return (
@@ -646,24 +643,18 @@ function HeroSkeleton() {
           }}
           className="lg:grid-cols-2 grid-cols-1"
         >
-          {/* Left — text skeleton */}
           <div className="space-y-5">
-            {/* Badge pill */}
             <Skeleton className="h-6 w-40 rounded-full" />
-            {/* Headline — three lines */}
             <div className="space-y-3">
               <Skeleton className="h-12 w-4/5 rounded-lg" />
               <Skeleton className="h-12 w-3/5 rounded-lg" />
             </div>
-            {/* Subtitle */}
             <div className="space-y-2 pt-1">
               <Skeleton className="h-4 w-full rounded" />
               <Skeleton className="h-4 w-5/6 rounded" />
               <Skeleton className="h-4 w-3/4 rounded" />
             </div>
-            {/* Search bar */}
             <Skeleton className="h-12 w-full max-w-125 rounded-xl mt-2" />
-            {/* Tags row */}
             <div className="flex gap-2 pt-1">
               {[80, 64, 96, 72].map((w) => (
                 <Skeleton
@@ -674,8 +665,6 @@ function HeroSkeleton() {
               ))}
             </div>
           </div>
-
-          {/* Right — visual placeholder */}
           <div
             className="hidden lg:flex items-center justify-center"
             style={{ height: 520 }}
