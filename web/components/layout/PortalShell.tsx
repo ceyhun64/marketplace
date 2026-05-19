@@ -33,7 +33,10 @@ export function PortalShell({ links, role, children }: PortalShellProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen" style={{ background: "var(--off-white)" }}>
+    <div
+      className="flex min-h-screen"
+      style={{ background: "var(--off-white)" }}
+    >
       <Sidebar
         links={links}
         role={role}
@@ -112,7 +115,7 @@ export function PortalShell({ links, role, children }: PortalShellProps) {
        *  - ml-0 → lg:ml-60 tracks the sidebar width on desktop
        *  - min-w-0 prevents flex child from overflowing the parent
        */}
-      <main className="flex-1 min-w-0 pt-14 lg:pt-0 lg:ml-60 p-4 md:p-6 lg:p-8">
+      <main className="flex-1 min-w-0 pt-14 lg:pt-10 lg:ml-60 p-4 md:p-6 lg:p-8">
         {children}
       </main>
     </div>
