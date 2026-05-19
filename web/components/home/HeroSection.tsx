@@ -1,311 +1,689 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Store, ShoppingBag, Sparkles } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Search, Truck, Store, ChevronRight, ArrowRight } from "lucide-react";
+import { useHeroSettings, type HeroSettings } from "@/queries/useSiteSettings";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Fallback — mirrors the seeded DB defaults ────────────────────────────────
 
-interface StatItem {
-  value: string;
-  label: string;
-}
-
-interface HeroData {
-  badge: string;
-  /** Each string is one display line. The last line receives the gradient treatment. */
-  headlineLines: string[];
-  subheadline: string;
-  primaryCta: { label: string; href: string };
-  secondaryCta: { label: string; href: string };
-  stats: StatItem[];
-}
-
-// ── Default content ───────────────────────────────────────────────────────────
-
-const DEFAULT_DATA: HeroData = {
-  badge: "The Future of Commerce",
-  headlineLines: ["Where Brands", "Meet Their", "Customers"],
-  subheadline:
-    "A multi-vendor marketplace built for modern commerce. Launch your store in minutes, sell everywhere, and grow without limits.",
-  primaryCta: { label: "Start Selling Free", href: "/auth/register-merchant" },
-  secondaryCta: { label: "Explore Marketplace", href: "/products" },
-  stats: [
-    { value: "50K+", label: "Active Sellers" },
-    { value: "2M+", label: "Products" },
-    { value: "99.9%", label: "Uptime SLA" },
-    { value: "4.9★", label: "Merchant Rating" },
-  ],
+const FALLBACK: HeroSettings = {
+  badgeText: "Next-Gen Commerce",
+  headline: "Premium Marketplace\nMeets Fast Delivery.",
+  headlineAccent: "Marketplace",
+  subtitle:
+    "We redefine digital commerce with independent stores and an integrated courier engine — everything under one roof.",
+  searchPlaceholder: "Search products, stores...",
+  primaryCtaText: "Search",
+  primaryCtaHref: "/products",
+  secondaryCtaText: undefined,
+  secondaryCtaHref: undefined,
+  backgroundImageUrl: undefined,
+  tags: ["Electronics", "Fashion", "Home & Living", "Fast Delivery"],
+  isActive: true,
+  updatedAt: "",
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function HeroSection({ data = DEFAULT_DATA }: { data?: HeroData }) {
-  const [ready, setReady] = useState(false);
+export default function HeroSection() {
+  const { data, isError, isLoading } = useHeroSettings();
 
-  useEffect(() => {
-    const t = requestAnimationFrame(() => setReady(true));
-    return () => cancelAnimationFrame(t);
-  }, []);
+  // ✅ Rules of Hooks: useState her render'da çağrılmalı — erken return'den ÖNCE.
+  const [query, setQuery] = useState("");
+
+  // While loading show a shape-matched skeleton so layout never shifts.
+  if (isLoading) return <HeroSkeleton />;
+
+  // Use live data when ready; fall back if the API errored or returned inactive.
+  const hero: HeroSettings = data && data.isActive ? data : FALLBACK;
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) {
+      window.location.href = `/search?q=${encodeURIComponent(query.trim())}`;
+    }
+  };
+
+  // Split headline on literal \n (from DB) or JS newline
+  const headlineLines = hero.headline.split(/\\n|\n/);
+  const accentWord = hero.headlineAccent ?? "Marketplace";
 
   return (
     <section
-      role="banner"
-      className="relative overflow-hidden"
-      style={{ background: "#0A0A0B", minHeight: "100svh", display: "flex", alignItems: "center" }}
+      style={{
+        position: "relative",
+        minHeight: "88vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+        padding: "3rem 0",
+        background: hero.backgroundImageUrl
+          ? `url(${hero.backgroundImageUrl}) center/cover no-repeat`
+          : "var(--off-white)",
+      }}
     >
-      {/* ── Ambient Background ── */}
-      <Background />
-
-      {/* ── Main Content ── */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 py-24 sm:py-32 lg:py-40">
-        <div className="max-w-4xl">
-
-          {/* Badge pill */}
-          <Fade ready={ready} delay={80}>
-            <span
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold mb-6 sm:mb-8"
-              style={{
-                background: "rgba(200,16,46,0.09)",
-                border: "1px solid rgba(200,16,46,0.22)",
-                color: "#FF4D6D",
-                letterSpacing: "0.03em",
-                textTransform: "uppercase",
-              }}
-            >
-              <Sparkles className="w-3 h-3" strokeWidth={2.5} />
-              {data.badge}
-            </span>
-          </Fade>
-
-          {/* Headline */}
-          <h1 style={{ lineHeight: 0.96, letterSpacing: "-0.03em" }}>
-            {data.headlineLines.map((line, i) => {
-              const isLast = i === data.headlineLines.length - 1;
-              return (
-                <Fade key={i} ready={ready} delay={160 + i * 110} asBlock>
-                  <span
-                    className="block"
-                    style={{
-                      fontFamily: "var(--font-heading, 'Cormorant Garamond', serif)",
-                      fontSize: "clamp(3rem, 7.5vw, 6.75rem)",
-                      fontWeight: 600,
-                      ...(isLast
-                        ? {
-                            backgroundImage:
-                              "linear-gradient(130deg, #818CF8 0%, #C084FC 45%, #F472B6 100%)",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                            backgroundClip: "text",
-                          }
-                        : { color: "#F0F0F2" }),
-                    }}
-                  >
-                    {line}
-                  </span>
-                </Fade>
-              );
-            })}
-          </h1>
-
-          {/* Subheadline */}
-          <Fade ready={ready} delay={560}>
-            <p
-              className="mt-6 sm:mt-8 max-w-xl text-base sm:text-lg leading-[1.65]"
-              style={{ color: "#5C5C68", fontFamily: "var(--font-body)" }}
-            >
-              {data.subheadline}
-            </p>
-          </Fade>
-
-          {/* CTAs */}
-          <Fade ready={ready} delay={680}>
-            <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3">
-              <PrimaryButton href={data.primaryCta.href} label={data.primaryCta.label} />
-              <SecondaryButton href={data.secondaryCta.href} label={data.secondaryCta.label} />
-            </div>
-          </Fade>
-
-          {/* Stats row */}
-          <Fade ready={ready} delay={820}>
-            <div className="mt-12 sm:mt-16 flex flex-wrap gap-7 sm:gap-12">
-              {data.stats.map((s, i) => (
-                <div key={i}>
-                  <div
-                    className="text-2xl sm:text-3xl font-bold tabular-nums"
-                    style={{
-                      color: "#E8E8EC",
-                      letterSpacing: "-0.025em",
-                      fontFamily: "var(--font-body)",
-                    }}
-                  >
-                    {s.value}
-                  </div>
-                  <div
-                    className="text-xs sm:text-[0.8125rem] mt-0.5"
-                    style={{ color: "#46464E" }}
-                  >
-                    {s.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Fade>
-        </div>
+      {/* Subtle background texture */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: "-10%",
+            right: "-5%",
+            width: "45%",
+            height: "70%",
+            background:
+              "radial-gradient(ellipse, rgba(200,16,46,0.04) 0%, transparent 70%)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: "-10%",
+            left: "-5%",
+            width: "35%",
+            height: "50%",
+            background:
+              "radial-gradient(ellipse, rgba(51,51,51,0.04) 0%, transparent 70%)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 1,
+            background: "var(--border-light)",
+          }}
+        />
       </div>
 
-      {/* Bottom fade-out gradient */}
       <div
-        className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
         style={{
-          background: "linear-gradient(to bottom, transparent, #0A0A0B)",
+          position: "relative",
+          maxWidth: 1300,
+          margin: "0 auto",
+          padding: "0 2rem",
+          width: "100%",
         }}
-      />
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "5rem",
+            alignItems: "center",
+          }}
+          className="lg:grid-cols-2 grid-cols-1"
+        >
+          {/* ── Left: Text ── */}
+          <div style={{ zIndex: 10 }}>
+            {/* Badge */}
+            {hero.badgeText && (
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  background: "var(--red-muted)",
+                  color: "var(--red)",
+                  border: "1px solid var(--red-subtle)",
+                  borderRadius: 999,
+                  padding: "4px 14px",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.6875rem",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase" as const,
+                  marginBottom: "2rem",
+                }}
+              >
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "var(--red)",
+                    display: "inline-block",
+                  }}
+                />
+                {hero.badgeText}
+              </div>
+            )}
+
+            {/* Dynamic headline — apply accent colour to the matching word */}
+            <h1
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(2.75rem, 5vw, 4.5rem)",
+                fontWeight: 400,
+                lineHeight: 1.05,
+                letterSpacing: "-0.02em",
+                color: "var(--charcoal)",
+                marginBottom: "1.5rem",
+              }}
+            >
+              {headlineLines.map((line, i) => {
+                // Split each line so the accent word gets its own styled span
+                if (accentWord && line.includes(accentWord)) {
+                  const parts = line.split(accentWord);
+                  return (
+                    <span key={i}>
+                      {parts[0]}
+                      <em style={{ color: "var(--red)", fontStyle: "italic" }}>
+                        {accentWord}
+                      </em>
+                      {parts.slice(1).join(accentWord)}
+                      {i < headlineLines.length - 1 && <br />}
+                    </span>
+                  );
+                }
+                return (
+                  <span key={i}>
+                    {line}
+                    {i < headlineLines.length - 1 && <br />}
+                  </span>
+                );
+              })}
+            </h1>
+
+            {/* Subtitle */}
+            <p
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: "1rem",
+                color: "var(--charcoal-soft)",
+                lineHeight: 1.8,
+                marginBottom: "2.5rem",
+                maxWidth: 480,
+              }}
+            >
+              {hero.subtitle}
+            </p>
+
+            {/* Search form */}
+            <form
+              onSubmit={handleSearch}
+              style={{ marginBottom: "2rem", maxWidth: 500 }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  background: "var(--white)",
+                  border: "1.5px solid var(--border-mid)",
+                  borderRadius: "0.75rem",
+                  padding: "6px 6px 6px 16px",
+                  boxShadow: "var(--shadow-sm)",
+                  transition:
+                    "border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out)",
+                }}
+                className="focus-within:border-(--red)! focus-within:shadow-[0_0_0_3px_var(--red-muted)]"
+              >
+                <Search
+                  style={{
+                    color: "var(--charcoal-soft)",
+                    flexShrink: 0,
+                    marginRight: 8,
+                  }}
+                  size={16}
+                  strokeWidth={2}
+                />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={hero.searchPlaceholder}
+                  style={{
+                    flex: 1,
+                    border: "none",
+                    outline: "none",
+                    background: "transparent",
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.9375rem",
+                    color: "var(--charcoal)",
+                    lineHeight: 1.5,
+                  }}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    background: "var(--red)",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "0.5rem",
+                    padding: "0.625rem 1.25rem",
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.8125rem",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.375rem",
+                    flexShrink: 0,
+                    boxShadow: "0 2px 8px rgba(200,16,46,0.25)",
+                    transition:
+                      "background var(--duration-fast) var(--ease-out)",
+                  }}
+                >
+                  {hero.primaryCtaText} <ArrowRight size={13} />
+                </button>
+              </div>
+            </form>
+
+            {/* Secondary CTA — optional */}
+            {hero.secondaryCtaText && hero.secondaryCtaHref && (
+              <Link
+                href={hero.secondaryCtaHref}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  padding: "0.625rem 1.25rem",
+                  background: "transparent",
+                  border: "1.5px solid var(--border-mid)",
+                  borderRadius: "0.5rem",
+                  fontFamily: "var(--font-body)",
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  color: "var(--charcoal)",
+                  textDecoration: "none",
+                  marginBottom: "2rem",
+                }}
+              >
+                {hero.secondaryCtaText} <ArrowRight size={14} />
+              </Link>
+            )}
+
+            {/* Quick-filter tags */}
+            {hero.tags.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap" as const,
+                  gap: "0.5rem",
+                }}
+              >
+                {hero.tags.map((tag) => (
+                  <Link
+                    key={tag}
+                    href={`/products?category=${encodeURIComponent(tag.toLowerCase())}`}
+                    style={{
+                      padding: "5px 14px",
+                      background: "var(--white)",
+                      border: "1.5px solid var(--border-light)",
+                      borderRadius: 999,
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.6875rem",
+                      fontWeight: 500,
+                      color: "var(--charcoal-soft)",
+                      letterSpacing: "0.08em",
+                      textDecoration: "none",
+                      transition:
+                        "border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out)",
+                    }}
+                  >
+                    {tag}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ── Right: Decorative cards (static visual — unchanged) ── */}
+          <div
+            className="hidden lg:flex"
+            style={{
+              position: "relative",
+              alignItems: "center",
+              justifyContent: "center",
+              height: 520,
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                width: 380,
+                height: 380,
+                borderRadius: "50%",
+                background: "var(--off-white-2)",
+                border: "1px solid var(--border-light)",
+              }}
+            />
+
+            {/* Main product card */}
+            <div
+              style={{
+                position: "relative",
+                width: 320,
+                background: "var(--white)",
+                borderRadius: 24,
+                boxShadow: "var(--shadow-lg)",
+                border: "1px solid var(--border-light)",
+                overflow: "hidden",
+                zIndex: 20,
+              }}
+            >
+              <div style={{ height: 3, background: "var(--red)" }} />
+              <div
+                style={{
+                  height: 180,
+                  background:
+                    "linear-gradient(135deg, var(--off-white) 0%, var(--off-white-2) 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 64,
+                }}
+              >
+                📦
+              </div>
+              <div style={{ padding: "1.5rem" }}>
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.6875rem",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase" as const,
+                    color: "var(--red)",
+                    marginBottom: "0.375rem",
+                  }}
+                >
+                  Best Offer
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: "1.25rem",
+                    fontWeight: 500,
+                    color: "var(--charcoal)",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  iPhone 15 Pro
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    paddingTop: "1rem",
+                    borderTop: "1px solid var(--border-light)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: "1.5rem",
+                      fontWeight: 500,
+                      color: "var(--charcoal)",
+                    }}
+                  >
+                    ₺72,499
+                  </div>
+                  <Link
+                    href="/flash-sale"
+                    style={{
+                      background: "transparent",
+                      border: "1.5px solid var(--border-mid)",
+                      borderRadius: "0.5rem",
+                      padding: "0.5rem 1rem",
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.75rem",
+                      fontWeight: 600,
+                      color: "var(--charcoal)",
+                      cursor: "pointer",
+                      textDecoration: "none",
+                      display: "inline-block",
+                    }}
+                  >
+                    View Details
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Tracking float card */}
+            <div
+              className="animate-float"
+              style={{
+                position: "absolute",
+                top: 40,
+                right: -10,
+                zIndex: 30,
+                background: "var(--white)",
+                border: "1px solid var(--border-light)",
+                borderRadius: 16,
+                padding: "1rem 1.25rem",
+                boxShadow: "var(--shadow-md)",
+                minWidth: 210,
+                animationDelay: "0s",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                }}
+              >
+                <div
+                  style={{
+                    width: 38,
+                    height: 38,
+                    background: "var(--charcoal)",
+                    borderRadius: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Truck size={16} color="white" />
+                </div>
+                <div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.625rem",
+                      color: "var(--charcoal-soft)",
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase" as const,
+                      marginBottom: 2,
+                    }}
+                  >
+                    Courier en route
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      color: "var(--charcoal)",
+                    }}
+                  >
+                    Arriving in 3 mins
+                  </div>
+                  <div
+                    style={{
+                      width: "100%",
+                      background: "var(--off-white-2)",
+                      height: 3,
+                      borderRadius: 999,
+                      marginTop: 6,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "75%",
+                        height: "100%",
+                        background: "var(--red)",
+                        borderRadius: 999,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Store float card */}
+            <Link
+              href="/auth/apply-merchant"
+              className="animate-float"
+              style={{
+                position: "absolute",
+                bottom: 60,
+                left: -20,
+                zIndex: 30,
+                background: "var(--white)",
+                border: "1px solid var(--border-light)",
+                borderRadius: 16,
+                padding: "1rem 1.25rem",
+                boxShadow: "var(--shadow-md)",
+                transform: "rotate(-2deg)",
+                animationDelay: "1.5s",
+                textDecoration: "none",
+                display: "block",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                }}
+              >
+                <div
+                  style={{
+                    width: 38,
+                    height: 38,
+                    background: "var(--red-muted)",
+                    borderRadius: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Store size={16} color="var(--red)" />
+                </div>
+                <div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.625rem",
+                      color: "var(--charcoal-soft)",
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase" as const,
+                      marginBottom: 2,
+                    }}
+                  >
+                    Seller Panel
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      color: "var(--charcoal)",
+                    }}
+                  >
+                    Open Your Store
+                  </div>
+                </div>
+                <ChevronRight size={14} color="var(--border-mid)" />
+              </div>
+            </Link>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
 
-// ── Background orbs + grid ─────────────────────────────────────────────────────
+// ── Shape-matched skeleton — mirrors the real hero layout ─────────────────────
+// Renders while `useHeroSettings()` is fetching so the page height is stable
+// from the very first paint and there is no layout shift on hydration.
 
-function Background() {
+function HeroSkeleton() {
   return (
-    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-      {/* Subtle grid */}
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)",
-          backgroundSize: "72px 72px",
-          maskImage:
-            "radial-gradient(ellipse 80% 60% at 45% 35%, black 30%, transparent 100%)",
-        }}
-      />
-
-      {/* Orb — top-left indigo */}
-      <div
-        style={{
-          position: "absolute",
-          top: "-15%",
-          left: "-8%",
-          width: "min(55vw, 720px)",
-          height: "min(55vw, 720px)",
-          background:
-            "radial-gradient(ellipse, rgba(99,102,241,0.14) 0%, transparent 68%)",
-          filter: "blur(70px)",
-        }}
-      />
-
-      {/* Orb — right purple */}
-      <div
-        style={{
-          position: "absolute",
-          top: "5%",
-          right: "-12%",
-          width: "min(45vw, 600px)",
-          height: "min(45vw, 600px)",
-          background:
-            "radial-gradient(ellipse, rgba(192,132,252,0.09) 0%, transparent 68%)",
-          filter: "blur(70px)",
-        }}
-      />
-
-      {/* Orb — bottom accent */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: "8%",
-          left: "25%",
-          width: "min(30vw, 400px)",
-          height: "min(30vw, 400px)",
-          background:
-            "radial-gradient(ellipse, rgba(200,16,46,0.07) 0%, transparent 70%)",
-          filter: "blur(80px)",
-        }}
-      />
-    </div>
-  );
-}
-
-// ── Utility: fade-in-up wrapper ────────────────────────────────────────────────
-
-function Fade({
-  children,
-  ready,
-  delay,
-  asBlock = false,
-}: {
-  children: React.ReactNode;
-  ready: boolean;
-  delay: number;
-  asBlock?: boolean;
-}) {
-  return (
-    <div
-      className={asBlock ? "block" : ""}
+    <section
       style={{
-        transition: `opacity 680ms ease, transform 680ms cubic-bezier(0.16,1,0.3,1)`,
-        transitionDelay: `${delay}ms`,
-        opacity: ready ? 1 : 0,
-        transform: ready ? "translateY(0)" : "translateY(18px)",
+        position: "relative",
+        minHeight: "88vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+        padding: "3rem 0",
+        background: "var(--off-white)",
       }}
     >
-      {children}
-    </div>
-  );
-}
+      <div
+        style={{
+          maxWidth: 1300,
+          margin: "0 auto",
+          padding: "0 2rem",
+          width: "100%",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "5rem",
+            alignItems: "center",
+          }}
+          className="lg:grid-cols-2 grid-cols-1"
+        >
+          {/* Left — text skeleton */}
+          <div className="space-y-5">
+            {/* Badge pill */}
+            <Skeleton className="h-6 w-40 rounded-full" />
+            {/* Headline — three lines */}
+            <div className="space-y-3">
+              <Skeleton className="h-12 w-4/5 rounded-lg" />
+              <Skeleton className="h-12 w-3/5 rounded-lg" />
+            </div>
+            {/* Subtitle */}
+            <div className="space-y-2 pt-1">
+              <Skeleton className="h-4 w-full rounded" />
+              <Skeleton className="h-4 w-5/6 rounded" />
+              <Skeleton className="h-4 w-3/4 rounded" />
+            </div>
+            {/* Search bar */}
+            <Skeleton className="h-12 w-full max-w-125 rounded-xl mt-2" />
+            {/* Tags row */}
+            <div className="flex gap-2 pt-1">
+              {[80, 64, 96, 72].map((w) => (
+                <Skeleton
+                  key={w}
+                  className="h-7 rounded-full"
+                  style={{ width: w }}
+                />
+              ))}
+            </div>
+          </div>
 
-// ── CTA Buttons ────────────────────────────────────────────────────────────────
-
-function PrimaryButton({ href, label }: { href: string; label: string }) {
-  const [hov, setHov] = useState(false);
-  return (
-    <Link
-      href={href}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-semibold text-sm sm:text-[0.9375rem] transition-all duration-300 select-none"
-      style={{
-        background: hov
-          ? "linear-gradient(135deg, #E01232 0%, #B00C28 100%)"
-          : "linear-gradient(135deg, #C8102E 0%, #9A0C24 100%)",
-        color: "#ffffff",
-        boxShadow: hov
-          ? "0 0 0 1px rgba(200,16,46,0.45), 0 8px 36px rgba(200,16,46,0.38), 0 2px 10px rgba(200,16,46,0.22)"
-          : "0 0 0 1px rgba(200,16,46,0.28), 0 4px 18px rgba(200,16,46,0.22)",
-        transform: hov ? "translateY(-2px) scale(1.015)" : "translateY(0) scale(1)",
-        letterSpacing: "-0.01em",
-      }}
-    >
-      <Store className="w-4 h-4 flex-shrink-0" strokeWidth={2} />
-      {label}
-      <ArrowRight
-        className="w-4 h-4 flex-shrink-0 transition-transform duration-300"
-        style={{ transform: hov ? "translateX(4px)" : "translateX(0)" }}
-        strokeWidth={2}
-      />
-    </Link>
-  );
-}
-
-function SecondaryButton({ href, label }: { href: string; label: string }) {
-  const [hov, setHov] = useState(false);
-  return (
-    <Link
-      href={href}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-semibold text-sm sm:text-[0.9375rem] transition-all duration-300 select-none"
-      style={{
-        background: hov ? "rgba(255,255,255,0.065)" : "rgba(255,255,255,0.04)",
-        color: hov ? "#D8D8E0" : "#7A7A84",
-        border: `1px solid ${hov ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.08)"}`,
-        transform: hov ? "translateY(-2px)" : "translateY(0)",
-        letterSpacing: "-0.01em",
-      }}
-    >
-      <ShoppingBag className="w-4 h-4 flex-shrink-0" strokeWidth={2} />
-      {label}
-    </Link>
+          {/* Right — visual placeholder */}
+          <div
+            className="hidden lg:flex items-center justify-center"
+            style={{ height: 520 }}
+          >
+            <Skeleton className="w-80 h-96 rounded-3xl" />
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
