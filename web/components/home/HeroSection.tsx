@@ -29,14 +29,13 @@ const FALLBACK: HeroSettings = {
 
 export default function HeroSection() {
   const { data, isError, isLoading } = useHeroSettings();
-
-  // ✅ Hooks must be called unconditionally — before any early return
+  //  Hook'u erken dönüşün (early return) yukarısına taşıdık:
   const [query, setQuery] = useState("");
 
-  // While loading show a shape-matched skeleton so layout never shifts.
+  // Hook'lar tanımlandıktan sonra artık güvenle erken dönüş yapabiliriz.
   if (isLoading) return <HeroSkeleton />;
 
-  // ✅ API hata verirse veya veri yoksa FALLBACK kullan
+  // Use live data when ready; fall back if the API errored or returned inactive.
   const hero: HeroSettings = data && data.isActive ? data : FALLBACK;
 
   const handleSearch = (e: React.FormEvent) => {
@@ -160,7 +159,7 @@ export default function HeroSection() {
               </div>
             )}
 
-            {/* Dynamic headline */}
+            {/* Dynamic headline — apply accent colour to the matching word */}
             <h1
               style={{
                 fontFamily: "var(--font-display)",
@@ -338,7 +337,7 @@ export default function HeroSection() {
             )}
           </div>
 
-          {/* ── Right: Decorative cards ── */}
+          {/* ── Right: Decorative cards (static visual — unchanged) ── */}
           <div
             className="hidden lg:flex"
             style={{
@@ -610,7 +609,7 @@ export default function HeroSection() {
   );
 }
 
-// ── Shape-matched skeleton ────────────────────────────────────────────────────
+// ── Shape-matched skeleton — mirrors the real hero layout ─────────────────────
 
 function HeroSkeleton() {
   return (
@@ -643,6 +642,7 @@ function HeroSkeleton() {
           }}
           className="lg:grid-cols-2 grid-cols-1"
         >
+          {/* Left — text skeleton */}
           <div className="space-y-5">
             <Skeleton className="h-6 w-40 rounded-full" />
             <div className="space-y-3">
@@ -665,6 +665,8 @@ function HeroSkeleton() {
               ))}
             </div>
           </div>
+
+          {/* Right — visual placeholder */}
           <div
             className="hidden lg:flex items-center justify-center"
             style={{ height: 520 }}
