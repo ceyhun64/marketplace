@@ -28,11 +28,17 @@ public class CreateProductCommandHandler
 {
     private readonly AppDbContext _db;
     private readonly ICurrentUserService _currentUser;
+    private readonly ISubscriptionGuard _subscriptionGuard;
 
-    public CreateProductCommandHandler(AppDbContext db, ICurrentUserService currentUser)
+    public CreateProductCommandHandler(
+        AppDbContext db,
+        ICurrentUserService currentUser,
+        ISubscriptionGuard subscriptionGuard
+    )
     {
         _db = db;
         _currentUser = currentUser;
+        _subscriptionGuard = subscriptionGuard;
     }
 
     public async Task<CreateProductResult> Handle(
@@ -42,7 +48,7 @@ public class CreateProductCommandHandler
     {
         bool isAdmin = _currentUser.Role is nameof(UserRole.Admin);
 
-        // MerchantId çözümleme: admin başka merchant adına ekleyebilir
+        // MerchantId resolution — admin may create on behalf of any merchant
         Guid merchantId;
         if (isAdmin && request.MerchantId.HasValue)
         {
@@ -50,23 +56,32 @@ public class CreateProductCommandHandler
         }
         else
         {
-            var merchant = await _db.MerchantProfiles
-                .Include(m => m.Subscription)
+            var merchant = await _db
+                .MerchantProfiles.Include(m => m.Subscription)
                 .FirstOrDefaultAsync(m => m.UserId == _currentUser.UserId, cancellationToken);
             if (merchant is null)
                 throw new InvalidOperationException("Merchant profili bulunamadı.");
             merchantId = merchant.Id;
 
-            // Marketplace yayını için Pro veya Enterprise aboneliği gereklidir
-            if (request.PublishToMarket)
-            {
-                var hasPro = merchant.Subscription != null
-                    && merchant.Subscription.IsActive
-                    && (merchant.Subscription.Plan == PlanType.Pro || merchant.Subscription.Plan == PlanType.Enterprise);
+            // ── Plan gate: marketplace publishing ────────────────────────────
+            if (
+                request.PublishToMarket
+                && !await _subscriptionGuard.CanPublishToMarketAsync(merchantId)
+            )
+                throw new InvalidOperationException(
+                    "Marketplace'e ürün yayınlamak için Pro veya Enterprise aboneliği gereklidir."
+                );
 
-                if (!hasPro)
-                    throw new InvalidOperationException("Marketplace'e ürün yayınlamak için Pro veya Enterprise aboneliği gereklidir.");
-            }
+            // ── Plan gate: product count limit ────────────────────────────────
+            var limit = await _subscriptionGuard.GetProductLimitAsync(merchantId);
+            var current = await _db.Products.CountAsync(
+                p => p.MerchantId == merchantId && !p.IsDeleted,
+                cancellationToken
+            );
+            if (current >= limit)
+                throw new InvalidOperationException(
+                    $"Ürün limitinize ulaştınız ({limit}). Daha fazla ürün eklemek için planınızı yükseltin."
+                );
         }
 
         var product = new Product
@@ -84,6 +99,7 @@ public class CreateProductCommandHandler
             PublishToMarket = request.PublishToMarket,
             PublishToStore = request.PublishToStore,
             IsApproved = isAdmin,
+            ModerationStatus = isAdmin ? ModerationStatus.Approved : ModerationStatus.PendingReview,
             IsDeleted = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,

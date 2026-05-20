@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using api.Common.Serialization;
+using api.Controllers;
 using api.Infrastructure.Hubs;
 using api.Infrastructure.Jobs;
 using api.Infrastructure.Middleware;
@@ -239,6 +240,9 @@ try
     // Module 2: Wallet & Escrow
     builder.Services.AddScoped<IWalletService, WalletService>();
     builder.Services.AddScoped<ICommissionService, CommissionService>();
+    builder.Services.AddScoped<ISubscriptionGuard, SubscriptionGuard>();
+    builder.Services.AddTransient<DataExportJob>();
+    builder.Services.AddTransient<AccountPurgeJob>();
 
     // ── Milestone 2: Webhook Service ─────────────────────────────────────────
     builder.Services.AddHttpClient("webhook");

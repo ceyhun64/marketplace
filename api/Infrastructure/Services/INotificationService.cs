@@ -11,6 +11,12 @@ public interface INotificationService
     // ── Temel e-posta ───────────────────────────────────────────────────────
     Task SendEmailAsync(string to, string subject, string body);
 
+    /// <summary>
+    /// Looks up the user's email by ID and sends an email notification.
+    /// Used by background jobs and controllers that have a userId rather than an email address.
+    /// </summary>
+    Task SendAsync(Guid userId, string subject, string body);
+
     // ── SMS (Twilio) ─────────────────────────────────────────────────────────
     Task SendSmsAsync(string toPhoneNumber, string message);
 

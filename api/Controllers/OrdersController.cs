@@ -1,10 +1,11 @@
-using System.Data;
+using api.Application.Commands.Orders;
 using api.Common.DTOs;
 using api.Common.Extensions;
-using api.Domain.Entities;
+using api.Domain.Entities; // Kendi proje yapınıza göre burayı düzenleyin (örn: api.Domain.Models veya api.Domain.Orders de olabilir)
 using api.Domain.Enums;
 using api.Infrastructure.Persistence;
 using api.Infrastructure.Services;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,195 +18,32 @@ namespace api.Controllers;
 public class OrdersController(
     AppDbContext db,
     ICurrentUserService currentUser,
-    IFulfillmentService fulfillmentService
+    IMediator mediator
 ) : ControllerBase
 {
     // ─── CUSTOMER ──────────────────────────────────────────────
 
+    /// <summary>
+    /// POST /api/orders
+    ///
+    /// Delegates entirely to <see cref="CreateOrderCommandHandler"/>, which owns:
+    ///   • Serializable transaction + stock decrement (variant-aware)
+    ///   • VendorOrder splitting with dynamic commission resolution
+    ///   • Escrow hold via IWalletService
+    ///   • Per-VendorOrder shipment creation via IFulfillmentService
+    ///
+    /// The controller is intentionally thin — all business logic lives in the handler.
+    /// </summary>
     [HttpPost]
     [Authorize(Policy = "CustomerOnly")]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto dto)
     {
-        var productIds = dto.Items.Select(i => i.ProductId).ToList();
+        var result = await mediator.Send(new CreateOrderCommand(dto));
 
-        Order order = null!;
-        List<OrderItem> orderItems = new();
+        if (!result.Success)
+            return BadRequest(new { message = result.Message });
 
-        // Serializable isolation prevents race conditions — same stock cannot be allocated
-        // to two concurrent orders.
-        await using var transaction = await db.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable
-        );
-        try
-        {
-            var products = await db
-                .Products.Include(p => p.Merchant)
-                .Where(p => productIds.Contains(p.Id) && !p.IsDeleted)
-                .ToListAsync();
-
-            if (products.Count != dto.Items.Count)
-            {
-                await transaction.RollbackAsync();
-                return BadRequest(new { message = "Some products were not found." });
-            }
-
-            // Resolve variants (optional per item)
-            var variantIds = dto
-                .Items.Where(i => i.VariantId.HasValue)
-                .Select(i => i.VariantId!.Value)
-                .ToList();
-            var variants = variantIds.Any()
-                ? await db
-                    .ProductVariants.Where(v => variantIds.Contains(v.Id) && v.IsActive)
-                    .ToListAsync()
-                : new List<ProductVariant>();
-
-            decimal total = 0;
-
-            foreach (var item in dto.Items)
-            {
-                var product = products.First(p => p.Id == item.ProductId);
-
-                // Determine effective price and stock source
-                ProductVariant? variant = null;
-                if (item.VariantId.HasValue)
-                {
-                    variant = variants.FirstOrDefault(v =>
-                        v.Id == item.VariantId.Value && v.ProductId == product.Id
-                    );
-                    if (variant == null)
-                    {
-                        await transaction.RollbackAsync();
-                        return BadRequest(
-                            new { message = $"Variant not found for '{product.Name}'." }
-                        );
-                    }
-                    if (variant.Stock < item.Quantity)
-                    {
-                        await transaction.RollbackAsync();
-                        return BadRequest(
-                            new { message = $"Insufficient variant stock for '{product.Name}'." }
-                        );
-                    }
-                    variant.Stock -= item.Quantity;
-                    variant.UpdatedAt = DateTime.UtcNow;
-                }
-                else
-                {
-                    if (product.Stock < item.Quantity)
-                    {
-                        await transaction.RollbackAsync();
-                        return BadRequest(
-                            new { message = $"Insufficient stock for '{product.Name}'." }
-                        );
-                    }
-                    product.Stock -= item.Quantity;
-                }
-
-                var effectivePrice = variant?.PriceOverride ?? product.Price;
-
-                orderItems.Add(
-                    new OrderItem
-                    {
-                        Id = Guid.NewGuid(),
-                        ProductId = product.Id,
-                        MerchantId = product.MerchantId,
-                        VariantId = variant?.Id,
-                        VariantAttributes = variant?.Attributes,
-                        ProductName = product.Name,
-                        ProductImage = variant?.ImageUrl ?? product.Images.FirstOrDefault(),
-                        UnitPrice = effectivePrice,
-                        Quantity = item.Quantity,
-                    }
-                );
-
-                total += effectivePrice * item.Quantity;
-                product.UpdatedAt = DateTime.UtcNow;
-            }
-
-            if (!Enum.TryParse<OrderSource>(dto.Source, ignoreCase: true, out var parsedSource))
-            {
-                await transaction.RollbackAsync();
-                return BadRequest(new { message = $"Invalid order source: {dto.Source}" });
-            }
-
-            if (
-                !Enum.TryParse<ShippingRate>(dto.ShippingRate, ignoreCase: true, out var parsedRate)
-            )
-            {
-                await transaction.RollbackAsync();
-                return BadRequest(new { message = $"Invalid shipping rate: {dto.ShippingRate}" });
-            }
-
-            order = new Order
-            {
-                Id = Guid.NewGuid(),
-                CustomerId = currentUser.UserId,
-                Source = parsedSource,
-                Status = OrderStatus.Pending,
-                TotalAmount = total,
-                ShippingRate = parsedRate,
-                RecipientName = dto.ShippingAddress.FullName,
-                RecipientPhone = dto.ShippingAddress.Phone,
-                AddressLine = dto.ShippingAddress.AddressLine,
-                City = dto.ShippingAddress.City,
-                District = dto.ShippingAddress.District,
-                PostalCode = dto.ShippingAddress.PostalCode,
-                Items = orderItems,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-            };
-
-            db.Orders.Add(order);
-            await db.SaveChangesAsync(); // get order.Id before VendorOrders
-
-            // ── Split into VendorOrders (one per merchant) ────────────────────
-            var platformFeePercent = 8.0m; // TODO: read from IConfiguration
-            var itemsByMerchant = orderItems.GroupBy(i => i.MerchantId);
-
-            foreach (var group in itemsByMerchant)
-            {
-                var subTotal = group.Sum(i => i.UnitPrice * i.Quantity);
-                var fee = Math.Round(subTotal * platformFeePercent / 100m, 2);
-                var vendorOrder = new VendorOrder
-                {
-                    Id = Guid.NewGuid(),
-                    OrderId = order.Id,
-                    MerchantId = group.Key,
-                    Status = OrderStatus.Pending,
-                    SubTotal = subTotal,
-                    PlatformFee = fee,
-                    MerchantNetAmount = subTotal - fee,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                };
-                db.VendorOrders.Add(vendorOrder);
-                await db.SaveChangesAsync(); // get vendorOrder.Id
-
-                // Link items
-                foreach (var item in group)
-                {
-                    item.VendorOrderId = vendorOrder.Id;
-                }
-            }
-
-            await db.SaveChangesAsync();
-            await transaction.CommitAsync();
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
-
-        // Create shipment record outside transaction (external service call)
-        await fulfillmentService.CreateShipmentForOrderAsync(order);
-
-        return CreatedAtAction(
-            nameof(GetOrder),
-            new { id = order.Id },
-            new { orderId = order.Id, totalAmount = order.TotalAmount }
-        );
+        return CreatedAtAction(nameof(GetOrder), new { id = result.Data!.Id }, result.Data);
     }
 
     [HttpGet]
@@ -352,8 +190,25 @@ public class OrdersController(
         order.CancellationReason = dto.Reason;
         order.UpdatedAt = DateTime.UtcNow;
 
-        // Restore stock — variant-aware: if an item was placed against a variant,
-        // restore to variant.Stock (not base product.Stock).
+        // ── Cancel associated VendorOrders (non-terminal only) ──────────────
+        // This ensures per-merchant sub-orders reflect the cancellation so the
+        // merchant dashboard is accurate and escrow is not settled for a cancelled order.
+        var vendorOrders = await db.VendorOrders.Where(vo => vo.OrderId == id).ToListAsync();
+
+        var terminalStatuses = new[] { OrderStatus.Delivered, OrderStatus.Cancelled };
+        foreach (var vo in vendorOrders)
+        {
+            if (!terminalStatuses.Contains(vo.Status))
+            {
+                vo.Status = OrderStatus.Cancelled;
+                vo.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
+        // ── Variant-aware stock restoration ──────────────────────────────────
+        // If an OrderItem was placed against a specific ProductVariant, the stock
+        // must be returned to that variant's pool — not to the base product.Stock.
+        // Failing to do this causes permanent variant-level stock drift.
         var productIds = order.Items.Select(i => i.ProductId).Distinct().ToList();
         var variantIds = order
             .Items.Where(i => i.VariantId.HasValue)

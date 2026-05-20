@@ -4,7 +4,10 @@ public enum OrderStatus
 {
     Pending,
     PaymentConfirmed,
+    Processing,
+    Packed,
     LabelGenerated,
+    Shipped,
     CourierAssigned,
     PickedUp,
     InTransit,

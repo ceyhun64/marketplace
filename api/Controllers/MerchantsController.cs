@@ -5,7 +5,6 @@ using api.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Stripe;
 
 namespace api.Controllers;
 
@@ -705,7 +704,7 @@ public class MerchantsController : ControllerBase
             _config["Stripe:SecretKey"]
             ?? throw new InvalidOperationException("Stripe secret key not configured.");
 
-        StripeClient.ApiKey = stripeKey;
+        Stripe.StripeConfiguration.ApiKey = stripeKey;
 
         // Create a Stripe Express account if not already created
         if (string.IsNullOrEmpty(merchant.StripeAccountId))
@@ -771,7 +770,7 @@ public class MerchantsController : ControllerBase
         var stripeKey =
             _config["Stripe:SecretKey"]
             ?? throw new InvalidOperationException("Stripe secret key not configured.");
-        StripeClient.ApiKey = stripeKey;
+        Stripe.StripeConfiguration.ApiKey = stripeKey;
 
         var accountService = new Stripe.AccountService();
         var account = await accountService.GetAsync(merchant.StripeAccountId);

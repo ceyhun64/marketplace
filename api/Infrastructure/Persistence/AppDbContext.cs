@@ -1,4 +1,5 @@
 using api.Domain.Entities;
+using api.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Infrastructure.Persistence;
@@ -574,5 +575,6 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Dispute>().HasIndex(d => new { d.MerchantId, d.Status });
         modelBuilder.Entity<Dispute>().Property(d => d.Status).HasConversion<string>();
         modelBuilder.Entity<Dispute>().Property(d => d.Reason).HasConversion<string>();
+        modelBuilder.Entity<Product>().Property(p => p.ModerationStatus).HasConversion<string>();
     }
 }

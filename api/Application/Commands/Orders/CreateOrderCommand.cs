@@ -1,3 +1,4 @@
+using System.Data;
 using api.Common.DTOs;
 using api.Domain.Entities;
 using api.Domain.Enums;
@@ -5,28 +6,38 @@ using api.Infrastructure.Persistence;
 using api.Infrastructure.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System.Data;
 
 namespace api.Application.Commands.Orders;
 
 public record CreateOrderCommand(CreateOrderDto Request) : IRequest<ServiceResult<OrderDto>>;
 
+/// <summary>
+/// MediatR path for order creation — kept in sync with OrdersController.CreateOrder.
+/// Includes VendorOrder splitting, variant-aware stock decrement, escrow hold, and
+/// dynamic commission resolution via ICommissionService.
+/// </summary>
 public class CreateOrderCommandHandler
     : IRequestHandler<CreateOrderCommand, ServiceResult<OrderDto>>
 {
     private readonly AppDbContext _context;
     private readonly ICurrentUserService _currentUser;
     private readonly IFulfillmentService _fulfillmentService;
+    private readonly IWalletService _walletService;
+    private readonly ICommissionService _commissionService;
 
     public CreateOrderCommandHandler(
         AppDbContext context,
         ICurrentUserService currentUser,
-        IFulfillmentService fulfillmentService
+        IFulfillmentService fulfillmentService,
+        IWalletService walletService,
+        ICommissionService commissionService
     )
     {
         _context = context;
         _currentUser = currentUser;
         _fulfillmentService = fulfillmentService;
+        _walletService = walletService;
+        _commissionService = commissionService;
     }
 
     public async Task<ServiceResult<OrderDto>> Handle(
@@ -41,74 +52,177 @@ public class CreateOrderCommandHandler
         List<OrderItem> orderItems = new();
 
         await using var transaction = await _context.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable, cancellationToken);
+            IsolationLevel.Serializable,
+            cancellationToken
+        );
         try
         {
-        var products = await _context
-            .Products.Include(p => p.Merchant)
-            .Where(p => productIds.Contains(p.Id) && !p.IsDeleted)
-            .ToListAsync(cancellationToken);
+            var products = await _context
+                .Products.Include(p => p.Merchant)
+                    .ThenInclude(m => m.Subscription)
+                .Where(p => productIds.Contains(p.Id) && !p.IsDeleted)
+                .ToListAsync(cancellationToken);
 
-        foreach (var item in dto.Items)
-        {
-            var product = products.FirstOrDefault(p => p.Id == item.ProductId);
-            if (product == null)
-                return ServiceResult<OrderDto>.Fail($"Ürün bulunamadı: {item.ProductId}");
-            if (product.Stock < item.Quantity)
-                return ServiceResult<OrderDto>.Fail($"Yetersiz stok: {product.Name}");
-        }
+            // ── Variant resolution ────────────────────────────────────────────
+            var variantIds = dto
+                .Items.Where(i => i.VariantId.HasValue)
+                .Select(i => i.VariantId!.Value)
+                .ToList();
 
-        var shippingRate = Enum.Parse<ShippingRate>(dto.ShippingRate, ignoreCase: true);
-        var source = Enum.Parse<OrderSource>(dto.Source, ignoreCase: true);
+            var variants = variantIds.Any()
+                ? await _context
+                    .ProductVariants.Where(v => variantIds.Contains(v.Id) && v.IsActive)
+                    .ToListAsync(cancellationToken)
+                : new List<ProductVariant>();
 
-        orderItems = dto
-            .Items.Select(i =>
+            // ── Stock validation ──────────────────────────────────────────────
+            foreach (var item in dto.Items)
             {
-                var product = products.First(p => p.Id == i.ProductId);
-                return new OrderItem
+                var product = products.FirstOrDefault(p => p.Id == item.ProductId);
+                if (product == null)
+                    return ServiceResult<OrderDto>.Fail($"Product not found: {item.ProductId}");
+
+                if (item.VariantId.HasValue)
+                {
+                    var variant = variants.FirstOrDefault(v =>
+                        v.Id == item.VariantId.Value && v.ProductId == product.Id
+                    );
+                    if (variant == null)
+                        return ServiceResult<OrderDto>.Fail(
+                            $"Variant not found: {item.VariantId}"
+                        );
+                    if (variant.Stock < item.Quantity)
+                        return ServiceResult<OrderDto>.Fail(
+                            $"Insufficient variant stock for '{product.Name}'."
+                        );
+                }
+                else
+                {
+                    if (product.Stock < item.Quantity)
+                        return ServiceResult<OrderDto>.Fail($"Insufficient stock for '{product.Name}'.");
+                }
+            }
+
+            if (
+                !Enum.TryParse<ShippingRate>(
+                    dto.ShippingRate,
+                    ignoreCase: true,
+                    out var shippingRate
+                )
+            )
+                return ServiceResult<OrderDto>.Fail($"Invalid shipping rate: {dto.ShippingRate}");
+
+            if (!Enum.TryParse<OrderSource>(dto.Source, ignoreCase: true, out var source))
+                return ServiceResult<OrderDto>.Fail($"Invalid order source: {dto.Source}");
+
+            // ── Build OrderItems + decrement stock ────────────────────────────
+            decimal total = 0;
+            foreach (var item in dto.Items)
+            {
+                var product = products.First(p => p.Id == item.ProductId);
+                ProductVariant? variant = null;
+
+                if (item.VariantId.HasValue)
+                {
+                    variant = variants.First(v => v.Id == item.VariantId.Value);
+                    variant.Stock -= item.Quantity;
+                    variant.UpdatedAt = DateTime.UtcNow;
+                }
+                else
+                {
+                    product.Stock -= item.Quantity;
+                }
+
+                var effectivePrice = variant?.PriceOverride ?? product.Price;
+                total += effectivePrice * item.Quantity;
+                product.UpdatedAt = DateTime.UtcNow;
+
+                orderItems.Add(
+                    new OrderItem
+                    {
+                        Id = Guid.NewGuid(),
+                        ProductId = product.Id,
+                        MerchantId = product.MerchantId,
+                        VariantId = variant?.Id,
+                        VariantAttributes = variant?.Attributes,
+                        ProductName = product.Name,
+                        ProductImage = variant?.ImageUrl ?? product.Images.FirstOrDefault(),
+                        UnitPrice = effectivePrice,
+                        Quantity = item.Quantity,
+                    }
+                );
+            }
+
+            order = new Order
+            {
+                Id = Guid.NewGuid(),
+                CustomerId = _currentUser.UserId,
+                Source = source,
+                Status = OrderStatus.Pending,
+                ShippingRate = shippingRate,
+                TotalAmount = total,
+                RecipientName = dto.ShippingAddress.FullName,
+                RecipientPhone = dto.ShippingAddress.Phone,
+                AddressLine = dto.ShippingAddress.AddressLine,
+                City = dto.ShippingAddress.City,
+                District = dto.ShippingAddress.District,
+                PostalCode = dto.ShippingAddress.PostalCode,
+                Items = orderItems,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync(cancellationToken); // materialise order.Id
+
+            // ── VendorOrder splitting (one per merchant) ──────────────────────
+            var itemsByMerchant = orderItems.GroupBy(i => i.MerchantId);
+
+            foreach (var group in itemsByMerchant)
+            {
+                var merchantId = group.Key;
+                var merchant = products.First(p => p.MerchantId == merchantId).Merchant;
+                var categoryId = products
+                    .FirstOrDefault(p => p.MerchantId == merchantId)
+                    ?.CategoryId;
+                var plan = merchant.Subscription?.Plan;
+
+                // Dynamic commission resolution (priority waterfall via CommissionRule table)
+                var feePercent = await _commissionService.ResolveRateAsync(
+                    merchantId,
+                    categoryId,
+                    plan
+                );
+
+                var subTotal = group.Sum(i => i.UnitPrice * i.Quantity);
+                var fee = Math.Round(subTotal * feePercent / 100m, 2);
+
+                var vendorOrder = new VendorOrder
                 {
                     Id = Guid.NewGuid(),
-                    ProductId = product.Id,
-                    MerchantId = product.MerchantId,
-                    ProductName = product.Name,
-                    ProductImage = product.Images.FirstOrDefault(),
-                    UnitPrice = product.Price,
-                    Quantity = i.Quantity,
+                    OrderId = order.Id,
+                    MerchantId = merchantId,
+                    Status = OrderStatus.Pending,
+                    SubTotal = subTotal,
+                    PlatformFee = fee,
+                    MerchantNetAmount = subTotal - fee,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
                 };
-            })
-            .ToList();
 
-        order = new Order
-        {
-            Id = Guid.NewGuid(),
-            CustomerId = _currentUser.UserId,
-            Source = source,
-            Status = OrderStatus.Pending,
-            ShippingRate = shippingRate,
-            TotalAmount = orderItems.Sum(i => i.UnitPrice * i.Quantity),
-            RecipientName = dto.ShippingAddress.FullName,
-            RecipientPhone = dto.ShippingAddress.Phone,
-            AddressLine = dto.ShippingAddress.AddressLine,
-            City = dto.ShippingAddress.City,
-            District = dto.ShippingAddress.District,
-            PostalCode = dto.ShippingAddress.PostalCode,
-            Items = orderItems,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
+                _context.VendorOrders.Add(vendorOrder);
+                await _context.SaveChangesAsync(cancellationToken); // materialise vendorOrder.Id
 
-        _context.Orders.Add(order);
+                // Link items to their VendorOrder
+                foreach (var item in group)
+                    item.VendorOrderId = vendorOrder.Id;
 
-        // Stok düş
-        foreach (var item in dto.Items)
-        {
-            var product = products.First(p => p.Id == item.ProductId);
-            product.Stock -= item.Quantity;
-            product.UpdatedAt = DateTime.UtcNow;
-        }
+                // Escrow hold — funds are pending until delivery window clears
+                await _walletService.HoldEscrowAsync(vendorOrder);
+            }
 
-        await _context.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
         }
         catch
         {
@@ -116,6 +230,7 @@ public class CreateOrderCommandHandler
             throw;
         }
 
+        // Shipments are created per VendorOrder by FulfillmentService
         await _fulfillmentService.CreateShipmentForOrderAsync(order);
 
         return ServiceResult<OrderDto>.Ok(

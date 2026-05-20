@@ -31,6 +31,24 @@ public class NotificationService : INotificationService
         _config = config;
     }
 
+    // ── User-id-based convenience wrapper ───────────────────────────────────
+
+    public async Task SendAsync(Guid userId, string subject, string body)
+    {
+        var email = await _db.Users
+            .Where(u => u.Id == userId)
+            .Select(u => u.Email)
+            .FirstOrDefaultAsync();
+
+        if (string.IsNullOrEmpty(email))
+        {
+            _logger.LogWarning("SendAsync: no email found for UserId={UserId}", userId);
+            return;
+        }
+
+        await SendEmailAsync(email, subject, body);
+    }
+
     // ── Email (SendGrid) ────────────────────────────────────────────────────
 
     public async Task SendEmailAsync(string to, string subject, string body)

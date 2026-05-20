@@ -67,10 +67,13 @@ public class ProductsController : ControllerBase
             query = query.Where(p => p.Tags.Any(t => tags.Contains(t)));
 
         if (!string.IsNullOrEmpty(search))
-            query = query.Where(p =>
-                EF.Functions.ILike(p.Name, $"%{search}%")
-                || EF.Functions.ILike(p.Description, $"%{search}%")
-            );
+        {
+            var tsQuery = string.Join(" & ",
+                search.Trim()
+                      .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                      .Select(t => t + ":*"));
+            query = query.Where(p => p.SearchVector!.Matches(EF.Functions.ToTsQuery("english", tsQuery)));
+        }
 
         if (minPrice.HasValue)
             query = query.Where(p => p.Price >= minPrice.Value);
@@ -512,13 +515,15 @@ public class ProductsController : ControllerBase
             .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && p.Stock > 0)
             .AsQueryable();
 
-        // Full-text arama
+        // Full-text search — GIN-indexed tsvector (prefix matching per token)
         if (!string.IsNullOrEmpty(q))
-            query = query.Where(p =>
-                EF.Functions.ILike(p.Name, $"%{q}%")
-                || EF.Functions.ILike(p.Description, $"%{q}%")
-                || p.Tags.Any(t => EF.Functions.ILike(t, $"%{q}%"))
-            );
+        {
+            var tsQuery = string.Join(" & ",
+                q.Trim()
+                 .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                 .Select(t => t + ":*"));
+            query = query.Where(p => p.SearchVector!.Matches(EF.Functions.ToTsQuery("english", tsQuery)));
+        }
 
         // Kategori filtresi (ana kategori slug'ı — hem ana hem alt dahil)
         if (!string.IsNullOrEmpty(category))
@@ -633,10 +638,13 @@ public class ProductsController : ControllerBase
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(search))
-            query = query.Where(p =>
-                EF.Functions.ILike(p.Name, $"%{search}%")
-                || EF.Functions.ILike(p.Description, $"%{search}%")
-            );
+        {
+            var tsQuery = string.Join(" & ",
+                search.Trim()
+                      .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                      .Select(t => t + ":*"));
+            query = query.Where(p => p.SearchVector!.Matches(EF.Functions.ToTsQuery("english", tsQuery)));
+        }
 
         var total = await query.CountAsync();
         var items = await query
@@ -772,35 +780,49 @@ public class ProductsController : ControllerBase
         return Ok(new { message = "Ürün onaylandı." });
     }
 
-    /// <summary>Ürün güncelle (Admin veya Merchant)</summary>
+    /// <summary>
+    /// PATCH /api/products/{id}/update — partial product update.
+    ///
+    /// Uses <see cref="ICurrentUserService"/> instead of raw ClaimTypes string parsing.
+    /// This eliminates two vulnerabilities from the previous implementation:
+    ///   1. Guid.Parse(userIdClaim!) throws NullReferenceException when the claim is absent.
+    ///   2. String comparison (userRole == "Merchant") silently fails when Role claim is empty,
+    ///      granting any authenticated user admin-level update access.
+    /// </summary>
     [HttpPatch("{id:guid}/update")]
     [Authorize(Policy = "AdminOrMerchant")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductRequest dto)
+    public async Task<IActionResult> Update(
+        Guid id,
+        [FromBody] UpdateProductRequest dto,
+        [FromServices] ICurrentUserService currentUser)
     {
-        var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
         var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
         if (product == null)
-            return NotFound(new { message = "Ürün bulunamadı." });
+            return NotFound(new { message = "Product not found." });
 
-        // Merchant sadece kendi ürününü güncelleyebilir
-        if (userRole == "Merchant")
+        // Merchants may only update their own products.
+        if (currentUser.Role == "Merchant")
         {
+            // currentUser.MerchantId resolves from the JWT claim — null-safe, no Guid.Parse risk.
+            if (currentUser.MerchantId is null)
+                return Forbid();
+
+            // Re-fetch from DB so we get the current plan, not a stale JWT claim.
             var merchant = await _db
                 .MerchantProfiles.Include(m => m.Subscription)
-                .FirstOrDefaultAsync(m => m.UserId == Guid.Parse(userIdClaim!));
+                .FirstOrDefaultAsync(m => m.Id == currentUser.MerchantId.Value);
+
             if (merchant == null || product.MerchantId != merchant.Id)
                 return Forbid();
 
-            // Plan kontrolü: PublishToMarket sadece Pro+ planlarda
+            // Plan gate: PublishToMarket requires Pro or Enterprise subscription.
             if (dto.PublishToMarket == true)
             {
                 var plan = merchant.Subscription?.Plan ?? api.Domain.Enums.PlanType.Basic;
                 if (plan == api.Domain.Enums.PlanType.Basic)
                     return BadRequest(
                         new ApiResponse<string>(
-                            "Marketplace'e ürün yayınlamak için Pro veya Enterprise planı gereklidir."
+                            "Publishing to the marketplace requires a Pro or Enterprise plan."
                         )
                     );
             }
@@ -845,14 +867,35 @@ public class ProductsController : ControllerBase
         );
     }
 
-    /// <summary>Ürün soft-delete</summary>
+    /// <summary>
+    /// DELETE /api/products/{id} — soft-delete a product.
+    ///
+    /// Authorization rules:
+    ///   • Admin  — may delete any product regardless of ownership.
+    ///   • Merchant — may only delete products they own (MerchantId must match).
+    ///
+    /// Uses <see cref="ICurrentUserService"/> for strongly-typed, null-safe identity
+    /// resolution instead of raw ClaimTypes string parsing, eliminating the null-ref
+    /// and role-bypass vulnerabilities present in the previous implementation.
+    /// </summary>
     [HttpDelete("{id:guid}")]
-    [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Delete(Guid id)
+    [Authorize(Policy = "AdminOrMerchant")]
+    public async Task<IActionResult> Delete(
+        Guid id,
+        [FromServices] ICurrentUserService currentUser)
     {
         var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
         if (product == null)
-            return NotFound(new { message = "Ürün bulunamadı." });
+            return NotFound(new { message = "Product not found." });
+
+        // Merchants may only delete their own products.
+        // currentUser.MerchantId is null-safe — it returns null when the claim is absent,
+        // preventing privilege escalation if a malformed token omits the merchantId claim.
+        if (currentUser.Role == "Merchant")
+        {
+            if (currentUser.MerchantId is null || product.MerchantId != currentUser.MerchantId.Value)
+                return Forbid();
+        }
 
         product.IsDeleted = true;
         product.UpdatedAt = DateTime.UtcNow;

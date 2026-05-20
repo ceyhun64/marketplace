@@ -56,10 +56,28 @@ public class PaymentService : IPaymentService
                 return ServiceResult<PaymentCheckoutResponseDto>.Fail("Order not found.");
 
             if (order.IsPaid)
-                return ServiceResult<PaymentCheckoutResponseDto>.Fail("This order has already been paid.");
+                return ServiceResult<PaymentCheckoutResponseDto>.Fail(
+                    "This order has already been paid."
+                );
 
-            // Amount in cents (for Stripe)
+            // Load VendorOrders to resolve per-merchant Stripe accounts and platform fees
+            var vendorOrders = await _db
+                .VendorOrders.Include(vo => vo.Merchant)
+                .Where(vo => vo.OrderId == order.Id)
+                .ToListAsync();
+
             var amountInCents = (long)(order.TotalAmount * 100);
+
+            // ── Stripe Connect: attach transfer and fee data ──────────────────
+            // For single-merchant orders we use transfer_data to route funds directly.
+            // For multi-merchant carts, the platform collects the full amount and
+            // splits via separate transfers on payment confirmation (see FinalizeOrderPaymentAsync).
+            var singleVendor = vendorOrders.Count == 1 ? vendorOrders[0] : null;
+            var stripeAccountId = singleVendor?.Merchant?.StripeAccountId;
+            var onboardingComplete = singleVendor?.Merchant?.StripeOnboardingComplete ?? false;
+
+            var totalPlatformFee = vendorOrders.Sum(vo => vo.PlatformFee);
+            var platformFeeInCents = (long)(totalPlatformFee * 100);
 
             var options = new PaymentIntentCreateOptions
             {
@@ -73,24 +91,36 @@ public class PaymentService : IPaymentService
                 {
                     ["orderId"] = order.Id.ToString(),
                     ["customerId"] = order.CustomerId.ToString(),
+                    ["vendorCount"] = vendorOrders.Count.ToString(),
                 },
                 Description = $"Marketplace Order #{order.Id.ToString()[..8].ToUpper()}",
                 ReceiptEmail = order.Customer?.Email,
+                // Attach application fee so Stripe retains platform commission
+                ApplicationFeeAmount = platformFeeInCents > 0 ? platformFeeInCents : null,
+                // For single-vendor orders with a connected account, route directly
+                TransferData =
+                    (
+                        singleVendor != null
+                        && onboardingComplete
+                        && !string.IsNullOrEmpty(stripeAccountId)
+                    )
+                        ? new PaymentIntentTransferDataOptions { Destination = stripeAccountId }
+                        : null,
             };
 
             var service = new PaymentIntentService();
             var intent = await service.CreateAsync(options);
 
-            // Save PaymentIntent ID to the order
             order.PaymentToken = intent.Id;
             order.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
 
             _logger.LogInformation(
-                "✅ Stripe PaymentIntent created: OrderId={OrderId} IntentId={IntentId} Amount={Amount}",
+                "✅ Stripe PaymentIntent created: OrderId={OrderId} IntentId={IntentId} Amount={Amount} PlatformFee={Fee}",
                 order.Id,
                 intent.Id,
-                order.TotalAmount
+                order.TotalAmount,
+                totalPlatformFee
             );
 
             return ServiceResult<PaymentCheckoutResponseDto>.Ok(
@@ -140,8 +170,10 @@ public class PaymentService : IPaymentService
             }
 
             // Get orderId from Stripe-signed metadata — do not trust client input (IDOR prevention)
-            if (!intent.Metadata.TryGetValue("orderId", out var orderIdStr)
-                || !Guid.TryParse(orderIdStr, out var orderId))
+            if (
+                !intent.Metadata.TryGetValue("orderId", out var orderIdStr)
+                || !Guid.TryParse(orderIdStr, out var orderId)
+            )
             {
                 _logger.LogError(
                     "❌ PaymentIntent metadata has no valid orderId: IntentId={Id}",
@@ -151,13 +183,17 @@ public class PaymentService : IPaymentService
             }
 
             // Identity check: does this PaymentIntent really belong to this customer?
-            if (intent.Metadata.TryGetValue("customerId", out var customerIdStr)
+            if (
+                intent.Metadata.TryGetValue("customerId", out var customerIdStr)
                 && Guid.TryParse(customerIdStr, out var intentCustomerId)
-                && intentCustomerId != _currentUser.UserId)
+                && intentCustomerId != _currentUser.UserId
+            )
             {
                 _logger.LogWarning(
                     "⚠️ IDOR attempt: IntentId={IntentId} CustomerId={Claimed} vs {Actual}",
-                    dto.PaymentIntentId, _currentUser.UserId, intentCustomerId
+                    dto.PaymentIntentId,
+                    _currentUser.UserId,
+                    intentCustomerId
                 );
                 return ServiceResult<Guid>.Fail("This payment does not belong to you.");
             }
@@ -227,9 +263,7 @@ public class PaymentService : IPaymentService
                 return ServiceResult<bool>.Fail("Order not found.");
 
             if (!order.IsPaid || string.IsNullOrEmpty(order.PaymentId))
-                return ServiceResult<bool>.Fail(
-                    "Cannot refund this order (payment not found)."
-                );
+                return ServiceResult<bool>.Fail("Cannot refund this order (payment not found).");
 
             // Refund via PaymentIntent
             var chargeService = new ChargeService();
@@ -421,7 +455,8 @@ public class PaymentService : IPaymentService
 
         // RepeatableRead transaction — IsPaid read and write are atomic, prevents TOCTOU race
         await using var tx = await _db.Database.BeginTransactionAsync(
-            System.Data.IsolationLevel.RepeatableRead);
+            System.Data.IsolationLevel.RepeatableRead
+        );
         try
         {
             var order = await _db
@@ -489,8 +524,8 @@ public class PaymentService : IPaymentService
         // Side effects outside transaction — payment is not affected if these fail
         try
         {
-            var orderForInvoice = await _db.Orders
-                .Include(o => o.Items)
+            var orderForInvoice = await _db
+                .Orders.Include(o => o.Items)
                 .Include(o => o.Customer)
                 .FirstOrDefaultAsync(o => o.Id == orderId);
 

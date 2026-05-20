@@ -16,6 +16,23 @@ public class UpdateOrderStatusCommandHandler
     private readonly AppDbContext _context;
     private readonly INotificationService _notificationService;
 
+    /// <summary>
+    /// Whitelist-only transition guard.
+    /// Any transition NOT listed here is rejected, preventing skips like Pending → Delivered.
+    /// </summary>
+    private static readonly Dictionary<OrderStatus, OrderStatus[]> AllowedTransitions = new()
+    {
+        [OrderStatus.Pending] = [OrderStatus.PaymentConfirmed, OrderStatus.Cancelled],
+        [OrderStatus.PaymentConfirmed] = [OrderStatus.Processing, OrderStatus.Cancelled],
+        [OrderStatus.Processing] = [OrderStatus.Packed],
+        [OrderStatus.Packed] = [OrderStatus.Shipped, OrderStatus.Cancelled],
+        [OrderStatus.Shipped] = [OrderStatus.InTransit],
+        [OrderStatus.InTransit] = [OrderStatus.Delivered, OrderStatus.Failed],
+        [OrderStatus.Delivered] = [],
+        [OrderStatus.Cancelled] = [],
+        [OrderStatus.Failed] = [],
+    };
+
     public UpdateOrderStatusCommandHandler(
         AppDbContext context,
         INotificationService notificationService
@@ -41,26 +58,16 @@ public class UpdateOrderStatusCommandHandler
         if (order == null)
             return ServiceResult<OrderDto>.Fail("Sipariş bulunamadı.");
 
-        // Geçersiz durum geçişlerini engelle
-        var invalidTransitions = new Dictionary<OrderStatus, List<OrderStatus>>
-        {
-            {
-                OrderStatus.Delivered,
-                new List<OrderStatus> { OrderStatus.Pending, OrderStatus.PaymentConfirmed }
-            },
-            {
-                OrderStatus.Cancelled,
-                new List<OrderStatus> { OrderStatus.Delivered, OrderStatus.InTransit }
-            },
-        };
-
+        // Whitelist transition guard — rejects any unlisted jump
         if (
-            invalidTransitions.TryGetValue(order.Status, out var blocked)
-            && blocked.Contains(newStatus)
+            !AllowedTransitions.TryGetValue(order.Status, out var allowed)
+            || !allowed.Contains(newStatus)
         )
+        {
             return ServiceResult<OrderDto>.Fail(
                 $"'{order.Status}' durumundan '{newStatus}' durumuna geçiş yapılamaz."
             );
+        }
 
         order.Status = newStatus;
         order.UpdatedAt = DateTime.UtcNow;

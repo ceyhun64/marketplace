@@ -1,3 +1,7 @@
+using System.ComponentModel.DataAnnotations;
+using api.Domain.Enums;
+using NpgsqlTypes;
+
 namespace api.Domain.Entities;
 
 public class Product
@@ -21,12 +25,32 @@ public class Product
     /// </summary>
     public int Stock { get; set; }
 
+    public ModerationStatus ModerationStatus { get; set; } = ModerationStatus.PendingReview;
+
     public bool PublishToMarket { get; set; } = false;
     public bool PublishToStore { get; set; } = true;
     public bool IsApproved { get; set; } = false;
     public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    // ── Full-Text Search ───────────────────────────────────────────────────────
+    /// <summary>
+    /// PostgreSQL generated tsvector column automatically maintained by the database
+    /// from Name + Description.  Backed by a GIN index (configured in AppDbContext).
+    /// Never set manually — EF Core maps it as a generated computed column.
+    /// </summary>
+    public NpgsqlTsVector? SearchVector { get; set; }
+
+    // ── Optimistic Concurrency ─────────────────────────────────────────────────
+    /// <summary>
+    /// Row-version token for optimistic concurrency on concurrent stock mutations.
+    /// EF Core throws <see cref="Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException"/>
+    /// when two transactions attempt to update the same row simultaneously, allowing
+    /// the caller to retry with refreshed data instead of silently losing an update.
+    /// </summary>
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
 
     // ── Navigation ─────────────────────────────────────────────────────────────
     public MerchantProfile Merchant { get; set; } = null!;
