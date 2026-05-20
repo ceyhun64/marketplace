@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// lib/shipping.ts — Client-side ETA hesaplama (Haversine) + kargo yardımcıları
-// Backend ShippingCalculatorService ile birebir aynı mantık
+// lib/shipping.ts — Client-side ETA calculation (Haversine) + shipping helpers
+// Mirrors the logic in the backend ShippingCalculatorService exactly
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {
@@ -10,7 +10,7 @@ import {
 } from "./constants";
 import type { ShippingRate } from "@/types/enums";
 
-// ── Haversine Formülü ─────────────────────────────────────────────────────────
+// ── Haversine Formula ─────────────────────────────────────────────────────────
 
 const EARTH_RADIUS_KM = 6371;
 
@@ -19,7 +19,7 @@ function toRad(degrees: number): number {
 }
 
 /**
- * İki koordinat arasındaki kuş uçuşu mesafeyi km cinsinden hesaplar.
+ * Calculates the straight-line distance between two coordinates in kilometres.
  */
 export function haversineDistance(
   lat1: number,
@@ -41,7 +41,7 @@ export function haversineDistance(
   return EARTH_RADIUS_KM * c;
 }
 
-// ── ETA Hesaplama ─────────────────────────────────────────────────────────────
+// ── ETA Calculation ───────────────────────────────────────────────────────────
 
 export interface EtaResult {
   distanceKm: number;
@@ -60,14 +60,14 @@ export interface EtaParams {
   customerLat: number;
   customerLon: number;
   shippingRate: ShippingRate;
-  /** Merchant'ın paket hazırlama süresi (hours). Default 24 */
+  /** Merchant's package preparation time in hours. Default: 24 */
   handlingHours?: number;
 }
 
 /**
- * Client-side ETA hesaplama.
- * Checkout sayfasında anlık önizleme için kullanılır.
- * Gerçek ETA backend'den gelir (/api/fulfillment/calculate-eta).
+ * Client-side ETA calculation.
+ * Used for live previews on the checkout page.
+ * The authoritative ETA comes from the backend (/api/fulfillment/calculate-eta).
  */
 export function calculateEta(params: EtaParams): EtaResult {
   const {
@@ -86,7 +86,7 @@ export function calculateEta(params: EtaParams): EtaResult {
     customerLon,
   );
 
-  // Transit süresi = mesafe / hız * (1 + buffer)
+  // Transit time = distance / speed × (1 + buffer)
   const baseSpeed = AVG_COURIER_SPEED_KMH[shippingRate];
   const rawTransitHours = distanceKm / baseSpeed;
   const transitHours = rawTransitHours * (1 + ETA_BUFFER_PERCENT / 100);
@@ -95,11 +95,11 @@ export function calculateEta(params: EtaParams): EtaResult {
 
   const now = new Date();
 
-  // Pickup penceresi: handling süresi bittikten sonra 2 hourslik pencere
+  // Pickup window: 2-hour window after handling time ends
   const pickupStart = new Date(now.getTime() + handlingHours * 3_600_000);
   const pickupEnd = new Date(pickupStart.getTime() + 2 * 3_600_000);
 
-  // Delivery penceresi: pickup'tan sonra transit + 2 hourslik pencere
+  // Delivery window: transit + 2-hour window after pickup
   const deliveryStart = new Date(
     pickupEnd.getTime() + transitHours * 3_600_000,
   );
@@ -118,24 +118,23 @@ export function calculateEta(params: EtaParams): EtaResult {
 }
 
 /**
- * ETA'yı insan okunabilir formatta döndürür.
- * @example getEtaLabel({ shippingRate: "EXPRESS", totalHours: 6 })
- *   → "1-2 iş günü içinde teslim"
+ * Returns a human-readable ETA label.
+ * @example getEtaLabel("EXPRESS", 6) → "Same day or next day delivery"
  */
 export function getEtaLabel(
   shippingRate: ShippingRate,
   totalHours: number,
 ): string {
   if (shippingRate === "EXPRESS") {
-    if (totalHours <= 24) return "Aynı gün veya yarın teslim";
-    return "1-2 iş günü içinde teslim";
+    if (totalHours <= 24) return "Same day or next day delivery";
+    return "Delivered within 1–2 business days";
   }
   const days = Math.ceil(totalHours / 24);
-  if (days <= 3) return "2-3 iş günü içinde teslim";
-  return "3-5 iş günü içinde teslim";
+  if (days <= 3) return "Delivered within 2–3 business days";
+  return "Delivered within 3–5 business days";
 }
 
-// ── Kargo Maliyeti ────────────────────────────────────────────────────────────
+// ── Shipping Cost ─────────────────────────────────────────────────────────────
 
 export function getShippingCost(rate: ShippingRate): number {
   return SHIPPING_COSTS[rate];
@@ -164,21 +163,21 @@ export function getShippingOptions(
 
     return {
       rate,
-      label: rate === "EXPRESS" ? "Ekspres Teslimat" : "Standart Teslimat",
+      label: rate === "EXPRESS" ? "Express Delivery" : "Standard Delivery",
       description:
         rate === "EXPRESS"
-          ? "Hızlı teslimat, öncelikli kurye"
-          : "Ekonomik teslimat seçeneği",
+          ? "Fast delivery with priority courier"
+          : "Economy delivery option",
       cost: SHIPPING_COSTS[rate],
       etaLabel,
     };
   });
 }
 
-// ── Kargo Labeli QR URL ──────────────────────────────────────────────────────
+// ── Shipping Label QR URL ─────────────────────────────────────────────────────
 
 /**
- * Takip numarasından QR erişim URL'si oluşturur.
+ * Builds a QR access URL from a tracking number.
  */
 export function getTrackingUrl(
   trackingNumber: string,

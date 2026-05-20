@@ -58,7 +58,7 @@ export function useMerchantOffers() {
       const { data } = await api.get<{ items: MerchantOffer[]; total: number }>(
         "/api/merchants/catalogue",
       );
-      // API { total, page, limit, items } döndürüyor
+      // API returns { total, page, limit, items }
       return Array.isArray(data) ? data : ((data as any).items ?? []);
     },
   });

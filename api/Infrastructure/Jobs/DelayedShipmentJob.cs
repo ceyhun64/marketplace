@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore;
 namespace api.Infrastructure.Jobs;
 
 /// <summary>
-/// Hangfire recurring job — her saat çalışır.
-/// EstimatedDelivery süresi geçmiş ve teslim edilmemiş
-/// shipment'ları tespit edip merchant + müşteriye bildirim gönderir.
+/// Hangfire recurring job — runs every hour.
+/// Detects shipments whose EstimatedDelivery has passed and have not been delivered,
+/// then sends notifications to the merchant and the customer.
 /// </summary>
 public class DelayedShipmentJob
 {
@@ -30,7 +30,7 @@ public class DelayedShipmentJob
     public async Task RunAsync()
     {
         _logger.LogInformation(
-            "[DelayedShipmentJob] Gecikmiş kargo kontrolü başlatıldı: {Time}",
+            "[DelayedShipmentJob] Delayed shipment check started: {Time}",
             DateTime.UtcNow
         );
 
@@ -54,7 +54,7 @@ public class DelayedShipmentJob
             .ToListAsync();
 
         _logger.LogInformation(
-            "[DelayedShipmentJob] {Count} gecikmiş kargo bulundu.",
+            "[DelayedShipmentJob] {Count} delayed shipment(s) found.",
             delayedShipments.Count
         );
 
@@ -64,26 +64,26 @@ public class DelayedShipmentJob
                 Math.Ceiling((DateTime.UtcNow - shipment.EstimatedDelivery).TotalHours);
 
             _logger.LogWarning(
-                "[DelayedShipmentJob] Gecikmiş Shipment={Id} TrackingNo={TrackingNo} HoursLate={Hours}",
+                "[DelayedShipmentJob] Delayed Shipment={Id} TrackingNo={TrackingNo} HoursLate={Hours}",
                 shipment.Id,
                 shipment.TrackingNumber,
                 hoursLate
             );
 
-            // Müşteriye bildirim
+            // Customer notification
             var customerEmail = shipment.Order?.Customer?.Email;
             if (!string.IsNullOrEmpty(customerEmail))
             {
                 await _notificationService.SendEmailAsync(
                     customerEmail,
-                    $"Kargo Gecikmesi — Takip: {shipment.TrackingNumber}",
-                    $"Siparişinizin teslimatı {hoursLate} saat gecikmektedir. "
-                        + $"Takip numaranız: {shipment.TrackingNumber}. "
-                        + "Destek için bize ulaşabilirsiniz."
+                    $"Shipment Delay — Tracking: {shipment.TrackingNumber}",
+                    $"The delivery of your order is {hoursLate} hour(s) late. "
+                        + $"Your tracking number is: {shipment.TrackingNumber}. "
+                        + "Please contact us for support."
                 );
             }
 
-            // Merchant e-postasına OrderItems üzerinden ulaşılır
+            // Merchant email is retrieved via OrderItems
             var merchantEmail = shipment
                 .Order?.Items.Select(i => i.Product?.Merchant?.User?.Email)
                 .FirstOrDefault(e => !string.IsNullOrEmpty(e));
@@ -91,19 +91,19 @@ public class DelayedShipmentJob
             {
                 await _notificationService.SendEmailAsync(
                     merchantEmail,
-                    $"Kargo Gecikmesi Uyarısı — Sipariş #{shipment.OrderId}",
-                    $"Sipariş #{shipment.OrderId} için kargo {hoursLate} saat gecikmiş görünüyor. "
-                        + $"Takip no: {shipment.TrackingNumber}. Kurye ile iletişime geçin."
+                    $"Shipment Delay Warning — Order #{shipment.OrderId}",
+                    $"The shipment for Order #{shipment.OrderId} appears to be {hoursLate} hour(s) late. "
+                        + $"Tracking no: {shipment.TrackingNumber}. Please contact the courier."
                 );
             }
 
-            // SignalR bildirim (OrderStatusNotification)
+            // SignalR notification (OrderStatusNotification)
             await _notificationService.SendOrderStatusNotificationAsync(
                 shipment.OrderId,
-                $"Kargo gecikmesi tespit edildi. Takip: {shipment.TrackingNumber}"
+                $"Shipment delay detected. Tracking: {shipment.TrackingNumber}"
             );
         }
 
-        _logger.LogInformation("[DelayedShipmentJob] Tamamlandı.");
+        _logger.LogInformation("[DelayedShipmentJob] Completed.");
     }
 }

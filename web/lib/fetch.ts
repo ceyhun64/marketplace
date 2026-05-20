@@ -1,6 +1,6 @@
 // web/lib/fetch.ts
-// Sadece Server Components ve Route Handlers'ta kullan
-// Client Components'te bu dosyayı IMPORT ETME
+// For use in Server Components and Route Handlers only.
+// DO NOT import this file in Client Components.
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5010";
 
@@ -10,8 +10,8 @@ type FetchOptions = RequestInit & {
 };
 
 /**
- * ISR fetch — statik sayfalar için (kategori listesi, ürün listesi vb.)
- * revalidate: 60 → 60 saniyede bir arka planda yeniler
+ * ISR fetch — for static pages (category list, product list, etc.)
+ * revalidate: 60 → revalidates in the background every 60 seconds
  */
 export async function fetchISR<T>(
   path: string,
@@ -41,8 +41,8 @@ export async function fetchISR<T>(
 }
 
 /**
- * SSR fetch — her istekte taze veri gereken sayfalar için
- * (sipariş detayı, profil, admin paneli vb.)
+ * SSR fetch — for pages that need fresh data on every request
+ * (order detail, profile, admin panel, etc.)
  */
 export async function fetchSSR<T>(
   path: string,
@@ -63,22 +63,22 @@ export async function fetchSSR<T>(
     });
 
     if (!res.ok) {
-      // 404 → null döndür, çökme
+      // 404 → return null, do not throw
       if (res.status === 404) return null;
       throw new Error(`Fetch SSR failed: ${res.status} ${path}`);
     }
 
     return res.json() as Promise<T>;
   } catch (err) {
-    // Network hatası veya JSON parse hatası
+    // Network error or JSON parse error
     console.error(`[fetchSSR] ${path}`, err);
     return null;
   }
 }
 
 /**
- * Static fetch — hiç değişmeyen veriler (plan listesi, plugin listesi vb.)
- * Build time'da bir kez çekilir
+ * Static fetch — for data that never changes (plan list, plugin list, etc.)
+ * Fetched once at build time.
  */
 export async function fetchStatic<T>(path: string): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
@@ -93,7 +93,7 @@ export async function fetchStatic<T>(path: string): Promise<T> {
 }
 
 /**
- * Server Fetch Helper — mağaza ve ürün verisi için
+ * Server Fetch Helper — for store and product data
  */
 export const serverFetch = {
   product: (id: string) => fetchISR(`/api/products/${id}`),

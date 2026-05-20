@@ -84,7 +84,7 @@ public class CourierService : ICourierService
     public async Task<ServiceResult<CourierDto>> CreateAsync(CreateCourierDto dto)
     {
         if (await _db.Users.AnyAsync(u => u.Email == dto.Email.ToLower()))
-            return ServiceResult<CourierDto>.Fail("Bu e-posta zaten kayıtlı.");
+            return ServiceResult<CourierDto>.Fail("This email is already registered.");
 
         var user = new User
         {
@@ -136,7 +136,7 @@ public class CourierService : ICourierService
     {
         var courier = await _db.Couriers.Include(c => c.User).FirstOrDefaultAsync(c => c.Id == id);
         if (courier == null)
-            return ServiceResult<CourierDto>.Fail("Kurye bulunamadı.");
+            return ServiceResult<CourierDto>.Fail("Courier not found.");
 
         if (dto.FullName != null)
         {
@@ -181,7 +181,7 @@ public class CourierService : ICourierService
     {
         var courier = await _db.Couriers.FindAsync(id);
         if (courier == null)
-            return ServiceResult<bool>.Fail("Kurye bulunamadı.");
+            return ServiceResult<bool>.Fail("Courier not found.");
 
         courier.IsActive = !courier.IsActive;
         await _db.SaveChangesAsync();
@@ -216,7 +216,7 @@ public class CourierService : ICourierService
     {
         var courier = await _db.Couriers.Include(c => c.User).FirstOrDefaultAsync(c => c.Id == id);
         if (courier == null)
-            return ServiceResult<bool>.Fail("Kurye bulunamadı.");
+            return ServiceResult<bool>.Fail("Courier not found.");
 
         courier.User.IsDeleted = true;
         courier.IsActive = false;

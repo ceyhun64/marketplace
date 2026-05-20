@@ -26,20 +26,20 @@ public class LabelGeneratorService : ILabelGeneratorService
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
-    // ── Herkese açık API ──────────────────────────────────────────────────────
+    // ── Public API ───────────────────────────────────────────────────────────
 
     public async Task<byte[]> GenerateLabelAsync(Guid shipmentId)
     {
         var shipment = await LoadShipmentAsync(shipmentId);
         if (shipment is null)
-            throw new InvalidOperationException($"Shipment {shipmentId} bulunamadı.");
+            throw new InvalidOperationException($"Shipment {shipmentId} not found.");
 
         return BuildLabelPdf(shipment, _config["PLATFORM_URL"] ?? "https://platform.com");
     }
 
     public async Task<string> GenerateAndUploadLabelAsync(Shipment shipment)
     {
-        // Navigation property'ler yüklü değilse yeniden çek
+        // Reload if navigation properties are not populated
         if (shipment.Order is null)
             shipment = await LoadShipmentAsync(shipment.Id) ?? shipment;
 
@@ -51,7 +51,7 @@ public class LabelGeneratorService : ILabelGeneratorService
         await _db.SaveChangesAsync();
 
         _logger.LogInformation(
-            "✅ Kargo etiketi oluşturuldu ve yüklendi: TrackingNo={TrackingNo} Url={Url}",
+            "✅ Shipping label generated and uploaded: TrackingNo={TrackingNo} Url={Url}",
             shipment.TrackingNumber,
             url
         );
@@ -59,7 +59,7 @@ public class LabelGeneratorService : ILabelGeneratorService
         return url;
     }
 
-    // ── QuestPDF Kargo Etiketi ────────────────────────────────────────────────
+    // ── QuestPDF Shipping Label ───────────────────────────────────────────────
 
     private static byte[] BuildLabelPdf(Shipment shipment, string platformUrl)
     {
@@ -67,12 +67,12 @@ public class LabelGeneratorService : ILabelGeneratorService
         var order = shipment.Order;
         var courier = shipment.Courier;
 
-        // Merchant bilgisi: ürünler üzerinden merchant profile'a eriş
+        // Merchant info: access merchant profile via order items
         var merchant = order?.Items
             .Select(i => i.Product?.Merchant)
             .FirstOrDefault(m => m != null);
 
-        var senderName = merchant?.StoreName ?? "Satıcı";
+        var senderName = merchant?.StoreName ?? "Seller";
         var senderCity = merchant?.City ?? "";
         var senderAddress = merchant?.Address ?? "";
 
@@ -93,7 +93,7 @@ public class LabelGeneratorService : ILabelGeneratorService
                         .BorderColor(Colors.Black)
                         .Column(col =>
                         {
-                            // ── Başlık bandı ─────────────────────────────────
+                            // ── Header band ──────────────────────────────────
                             col.Item()
                                 .Background(Colors.Black)
                                 .Padding(8)
@@ -104,7 +104,7 @@ public class LabelGeneratorService : ILabelGeneratorService
                                         {
                                             inner
                                                 .Item()
-                                                .Text("KARGO ETİKETİ")
+                                                .Text("SHIPPING LABEL")
                                                 .FontColor(Colors.White)
                                                 .Bold()
                                                 .FontSize(13);
@@ -121,7 +121,7 @@ public class LabelGeneratorService : ILabelGeneratorService
                                         .AlignRight()
                                         .Column(inner =>
                                         {
-                                            // EXPRESS'te turuncu, REGULAR'da gri
+                                            // Orange for EXPRESS, grey for REGULAR
                                             var rateColor =
                                                 shippingRateLabel == "EXPRESS"
                                                     ? Colors.Orange.Medium
@@ -142,18 +142,18 @@ public class LabelGeneratorService : ILabelGeneratorService
                                         });
                                 });
 
-                            // ── Ana içerik ───────────────────────────────────
+                            // ── Main content ─────────────────────────────────
                             col.Item()
                                 .Padding(10)
                                 .Row(row =>
                                 {
-                                    // Sol: Adres bilgileri
+                                    // Left: Address information
                                     row.RelativeItem(3)
                                         .Column(addr =>
                                         {
-                                            // Gönderici (Merchant)
+                                            // Sender (Merchant)
                                             addr.Item()
-                                                .Text("GÖNDERİCİ")
+                                                .Text("SENDER")
                                                 .FontSize(7)
                                                 .FontColor(Colors.Grey.Darken2)
                                                 .Bold();
@@ -177,9 +177,9 @@ public class LabelGeneratorService : ILabelGeneratorService
 
                                             addr.Item().PaddingBottom(10).Text(" ");
 
-                                            // Alıcı (Customer)
+                                            // Recipient (Customer)
                                             addr.Item()
-                                                .Text("ALICI")
+                                                .Text("RECIPIENT")
                                                 .FontSize(7)
                                                 .FontColor(Colors.Grey.Darken2)
                                                 .Bold();
@@ -212,12 +212,12 @@ public class LabelGeneratorService : ILabelGeneratorService
                                                 )
                                                 .Bold();
 
-                                            // Kurye bilgisi
+                                            // Courier information
                                             if (courier is not null)
                                             {
                                                 addr.Item().PaddingTop(8).Text(" ");
                                                 addr.Item()
-                                                    .Text("KURYE")
+                                                    .Text("COURIER")
                                                     .FontSize(7)
                                                     .FontColor(Colors.Grey.Darken2)
                                                     .Bold();
@@ -237,7 +237,7 @@ public class LabelGeneratorService : ILabelGeneratorService
                                             }
                                         });
 
-                                    // Sağ: QR kodu
+                                    // Right: QR code
                                     row.AutoItem()
                                         .AlignRight()
                                         .AlignBottom()
@@ -248,13 +248,13 @@ public class LabelGeneratorService : ILabelGeneratorService
                                             qrCol
                                                 .Item()
                                                 .AlignCenter()
-                                                .Text("Takip için tarat")
+                                                .Text("Scan to track")
                                                 .FontSize(7)
                                                 .FontColor(Colors.Grey.Darken1);
                                         });
                                 });
 
-                            // ── Alt bant ─────────────────────────────────────
+                            // ── Footer band ──────────────────────────────────
                             col.Item()
                                 .Background(Colors.Grey.Lighten3)
                                 .Padding(6)
@@ -262,14 +262,14 @@ public class LabelGeneratorService : ILabelGeneratorService
                                 {
                                     row.RelativeItem()
                                         .Text(
-                                            $"Sipariş: {order?.Id.ToString()[..8].ToUpper() ?? "-"}"
+                                            $"Order: {order?.Id.ToString()[..8].ToUpper() ?? "-"}"
                                         )
                                         .FontSize(8)
                                         .FontColor(Colors.Grey.Darken2);
 
                                     row.AutoItem()
                                         .Text(
-                                            $"Oluşturuldu: {DateTime.UtcNow:dd.MM.yyyy HH:mm} UTC"
+                                            $"Generated: {DateTime.UtcNow:dd.MM.yyyy HH:mm} UTC"
                                         )
                                         .FontSize(8)
                                         .FontColor(Colors.Grey.Darken2);
@@ -280,7 +280,7 @@ public class LabelGeneratorService : ILabelGeneratorService
             .GeneratePdf();
     }
 
-    // ── QR Kodu ───────────────────────────────────────────────────────────────
+    // ── QR Code ──────────────────────────────────────────────────────────────
 
     private static byte[] GenerateQrCode(string trackingNumber, string platformUrl)
     {
@@ -293,7 +293,7 @@ public class LabelGeneratorService : ILabelGeneratorService
         return qrCode.GetGraphic(4, [0, 0, 0], [255, 255, 255]);
     }
 
-    // ── Cloudinary Yükleme ────────────────────────────────────────────────────
+    // ── Cloudinary Upload ─────────────────────────────────────────────────────
 
     private async Task<string> UploadLabelAsync(byte[] pdfBytes, string trackingNumber)
     {
@@ -304,7 +304,7 @@ public class LabelGeneratorService : ILabelGeneratorService
         if (string.IsNullOrEmpty(cloudName) || string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(apiSecret))
         {
             _logger.LogWarning(
-                "⚠️  Cloudinary yapılandırması eksik — etiket yerel path'e kaydedildi: {TrackingNo}",
+                "⚠️  Cloudinary configuration missing — label saved to local path: {TrackingNo}",
                 trackingNumber
             );
             return $"/labels/{trackingNumber}.pdf";
@@ -314,7 +314,7 @@ public class LabelGeneratorService : ILabelGeneratorService
         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
         var publicId = $"labels/{trackingNumber}";
 
-        // HMAC-SHA1 imzası
+        // HMAC-SHA1 signature
         var signatureString = $"public_id={publicId}&timestamp={timestamp}{apiSecret}";
         var signature = ComputeSha1(signatureString);
 
@@ -335,7 +335,7 @@ public class LabelGeneratorService : ILabelGeneratorService
             {
                 var err = await response.Content.ReadAsStringAsync();
                 _logger.LogWarning(
-                    "⚠️  Cloudinary yükleme başarısız: {Status} — {Error}",
+                    "⚠️  Cloudinary upload failed: {Status} — {Error}",
                     (int)response.StatusCode,
                     err
                 );
@@ -353,14 +353,14 @@ public class LabelGeneratorService : ILabelGeneratorService
         {
             _logger.LogError(
                 ex,
-                "❌ Cloudinary yükleme exception: TrackingNo={TrackingNo}",
+                "❌ Cloudinary upload exception: TrackingNo={TrackingNo}",
                 trackingNumber
             );
             return $"/labels/{trackingNumber}.pdf";
         }
     }
 
-    // ── Yardımcı metodlar ─────────────────────────────────────────────────────
+    // ── Helper methods ────────────────────────────────────────────────────────
 
     private async Task<Shipment?> LoadShipmentAsync(Guid shipmentId) =>
         await _db

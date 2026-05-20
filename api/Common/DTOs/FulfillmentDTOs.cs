@@ -1,6 +1,6 @@
 namespace api.Common.DTOs;
 
-/// <summary>Kurye atama panel listesi için özet DTO</summary>
+/// <summary>Summary DTO for the courier assignment panel list</summary>
 public class CourierAssignmentSummaryDto
 {
     public Guid CourierId { get; set; }
@@ -11,7 +11,7 @@ public class CourierAssignmentSummaryDto
     public int ActiveShipmentCount { get; set; }
 }
 
-/// <summary>Admin shipment izleme paneli için özet liste DTO</summary>
+/// <summary>Summary list DTO for the admin shipment tracking panel</summary>
 public class ShipmentListItemDto
 {
     public Guid Id { get; set; }
@@ -26,7 +26,7 @@ public class ShipmentListItemDto
     public bool IsDelayed { get; set; }
 }
 
-/// <summary>Kurye portal — atanan paket özeti</summary>
+/// <summary>Courier portal — assigned package summary</summary>
 public class CourierShipmentCardDto
 {
     public Guid ShipmentId { get; set; }
@@ -39,7 +39,7 @@ public class CourierShipmentCardDto
     public List<string> ItemNames { get; set; } = [];
 }
 
-/// <summary>Webhook event payload — iyzico veya dahili kullanım için</summary>
+/// <summary>Webhook event payload — for iyzico or internal use</summary>
 public class WebhookEventDto
 {
     public string Event { get; set; } = string.Empty;
@@ -50,7 +50,7 @@ public class WebhookEventDto
     public Dictionary<string, string> Metadata { get; set; } = [];
 }
 
-/// <summary>Hangfire gecikmeli teslimat uyarısı için</summary>
+/// <summary>For Hangfire delayed delivery alerts</summary>
 public class DelayedShipmentAlertDto
 {
     public Guid ShipmentId { get; set; }

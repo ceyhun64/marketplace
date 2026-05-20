@@ -1,37 +1,37 @@
-# Test Talimatları
+# Test Instructions
 
-## Uygulandı: 3 Fix + 5 Test Dosyası
-
----
-
-## FIX'LER
-
-| # | Dosya | Sorun | Çözüm |
-|---|-------|-------|-------|
-| 1 | `api/Common/Mappings/MappingProfile.cs` | Enum PascalCase → Frontend UPPER_SNAKE_CASE uyumsuzluğu | `ToUpperSnakeCase()` helper + tüm status ForMember mappings |
-| 2 | `api/Controllers/AdminController.cs` | `POST /api/admin/store/{id}/setup` endpoint eksikti | Endpoint + `AdminStoreSetupDto` eklendi |
-| 3 | `api/Application/Commands/Orders/CreateOrderCommand.cs` | Stok kontrolü race condition | `IsolationLevel.Serializable` transaction ile sarıldı |
+## Applied: 3 Fixes + 5 Test Files
 
 ---
 
-## BACKEND TESTLERİ ÇALIŞTIRMA (xUnit)
+## FIXES
+
+| # | File | Problem | Solution |
+|---|------|---------|----------|
+| 1 | `api/Common/Mappings/MappingProfile.cs` | Enum PascalCase → Frontend UPPER_SNAKE_CASE mismatch | `ToUpperSnakeCase()` helper + all status ForMember mappings |
+| 2 | `api/Controllers/AdminController.cs` | `POST /api/admin/store/{id}/setup` endpoint was missing | Endpoint + `AdminStoreSetupDto` added |
+| 3 | `api/Application/Commands/Orders/CreateOrderCommand.cs` | Stock check race condition | Wrapped with `IsolationLevel.Serializable` transaction |
+
+---
+
+## RUNNING BACKEND TESTS (xUnit)
 
 ```bash
-# Test projesini solution'a ekle (sadece bir kez)
+# Add the test project to the solution (once only)
 cd api
 dotnet sln ../marketplace.sln add ../api.Tests/api.Tests.csproj
 
-# Testleri çalıştır
+# Run all tests
 cd api.Tests
 dotnet test --logger "console;verbosity=normal"
 
-# Tek dosya
+# Run a single test file
 dotnet test --filter "FullyQualifiedName~EnumSerializationTests"
 dotnet test --filter "FullyQualifiedName~AdminStoreSetupTests"
 dotnet test --filter "FullyQualifiedName~CreateOrderStockTests"
 ```
 
-**Beklenen sonuç:**
+**Expected result:**
 ```
 EnumSerializationTests: 18 passed
 AdminStoreSetupTests:    4 passed
@@ -41,47 +41,47 @@ Total: 27 passed
 
 ---
 
-## FRONTEND TESTLERİ ÇALIŞTIRMA (Jest)
+## RUNNING FRONTEND TESTS (Jest)
 
 ```bash
 cd web
 
-# Jest bağımlılıklarını yükle (ilk seferinde)
+# Install Jest dependencies (first time only)
 npm install --save-dev jest jest-environment-jsdom @testing-library/react \
   @testing-library/jest-dom @types/jest ts-jest next
 
-# Testleri çalıştır
+# Run all tests
 npx jest --testPathPattern="__tests__"
 
 # Watch mode
 npx jest --watch
 
-# Belirli dosya
+# Run a specific file
 npx jest enumMapping
 npx jest TrackingTimeline
 ```
 
-**Beklenen sonuç:**
+**Expected result:**
 ```
-enumMapping.test.ts:     16 passed
-TrackingTimeline.test.tsx: 12 passed (bileşen render gerektiriyor)
+enumMapping.test.ts:       16 passed
+TrackingTimeline.test.tsx: 12 passed (requires component rendering)
 ```
 
-> **Not:** TrackingTimeline testleri `@testing-library/react` kurulumu gerektirir.
-> Sadece enum logic testleri için `enumMapping.test.ts` yeterlidir.
+> **Note:** TrackingTimeline tests require `@testing-library/react` to be installed.
+> For enum logic tests only, `enumMapping.test.ts` is sufficient.
 
 ---
 
-## TEST DOSYALARI
+## TEST FILES
 
 ```
 api.Tests/
 ├── api.Tests.csproj
-├── EnumSerializationTests.cs      # Fix #1 — 18 test
-├── AdminStoreSetupTests.cs        # Fix #2 — 4 test
-└── CreateOrderStockTests.cs       # Fix #3 — 5 test
+├── EnumSerializationTests.cs      # Fix #1 — 18 tests
+├── AdminStoreSetupTests.cs        # Fix #2 — 4 tests
+└── CreateOrderStockTests.cs       # Fix #3 — 5 tests
 
 web/__tests__/
-├── enumMapping.test.ts            # Fix #1 frontend — 16 test
-└── TrackingTimeline.test.tsx      # TrackingTimeline render — 12 test
+├── enumMapping.test.ts            # Fix #1 frontend — 16 tests
+└── TrackingTimeline.test.tsx      # TrackingTimeline render — 12 tests
 ```

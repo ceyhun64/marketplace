@@ -17,8 +17,8 @@ export const categoryKeys = {
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
 /**
- * Tüm kategori ağacını getirir (ana + alt kategoriler dahil).
- * Navbar, CategoryGrid ve filtre dropdown'larında kullanılır.
+ * Fetches the full category tree (parent and child categories included).
+ * Used in the Navbar, CategoryGrid, and filter dropdowns.
  */
 export function useCategories() {
   return useQuery({
@@ -27,12 +27,12 @@ export function useCategories() {
       const { data } = await api.get<Category[]>("/api/categories");
       return data;
     },
-    staleTime: STALE_TIME.LONG, // Kategoriler sık değişmez
+    staleTime: STALE_TIME.LONG, // Categories change infrequently
   });
 }
 
 /**
- * Tek kategori + o kategoriye ait ürünleri getirir.
+ * Fetches a single category along with its associated products.
  */
 export function useCategory(slug: string) {
   return useQuery({
@@ -47,7 +47,7 @@ export function useCategory(slug: string) {
 }
 
 /**
- * Sadece ana kategoriler (parentId yoklar) — navigasyon için.
+ * Root categories only (those without a parentId) — for navigation.
  */
 export function useRootCategories() {
   return useQuery({

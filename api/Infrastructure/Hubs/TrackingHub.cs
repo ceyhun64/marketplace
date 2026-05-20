@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.SignalR;
 namespace api.Infrastructure.Hubs;
 
 /// <summary>
-/// SignalR hub — gerçek zamanlı kargo takibi.
-/// Gruplar:
-///   - "shipment-{shipmentId}" → müşteri / satıcı / admin
-///   - "admin-tracking"        → admin panel genel izleme
-///   - "courier-{courierId}"   → kurye kendi grubunda
+/// SignalR hub — real-time shipment tracking.
+/// Groups:
+///   - "shipment-{shipmentId}" → customer / seller / admin
+///   - "admin-tracking"        → admin panel general monitoring
+///   - "courier-{courierId}"   → courier in their own group
 /// </summary>
 [Authorize]
 public class TrackingHub : Hub
@@ -20,7 +20,7 @@ public class TrackingHub : Hub
         _logger = logger;
     }
 
-    /// <summary>Müşteri/satıcı: belirli bir shipment'ı izlemek için gruba katıl.</summary>
+    /// <summary>Customer/seller: join the group to track a specific shipment.</summary>
     public async Task JoinShipmentGroup(string shipmentId)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, $"shipment-{shipmentId}");
@@ -36,13 +36,13 @@ public class TrackingHub : Hub
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"shipment-{shipmentId}");
     }
 
-    /// <summary>Admin: tüm kargo olaylarını dinlemek için admin grubuna katıl.</summary>
+    /// <summary>Admin: join the admin group to listen to all shipment events.</summary>
     public async Task JoinAdminTracking()
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, "admin-tracking");
     }
 
-    /// <summary>Kurye: kendi grubuna katıl — atama bildirimleri için.</summary>
+    /// <summary>Courier: join their own group — for assignment notifications.</summary>
     public async Task JoinCourierGroup(string courierId)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, $"courier-{courierId}");
@@ -50,8 +50,8 @@ public class TrackingHub : Hub
     }
 
     /// <summary>
-    /// Kurye: konum güncellemesi gönderir.
-    /// Hem shipment grubuna hem admin grubuna iletilir.
+    /// Courier: sends a location update.
+    /// Forwarded to both the shipment group and the admin group.
     /// </summary>
     public async Task UpdateLocation(string shipmentId, double lat, double lng)
     {
@@ -67,7 +67,7 @@ public class TrackingHub : Hub
         await Clients.Group("admin-tracking").SendAsync("CourierLocationUpdated", payload);
     }
 
-    /// <summary>Eski method — geriye dönük uyumluluk için korundu.</summary>
+    /// <summary>Legacy method — retained for backward compatibility.</summary>
     public async Task JoinOrderGroup(string orderId)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, $"Order_{orderId}");

@@ -4,9 +4,9 @@ using MediatR;
 namespace api.Application.Behaviours;
 
 /// <summary>
-/// MediatR pipeline behavior — her IRequest gönderiminde kayıtlı FluentValidation
-/// validator'larını otomatik olarak tetikler. Herhangi bir validation hatası varsa
-/// ValidationException fırlatır; controller'da 400 Bad Request'e dönüştürülür.
+/// MediatR pipeline behavior — automatically triggers registered FluentValidation
+/// validators on every IRequest dispatch. If any validation errors exist,
+/// throws ValidationException, which is converted to 400 Bad Request in the controller.
 /// </summary>
 public class ValidationBehaviour<TRequest, TResponse>
     : IPipelineBehavior<TRequest, TResponse>

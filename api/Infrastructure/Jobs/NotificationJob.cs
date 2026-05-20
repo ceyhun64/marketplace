@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore;
 namespace api.Infrastructure.Jobs;
 
 /// <summary>
-/// Hangfire recurring job — her dakika çalışır.
-/// Görevler:
-///   1. Yeni sipariş bildirimleri — merchant'a "yeni sipariş var" e-postası
-///   2. Teslim edilen sipariş teşekkür e-postası (delivered, henüz gönderilmemiş)
-///   3. İptal bildirimleri (Cancelled, son 5 dakika)
+/// Hangfire recurring job — runs every minute.
+/// Tasks:
+///   1. New order notifications — sends a "new order received" email to the merchant
+///   2. Delivery thank-you email (delivered, not yet sent)
+///   3. Cancellation notifications (Cancelled, last 5 minutes)
 /// </summary>
 public class NotificationJob
 {
@@ -31,21 +31,21 @@ public class NotificationJob
 
     public async Task RunAsync()
     {
-        _logger.LogInformation("[NotificationJob] Başlatıldı: {Time}", DateTime.UtcNow);
+        _logger.LogInformation("[NotificationJob] Started: {Time}", DateTime.UtcNow);
 
         await NotifyMerchantsForNewOrdersAsync();
         await SendDeliveryThankYouAsync();
         await NotifyCancelledOrdersAsync();
 
-        _logger.LogInformation("[NotificationJob] Tamamlandı.");
+        _logger.LogInformation("[NotificationJob] Completed.");
     }
 
-    // ── 1. Yeni siparişlerde merchant'a bildirim ────────────────────────────
+    // ── 1. Notify merchant on new orders ────────────────────────────────────
 
     /// <summary>
-    /// Son 2 dakikada oluşturulmuş ve ödeme onaylı siparişleri bulur,
-    /// ilgili merchant'a "yeni sipariş" e-postası gönderir.
-    /// (Hangfire dakikada bir çalıştığından 2 dakikalık pencere yeterli buffer sağlar.)
+    /// Finds orders created in the last 2 minutes with payment confirmed
+    /// and sends a "new order" email to the relevant merchant.
+    /// (Since Hangfire runs every minute, a 2-minute window provides sufficient buffer.)
     /// </summary>
     private async Task NotifyMerchantsForNewOrdersAsync()
     {
@@ -67,13 +67,13 @@ public class NotificationJob
             return;
 
         _logger.LogInformation(
-            "[NotificationJob] {Count} yeni sipariş bildirimi gönderiliyor.",
+            "[NotificationJob] Sending {Count} new order notification(s).",
             newOrders.Count
         );
 
         foreach (var order in newOrders)
         {
-            // Her siparişteki tüm merchant'ları bul (genelde tek merchant)
+            // Find all merchants in this order (usually a single merchant)
             var merchantEmails = order
                 .Items.Select(i => i.Product?.Merchant?.User?.Email)
                 .Where(e => !string.IsNullOrEmpty(e))
@@ -91,22 +91,22 @@ public class NotificationJob
 
                 await _notificationService.SendEmailAsync(
                     email,
-                    $"🛒 Yeni Sipariş — #{shortId}",
+                    $"🛒 New Order — #{shortId}",
                     $"""
-                    Yeni bir siparişiniz var!
+                    You have a new order!
 
-                    Sipariş No: #{shortId}
-                    Müşteri: {order.Customer?.FirstName} {order.Customer?.LastName}
-                    Ürün Sayısı: {itemCount}
-                    Toplam: {total:C2}
-                    Kargo: {order.ShippingRate}
+                    Order No: #{shortId}
+                    Customer: {order.Customer?.FirstName} {order.Customer?.LastName}
+                    Item Count: {itemCount}
+                    Total: {total:C2}
+                    Shipping: {order.ShippingRate}
 
-                    Siparişi hazırlamak için merchant panelinize giriş yapın.
+                    Log in to your merchant panel to prepare the order.
                     """
                 );
 
                 _logger.LogInformation(
-                    "[NotificationJob] Merchant bildirildi: {Email} — Order={OrderId}",
+                    "[NotificationJob] Merchant notified: {Email} — Order={OrderId}",
                     email,
                     order.Id
                 );
@@ -114,11 +114,11 @@ public class NotificationJob
         }
     }
 
-    // ── 2. Teslim sonrası teşekkür e-postası ───────────────────────────────
+    // ── 2. Post-delivery thank-you email ────────────────────────────────────
 
     /// <summary>
-    /// Son 5 dakikada Delivered olan siparişler için müşteriye
-    /// teşekkür e-postası gönderir.
+    /// Sends a thank-you email to the customer for orders
+    /// that were delivered in the last 5 minutes.
     /// </summary>
     private async Task SendDeliveryThankYouAsync()
     {
@@ -140,37 +140,37 @@ public class NotificationJob
                 continue;
 
             var shortId = order.Id.ToString()[..8].ToUpper();
-            var firstProduct = order.Items.FirstOrDefault()?.ProductName ?? "ürününüz";
+            var firstProduct = order.Items.FirstOrDefault()?.ProductName ?? "your product";
 
             await _notificationService.SendEmailAsync(
                 order.Customer.Email,
-                $"Teşekkürler! Siparişiniz teslim edildi — #{shortId}",
+                $"Thank you! Your order has been delivered — #{shortId}",
                 $"""
-                Merhaba {order.Customer.FirstName},
+                Hello {order.Customer.FirstName},
 
-                #{shortId} numaralı siparişiniz başarıyla teslim edildi! 🎉
+                Your order #{shortId} has been successfully delivered! 🎉
 
-                "{firstProduct}" ve diğer ürünlerinizin tadını çıkarın.
+                Enjoy "{firstProduct}" and your other items.
 
-                Değerlendirme yapmak için hesabınıza giriş yapabilirsiniz.
+                You can log in to your account to leave a review.
 
-                İyi günler dileriz!
+                Have a great day!
                 """
             );
 
             _logger.LogInformation(
-                "[NotificationJob] Teşekkür e-postası gönderildi: {Email} — Order={OrderId}",
+                "[NotificationJob] Thank-you email sent: {Email} — Order={OrderId}",
                 order.Customer.Email,
                 order.Id
             );
         }
     }
 
-    // ── 3. İptal bildirimi ──────────────────────────────────────────────────
+    // ── 3. Cancellation notification ────────────────────────────────────────
 
     /// <summary>
-    /// Son 5 dakikada iptal edilen siparişler için hem müşteriye
-    /// hem merchant'a bildirim gönderir.
+    /// Sends notifications to both the customer and the merchant
+    /// for orders cancelled in the last 5 minutes.
     /// </summary>
     private async Task NotifyCancelledOrdersAsync()
     {
@@ -195,26 +195,26 @@ public class NotificationJob
 
             var shortId = order.Id.ToString()[..8].ToUpper();
             var reason = string.IsNullOrEmpty(order.CancellationReason)
-                ? "Belirtilmedi"
+                ? "Not specified"
                 : order.CancellationReason;
 
-            // Müşteriye bildirim
+            // Customer notification
             await _notificationService.SendEmailAsync(
                 order.Customer.Email,
-                $"Siparişiniz İptal Edildi — #{shortId}",
+                $"Your Order Has Been Cancelled — #{shortId}",
                 $"""
-                Merhaba {order.Customer.FirstName},
+                Hello {order.Customer.FirstName},
 
-                #{shortId} numaralı siparişiniz iptal edildi.
-                İptal Nedeni: {reason}
+                Your order #{shortId} has been cancelled.
+                Cancellation Reason: {reason}
 
-                Ödemeniz yapıldıysa, iade işlemi 3-5 iş günü içinde hesabınıza yansıyacaktır.
+                If a payment was made, the refund will be reflected in your account within 3-5 business days.
 
-                Sorularınız için destek hattımıza başvurabilirsiniz.
+                Please contact our support line if you have any questions.
                 """
             );
 
-            // Merchant'a bildirim
+            // Merchant notification
             var merchantEmail = order
                 .Items.Select(i => i.Product?.Merchant?.User?.Email)
                 .FirstOrDefault(e => !string.IsNullOrEmpty(e));
@@ -223,18 +223,18 @@ public class NotificationJob
             {
                 await _notificationService.SendEmailAsync(
                     merchantEmail,
-                    $"Sipariş İptal Edildi — #{shortId}",
+                    $"Order Cancelled — #{shortId}",
                     $"""
-                    #{shortId} numaralı sipariş iptal edildi.
-                    İptal Nedeni: {reason}
+                    Order #{shortId} has been cancelled.
+                    Cancellation Reason: {reason}
 
-                    Stok miktarlarınız otomatik olarak güncellendi.
+                    Your stock quantities have been updated automatically.
                     """
                 );
             }
 
             _logger.LogInformation(
-                "[NotificationJob] İptal bildirimi gönderildi: Order={OrderId}",
+                "[NotificationJob] Cancellation notification sent: Order={OrderId}",
                 order.Id
             );
         }

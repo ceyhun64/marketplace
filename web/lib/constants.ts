@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// lib/constants.ts — Uygulama genelinde sabit değerler
+// lib/constants.ts — Application-wide constants
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── API ───────────────────────────────────────────────────────────────────────
@@ -33,22 +33,22 @@ export const SHIPPING_COSTS = {
   REGULAR: 19.9,
 } as const;
 
-/** Haversine ETA hesabında kullanılan ortalama hız (km/hours) */
+/** Average courier speed used in Haversine ETA calculations (km/h) */
 export const AVG_COURIER_SPEED_KMH = {
   EXPRESS: 60,
   REGULAR: 40,
 } as const;
 
-/** ETA'ya eklenen trafik/bekleme buffer'ı (%) */
+/** Traffic/waiting buffer added to ETA (%) */
 export const ETA_BUFFER_PERCENT = 20;
 
 /**
- * Türkiye'deki şehirlerin yaklaşık koordinatları.
- * Checkout'ta adres girişinde şehir adından koordinat çözümlemesi için kullanılır.
- * Gerçek ETA hesabı backend /api/fulfillment/calculate-eta endpoint'inden gelir.
+ * Approximate coordinates of cities in Turkey.
+ * Used to resolve coordinates from a city name during checkout address entry.
+ * Authoritative ETA calculation comes from the backend /api/fulfillment/calculate-eta endpoint.
  */
 export const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
-  // Büyük şehirler
+  // Major cities
   istanbul: { lat: 41.0082, lng: 28.9784 },
   ankara: { lat: 39.9334, lng: 32.8597 },
   izmir: { lat: 38.4237, lng: 27.1428 },
@@ -59,7 +59,7 @@ export const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
   gaziantep: { lat: 37.0662, lng: 37.3833 },
   mersin: { lat: 36.8, lng: 34.6333 },
   kayseri: { lat: 38.7225, lng: 35.4875 },
-  // Diğer iller
+  // Other provinces
   eskişehir: { lat: 39.7767, lng: 30.5206 },
   diyarbakır: { lat: 37.9144, lng: 40.2306 },
   şanlıurfa: { lat: 37.1591, lng: 38.7969 },
@@ -147,22 +147,22 @@ export const CLOUDINARY_CLOUD_NAME =
 export const CLOUDINARY_UPLOAD_PRESET =
   process.env.NEXT_PUBLIC_CLOUDINARY_PRESET ?? "marketplace-unsigned";
 
-/** Maksimum yüklenebilir görsel boyutu (bytes) — 5 MB */
+/** Maximum uploadable image size (bytes) — 5 MB */
 export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 export const MAX_PRODUCT_IMAGES = 6;
 
 // ── Stale Time (TanStack Query) ───────────────────────────────────────────────
 
 export const STALE_TIME = {
-  /** Hiç değişmez — build time'da bir kez */
+  /** Never changes — fetched once at build time */
   STATIC: Infinity,
-  /** Yavaş değişen veriler (kategoriler, ürün detayları) */
-  LONG: 1000 * 60 * 10, // 10 dakika
-  /** Orta hızlı (liste sayfaları) */
-  MEDIUM: 1000 * 60 * 2, // 2 dakika
-  /** Hızlı değişen (sipariş durumu, stok) */
-  SHORT: 1000 * 30, // 30 saniye
-  /** Anlık (tracking polling) */
+  /** Slowly changing data (categories, product details) */
+  LONG: 1000 * 60 * 10,   // 10 minutes
+  /** Moderately changing data (list pages) */
+  MEDIUM: 1000 * 60 * 2,  // 2 minutes
+  /** Frequently changing data (order status, stock) */
+  SHORT: 1000 * 30,        // 30 seconds
+  /** Real-time (tracking polling) */
   REALTIME: 0,
 } as const;
 

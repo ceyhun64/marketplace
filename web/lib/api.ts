@@ -15,7 +15,7 @@ export const api = axios.create({
   withCredentials: false,
 });
 
-// ── camelCase dönüşümü ────────────────────────────────────────────────────
+// ── camelCase transformation ──────────────────────────────────────────────
 function toCamel(obj: unknown): unknown {
   if (Array.isArray(obj)) return obj.map(toCamel);
   if (obj !== null && typeof obj === "object") {
@@ -60,7 +60,7 @@ api.interceptors.response.use(
     // Backend PascalCase → frontend camelCase
     response.data = toCamel(response.data);
 
-    // ApiResponse<T> sarmalayıcısını aç:
+    // Unwrap ApiResponse<T> wrapper:
     // { success: true, data: T } → T
     if (
       response.data !== null &&
@@ -72,10 +72,10 @@ api.interceptors.response.use(
       response.data = response.data.data;
     }
 
-    // Bazı endpoint'ler { data: T } döndürür (success field yok) — onu da aç.
-    // Önceki Object.keys().length === 1 koşulu { data: [...], total: 10 } gibi
-    // iki-key response'ları kaçırıyordu. Artık yalnızca "data" key'i olan ve
-    // "total/page/limit/items" gibi pagination key'leri BULUNMAYAN yanıtları açıyoruz.
+    // Some endpoints return { data: T } without a success field — unwrap those too.
+    // The previous Object.keys().length === 1 check was missing two-key responses like
+    // { data: [...], total: 10 }. Now we only unwrap responses that have a "data" key
+    // and do NOT contain pagination keys like "total/page/limit/items".
     // "pagination" guards against { data: T[], pagination: {...} } shaped responses
     // being incorrectly unwrapped to just the inner array.
     const PAGINATION_KEYS = ["total", "page", "limit", "items", "pages", "stores", "pagination"];
@@ -114,8 +114,8 @@ api.interceptors.response.use(
       try {
         const refreshToken = getRefreshToken();
 
-        // Refresh token yoksa kullanıcı zaten giriş yapmamış demektir.
-        // Login sayfasına yönlendirmek yerine sadece hatayı ilet.
+        // If there is no refresh token, the user is not authenticated.
+        // Forward the error instead of redirecting to the login page.
         if (!refreshToken) {
           isRefreshing = false;
           processQueue(error, null);

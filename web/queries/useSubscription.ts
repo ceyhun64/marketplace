@@ -36,7 +36,7 @@ export const pluginKeys = {
 // ── Subscription Hooks ────────────────────────────────────────────────────────
 
 /**
- * Merchant'ın aktif abonelik planı.
+ * The merchant's active subscription plan.
  */
 export function useMySubscription() {
   return useQuery({
@@ -50,7 +50,7 @@ export function useMySubscription() {
 }
 
 /**
- * Admin: tüm merchant abonelikleri.
+ * Admin: all merchant subscriptions.
  */
 export function useAdminSubscriptions() {
   return useQuery({
@@ -79,7 +79,7 @@ export function useUpgradePlan() {
 // ── Invoice Hooks ─────────────────────────────────────────────────────────────
 
 /**
- * Merchant'ın kendi faturaları.
+ * The merchant's own invoices.
  */
 export function useMyInvoices(filters?: { page?: number; limit?: number }) {
   return useQuery({
@@ -109,7 +109,7 @@ export function useInvoice(id: string) {
 }
 
 /**
- * Admin: tüm faturalar (muhasebe).
+ * Admin: all invoices (accounting).
  */
 export function useAdminInvoices(filters?: {
   page?: number;
@@ -137,7 +137,7 @@ export function useAdminInvoices(filters?: {
 }
 
 /**
- * Fatura PDF indirme URL'sini döndürür (blob olarak).
+ * Returns the invoice PDF download URL (as a blob).
  */
 export function useDownloadInvoice() {
   return useMutation({
@@ -145,11 +145,11 @@ export function useDownloadInvoice() {
       const response = await api.get(`/api/invoices/${invoiceId}/download`, {
         responseType: "blob",
       });
-      // Blob URL oluştur ve indir
+      // Create a Blob URL and trigger download
       const url = URL.createObjectURL(response.data as Blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `fatura-${invoiceId}.pdf`;
+      a.download = `invoice-${invoiceId}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
       return url;
@@ -160,7 +160,7 @@ export function useDownloadInvoice() {
 // ── Plugin Hooks ──────────────────────────────────────────────────────────────
 
 /**
- * Tüm mevcut plugin'ler — plugin marketplace listesi.
+ * All available plugins — plugin marketplace listing.
  */
 export function usePlugins() {
   return useQuery({
@@ -176,7 +176,7 @@ export function usePlugins() {
 }
 
 /**
- * Merchant'ın aktif plugin'leri.
+ * The merchant's active plugins.
  */
 export function useMyPlugins() {
   return useQuery({

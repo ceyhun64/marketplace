@@ -39,7 +39,7 @@ export const analyticsKeys = {
 // ── Merchant Analytics ────────────────────────────────────────────────────────
 
 /**
- * Merchant genel istatistikleri: toplam gelir, sipariş sayısı, ürün sayısı.
+ * Merchant general statistics: total revenue, order count, product count.
  */
 export function useMerchantStats() {
   return useQuery({
@@ -48,7 +48,7 @@ export function useMerchantStats() {
       const { data } = await api.get<any>(
         "/api/analytics/merchant/stats",
       );
-      // Backend ApiResponse<MerchantStatsDto> döndürür → data.data veya data
+      // Backend returns ApiResponse<MerchantStatsDto> → data.data or data
       return (data?.data ?? data) as MerchantStatsResponse;
     },
     staleTime: STALE_TIME.MEDIUM,
@@ -56,7 +56,7 @@ export function useMerchantStats() {
 }
 
 /**
- * Satış grafiği verisi — günlük / haftalık / aylık.
+ * Sales chart data — daily / weekly / monthly.
  */
 export function useMerchantSalesChart(period: AnalyticsPeriod = "weekly") {
   return useQuery({
@@ -65,7 +65,7 @@ export function useMerchantSalesChart(period: AnalyticsPeriod = "weekly") {
       const { data } = await api.get<any>(
         `/api/analytics/merchant/sales?period=${period}`,
       );
-      // API dizi veya obje dönebilir
+      // API may return an array or an object
       const raw = data?.data ?? data?.items ?? data?.salesChart ?? data?.salesByPeriod ?? data;
       return (Array.isArray(raw) ? raw : []) as SalesDataPoint[];
     },
@@ -74,14 +74,14 @@ export function useMerchantSalesChart(period: AnalyticsPeriod = "weekly") {
 }
 
 /**
- * Marketplace vs E-mağaza karşılaştırma: gelir, sipariş, dönüşüm oranı.
+ * Marketplace vs. e-store comparison: revenue, orders, conversion rate.
  */
 export function useMerchantComparison() {
   return useQuery({
     queryKey: analyticsKeys.merchantComparison(),
     queryFn: async () => {
       const { data } = await api.get<any>("/api/analytics/merchant/comparison");
-      // Backend ApiResponse<MarketplaceComparisonDto> döndürür
+      // Backend returns ApiResponse<MarketplaceComparisonDto>
       // MarketplaceComparisonDto: { marketplace: {revenue, orders, conversionRate}, estore: {...} }
       const raw = data?.data ?? data ?? {};
       const empty = { revenue: 0, orders: 0, conversionRate: 0 };
@@ -95,7 +95,7 @@ export function useMerchantComparison() {
 }
 
 /**
- * En çok satan ürünler — kanal ayrımıyla.
+ * Best-selling products — broken down by channel.
  */
 export function useMerchantTopProducts(limit = 10) {
   return useQuery({
@@ -104,7 +104,7 @@ export function useMerchantTopProducts(limit = 10) {
       const { data } = await api.get<any>(
         `/api/analytics/merchant/top-products?limit=${limit}`,
       );
-      // Backend ApiResponse<IEnumerable<TopProductDto>> döndürür
+      // Backend returns ApiResponse<IEnumerable<TopProductDto>>
       const raw = data?.data ?? data;
       return (Array.isArray(raw) ? raw : []) as TopProduct[];
     },
@@ -113,7 +113,7 @@ export function useMerchantTopProducts(limit = 10) {
 }
 
 /**
- * Tek ürünün satış detayı — marketplace vs e-mağaza kırılımıyla.
+ * Sales detail for a single product — broken down by marketplace vs. e-store.
  */
 export function useMerchantProductAnalytics(productId: string) {
   return useQuery({
@@ -132,7 +132,7 @@ export function useMerchantProductAnalytics(productId: string) {
 // ── Admin Analytics ───────────────────────────────────────────────────────────
 
 /**
- * Platform geneli özet — GMV, merchant sayısı, sipariş hacmi.
+ * Platform-wide summary — GMV, merchant count, order volume.
  */
 export function useAdminOverview() {
   return useQuery({
@@ -148,7 +148,7 @@ export function useAdminOverview() {
 }
 
 /**
- * Tüm merchantlar ve mağazalar geneli gelir raporu.
+ * Revenue report across all merchants and stores.
  */
 export function useAdminRevenue(period: AnalyticsPeriod = "monthly") {
   return useQuery({
@@ -164,7 +164,7 @@ export function useAdminRevenue(period: AnalyticsPeriod = "monthly") {
 }
 
 /**
- * Fulfillment performans raporu — ortalama teslimat süresi, başarı oranı, kurye karnesi.
+ * Fulfillment performance report — average delivery time, success rate, courier scorecard.
  */
 export function useAdminFulfillmentStats() {
   return useQuery({

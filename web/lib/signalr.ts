@@ -39,7 +39,7 @@ export async function stopConnection(): Promise<void> {
   }
 }
 
-// ── Helper: belirli bir shipment'ı takip et ────────────────────────────────
+// ── Helper: subscribe to tracking updates for a specific shipment ─────────
 export async function joinShipmentTracking(shipmentId: string): Promise<void> {
   const conn = getConnection();
   await conn.invoke("JoinShipmentGroup", shipmentId);

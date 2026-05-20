@@ -1,17 +1,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// types/api.ts — API response sarmalayıcıları ve ortak request/response tipleri
+// types/api.ts — API response wrappers and shared request/response types
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Generic Wrappers ─────────────────────────────────────────────────────────
 
-/** Backend'in ResponseDTOs.cs'indeki ApiResponse<T> karşılığı */
+/** TypeScript equivalent of ApiResponse&lt;T&gt; in the backend's ResponseDTOs.cs */
 export interface ApiResponse<T> {
   success: boolean;
   message?: string;
   data: T;
 }
 
-/** Backend'in PagedResult<T> karşılığı */
+/** TypeScript equivalent of PagedResult&lt;T&gt; in the backend */
 export interface PagedResponse<T> {
   items: T[];
   totalCount: number;

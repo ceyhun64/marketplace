@@ -94,7 +94,7 @@ export const adminKeys = {
   fulfillmentPerf: () => [...adminKeys.all, "fulfillmentPerf"] as const,
 };
 
-// ── Merchant Yönetimi ─────────────────────────────────────────────────────────
+// ── Merchant Management ───────────────────────────────────────────────────────
 
 export function useAdminMerchants(filters?: {
   page?: number;
@@ -109,13 +109,13 @@ export function useAdminMerchants(filters?: {
       if (filters?.page) params.set("page", String(filters.page));
       if (filters?.limit) params.set("limit", String(filters.limit));
       if (filters?.search) params.set("search", filters.search);
-      // API isActive bekliyor (isSuspended'ın tersi)
+      // API expects isActive (the inverse of isSuspended)
       if (filters?.isSuspended !== undefined)
         params.set("isActive", String(!filters.isSuspended));
       const { data } = await api.get<PaginatedResponse<MerchantProfile>>(
         `/api/admin/merchants?${params}`,
       );
-      // API { total, page, limit, items } döndürüyor → normalize
+      // API returns { total, page, limit, items } → normalize
       const raw = data as any;
       if (raw.total !== undefined && raw.totalCount === undefined) {
         return {
@@ -176,7 +176,7 @@ export function useAdminSetupStore() {
   });
 }
 
-// ── Sipariş Yönetimi ──────────────────────────────────────────────────────────
+// ── Order Management ──────────────────────────────────────────────────────────
 
 export function useAdminOrders(filters?: {
   page?: number;
@@ -195,7 +195,7 @@ export function useAdminOrders(filters?: {
       const { data } = await api.get<PaginatedResponse<Order>>(
         `/api/orders/admin/all?${params}`,
       );
-      // API { data: orders[], pagination: { page, limit, total, pages } } döndürüyor
+      // API returns { data: orders[], pagination: { page, limit, total, pages } }
       const raw = data as any;
       if (raw?.pagination !== undefined) {
         return {
@@ -221,7 +221,7 @@ export function useUpdateOrderStatus() {
   });
 }
 
-// ── Ürün Onay ─────────────────────────────────────────────────────────────────
+// ── Product Approval ──────────────────────────────────────────────────────────
 
 export function useAdminPendingProducts(filters?: {
   page?: number;
@@ -311,7 +311,7 @@ export function useAdminFulfillmentPerformance() {
   });
 }
 
-// ── Kullanıcı Yönetimi ────────────────────────────────────────────────────────
+// ── User Management ───────────────────────────────────────────────────────────
 
 export function useAdminUsers(filters?: {
   page?: number;
@@ -328,7 +328,7 @@ export function useAdminUsers(filters?: {
       const { data } = await api.get<PaginatedResponse<User>>(
         `/api/admin/users?${params}`,
       );
-      // API { total, page, limit, items } döndürüyor
+      // API returns { total, page, limit, items }
       const raw = data as any;
       if (raw?.total !== undefined && raw?.totalCount === undefined) {
         return {

@@ -1,11 +1,11 @@
 "use client";
 
 /**
- * use-auth.ts  (güncellenmiş)
+ * use-auth.ts
  *
- * login() sonunda:
- *  1. Guest favori listesi sunucuya aktarılır (syncGuestWishlistToServer)
- *  2. Eğer ileride server-side sepet eklenirse burada mergeWith() çağrılır
+ * After login():
+ *  1. The guest wishlist is synced to the server (syncGuestWishlistToServer)
+ *  2. If a server-side cart is added in the future, mergeWith() will be called here
  */
 
 import { create } from "zustand";
@@ -70,7 +70,7 @@ export const useAuth = create<AuthState>()(
           setTokens(accessToken, refreshToken);
 
           const role = getRoleFromToken(accessToken);
-          if (!role) throw new Error("Token'da rol bulunamadı");
+          if (!role) throw new Error("Role not found in token");
 
           const meRes = await api.get("/api/auth/me");
           // API UserInfoResponse: { id, email, firstName, lastName, phone, role, isVerified, merchantId }
@@ -94,17 +94,17 @@ export const useAuth = create<AuthState>()(
             isLoading: false,
           });
 
-          // ✅ Giriş başarılı → guest favori listesini sunucuya aktar
-          // Hata olsa bile sessizce geç (arka planda çalışır)
+          // ✅ Login successful → sync guest wishlist to server
+          // Silently ignore errors (runs in the background)
           syncGuestWishlistToServer().catch(() => {});
 
-          // Not: Eğer ileride server-side sepet (saved cart) eklenirse:
+          // Note: If a server-side saved cart is added in the future:
           // const { data: serverCart } = await api.get("/api/cart");
           // useCart.getState().mergeWith(serverCart.items);
         } catch (err: unknown) {
           const msg =
             (err as { response?: { data?: { message?: string } } })?.response
-              ?.data?.message ?? "Giriş başarısız";
+              ?.data?.message ?? "Login failed";
           set({ error: msg, isLoading: false });
           throw err;
         }
@@ -129,7 +129,7 @@ export const useAuth = create<AuthState>()(
             (responseData?.errors
               ? Object.values(responseData.errors).flat()[0]
               : null) ??
-            "Kayıt başarısız";
+            "Registration failed";
 
           set({ error: msg, isLoading: false });
           throw err;
@@ -154,7 +154,7 @@ export const useAuth = create<AuthState>()(
             (responseData?.errors
               ? Object.values(responseData.errors).flat()[0]
               : null) ??
-            "Başvuru gönderilemedi";
+            "Application could not be submitted";
           set({ error: msg, isLoading: false });
           throw err;
         }
@@ -164,14 +164,13 @@ export const useAuth = create<AuthState>()(
         try {
           await api.post("/api/auth/logout");
         } catch {
-          // sessizce geç
+          // silently ignore
         } finally {
           clearTokens();
           set({ user: null });
-          // NOT: Favoriler ve sepet local'da kalmaya devam eder.
-          // Başka kullanıcı giriş yaparsa karışma olmaması için
-          // aynı cihazda farklı kullanıcı senaryosunu düşünüyorsanız
-          // burada useLocalWishlist.getState().clearAll() ekleyebilirsiniz.
+          // NOTE: Wishlist and cart remain in local storage after logout.
+          // If you need to handle the case where a different user logs in on the
+          // same device, add useLocalWishlist.getState().clearAll() here.
         }
       },
 

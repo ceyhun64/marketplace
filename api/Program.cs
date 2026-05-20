@@ -58,12 +58,12 @@ try
             lc.ReadFrom.Configuration(ctx.Configuration).Enrich.FromLogContext().WriteTo.Console()
     );
 
-    // ── Stripe — global API key, başlangıçta bir kez ayarlanır ──────────────
+    // ── Stripe — global API key, set once at startup ─────────────────────────
     Stripe.StripeConfiguration.ApiKey =
         config["STRIPE_SECRET_KEY"]
-        ?? throw new InvalidOperationException("STRIPE_SECRET_KEY ortam değişkeni tanımlı değil.");
+        ?? throw new InvalidOperationException("STRIPE_SECRET_KEY environment variable is not defined.");
 
-    // ── Twilio — global istemci başlatma, başlangıçta bir kez yapılır ────────
+    // ── Twilio — global client initialization, set once at startup ───────────
     var twilioSid = config["TWILIO_ACCOUNT_SID"];
     var twilioToken = config["TWILIO_AUTH_TOKEN"];
     if (!string.IsNullOrEmpty(twilioSid) && !string.IsNullOrEmpty(twilioToken))
@@ -213,7 +213,7 @@ try
                     var frontendOrigin =
                         config["FRONTEND_URL"]
                         ?? throw new InvalidOperationException(
-                            "FRONTEND_URL ortam değişkeni production ortamında tanımlı değil."
+                            "FRONTEND_URL environment variable is not defined in the production environment."
                         );
                     p.WithOrigins(frontendOrigin).AllowAnyHeader().AllowAnyMethod();
                 }
@@ -327,18 +327,18 @@ try
 
         try
         {
-            // EF Core'un MigrateAsync'i idempotent'tir:
-            // - __EFMigrationsHistory tablosunu yoksa oluşturur
-            // - Henüz uygulanmamış migration'ları sırayla çalıştırır
-            // - Zaten uygulanmış migration'ları atlar
-            // Tablolar önceden varsa bile AddAccountStatusToUsers migration'ı
-            // IF NOT EXISTS kontrolüyle güvenli biçimde çalışır.
+            // EF Core's MigrateAsync is idempotent:
+            // - Creates __EFMigrationsHistory table if it does not exist
+            // - Applies pending migrations in order
+            // - Skips already-applied migrations
+            // Even if tables exist, the AddAccountStatusToUsers migration
+            // runs safely with an IF NOT EXISTS check.
             await db.Database.MigrateAsync();
-            logger.LogInformation("Veritabanı migration tamamlandı.");
+            logger.LogInformation("Database migration completed.");
         }
         catch (Exception ex)
         {
-            Log.Fatal(ex, "Migration sırasında beklenmeyen hata oluştu.");
+            Log.Fatal(ex, "Unexpected error occurred during migration.");
             throw;
         }
 

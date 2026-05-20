@@ -10,7 +10,7 @@ import type { ShippingRate } from "@/types/enums";
 export interface EtaRequest {
   merchantId: string;
   shippingRate: ShippingRate;
-  /** Müşteri koordinatları */
+  /** Customer coordinates */
   destinationLat: number;
   destinationLng: number;
 }
@@ -44,8 +44,8 @@ export const shippingKeys = {
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
 /**
- * ETA hesapla — Haversine distance + merchant handling süresi.
- * `merchantId` ve koordinatlar sağlandığında otomatik çalışır.
+ * Calculate ETA — Haversine distance + merchant handling time.
+ * Runs automatically when `merchantId` and coordinates are provided.
  */
 export function useEta(params: Partial<EtaRequest>) {
   const isReady =
@@ -69,13 +69,13 @@ export function useEta(params: Partial<EtaRequest>) {
       return data;
     },
     enabled: isReady,
-    staleTime: 1000 * 60 * 5, // 5 dakika — ETA sık değişmez
+    staleTime: 1000 * 60 * 5, // 5 minutes — ETA changes infrequently
   });
 }
 
 /**
- * Her iki kargo seçeneği için (EXPRESS + REGULAR) ETA'ları aynı anda hesapla.
- * ShippingRateSelect component'inde kullanmak için tasarlandı.
+ * Calculate ETAs for both shipping options (EXPRESS + REGULAR) simultaneously.
+ * Designed for use in the ShippingRateSelect component.
  */
 export function useAllShippingOptions(params: {
   merchantId?: string;
@@ -100,13 +100,13 @@ export function useAllShippingOptions(params: {
   const options: ShippingOption[] = [
     {
       rate: "EXPRESS",
-      label: "Ekspres (1-2 gün)",
+      label: "Express (1-2 days)",
       cost: SHIPPING_COSTS.EXPRESS,
       eta: expressQuery.data,
     },
     {
       rate: "REGULAR",
-      label: "Standart (3-5 gün)",
+      label: "Standard (3-5 days)",
       cost: SHIPPING_COSTS.REGULAR,
       eta: regularQuery.data,
     },

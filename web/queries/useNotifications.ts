@@ -42,7 +42,7 @@ export function ordersToNotifications(orders: Order[]): Notification[] {
   for (const order of orders) {
     const label = ORDER_STATUS_LABELS[order.status] ?? order.status;
     const shortId = order.id.slice(0, 8).toUpperCase();
-    // trackingNumber Order'da yok — shipment üzerinden gelir
+    // trackingNumber is not on Order — it comes via the shipment
     const trackingLink = order.shipment?.trackingNumber
       ? `/orders/${order.id}/tracking`
       : `/orders/${order.id}`;

@@ -16,7 +16,7 @@ export const invoiceKeys = {
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
-/** Merchant: kendi faturalarını listele */
+/** Merchant: list own invoices */
 export function useMyInvoices() {
   return useQuery({
     queryKey: invoiceKeys.myList(),
@@ -24,11 +24,11 @@ export function useMyInvoices() {
       const { data } = await api.get<Invoice[]>("/api/invoices");
       return data;
     },
-    staleTime: 1000 * 60 * 2, // 2 dakika
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }
 
-/** Fatura detayı — customer, merchant ve admin için */
+/** Invoice detail — for customer, merchant, and admin */
 export function useInvoice(id: string) {
   return useQuery({
     queryKey: invoiceKeys.detail(id),
@@ -40,7 +40,7 @@ export function useInvoice(id: string) {
   });
 }
 
-/** Admin: tüm faturaları listele */
+/** Admin: list all invoices */
 export function useAdminInvoices(filters?: {
   page?: number;
   limit?: number;
@@ -62,9 +62,9 @@ export function useAdminInvoices(filters?: {
 }
 
 /**
- * Fatura PDF'ini indir.
- * Tarayıcıda yeni sekmede açmak için dönen `pdfUrl`'i doğrudan kullanabilirsin,
- * ya da bu mutation'ı çağırarak blob indir.
+ * Download the invoice PDF.
+ * To open it in a new browser tab, use the returned `pdfUrl` directly,
+ * or call this mutation to download it as a blob.
  */
 export function useDownloadInvoice() {
   return useMutation({
@@ -75,7 +75,7 @@ export function useDownloadInvoice() {
       const url = URL.createObjectURL(new Blob([response.data as BlobPart]));
       const link = document.createElement("a");
       link.href = url;
-      link.download = `fatura-${invoiceId}.pdf`;
+      link.download = `invoice-${invoiceId}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
     },
@@ -92,7 +92,7 @@ export const accountingKeys = {
   merchant: (filters?: object) => [...accountingKeys.all, "merchant", filters] as const,
 };
 
-/** Admin: tüm muhasebe kayıtlarını listele (M3 — tam iz) */
+/** Admin: list all accounting entries (M3 — full audit trail) */
 export function useAdminAccountingEntries(filters?: {
   page?: number;
   limit?: number;
@@ -118,7 +118,7 @@ export function useAdminAccountingEntries(filters?: {
   });
 }
 
-/** Merchant: kendi muhasebe kayıtlarını listele (M3 — tam iz) */
+/** Merchant: list own accounting entries (M3 — full audit trail) */
 export function useMerchantAccountingEntries(filters?: {
   page?: number;
   limit?: number;

@@ -29,14 +29,14 @@ public record CreateProductRequest(
     List<string> Tags,
     decimal Price,
     int Stock,
-    Guid? MerchantId = null,          // Admin kendi adına veya belirli merchant adına ekleyebilir
-    string? ShortDescription = null,  // Opsiyonel kısa açıklama
+    Guid? MerchantId = null,          // Admin can add on their own behalf or on behalf of a specific merchant
+    string? ShortDescription = null,  // Optional short description
     bool PublishToMarket = false,
     bool PublishToStore = true
 );
 
-// UpdateProductRequest — ProductsController.cs içinde class olarak tanımlanmıştır.
-// Burada ayrıca tanımlanmaz; önceki record kaldırıldı.
+// UpdateProductRequest — defined as a class in ProductsController.cs.
+// Not redefined here; the previous record has been removed.
 
 public record CreateOfferRequest(
     Guid ProductId,
@@ -128,7 +128,7 @@ public record PagedProductResponse(
     int TotalPages
 );
 
-// Ürün güncelleme isteği — partial update, sadece gönderilen alanlar değişir
+// Product update request — partial update, only the fields that are sent will change
 public class UpdateProductRequest
 {
     public string? Name { get; set; }

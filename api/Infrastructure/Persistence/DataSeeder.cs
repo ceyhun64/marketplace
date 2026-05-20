@@ -8,7 +8,7 @@ public static class DataSeeder
 {
     private static readonly Random Rng = new(42);
 
-    // Web sunucusunun /public klasöründen servis edilen ürün ve mağaza görselleri
+    // Product and store images served from the web server's /public folder
     private static readonly string[] ProductImages =
     [
         "/products/product1.webp",
@@ -65,81 +65,81 @@ public static class DataSeeder
             admin = await db.Users.FirstAsync(u => u.Role == UserRole.Admin);
         }
 
-        // ── 2. Kategoriler ────────────────────────────────────────────────────
+        // ── 2. Categories ─────────────────────────────────────────────────────
         if (!await db.Categories.AnyAsync())
         {
-            var elektronik = new Category
+            var electronics = new Category
             {
                 Id = Guid.NewGuid(),
-                Name = "Elektronik",
-                Slug = "elektronik",
-                Description = "Teknoloji ve elektronik ürünler",
+                Name = "Electronics",
+                Slug = "electronics",
+                Description = "Technology and electronics products",
                 SortOrder = 1,
             };
-            var giyim = new Category
+            var clothing = new Category
             {
                 Id = Guid.NewGuid(),
-                Name = "Giyim",
-                Slug = "giyim",
-                Description = "Moda ve kıyafetler",
+                Name = "Clothing",
+                Slug = "clothing",
+                Description = "Fashion and apparel",
                 SortOrder = 2,
             };
-            var evYasam = new Category
+            var homeLiving = new Category
             {
                 Id = Guid.NewGuid(),
-                Name = "Ev & Yaşam",
-                Slug = "ev-yasam",
-                Description = "Ev dekorasyon ve yaşam ürünleri",
+                Name = "Home & Living",
+                Slug = "home-living",
+                Description = "Home decor and lifestyle products",
                 SortOrder = 3,
             };
-            var spor = new Category
+            var sports = new Category
             {
                 Id = Guid.NewGuid(),
-                Name = "Spor",
-                Slug = "spor",
-                Description = "Spor ve outdoor ürünleri",
+                Name = "Sports",
+                Slug = "sports",
+                Description = "Sports and outdoor products",
                 SortOrder = 4,
             };
-            var kitap = new Category
+            var books = new Category
             {
                 Id = Guid.NewGuid(),
-                Name = "Kitap",
-                Slug = "kitap",
-                Description = "Kitap, dergi ve yayınlar",
+                Name = "Books",
+                Slug = "books",
+                Description = "Books, magazines and publications",
                 SortOrder = 5,
             };
-            var kozmetik = new Category
+            var cosmetics = new Category
             {
                 Id = Guid.NewGuid(),
-                Name = "Kozmetik",
-                Slug = "kozmetik",
-                Description = "Güzellik ve kişisel bakım",
+                Name = "Cosmetics",
+                Slug = "cosmetics",
+                Description = "Beauty and personal care",
                 SortOrder = 6,
             };
-            var oyuncak = new Category
+            var toys = new Category
             {
                 Id = Guid.NewGuid(),
-                Name = "Oyuncak",
-                Slug = "oyuncak",
-                Description = "Oyuncak ve hobi ürünleri",
+                Name = "Toys",
+                Slug = "toys",
+                Description = "Toys and hobby products",
                 SortOrder = 7,
             };
 
             db.Categories.AddRange(
-                elektronik,
-                giyim,
-                evYasam,
-                spor,
-                kitap,
-                kozmetik,
-                oyuncak,
-                // Alt kategoriler
+                electronics,
+                clothing,
+                homeLiving,
+                sports,
+                books,
+                cosmetics,
+                toys,
+                // Subcategories
                 new Category
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Telefon",
-                    Slug = "telefon",
-                    ParentId = elektronik.Id,
+                    Name = "Mobile Phones",
+                    Slug = "mobile-phones",
+                    ParentId = electronics.Id,
                     SortOrder = 1,
                 },
                 new Category
@@ -147,7 +147,7 @@ public static class DataSeeder
                     Id = Guid.NewGuid(),
                     Name = "Laptop",
                     Slug = "laptop",
-                    ParentId = elektronik.Id,
+                    ParentId = electronics.Id,
                     SortOrder = 2,
                 },
                 new Category
@@ -155,86 +155,86 @@ public static class DataSeeder
                     Id = Guid.NewGuid(),
                     Name = "Tablet",
                     Slug = "tablet",
-                    ParentId = elektronik.Id,
+                    ParentId = electronics.Id,
                     SortOrder = 3,
                 },
                 new Category
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Kulaklık",
-                    Slug = "kulaklik",
-                    ParentId = elektronik.Id,
+                    Name = "Headphones",
+                    Slug = "headphones",
+                    ParentId = electronics.Id,
                     SortOrder = 4,
                 },
                 new Category
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Akıllı Saat",
-                    Slug = "akilli-saat",
-                    ParentId = elektronik.Id,
+                    Name = "Smart Watches",
+                    Slug = "smart-watches",
+                    ParentId = electronics.Id,
                     SortOrder = 5,
                 },
                 new Category
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Erkek Giyim",
-                    Slug = "erkek-giyim",
-                    ParentId = giyim.Id,
+                    Name = "Men's Clothing",
+                    Slug = "mens-clothing",
+                    ParentId = clothing.Id,
                     SortOrder = 1,
                 },
                 new Category
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Kadın Giyim",
-                    Slug = "kadin-giyim",
-                    ParentId = giyim.Id,
+                    Name = "Women's Clothing",
+                    Slug = "womens-clothing",
+                    ParentId = clothing.Id,
                     SortOrder = 2,
                 },
                 new Category
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Çocuk Giyim",
-                    Slug = "cocuk-giyim",
-                    ParentId = giyim.Id,
+                    Name = "Children's Clothing",
+                    Slug = "childrens-clothing",
+                    ParentId = clothing.Id,
                     SortOrder = 3,
                 },
                 new Category
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Mutfak",
-                    Slug = "mutfak",
-                    ParentId = evYasam.Id,
+                    Name = "Kitchen",
+                    Slug = "kitchen",
+                    ParentId = homeLiving.Id,
                     SortOrder = 1,
                 },
                 new Category
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Dekorasyon",
-                    Slug = "dekorasyon",
-                    ParentId = evYasam.Id,
+                    Name = "Decoration",
+                    Slug = "decoration",
+                    ParentId = homeLiving.Id,
                     SortOrder = 2,
                 }
             );
             await db.SaveChangesAsync();
-            Console.WriteLine("✅ 17 kategori oluşturuldu.");
+            Console.WriteLine("✅ 17 categories created.");
         }
 
-        // ── 3. Müşteri Kullanıcılar ───────────────────────────────────────────
+        // ── 3. Customer Users ─────────────────────────────────────────────────
         List<User> customers;
         if (!await db.Users.AnyAsync(u => u.Role == UserRole.Customer))
         {
             var customerData = new[]
             {
-                ("ahmet.yilmaz@gmail.com", "Ahmet", "Yılmaz", "+905551234567"),
-                ("zeynep.kaya@gmail.com", "Zeynep", "Kaya", "+905552345678"),
-                ("mehmet.demir@hotmail.com", "Mehmet", "Demir", "+905553456789"),
-                ("fatma.celik@gmail.com", "Fatma", "Çelik", "+905554567890"),
-                ("ali.sahin@gmail.com", "Ali", "Şahin", "+905555678901"),
-                ("ayse.ozturk@outlook.com", "Ayşe", "Öztürk", "+905556789012"),
-                ("mustafa.arslan@gmail.com", "Mustafa", "Arslan", "+905557890123"),
-                ("hatice.dogan@gmail.com", "Hatice", "Doğan", "+905558901234"),
-                ("ibrahim.yildiz@gmail.com", "İbrahim", "Yıldız", "+905559012345"),
-                ("elif.kurt@hotmail.com", "Elif", "Kurt", "+905550123456"),
+                ("alex.morgan@gmail.com", "Alex", "Morgan", "+905551234567"),
+                ("emily.carter@gmail.com", "Emily", "Carter", "+905552345678"),
+                ("michael.reed@hotmail.com", "Michael", "Reed", "+905553456789"),
+                ("sophia.bell@gmail.com", "Sophia", "Bell", "+905554567890"),
+                ("james.hunter@gmail.com", "James", "Hunter", "+905555678901"),
+                ("olivia.grant@outlook.com", "Olivia", "Grant", "+905556789012"),
+                ("william.hayes@gmail.com", "William", "Hayes", "+905557890123"),
+                ("isabella.ford@gmail.com", "Isabella", "Ford", "+905558901234"),
+                ("benjamin.scott@gmail.com", "Benjamin", "Scott", "+905559012345"),
+                ("charlotte.price@hotmail.com", "Charlotte", "Price", "+905550123456"),
             };
             customers = new List<User>();
             foreach (var (email, first, last, phone) in customerData)
@@ -257,14 +257,14 @@ public static class DataSeeder
             }
             db.Users.AddRange(customers);
             await db.SaveChangesAsync();
-            Console.WriteLine($"✅ {customers.Count} müşteri oluşturuldu.");
+            Console.WriteLine($"✅ {customers.Count} customers created.");
         }
         else
         {
             customers = await db.Users.Where(u => u.Role == UserRole.Customer).ToListAsync();
         }
 
-        // ── 4. Merchant Kullanıcılar & Profiller ──────────────────────────────
+        // ── 4. Merchant Users & Profiles ──────────────────────────────────────
         List<MerchantProfile> merchants;
         if (!await db.Users.AnyAsync(u => u.Role == UserRole.Merchant))
         {
@@ -274,10 +274,10 @@ public static class DataSeeder
                     "merchant1@marketplace.com",
                     "Tech",
                     "Merchant",
-                    "TechStore Türkiye",
-                    "techstore-turkiye",
-                    "İstanbul, Türkiye",
-                    "İstanbul",
+                    "TechStore",
+                    "techstore",
+                    "Istanbul, Turkey",
+                    "Istanbul",
                     41.0082,
                     28.9784,
                     24,
@@ -285,11 +285,11 @@ public static class DataSeeder
                 ),
                 (
                     "merchant2@marketplace.com",
-                    "Moda",
+                    "Fashion",
                     "Merchant",
-                    "Moda Dünyası",
-                    "moda-dunyasi",
-                    "Ankara, Türkiye",
+                    "Fashion World",
+                    "fashion-world",
+                    "Ankara, Turkey",
                     "Ankara",
                     39.9334,
                     32.8597,
@@ -298,12 +298,12 @@ public static class DataSeeder
                 ),
                 (
                     "merchant3@marketplace.com",
-                    "Ev",
+                    "Home",
                     "Merchant",
-                    "Ev & Dekor",
-                    "ev-dekor",
-                    "İzmir, Türkiye",
-                    "İzmir",
+                    "Home & Decor",
+                    "home-decor",
+                    "Izmir, Turkey",
+                    "Izmir",
                     38.4192,
                     27.1287,
                     36,
@@ -311,11 +311,11 @@ public static class DataSeeder
                 ),
                 (
                     "merchant4@marketplace.com",
-                    "Spor",
+                    "Sports",
                     "World",
-                    "Spor World",
-                    "spor-world",
-                    "Bursa, Türkiye",
+                    "Sports World",
+                    "sports-world",
+                    "Bursa, Turkey",
                     "Bursa",
                     40.1826,
                     29.0665,
@@ -324,11 +324,11 @@ public static class DataSeeder
                 ),
                 (
                     "merchant5@marketplace.com",
-                    "Kitap",
+                    "Book",
                     "Center",
-                    "Kitap Center",
-                    "kitap-center",
-                    "Antalya, Türkiye",
+                    "Book Center",
+                    "book-center",
+                    "Antalya, Turkey",
                     "Antalya",
                     36.8969,
                     30.7133,
@@ -380,17 +380,17 @@ public static class DataSeeder
                     Slug = slug,
                     Description = slug switch
                     {
-                        "techstore-turkiye" =>
-                            "TechStore Türkiye, 2018'den bu yana en güncel akıllı telefon, laptop, tablet ve aksesuar ürünlerini uygun fiyatlarla sunmaktadır. Yetkili servis desteği ve 2 yıl garantiyle güvenli alışveriş.",
-                        "moda-dunyasi" =>
-                            "Moda Dünyası, Türkiye'nin önde gelen ulusal ve uluslararası moda markalarını tek çatı altında toplayan bir butik mağazadır. Erkek, kadın ve çocuk giyiminde en yeni koleksiyonlar her sezon güncellenmektedir.",
-                        "ev-dekor" =>
-                            "Ev & Dekor, evinizi dönüştürecek mutfak aletleri, mobilya ve dekorasyon ürünlerini kaliteli ve garantili şekilde sunar. Yaşam alanlarınıza Skandinav estetiği ve modern dokunuşlar katıyoruz.",
-                        "spor-world" =>
-                            "Spor World, amatörden profesyonele her seviyede sporcunun ihtiyaç duyduğu ekipman ve giyimi sağlar. Koşu, bisiklet, tenis, yüzme ve daha fazlası için binlerce ürün seçeneği.",
-                        "kitap-center" =>
-                            "Kitap Center, kişisel gelişim, roman, tarih ve bilim kurgu kategorilerinde Türkçe ve yabancı dil kitapları sunan çevrimiçi kitabevimizdir. Hızlı kargo ve özenli paketleme garantisiyle kitap tutkunlarının adresi.",
-                        _ => $"{store} — Türkiye'nin güvenilir alışveriş noktası.",
+                        "techstore" =>
+                            "TechStore has been offering the latest smartphones, laptops, tablets and accessories at competitive prices since 2018. Shop with confidence backed by authorized service support and a 2-year warranty.",
+                        "fashion-world" =>
+                            "Fashion World is a boutique store bringing together Turkey's leading national and international fashion brands under one roof. The latest collections for men, women and children are refreshed every season.",
+                        "home-decor" =>
+                            "Home & Decor offers quality, guaranteed kitchen appliances, furniture and decoration products to transform your living space. We bring Scandinavian aesthetics and modern touches to your home.",
+                        "sports-world" =>
+                            "Sports World provides equipment and apparel for athletes of every level, from amateur to professional. Thousands of product options for running, cycling, tennis, swimming and more.",
+                        "book-center" =>
+                            "Book Center is your online bookstore offering English and foreign-language titles across personal development, fiction, history and science fiction. The go-to destination for book lovers with fast shipping and careful packaging.",
+                        _ => $"{store} — Your trusted shopping destination.",
                     },
                     Address = address,
                     City = city,
@@ -408,7 +408,7 @@ public static class DataSeeder
                 db.MerchantProfiles.Add(profile);
                 await db.SaveChangesAsync();
 
-                // Abonelik
+                // Subscription
                 var subPrice = plan switch
                 {
                     PlanType.Basic => 199m,
@@ -434,32 +434,32 @@ public static class DataSeeder
                 await db.SaveChangesAsync();
                 merchants.Add(profile);
             }
-            Console.WriteLine($"✅ {merchants.Count} merchant + abonelik oluşturuldu.");
+            Console.WriteLine($"✅ {merchants.Count} merchants + subscriptions created.");
         }
         else
         {
             merchants = await db.MerchantProfiles.ToListAsync();
         }
 
-        // ── 5. Kuryeler ───────────────────────────────────────────────────────
+        // ── 5. Couriers ───────────────────────────────────────────────────────
         List<Courier> couriers;
-        
+
         var courierData = new[]
         {
             (
                 "courier1@marketplace.com",
-                "Kadir",
-                "Polat",
+                "Kevin",
+                "Pollard",
                 "Motorcycle",
                 "34ABC123",
                 41.015,
                 28.979
             ),
-            ("courier2@marketplace.com", "Serkan", "Güneş", "Car", "06XYZ456", 39.920, 32.854),
+            ("courier2@marketplace.com", "Steven", "Greene", "Car", "06XYZ456", 39.920, 32.854),
             (
                 "courier3@marketplace.com",
-                "Burak",
-                "Aydın",
+                "Brian",
+                "Aydin",
                 "Bicycle",
                 "35QWE789",
                 38.430,
@@ -467,8 +467,8 @@ public static class DataSeeder
             ),
             (
                 "courier4@marketplace.com",
-                "Emre",
-                "Taş",
+                "Eric",
+                "Stone",
                 "Motorcycle",
                 "16DEF012",
                 40.195,
@@ -515,11 +515,11 @@ public static class DataSeeder
                 db.Couriers.Add(courier);
                 await db.SaveChangesAsync();
                 couriers.Add(courier);
-                Console.WriteLine($"✅ Kurye oluşturuldu: {email}");
+                Console.WriteLine($"✅ Courier created: {email}");
             }
             else
             {
-                // Mevcut courier kullanıcısının şifresini ve durumunu senkronize et
+                // Synchronize the existing courier user's password and status
                 if (!BCrypt.Net.BCrypt.Verify("Courier123!", existingUser.PasswordHash))
                 {
                     existingUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword("Courier123!");
@@ -527,9 +527,9 @@ public static class DataSeeder
                     existingUser.IsVerified = true;
                     existingUser.UpdatedAt = DateTime.UtcNow;
                     await db.SaveChangesAsync();
-                    Console.WriteLine($"🔑 Courier şifresi güncellendi: {email}");
+                    Console.WriteLine($"🔑 Courier password updated: {email}");
                 }
-                // Courier kaydı yoksa oluştur
+                // Create courier record if it does not exist
                 var existingCourier = await db.Couriers.FirstOrDefaultAsync(c => c.UserId == existingUser.Id);
                 if (existingCourier == null)
                 {
@@ -549,7 +549,7 @@ public static class DataSeeder
                     db.Couriers.Add(courier);
                     await db.SaveChangesAsync();
                     couriers.Add(courier);
-                    Console.WriteLine($"✅ Kurye profili oluşturuldu: {email}");
+                    Console.WriteLine($"✅ Courier profile created: {email}");
                 }
                 else
                 {
@@ -557,59 +557,59 @@ public static class DataSeeder
                 }
             }
         }
-        
+
         if (!couriers.Any())
         {
             couriers = await db.Couriers.ToListAsync();
         }
 
-        // ── 6. Ürünler ────────────────────────────────────────────────────────
+        // ── 6. Products ───────────────────────────────────────────────────────
         if (!await db.Products.AnyAsync())
         {
-            var telefonCat = await db.Categories.FirstAsync(c => c.Slug == "telefon");
+            var mobilePhonesCat = await db.Categories.FirstAsync(c => c.Slug == "mobile-phones");
             var laptopCat = await db.Categories.FirstAsync(c => c.Slug == "laptop");
             var tabletCat = await db.Categories.FirstAsync(c => c.Slug == "tablet");
-            var kulaklikCat = await db.Categories.FirstAsync(c => c.Slug == "kulaklik");
-            var saatCat = await db.Categories.FirstAsync(c => c.Slug == "akilli-saat");
-            var erkekGiyim = await db.Categories.FirstAsync(c => c.Slug == "erkek-giyim");
-            var kadinGiyim = await db.Categories.FirstAsync(c => c.Slug == "kadin-giyim");
-            var mutfakCat = await db.Categories.FirstAsync(c => c.Slug == "mutfak");
-            var dekorCat = await db.Categories.FirstAsync(c => c.Slug == "dekorasyon");
-            var sporCat = await db.Categories.FirstAsync(c => c.Slug == "spor");
-            var kitapCat = await db.Categories.FirstAsync(c => c.Slug == "kitap");
+            var headphonesCat = await db.Categories.FirstAsync(c => c.Slug == "headphones");
+            var smartWatchesCat = await db.Categories.FirstAsync(c => c.Slug == "smart-watches");
+            var mensClothing = await db.Categories.FirstAsync(c => c.Slug == "mens-clothing");
+            var womensClothing = await db.Categories.FirstAsync(c => c.Slug == "womens-clothing");
+            var kitchenCat = await db.Categories.FirstAsync(c => c.Slug == "kitchen");
+            var decorCat = await db.Categories.FirstAsync(c => c.Slug == "decoration");
+            var sportsCat = await db.Categories.FirstAsync(c => c.Slug == "sports");
+            var booksCat = await db.Categories.FirstAsync(c => c.Slug == "books");
 
-            var techM = merchants.First(m => m.Slug == "techstore-turkiye");
-            var modaM = merchants.First(m => m.Slug == "moda-dunyasi");
-            var evM = merchants.First(m => m.Slug == "ev-dekor");
-            var sporM = merchants.First(m => m.Slug == "spor-world");
-            var kitapM = merchants.First(m => m.Slug == "kitap-center");
+            var techM = merchants.First(m => m.Slug == "techstore");
+            var fashionM = merchants.First(m => m.Slug == "fashion-world");
+            var homeM = merchants.First(m => m.Slug == "home-decor");
+            var sportsM = merchants.First(m => m.Slug == "sports-world");
+            var bookM = merchants.First(m => m.Slug == "book-center");
 
             var products = new List<Product>
             {
-                // TechStore ürünleri
+                // TechStore products
                 MakeProduct(
                     techM.Id,
-                    telefonCat.Id,
+                    mobilePhonesCat.Id,
                     "Samsung Galaxy S24",
-                    "6.2 inç Dynamic AMOLED, Snapdragon 8 Gen 3, 50MP kamera. Gece fotoğrafçılığında devrim.",
+                    "6.2-inch Dynamic AMOLED, Snapdragon 8 Gen 3, 50MP camera. A revolution in night photography.",
                     44999m,
                     15,
                     ["samsung", "android", "5g"]
                 ),
                 MakeProduct(
                     techM.Id,
-                    telefonCat.Id,
+                    mobilePhonesCat.Id,
                     "Apple iPhone 16 Pro",
-                    "6.1 inç Super Retina XDR, A18 Pro chip, 48MP kamera. Profesyoneller için tasarlandı.",
+                    "6.1-inch Super Retina XDR, A18 Pro chip, 48MP camera. Designed for professionals.",
                     54999m,
                     8,
                     ["apple", "ios", "5g"]
                 ),
                 MakeProduct(
                     techM.Id,
-                    telefonCat.Id,
+                    mobilePhonesCat.Id,
                     "Xiaomi 14 Ultra",
-                    "6.73 inç LTPO AMOLED, Snapdragon 8 Gen 3, 50MP Leica Quad kamera. Fotoğraf tutkunları için.",
+                    "6.73-inch LTPO AMOLED, Snapdragon 8 Gen 3, 50MP Leica Quad camera. For photography enthusiasts.",
                     39999m,
                     12,
                     ["xiaomi", "leica", "android"]
@@ -618,7 +618,7 @@ public static class DataSeeder
                     techM.Id,
                     laptopCat.Id,
                     "MacBook Air M3",
-                    "13.6 inç Liquid Retina, Apple M3, 16GB RAM, 512GB SSD. Taşınabilirlikte zirve.",
+                    "13.6-inch Liquid Retina, Apple M3, 16GB RAM, 512GB SSD. The pinnacle of portability.",
                     67999m,
                     5,
                     ["apple", "laptop", "m3"]
@@ -627,7 +627,7 @@ public static class DataSeeder
                     techM.Id,
                     laptopCat.Id,
                     "Lenovo ThinkPad X1 Carbon",
-                    "14 inç IPS, Intel Core Ultra 7, 32GB RAM, 1TB SSD. Kurumsal kullanım için ideal.",
+                    "14-inch IPS, Intel Core Ultra 7, 32GB RAM, 1TB SSD. Ideal for enterprise use.",
                     59999m,
                     4,
                     ["lenovo", "laptop", "business"]
@@ -636,7 +636,7 @@ public static class DataSeeder
                     techM.Id,
                     laptopCat.Id,
                     "ASUS ROG Zephyrus G16",
-                    "16 inç QHD 240Hz, RTX 4080, Ryzen 9 8945HS. Oyun performansında üst segment.",
+                    "16-inch QHD 240Hz, RTX 4080, Ryzen 9 8945HS. Top-tier gaming performance.",
                     72999m,
                     3,
                     ["asus", "gaming", "rtx4080"]
@@ -645,221 +645,221 @@ public static class DataSeeder
                     techM.Id,
                     tabletCat.Id,
                     "iPad Pro 13 M4",
-                    "13 inç Ultra Retina XDR, M4 chip, 256GB. Tanscend-ince tasarım ve sonsuz güç.",
+                    "13-inch Ultra Retina XDR, M4 chip, 256GB. Transcendently thin design with limitless power.",
                     49999m,
                     6,
                     ["apple", "ipad", "m4"]
                 ),
                 MakeProduct(
                     techM.Id,
-                    kulaklikCat.Id,
+                    headphonesCat.Id,
                     "Sony WH-1000XM5",
-                    "30 saatlik pil, endüstrinin lideri gürültü engelleme, çok cihaz bağlantısı.",
+                    "30-hour battery, industry-leading noise cancellation, multi-device connectivity.",
                     8999m,
                     25,
-                    ["sony", "kulaklik", "anc"]
+                    ["sony", "headphones", "anc"]
                 ),
                 MakeProduct(
                     techM.Id,
-                    kulaklikCat.Id,
-                    "AirPods Pro 2. Nesil",
-                    "Adaptif ses önleme, Kişiselleştirilmiş Uzamsal Ses, USB-C şarj kutusu.",
+                    headphonesCat.Id,
+                    "AirPods Pro 2nd Generation",
+                    "Adaptive audio, Personalized Spatial Audio, USB-C charging case.",
                     7499m,
                     30,
                     ["apple", "airpods", "tws"]
                 ),
                 MakeProduct(
                     techM.Id,
-                    saatCat.Id,
+                    smartWatchesCat.Id,
                     "Apple Watch Series 10",
-                    "49mm titanyum kasa, çift bant GPS, kan oksijeni, uyku takibi.",
+                    "49mm titanium case, dual-band GPS, blood oxygen, sleep tracking.",
                     14999m,
                     10,
                     ["apple", "watch", "fitness"]
                 ),
                 MakeProduct(
                     techM.Id,
-                    saatCat.Id,
+                    smartWatchesCat.Id,
                     "Samsung Galaxy Watch 7",
-                    "44mm, BioActive sensör, 40 saat pil, Wear OS. Android ekosistemiyle mükemmel uyum.",
+                    "44mm, BioActive sensor, 40-hour battery, Wear OS. Perfect integration with the Android ecosystem.",
                     9999m,
                     18,
                     ["samsung", "watch", "android"]
                 ),
-                // Moda Dünyası ürünleri
+                // Fashion World products
                 MakeProduct(
-                    modaM.Id,
-                    erkekGiyim.Id,
+                    fashionM.Id,
+                    mensClothing.Id,
                     "Levi's 501 Original Jean",
-                    "Klasik düz kesim erkek kot pantolon, %100 organik pamuk. Zamansız stil.",
+                    "Classic straight-cut men's denim jeans, 100% organic cotton. Timeless style.",
                     1299m,
                     50,
-                    ["levis", "kot", "erkek"]
+                    ["levis", "denim", "mens"]
                 ),
                 MakeProduct(
-                    modaM.Id,
-                    erkekGiyim.Id,
+                    fashionM.Id,
+                    mensClothing.Id,
                     "Tommy Hilfiger Polo",
-                    "Slim fit pamuklu polo tişört, küçük logo nakışı. Ofis ve günlük için.",
+                    "Slim fit cotton polo shirt with small logo embroidery. Perfect for the office and everyday wear.",
                     799m,
                     40,
-                    ["tommy", "polo", "erkek"]
+                    ["tommy", "polo", "mens"]
                 ),
                 MakeProduct(
-                    modaM.Id,
-                    kadinGiyim.Id,
-                    "Mango Midi Elbise",
-                    "Fisto dokuma kumaş, midi boy elbise. Yaz koleksiyonu 2026.",
+                    fashionM.Id,
+                    womensClothing.Id,
+                    "Mango Midi Dress",
+                    "Woven fabric midi dress. Summer collection 2026.",
                     1499m,
                     35,
-                    ["mango", "elbise", "yaz"]
+                    ["mango", "dress", "summer"]
                 ),
                 MakeProduct(
-                    modaM.Id,
-                    kadinGiyim.Id,
-                    "Zara Blazer Ceket",
-                    "Fitted blazer ceket, düğmeli yaka. İş hayatında zarafetin simgesi.",
+                    fashionM.Id,
+                    womensClothing.Id,
+                    "Zara Blazer Jacket",
+                    "Fitted blazer jacket with buttoned collar. The symbol of elegance in the workplace.",
                     2199m,
                     20,
-                    ["zara", "blazer", "kadin"]
+                    ["zara", "blazer", "womens"]
                 ),
                 MakeProduct(
-                    modaM.Id,
-                    sporCat.Id,
+                    fashionM.Id,
+                    sportsCat.Id,
                     "Nike Air Max 2024",
-                    "Yüksek konforlu koşu ayakkabısı, Air Max yastıklama sistemi. Maksimum konfor.",
+                    "High-comfort running shoe with Air Max cushioning system. Maximum comfort.",
                     4499m,
                     20,
-                    ["nike", "kosu", "spor"]
+                    ["nike", "running", "sports"]
                 ),
                 MakeProduct(
-                    modaM.Id,
-                    sporCat.Id,
+                    fashionM.Id,
+                    sportsCat.Id,
                     "Adidas Ultraboost 24",
-                    "Responsive Boost ara taban, Primeknit+ kumaş üst. Koşucunun tercihi.",
+                    "Responsive Boost midsole, Primeknit+ fabric upper. The runner's choice.",
                     3999m,
                     15,
-                    ["adidas", "kosu", "boost"]
+                    ["adidas", "running", "boost"]
                 ),
-                // Ev & Dekor ürünleri
+                // Home & Decor products
                 MakeProduct(
-                    evM.Id,
-                    mutfakCat.Id,
+                    homeM.Id,
+                    kitchenCat.Id,
                     "Philips Airfryer XXL",
-                    "7L kapasiteli dijital airfryer, 7 pişirme modu, akıllı dokunmatik ekran.",
+                    "7L capacity digital air fryer, 7 cooking modes, smart touch screen.",
                     3299m,
                     10,
-                    ["philips", "mutfak", "airfryer"]
+                    ["philips", "kitchen", "airfryer"]
                 ),
                 MakeProduct(
-                    evM.Id,
-                    mutfakCat.Id,
+                    homeM.Id,
+                    kitchenCat.Id,
                     "Tefal Grandhall XXL",
-                    "2400W barbekü ızgara, 75x32 cm ızgara yüzeyi, katlanabilir tasarım.",
+                    "2400W barbecue grill, 75x32 cm grilling surface, foldable design.",
                     2499m,
                     8,
-                    ["tefal", "izgara", "bbq"]
+                    ["tefal", "grill", "bbq"]
                 ),
                 MakeProduct(
-                    evM.Id,
-                    mutfakCat.Id,
+                    homeM.Id,
+                    kitchenCat.Id,
                     "Nespresso Vertuo Pop",
-                    "Barista'dan ilham alan 5 kahve boyutu. Kompakt tasarım, 14 saniyede hazır.",
+                    "5 barista-inspired coffee sizes. Compact design, ready in 14 seconds.",
                     1999m,
                     14,
-                    ["nespresso", "kahve", "espresso"]
+                    ["nespresso", "coffee", "espresso"]
                 ),
                 MakeProduct(
-                    evM.Id,
-                    dekorCat.Id,
+                    homeM.Id,
+                    decorCat.Id,
                     "Dyson V15 Detect",
-                    "Lazer toz tespiti, 60 dk pil, HEPA filtre. Kablosuz süpürgede devrim.",
+                    "Laser dust detection, 60-minute battery, HEPA filter. A revolution in cordless vacuuming.",
                     18999m,
                     7,
-                    ["dyson", "supurge", "kablosuz"]
+                    ["dyson", "vacuum", "cordless"]
                 ),
                 MakeProduct(
-                    evM.Id,
-                    dekorCat.Id,
-                    "IKEA BILLY Kitaplık",
-                    "80x28x202 cm, beyaz renk, ayarlanabilir raflar. Scandi minimalist tasarım.",
+                    homeM.Id,
+                    decorCat.Id,
+                    "IKEA BILLY Bookcase",
+                    "80x28x202 cm, white, adjustable shelves. Scandi minimalist design.",
                     899m,
                     22,
-                    ["ikea", "kitaplik", "dekor"]
+                    ["ikea", "bookcase", "decor"]
                 ),
-                // Spor World ürünleri
+                // Sports World products
                 MakeProduct(
-                    sporM.Id,
-                    sporCat.Id,
+                    sportsM.Id,
+                    sportsCat.Id,
                     "Garmin Forerunner 965",
-                    "AMOLED ekran, GPS, kalp ritmi, VO2 max ölçümü. Yarı maraton taktiğinizi optimize edin.",
+                    "AMOLED display, GPS, heart rate, VO2 max measurement. Optimize your half-marathon strategy.",
                     15999m,
                     6,
-                    ["garmin", "gps", "kosu"]
+                    ["garmin", "gps", "running"]
                 ),
                 MakeProduct(
-                    sporM.Id,
-                    sporCat.Id,
-                    "Decathlon Bisiklet 27.5\"",
-                    "Dağ bisikleti, 21 vites Shimano, hidrolik disk fren. Off-road maceraya hazır.",
+                    sportsM.Id,
+                    sportsCat.Id,
+                    "Decathlon Mountain Bike 27.5\"",
+                    "Mountain bike, 21-speed Shimano, hydraulic disc brakes. Ready for off-road adventure.",
                     6999m,
                     9,
-                    ["bisiklet", "mtb", "shimano"]
+                    ["bicycle", "mtb", "shimano"]
                 ),
                 MakeProduct(
-                    sporM.Id,
-                    sporCat.Id,
-                    "Wilson Pro Staff Tenis",
-                    "97 inç baş, 315g, 18x20 kordon düzeni. Profesyonel tenis raketi.",
+                    sportsM.Id,
+                    sportsCat.Id,
+                    "Wilson Pro Staff Tennis",
+                    "97-inch head, 315g, 18x20 string pattern. Professional tennis racket.",
                     4299m,
                     11,
-                    ["wilson", "tenis", "pro"]
+                    ["wilson", "tennis", "pro"]
                 ),
-                // Kitap Center ürünleri
+                // Book Center products
                 MakeProduct(
-                    kitapM.Id,
-                    kitapCat.Id,
+                    bookM.Id,
+                    booksCat.Id,
                     "Atomic Habits - James Clear",
-                    "Küçük değişiklikler, büyük sonuçlar. Türkçe çeviri, 320 sayfa. Dünyada 15M+ satış.",
+                    "Small changes, remarkable results. 320 pages. 15M+ copies sold worldwide.",
                     189m,
                     100,
-                    ["kitap", "kisisel-gelisim", "bestseller"]
+                    ["books", "self-improvement", "bestseller"]
                 ),
                 MakeProduct(
-                    kitapM.Id,
-                    kitapCat.Id,
+                    bookM.Id,
+                    booksCat.Id,
                     "Sapiens - Yuval Noah Harari",
-                    "İnsanlığın kısa tarihi. 500+ sayfa, Türkçe. Fikirlerinizi kökten değiştirecek.",
+                    "A brief history of humankind. 500+ pages. A book that will fundamentally change how you think.",
                     249m,
                     80,
-                    ["kitap", "tarih", "harari"]
+                    ["books", "history", "harari"]
                 ),
                 MakeProduct(
-                    kitapM.Id,
-                    kitapCat.Id,
+                    bookM.Id,
+                    booksCat.Id,
                     "Dune - Frank Herbert",
-                    "Çöl Gezegeni. Bilim kurgunun başyapıtı, Türkçe çeviri 800 sayfa.",
+                    "The desert planet. A masterpiece of science fiction, 800 pages.",
                     219m,
                     60,
-                    ["kitap", "sci-fi", "dune"]
+                    ["books", "sci-fi", "dune"]
                 ),
                 MakeProduct(
-                    kitapM.Id,
-                    kitapCat.Id,
-                    "Savaş Sanatı - Sun Tzu",
-                    "Strateji ve liderlik klasiği. Türkçe, 160 sayfa. Her yöneticinin okuması gereken eser.",
+                    bookM.Id,
+                    booksCat.Id,
+                    "The Art of War - Sun Tzu",
+                    "A classic of strategy and leadership. 160 pages. Essential reading for every manager.",
                     149m,
                     120,
-                    ["kitap", "strateji", "klasik"]
+                    ["books", "strategy", "classic"]
                 ),
             };
 
             db.Products.AddRange(products);
             await db.SaveChangesAsync();
-            Console.WriteLine($"✅ {products.Count} ürün oluşturuldu.");
+            Console.WriteLine($"✅ {products.Count} products created.");
         }
 
-        // ── 7. Pluginler ──────────────────────────────────────────────────────
+        // ── 7. Plugins ────────────────────────────────────────────────────────
         if (!await db.Plugins.AnyAsync())
         {
             var plugins = new List<Plugin>
@@ -870,7 +870,7 @@ public static class DataSeeder
                     Name = "Google Analytics",
                     Slug = "google-analytics",
                     Description =
-                        "Mağazanıza Google Analytics entegrasyonu. Ziyaretçi, dönüşüm ve gelir raporlarını anlık takip edin.",
+                        "Google Analytics integration for your store. Track visitors, conversions and revenue reports in real time.",
                     Category = "Analytics",
                     MonthlyPrice = 0m,
                     IsActive = true,
@@ -887,7 +887,7 @@ public static class DataSeeder
                     Name = "Live Chat",
                     Slug = "live-chat",
                     Description =
-                        "Müşterilerinizle gerçek zamanlı sohbet edin. Yapay zeka destekli otomatik yanıtlar dahil.",
+                        "Chat with your customers in real time. Includes AI-powered automatic responses.",
                     Category = "Chat",
                     MonthlyPrice = 49.90m,
                     IsActive = true,
@@ -904,7 +904,7 @@ public static class DataSeeder
                     Name = "SEO Optimizer",
                     Slug = "seo-optimizer",
                     Description =
-                        "Meta etiketleri, XML sitemap ve yapısal veri otomatik yönetimi. Arama motoru görünürlüğünüzü artırın.",
+                        "Automatic management of meta tags, XML sitemaps and structured data. Boost your search engine visibility.",
                     Category = "SEO",
                     MonthlyPrice = 29.90m,
                     IsActive = true,
@@ -918,10 +918,10 @@ public static class DataSeeder
                 new()
                 {
                     Id = Guid.NewGuid(),
-                    Name = "E-Posta Marketing",
+                    Name = "Email Marketing",
                     Slug = "email-marketing",
                     Description =
-                        "Otomatik kampanya gönderimi, segmentasyon ve açılma oranı takibi. Mailchimp ve SendGrid destekli.",
+                        "Automated campaign delivery, segmentation and open-rate tracking. Powered by Mailchimp and SendGrid.",
                     Category = "Marketing",
                     MonthlyPrice = 79.90m,
                     IsActive = true,
@@ -935,10 +935,10 @@ public static class DataSeeder
                 new()
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Muhasebe Entegrasyonu",
+                    Name = "Accounting Integration",
                     Slug = "accounting",
                     Description =
-                        "Fatura, ödeme ve muhasebe kayıtlarını otomatik senkronize edin. Logo, Mikro ve Paraşüt destekli.",
+                        "Automatically synchronize invoices, payments and accounting records. Supports Logo, Mikro and Parasut.",
                     Category = "Accounting",
                     MonthlyPrice = 149.90m,
                     IsActive = true,
@@ -952,10 +952,10 @@ public static class DataSeeder
                 new()
                 {
                     Id = Guid.NewGuid(),
-                    Name = "WhatsApp Bildirim",
+                    Name = "WhatsApp Notifications",
                     Slug = "whatsapp-notify",
                     Description =
-                        "Sipariş durum güncellemelerini WhatsApp üzerinden müşterilerinize otomatik gönderin.",
+                        "Automatically send order status updates to your customers via WhatsApp.",
                     Category = "Chat",
                     MonthlyPrice = 39.90m,
                     IsActive = true,
@@ -972,7 +972,7 @@ public static class DataSeeder
                     Name = "Facebook Pixel",
                     Slug = "facebook-pixel",
                     Description =
-                        "Retargeting kampanyaları için Facebook Pixel entegrasyonu. Dönüşümlerinizi 3x artırın.",
+                        "Facebook Pixel integration for retargeting campaigns. Triple your conversions.",
                     Category = "Analytics",
                     MonthlyPrice = 19.90m,
                     IsActive = true,
@@ -986,10 +986,10 @@ public static class DataSeeder
                 new()
                 {
                     Id = Guid.NewGuid(),
-                    Name = "İndirim Kuponu",
+                    Name = "Discount Coupons",
                     Slug = "coupon-manager",
                     Description =
-                        "Esnek kupon ve indirim kodu yönetimi. Yüzde veya sabit indirim, tek/çok kullanım.",
+                        "Flexible coupon and discount code management. Percentage or fixed discounts, single or multi-use.",
                     Category = "Marketing",
                     MonthlyPrice = 24.90m,
                     IsActive = true,
@@ -1003,10 +1003,10 @@ public static class DataSeeder
             };
             db.Plugins.AddRange(plugins);
             await db.SaveChangesAsync();
-            Console.WriteLine($"✅ {plugins.Count} plugin oluşturuldu.");
+            Console.WriteLine($"✅ {plugins.Count} plugins created.");
         }
 
-        // ── 8. MerchantPlugin Abonelikleri ────────────────────────────────────
+        // ── 8. MerchantPlugin Subscriptions ───────────────────────────────────
         if (!await db.MerchantPlugins.AnyAsync())
         {
             var allPlugins = await db.Plugins.ToListAsync();
@@ -1020,15 +1020,15 @@ public static class DataSeeder
             var whatsPlugin = allPlugins.FirstOrDefault(p => p.Slug == "whatsapp-notify");
             var fbPlugin = allPlugins.FirstOrDefault(p => p.Slug == "facebook-pixel");
 
-            var techM = allMerchants.FirstOrDefault(m => m.Slug == "techstore-turkiye");
-            var modaM = allMerchants.FirstOrDefault(m => m.Slug == "moda-dunyasi");
-            var sporM = allMerchants.FirstOrDefault(m => m.Slug == "spor-world");
+            var techM = allMerchants.FirstOrDefault(m => m.Slug == "techstore");
+            var fashionM = allMerchants.FirstOrDefault(m => m.Slug == "fashion-world");
+            var sportsM = allMerchants.FirstOrDefault(m => m.Slug == "sports-world");
 
-            if (techM == null || modaM == null || sporM == null)
+            if (techM == null || fashionM == null || sportsM == null)
             {
                 Console.WriteLine(
-                    "⚠️  MerchantPlugin seed atlandı: gerekli merchant profilleri bulunamadı "
-                        + $"(techstore={techM != null}, moda={modaM != null}, spor={sporM != null})."
+                    "⚠️  MerchantPlugin seed skipped: required merchant profiles not found "
+                        + $"(techstore={techM != null}, fashion={fashionM != null}, sports={sportsM != null})."
                 );
             }
             else if (
@@ -1042,7 +1042,7 @@ public static class DataSeeder
             )
             {
                 Console.WriteLine(
-                    "⚠️  MerchantPlugin seed atlandı: gerekli plugin kayıtları bulunamadı."
+                    "⚠️  MerchantPlugin seed skipped: required plugin records not found."
                 );
             }
             else
@@ -1062,33 +1062,33 @@ public static class DataSeeder
                         "{\"provider\":\"Logo\",\"token\":\"xyz\"}",
                         DateTime.UtcNow.AddMonths(2)
                     ),
-                    MakeMerchantPlugin(modaM.Id, gaPlugin.Id, null, DateTime.UtcNow.AddMonths(1)),
+                    MakeMerchantPlugin(fashionM.Id, gaPlugin.Id, null, DateTime.UtcNow.AddMonths(1)),
                     MakeMerchantPlugin(
-                        modaM.Id,
+                        fashionM.Id,
                         emailPlugin.Id,
                         "{\"apiKey\":\"mc_moda_key99\"}",
                         DateTime.UtcNow.AddMonths(2)
                     ),
                     MakeMerchantPlugin(
-                        modaM.Id,
+                        fashionM.Id,
                         whatsPlugin.Id,
                         "{\"phone\":\"+905551112233\"}",
                         DateTime.UtcNow.AddMonths(1)
                     ),
-                    MakeMerchantPlugin(sporM.Id, gaPlugin.Id, null, DateTime.UtcNow.AddMonths(4)),
+                    MakeMerchantPlugin(sportsM.Id, gaPlugin.Id, null, DateTime.UtcNow.AddMonths(4)),
                     MakeMerchantPlugin(
-                        sporM.Id,
+                        sportsM.Id,
                         fbPlugin.Id,
                         "{\"pixelId\":\"1234567890\"}",
                         DateTime.UtcNow.AddMonths(2)
                     )
                 );
                 await db.SaveChangesAsync();
-                Console.WriteLine("✅ 9 merchant plugin aboneliği oluşturuldu.");
+                Console.WriteLine("✅ 9 merchant plugin subscriptions created.");
             }
         }
 
-        // ── 9. Siparişler, Kargo & Fatura ─────────────────────────────────────
+        // ── 9. Orders, Shipments & Invoices ───────────────────────────────────
         if (!await db.Orders.AnyAsync())
         {
             var allProducts = await db.Products.ToListAsync();
@@ -1119,13 +1119,13 @@ public static class DataSeeder
 
             var addresses = new[]
             {
-                ("Kadıköy", "İstanbul", "Moda Cad. No:12", "34710", 40.991, 29.028),
-                ("Çankaya", "Ankara", "Kızılay Sok. No:5", "06540", 39.912, 32.861),
-                ("Bornova", "İzmir", "Ege Bulvarı No:88", "35100", 38.458, 27.221),
-                ("Nilüfer", "Bursa", "Çekirge Cad. No:3", "16110", 40.212, 28.973),
-                ("Muratpaşa", "Antalya", "Cumhuriyet Mah. 7", "07040", 36.887, 30.705),
-                ("Şişli", "İstanbul", "Nişantaşı Cad. No:1", "34365", 41.049, 28.991),
-                ("Keçiören", "Ankara", "Etlik Sk. No:22", "06380", 39.964, 32.854),
+                ("Kadikoy", "Istanbul", "Moda Ave. No:12", "34710", 40.991, 29.028),
+                ("Cankaya", "Ankara", "Kizilay St. No:5", "06540", 39.912, 32.861),
+                ("Bornova", "Izmir", "Ege Blvd. No:88", "35100", 38.458, 27.221),
+                ("Nilufer", "Bursa", "Cekirge Ave. No:3", "16110", 40.212, 28.973),
+                ("Muratpasa", "Antalya", "Cumhuriyet Quarter No:7", "07040", 36.887, 30.705),
+                ("Sisli", "Istanbul", "Nisantasi Ave. No:1", "34365", 41.049, 28.991),
+                ("Kecioren", "Ankara", "Etlik St. No:22", "06380", 39.964, 32.854),
             };
 
             int invoiceCounter = 1;
@@ -1137,7 +1137,7 @@ public static class DataSeeder
                     Rng.Next(addresses.Length)
                 ];
 
-                // 1-3 ürün seç
+                // Select 1-3 products
                 var itemCount = Rng.Next(1, 4);
                 var pickedProducts = allProducts.OrderBy(_ => Rng.Next()).Take(itemCount).ToList();
 
@@ -1171,7 +1171,7 @@ public static class DataSeeder
                     PaidAt = isPaid ? createdAt.AddMinutes(5) : null,
                     CancellationReason =
                         orderStatus == OrderStatus.Cancelled
-                            ? "Müşteri tarafından iptal edildi."
+                            ? "Cancelled by the customer."
                             : null,
                     CreatedAt = createdAt,
                     UpdatedAt = createdAt.AddHours(Rng.Next(1, 5)),
@@ -1195,7 +1195,7 @@ public static class DataSeeder
                 db.OrderItems.AddRange(orderItems);
                 await db.SaveChangesAsync();
 
-                // Kargo
+                // Shipment
                 if (isPaid && orderStatus != OrderStatus.Cancelled)
                 {
                     var courier =
@@ -1221,7 +1221,7 @@ public static class DataSeeder
                     db.Shipments.Add(shipment);
                     await db.SaveChangesAsync();
 
-                    // Kargo durum geçmişi
+                    // Shipment status history
                     var historyEntries = BuildShipmentHistory(
                         shipment.Id,
                         shipStatus,
@@ -1232,7 +1232,7 @@ public static class DataSeeder
                     await db.SaveChangesAsync();
                 }
 
-                // Fatura (teslim + transit + yolda + ödendi)
+                // Invoice (delivered + in transit + out for delivery + paid)
                 if (
                     isPaid
                     && orderStatus
@@ -1266,7 +1266,7 @@ public static class DataSeeder
                         TotalAmount = totalAmount,
                         ShippingAmount = shippingAmount,
                         MerchantStoreName = merchant.StoreName,
-                        MerchantAddress = merchant.Address ?? "Türkiye",
+                        MerchantAddress = merchant.Address ?? "Turkey",
                         CustomerFullName = $"{customer.FirstName} {customer.LastName}",
                         CustomerEmail = customer.Email,
                         CustomerAddress = $"{addrLine}, {district}, {city}",
@@ -1278,7 +1278,7 @@ public static class DataSeeder
                     db.Invoices.Add(invoice);
                     await db.SaveChangesAsync();
 
-                    // Muhasebe kaydı
+                    // Accounting entry
                     db.AccountingEntries.Add(
                         new AccountingEntry
                         {
@@ -1289,7 +1289,7 @@ public static class DataSeeder
                             EntryType = "SALE",
                             Amount = totalAmount,
                             Description =
-                                $"{invNumber} – Satış geliri ({pickedProducts.Count} ürün)",
+                                $"{invNumber} – Sales revenue ({pickedProducts.Count} items)",
                             PaymentReference = order.PaymentId,
                             CreatedAt = createdAt.AddMinutes(20),
                         }
@@ -1299,11 +1299,11 @@ public static class DataSeeder
             }
 
             Console.WriteLine(
-                $"✅ {scenarios.Length} sipariş + kargo + fatura + muhasebe kaydı oluşturuldu."
+                $"✅ {scenarios.Length} orders + shipments + invoices + accounting entries created."
             );
         }
 
-        Console.WriteLine("\n🚀 Seed tamamlandı.");
+        Console.WriteLine("\n🚀 Seed completed.");
         Console.WriteLine("   Admin     : admin@marketplace.com       / Admin123!");
         Console.WriteLine("   Merchant1 : merchant1@marketplace.com   / Merchant123!");
         Console.WriteLine("   Merchant2 : merchant2@marketplace.com   / Merchant123!");
@@ -1312,13 +1312,13 @@ public static class DataSeeder
         Console.WriteLine("   Merchant5 : merchant5@marketplace.com   / Merchant123!");
         Console.WriteLine("   Courier1  : courier1@marketplace.com    / Courier123!");
         Console.WriteLine("   Courier2  : courier2@marketplace.com    / Courier123!");
-        Console.WriteLine("   Customer  : ahmet.yilmaz@gmail.com      / Customer123!");
+        Console.WriteLine("   Customer  : alex.morgan@gmail.com        / Customer123!");
     }
 
-    // ── Yardımcı: Product oluştur ─────────────────────────────────────────────
+    // ── Helper: Create Product ────────────────────────────────────────────────
     private static int _productImageIndex = 0;
 
-    // Her ürüne 2-3 görsel atamak için önceden tanımlanmış kombinasyonlar
+    // Predefined image set combinations to assign 2-3 images per product
     private static readonly string[][] ProductImageSets =
     [
         ["/products/product1.webp", "/products/product2.webp", "/products/product3.webp"],
@@ -1345,7 +1345,7 @@ public static class DataSeeder
         string[] tags
     )
     {
-        // Her ürüne döngüsel olarak farklı görsel kombinasyonu ata
+        // Assign a different image combination to each product in a round-robin fashion
         var imageSet = ProductImageSets[_productImageIndex % ProductImageSets.Length];
         _productImageIndex++;
 
@@ -1370,7 +1370,7 @@ public static class DataSeeder
         };
     }
 
-    // ── Yardımcı: MerchantPlugin oluştur ──────────────────────────────────────
+    // ── Helper: Create MerchantPlugin ─────────────────────────────────────────
     private static MerchantPlugin MakeMerchantPlugin(
         Guid merchantId,
         Guid pluginId,
@@ -1392,7 +1392,7 @@ public static class DataSeeder
             UpdatedAt = DateTime.UtcNow,
         };
 
-    // ── Yardımcı: Kargo durum geçmişi oluştur ────────────────────────────────
+    // ── Helper: Build shipment status history ─────────────────────────────────
     private static List<ShipmentStatusHistory> BuildShipmentHistory(
         Guid shipmentId,
         ShipmentStatus targetStatus,
@@ -1410,18 +1410,18 @@ public static class DataSeeder
 
             var note = status switch
             {
-                ShipmentStatus.Pending => "Gönderi oluşturuldu.",
-                ShipmentStatus.LabelGenerated => "Kargo etiketi hazırlandı.",
-                ShipmentStatus.CourierAssigned => "Kurye atandı, teslim alım bekleniyor.",
-                ShipmentStatus.PickedUp => "Kurye tarafından teslim alındı.",
-                ShipmentStatus.InTransit => $"{city} dağıtım merkezinde.",
-                ShipmentStatus.OutForDelivery => "Kurye yolda, bugün teslim edilecek.",
-                ShipmentStatus.Delivered => "Teslimat başarıyla tamamlandı.",
-                ShipmentStatus.Failed => "Teslimat başarısız, müşteri bulunamadı.",
+                ShipmentStatus.Pending => "Shipment created.",
+                ShipmentStatus.LabelGenerated => "Shipping label generated.",
+                ShipmentStatus.CourierAssigned => "Courier assigned, awaiting pickup.",
+                ShipmentStatus.PickedUp => "Picked up by courier.",
+                ShipmentStatus.InTransit => $"At {city} distribution center.",
+                ShipmentStatus.OutForDelivery => "Courier en route, delivery expected today.",
+                ShipmentStatus.Delivered => "Delivery successfully completed.",
+                ShipmentStatus.Failed => "Delivery failed, customer not available.",
                 _ => null,
             };
 
-            var offset = (int)status * 4; // her adım ~4 saat
+            var offset = (int)status * 4; // each step ~4 hours
             history.Add(
                 new ShipmentStatusHistory
                 {

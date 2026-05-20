@@ -1,12 +1,14 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import Navbar         from "@/components/layout/Navbar";
+import Footer         from "@/components/layout/Footer";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
-import CookieConsent from "@/components/layout/CookieConsent";
-import SocialProof from "@/components/layout/SocialProof";
-import BackToTop from "@/components/layout/BackToTop";
+import CookieConsent  from "@/components/layout/CookieConsent";
+import SocialProof    from "@/components/layout/SocialProof";
+import BackToTop      from "@/components/layout/BackToTop";
+import CommandMenu    from "@/components/layout/CommandMenu";
+import CartDrawer     from "@/components/layout/CartDrawer";
 
 const HIDDEN_PATHS = [
   "/admin",
@@ -50,6 +52,11 @@ export default function ClientLayoutWrapper({
       <CookieConsent />
       <SocialProof />
       <BackToTop />
+
+      {/* Global overlays — rendered outside the layout flow so they're
+          always reachable regardless of which portal section is active */}
+      <CommandMenu />
+      <CartDrawer />
     </>
   );
 }

@@ -8,8 +8,8 @@ using Microsoft.EntityFrameworkCore;
 namespace api.Controllers;
 
 /// <summary>
-/// Müşteri istek listesi (Wishlist) CRUD.
-/// Tüm endpoint'ler Customer veya Admin rolü gerektirir.
+/// Customer wishlist CRUD.
+/// All endpoints require the Customer or Admin role.
 /// </summary>
 [ApiController]
 [Route("api/wishlist")]
@@ -25,7 +25,7 @@ public class WishlistController : ControllerBase
         _currentUser = currentUser;
     }
 
-    // ── GET /api/wishlist — Customer'ın istek listesi ──────────────────────────
+    // ── GET /api/wishlist — Customer's wishlist ────────────────────────────────
 
     [HttpGet]
     public async Task<IActionResult> GetMyWishlist()
@@ -64,24 +64,24 @@ public class WishlistController : ControllerBase
         return Ok(new { total = items.Count, items });
     }
 
-    // ── POST /api/wishlist/{productId} — Ürün ekle ────────────────────────────
+    // ── POST /api/wishlist/{productId} — Add product ──────────────────────────
 
     [HttpPost("{productId:guid}")]
     public async Task<IActionResult> AddToWishlist(Guid productId)
     {
         var userId = _currentUser.UserId;
 
-        // Ürün var mı?
+        // Does the product exist?
         var product = await _db.Products.FindAsync(productId);
         if (product == null)
-            return NotFound(new { message = "Ürün bulunamadı." });
+            return NotFound(new { message = "Product not found." });
 
-        // Zaten var mı?
+        // Already in the list?
         var exists = await _db.WishlistItems
             .AnyAsync(w => w.CustomerId == userId && w.ProductId == productId);
 
         if (exists)
-            return Conflict(new { message = "Bu ürün zaten istek listesinde." });
+            return Conflict(new { message = "This product is already in the wishlist." });
 
         var item = new WishlistItem
         {
@@ -100,7 +100,7 @@ public class WishlistController : ControllerBase
         });
     }
 
-    // ── DELETE /api/wishlist/{productId} — Ürün çıkar ────────────────────────
+    // ── DELETE /api/wishlist/{productId} — Remove product ────────────────────
 
     [HttpDelete("{productId:guid}")]
     public async Task<IActionResult> RemoveFromWishlist(Guid productId)
@@ -111,14 +111,14 @@ public class WishlistController : ControllerBase
             .FirstOrDefaultAsync(w => w.CustomerId == userId && w.ProductId == productId);
 
         if (item == null)
-            return NotFound(new { message = "Ürün istek listesinde bulunamadı." });
+            return NotFound(new { message = "Product not found in the wishlist." });
 
         _db.WishlistItems.Remove(item);
         await _db.SaveChangesAsync();
         return NoContent();
     }
 
-    // ── GET /api/wishlist/check/{productId} — Ürün listede mi? ───────────────
+    // ── GET /api/wishlist/check/{productId} — Is product in list? ────────────
 
     [HttpGet("check/{productId:guid}")]
     public async Task<IActionResult> CheckWishlist(Guid productId)
@@ -129,7 +129,7 @@ public class WishlistController : ControllerBase
         return Ok(new { productId, inWishlist });
     }
 
-    // ── DELETE /api/wishlist — Tüm listeyi temizle ───────────────────────────
+    // ── DELETE /api/wishlist — Clear entire list ──────────────────────────────
 
     [HttpDelete]
     public async Task<IActionResult> ClearWishlist()

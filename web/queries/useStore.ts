@@ -26,8 +26,8 @@ export const storeKeys = {
 // ── Public Store Hooks ────────────────────────────────────────────────────────
 
 /**
- * E-mağaza profili — slug ile.
- * /store/[slug] sayfası için.
+ * E-store profile — fetched by slug.
+ * Used by the /store/[slug] page.
  */
 export function useStore(slug: string) {
   return useQuery({
@@ -42,7 +42,7 @@ export function useStore(slug: string) {
 }
 
 /**
- * E-mağazanın ürünleri — publishToStore=true olanlar.
+ * E-store products — those with publishToStore=true.
  */
 export function useStoreProducts(slug: string, filters: ProductFilters = {}) {
   return useQuery({
@@ -68,7 +68,7 @@ export function useStoreProducts(slug: string, filters: ProductFilters = {}) {
 }
 
 /**
- * E-mağazanın tek ürünü.
+ * A single product from the e-store.
  */
 export function useStoreProduct(slug: string, productId: string) {
   return useQuery({
@@ -85,7 +85,7 @@ export function useStoreProduct(slug: string, productId: string) {
 }
 
 /**
- * Store içi kategoriler.
+ * Categories within the store.
  */
 export function useStoreCategories(slug: string) {
   return useQuery({
@@ -100,7 +100,7 @@ export function useStoreCategories(slug: string) {
 }
 
 /**
- * Tüm e-mağaza listesi — ana sayfadaki "Öne Çıkan Storelar" için.
+ * Full e-store listing — for the "Featured Stores" section on the home page.
  */
 export function useStoreList(limit?: number) {
   return useQuery({
@@ -127,7 +127,7 @@ export function useStoreList(limit?: number) {
 // ── Merchant Store Settings ───────────────────────────────────────────────────
 
 /**
- * Merchant kendi mağaza ayarlarını günceller.
+ * Merchant updates their own store settings.
  */
 export function useUpdateStoreSettings() {
   const queryClient = useQueryClient();
@@ -135,14 +135,14 @@ export function useUpdateStoreSettings() {
     mutationFn: (body: UpdateStoreSettingsRequest) =>
       api.put("/api/store/settings", body),
     onSuccess: () => {
-      // Merchant profile ve store cache'ini temizle
+      // Invalidate merchant profile and store cache
       queryClient.invalidateQueries({ queryKey: storeKeys.all });
     },
   });
 }
 
 /**
- * Özel domain / subdomain ata.
+ * Assign a custom domain / subdomain.
  */
 export function useSetStoreDomain() {
   const queryClient = useQueryClient();
@@ -156,7 +156,7 @@ export function useSetStoreDomain() {
 }
 
 /**
- * DNS doğrulamasını başlat.
+ * Initiate DNS verification.
  */
 export function useVerifyDomain() {
   return useMutation({
@@ -164,7 +164,7 @@ export function useVerifyDomain() {
   });
 }
 
-// ── Admin: Merchant Adına Store Kur ─────────────────────────────────────────
+// ── Admin: Set Up Store on Behalf of Merchant ────────────────────────────────
 
 export function useAdminSetupStore() {
   const queryClient = useQueryClient();

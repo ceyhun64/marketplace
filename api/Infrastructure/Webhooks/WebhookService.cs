@@ -27,9 +27,9 @@ public class WebhookService : IWebhookService
         if (webhookUrls.Length == 0)
         {
             _logger.LogInformation(
-                "WEBHOOK_URLS tanımlı değil — event={Event} atlandı. "
-                    + "Webhook almak için ortam değişkenlerinde WEBHOOK_URLS değerini "
-                    + "virgülle ayrılmış URL listesi olarak tanımlayın.",
+                "WEBHOOK_URLS is not defined — event={Event} skipped. "
+                    + "To receive webhooks, set the WEBHOOK_URLS environment variable "
+                    + "to a comma-separated list of URLs.",
                 eventType
             );
             return;
@@ -55,13 +55,13 @@ public class WebhookService : IWebhookService
 
                 if (response.IsSuccessStatusCode)
                     _logger.LogInformation(
-                        "Webhook gönderildi: event={Event} url={Url}",
+                        "Webhook sent: event={Event} url={Url}",
                         eventType,
                         url
                     );
                 else
                     _logger.LogWarning(
-                        "Webhook başarısız: event={Event} url={Url} status={Status}",
+                        "Webhook failed: event={Event} url={Url} status={Status}",
                         eventType,
                         url,
                         (int)response.StatusCode
@@ -71,7 +71,7 @@ public class WebhookService : IWebhookService
             {
                 _logger.LogError(
                     ex,
-                    "Webhook gönderilemedi: event={Event} url={Url}",
+                    "Webhook could not be sent: event={Event} url={Url}",
                     eventType,
                     url
                 );
@@ -80,8 +80,8 @@ public class WebhookService : IWebhookService
     }
 
     /// <summary>
-    /// Stripe webhook imza doğrulaması.
-    /// Stripe-Signature header'ındaki imzayı, raw body ve webhook secret ile doğrular.
+    /// Stripe webhook signature verification.
+    /// Validates the signature in the Stripe-Signature header against the raw body and webhook secret.
     /// </summary>
     public bool VerifyStripeSignature(string rawBody, string signature, string webhookSecret)
     {

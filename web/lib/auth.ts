@@ -1,4 +1,4 @@
-// lib/auth.ts — Token storage helpers (cookie-based, middleware uyumlu)
+// lib/auth.ts — Token storage helpers (cookie-based, middleware-compatible)
 
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
@@ -6,7 +6,7 @@ const REFRESH_TOKEN_KEY = "refresh_token";
 function setCookie(name: string, value: string, days = 7) {
   if (typeof window === "undefined") return;
   const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  // JWT zaten URL-safe karakterler içerir, encodeURIComponent KULLANMA
+  // JWT already contains URL-safe characters — do NOT use encodeURIComponent
   document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax${
     location.protocol === "https:" ? "; Secure" : ""
   }`;
@@ -17,7 +17,7 @@ function getCookie(name: string): string | null {
   const match = document.cookie
     .split("; ")
     .find((row) => row.startsWith(`${name}=`));
-  // indexOf ile böl — değerin içinde '=' (base64 padding) olabilir
+  // Split with indexOf — the value may contain '=' (base64 padding)
   return match ? match.substring(match.indexOf("=") + 1) : null;
 }
 

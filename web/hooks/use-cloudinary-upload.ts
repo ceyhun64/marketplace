@@ -59,7 +59,7 @@ export function useCloudinaryUpload(): UseCloudinaryUploadReturn {
 
         xhr.onerror = () => {
           setUploading(false);
-          const msg = "Ağ hatası — dosya yüklenemedi";
+          const msg = "Network error — file could not be uploaded";
           setError(msg);
           reject(new Error(msg));
         };
@@ -67,7 +67,7 @@ export function useCloudinaryUpload(): UseCloudinaryUploadReturn {
         setUploading(true);
         setError(null);
         setProgress(0);
-        xhr.open("POST", "/api/upload"); // ← kendi route'umuz
+        xhr.open("POST", "/api/upload"); // ← our own upload route
         xhr.send(formData);
       });
     },

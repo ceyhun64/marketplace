@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/sheet";
 import { useAuth as useAuthStore } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
+import { useUI } from "@/hooks/use-ui";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNotifications } from "@/queries/useNotifications";
 import type { NotifType } from "@/queries/useNotifications";
@@ -194,7 +195,7 @@ function NotificationDropdown() {
           style={{ color: "var(--charcoal-soft)", background: "transparent" }}
           aria-label="Notifications"
         >
-          <Bell className="w-[17px] h-[17px]" strokeWidth={2} />
+          <Bell className="w-4.25 h-4.25" strokeWidth={2} />
           {unreadCount > 0 && (
             <span
               className="absolute top-1 right-1 min-w-[14px] h-3.5 px-0.5 text-[8px] font-bold rounded-full flex items-center justify-center"
@@ -363,6 +364,7 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const cartCount = useCartCount();
   const isMobile  = useIsMobile();
+  const { openCart, openCommand } = useUI();
 
   const [mounted,      setMounted]      = useState(false);
   const [scrolled,     setScrolled]     = useState(false);
@@ -574,7 +576,7 @@ export default function Navbar() {
                     style={{ color: "var(--charcoal-soft)" }}
                     aria-label="Search"
                   >
-                    <Search className="w-[17px] h-[17px]" strokeWidth={2} />
+                    <Search className="w-4.25 h-4.25" strokeWidth={2} />
                   </button>
                 )}
               </div>
@@ -586,20 +588,49 @@ export default function Navbar() {
                 style={{ color: "var(--charcoal-soft)", textDecoration: "none" }}
                 aria-label="Wishlist"
               >
-                <Heart className="w-[17px] h-[17px]" strokeWidth={2} />
+                <Heart className="w-4.25 h-4.25" strokeWidth={2} />
               </Link>
 
               {/* Notifications — logged-in only */}
               {user && <NotificationDropdown />}
 
-              {/* Cart */}
-              <Link
-                href="/cart"
-                className="relative p-2.5 rounded-lg transition-all"
-                style={{ color: "var(--charcoal-soft)", textDecoration: "none" }}
-                aria-label="Cart"
+              {/* Cmd+K search pill — desktop only */}
+              <button
+                type="button"
+                onClick={openCommand}
+                className="hidden lg:flex items-center gap-2 px-3 h-9 rounded-xl border transition-all hover:border-(--border-mid) hover:bg-(--off-white-2)"
+                style={{
+                  border: "1px solid var(--border-light)",
+                  color: "var(--charcoal-mist)",
+                  background: "var(--off-white)",
+                }}
+                aria-label="Open search (Ctrl+K)"
               >
-                <ShoppingBag className="w-[17px] h-[17px]" strokeWidth={2} />
+                <Search className="w-3.5 h-3.5" />
+                <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem" }}>
+                  Search…
+                </span>
+                <kbd
+                  className="ml-1 px-1 py-0.5 rounded text-[9px] font-mono"
+                  style={{
+                    background: "var(--off-white-2)",
+                    border: "1px solid var(--border-light)",
+                    color: "var(--charcoal-mist)",
+                  }}
+                >
+                  ⌘K
+                </kbd>
+              </button>
+
+              {/* Cart — opens micro-cart drawer */}
+              <button
+                type="button"
+                onClick={openCart}
+                className="relative p-2.5 rounded-lg transition-all"
+                style={{ color: "var(--charcoal-soft)", background: "transparent" }}
+                aria-label="Open cart"
+              >
+                <ShoppingBag className="w-4.25 h-4.25" strokeWidth={2} />
                 {mounted && cartCount > 0 && (
                   <span
                     className="absolute top-1 right-1 w-3.5 h-3.5 text-[8px] font-bold rounded-full flex items-center justify-center"
@@ -610,10 +641,10 @@ export default function Navbar() {
                       border: "2px solid var(--off-white)",
                     }}
                   >
-                    {cartCount}
+                    {cartCount > 9 ? "9+" : cartCount}
                   </span>
                 )}
-              </Link>
+              </button>
 
               {/*
                * Hamburger — visible below lg only.
@@ -627,7 +658,7 @@ export default function Navbar() {
                 aria-label="Open navigation menu"
                 aria-expanded={mobileMenuOpen}
               >
-                <Menu className="w-[17px] h-[17px]" strokeWidth={2} />
+                <Menu className="w-4.25 h-4.25" strokeWidth={2} />
               </button>
             </div>
 

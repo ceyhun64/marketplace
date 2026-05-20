@@ -42,7 +42,7 @@ public class UpdateCourierDto
     public bool? IsActive { get; set; }
 }
 
-/// <summary>Kurye anlık konum güncelleme isteği — PUT /api/couriers/me/location</summary>
+/// <summary>Courier real-time location update request — PUT /api/couriers/me/location</summary>
 public class CourierLocationDto
 {
     public double Latitude { get; set; }

@@ -59,7 +59,16 @@ function CommandDialog({
         )}
         showCloseButton={showCloseButton}
       >
-        {children}
+        {/*
+         * CRITICAL: children MUST be inside a <Command> root so that every
+         * CommandPrimitive.* (Input, List, Item…) can subscribe to the cmdk
+         * context store.  Rendering children directly in <DialogContent>
+         * leaves the cmdk context undefined, causing:
+         *   "Cannot read properties of undefined (reading 'subscribe')"
+         */}
+        <Command className="flex size-full flex-col overflow-hidden">
+          {children}
+        </Command>
       </DialogContent>
     </Dialog>
   )

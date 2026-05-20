@@ -10,7 +10,7 @@ export const CLOUDINARY_UPLOAD_PRESET =
 /** Unsigned upload endpoint */
 export const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`;
 
-/** Verilen public_id'den optimize edilmiş görsel URL'i döndürür */
+/** Returns an optimised image URL for a given public_id */
 export function getImageUrl(
   publicId: string,
   options?: { width?: number; height?: number; quality?: number },

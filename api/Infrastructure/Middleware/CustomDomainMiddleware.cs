@@ -4,10 +4,10 @@ using Microsoft.EntityFrameworkCore;
 namespace api.Infrastructure.Middleware;
 
 /// <summary>
-/// Gelen HTTP isteğinin Host header'ını okur ve bunu merchant slug'ına çevirir.
-/// Merchant'ın özel domain'i (mymağaza.com) veya subdomain'i (mağaza.platform.com)
-/// kullanıldığında, ilgili merchant'ı tespit edip HttpContext.Items'a yazar.
-/// StoreController bu değeri okuyarak doğru mağazayı döner.
+/// Reads the Host header of the incoming HTTP request and resolves it to a merchant slug.
+/// When a merchant's custom domain (mystore.com) or subdomain (store.platform.com) is used,
+/// identifies the relevant merchant and writes it to HttpContext.Items.
+/// StoreController reads this value to return the correct store.
 /// </summary>
 public class CustomDomainMiddleware
 {
@@ -22,7 +22,7 @@ public class CustomDomainMiddleware
     {
         var host = context.Request.Host.Host;
 
-        // Localhost ve bilinen platform subdomainleri için atla
+        // Skip for localhost and known platform subdomains
         if (
             !string.IsNullOrEmpty(host)
             && !host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
@@ -33,7 +33,7 @@ public class CustomDomainMiddleware
         {
             try
             {
-                // Önce özel domain eşleşmesine bak (mymağaza.com)
+                // First check for a custom domain match (mystore.com)
                 var merchantByDomain = await db
                     .MerchantProfiles.AsNoTracking()
                     .Where(m => m.IsActive && m.DomainVerified && m.CustomDomain == host)
@@ -47,8 +47,8 @@ public class CustomDomainMiddleware
                 }
                 else
                 {
-                    // Subdomain kontrolü: mağaza.platform.com → slug = mağaza
-                    // Host'u noktalara böl; ilk parça potansiyel slug
+                    // Subdomain check: store.platform.com → slug = store
+                    // Split the host by dots; the first part is the potential slug
                     var parts = host.Split('.');
                     if (parts.Length >= 3)
                     {
@@ -69,7 +69,7 @@ public class CustomDomainMiddleware
             }
             catch
             {
-                // DB hatası durumunda isteği kesme, devam et
+                // Do not interrupt the request on DB error, continue
             }
         }
 

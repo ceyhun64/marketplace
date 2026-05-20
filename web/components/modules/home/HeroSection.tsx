@@ -29,15 +29,19 @@ const FALLBACK: HeroSettings = {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function HeroSection() {
-  const { data, isError, isLoading } = useHeroSettings();
+  // ── All hooks declared unconditionally at the top of the component ──────────
+  // React requires hooks to be called in the same order on every render.
+  // No hook may appear after a conditional return.
+  const { data, isLoading } = useHeroSettings();   // hook 1 (useQuery internally)
+  const [query, setQuery]   = useState("");          // hook 2
 
-  // While loading show a shape-matched skeleton so layout never shifts.
-  if (isLoading) return <HeroSkeleton />;
-
-  // Use live data when ready; fall back if the API errored or returned inactive.
-  const hero: HeroSettings = (data && data.isActive) ? data : FALLBACK;
-
-  const [query, setQuery] = useState("");
+  // ── Derived values (not hooks — safe to compute after the hook block) ───────
+  // When isLoading is true, data is undefined so hero resolves to FALLBACK.
+  // Those values aren't rendered (we return the skeleton below), but computing
+  // them here is harmless and keeps the hook count constant across all renders.
+  const hero: HeroSettings  = (data && data.isActive) ? data : FALLBACK;
+  const headlineLines        = hero.headline.split(/\\n|\n/);
+  const accentWord           = hero.headlineAccent ?? "Marketplace";
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,9 +50,9 @@ export default function HeroSection() {
     }
   };
 
-  // Split headline on literal \n (from DB) or JS newline
-  const headlineLines = hero.headline.split(/\\n|\n/);
-  const accentWord    = hero.headlineAccent ?? "Marketplace";
+  // ── Conditional rendering AFTER all hooks ────────────────────────────────────
+  // The early return is now safe because every hook above has already been called.
+  if (isLoading) return <HeroSkeleton />;
 
   return (
     <section

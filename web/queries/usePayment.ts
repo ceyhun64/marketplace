@@ -17,8 +17,8 @@ export interface CheckoutRequest {
 }
 
 /**
- * Stripe PaymentIntent bilgileri.
- * client_secret → Stripe Elements ile ödeme tamamlanır.
+ * Stripe PaymentIntent details.
+ * client_secret → payment is completed using Stripe Elements.
  */
 export interface CheckoutResponse {
   clientSecret: string;
@@ -42,8 +42,8 @@ export interface RefundRequest {
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
 /**
- * Sipariş için Stripe PaymentIntent oluşturur.
- * Önce /api/orders ile sipariş oluştur, ardından bu hook ile ödeme başlat.
+ * Creates a Stripe PaymentIntent for an order.
+ * First create the order via /api/orders, then initiate payment with this hook.
  */
 export function useInitiateCheckout() {
   return useMutation({
@@ -58,8 +58,8 @@ export function useInitiateCheckout() {
 }
 
 /**
- * Stripe ödeme onayı.
- * Stripe.js confirmCardPayment() başarılı olduktan sonra çağrılır.
+ * Stripe payment confirmation.
+ * Called after Stripe.js confirmCardPayment() succeeds.
  */
 export function useConfirmPayment() {
   return useMutation({
@@ -73,7 +73,7 @@ export function useConfirmPayment() {
   });
 }
 
-/** Admin: iade işlemi */
+/** Admin: process a refund */
 export function useRefund() {
   return useMutation({
     mutationFn: async ({ paymentId, amount, reason }: RefundRequest) => {
@@ -86,7 +86,7 @@ export function useRefund() {
   });
 }
 
-/** Ödeme durumu sorgula */
+/** Query payment status */
 export function usePaymentStatus(orderId: string | undefined) {
   return useQuery({
     queryKey: ["payment-status", orderId],

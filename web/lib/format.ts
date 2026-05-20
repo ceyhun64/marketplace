@@ -1,11 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// lib/format.ts — Para birimi, tarih ve sayı formatlama yardımcıları
+// lib/format.ts — Currency, date, and number formatting helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── Para Birimi ───────────────────────────────────────────────────────────────
+// ── Currency ──────────────────────────────────────────────────────────────────
 
 /**
- * Sayıyı Türk Lirası formatında döndürür.
+ * Formats a number as Turkish Lira.
  * @example formatCurrency(1234.5) → "₺1.234,50"
  */
 export function formatCurrency(
@@ -22,7 +22,7 @@ export function formatCurrency(
 }
 
 /**
- * Kısa para formatı — ondalık yoksa göstermez.
+ * Short price format — omits decimals when the amount is a whole number.
  * @example formatPrice(1234) → "₺1.234"
  */
 export function formatPrice(amount: number): string {
@@ -37,13 +37,13 @@ export function formatPrice(amount: number): string {
   return formatCurrency(amount);
 }
 
-// ── Tarih & Saat ──────────────────────────────────────────────────────────────
+// ── Date & Time ───────────────────────────────────────────────────────────────
 
 /**
- * ISO tarih stringini okunabilir Türkçe tarihe çevirir.
- * @example formatDate("2026-04-22T10:30:00Z") → "22 Nisan 2026"
+ * Converts an ISO date string to a readable long-form date.
+ * @example formatDate("2026-04-22T10:30:00Z") → "22 April 2026"
  */
-export function formatDate(dateStr: string | Date, locale = "tr-TR"): string {
+export function formatDate(dateStr: string | Date, locale = "en-GB"): string {
   const date = typeof dateStr === "string" ? new Date(dateStr) : dateStr;
   return new Intl.DateTimeFormat(locale, {
     day: "numeric",
@@ -53,12 +53,12 @@ export function formatDate(dateStr: string | Date, locale = "tr-TR"): string {
 }
 
 /**
- * Tarih + hours formatı.
- * @example formatDateTime("2026-04-22T10:30:00Z") → "22 Nisan 2026, 13:30"
+ * Date + time format.
+ * @example formatDateTime("2026-04-22T10:30:00Z") → "22 April 2026, 13:30"
  */
 export function formatDateTime(
   dateStr: string | Date,
-  locale = "tr-TR",
+  locale = "en-GB",
 ): string {
   const date = typeof dateStr === "string" ? new Date(dateStr) : dateStr;
   return new Intl.DateTimeFormat(locale, {
@@ -71,12 +71,12 @@ export function formatDateTime(
 }
 
 /**
- * Kısa tarih formatı.
+ * Short date format.
  * @example formatShortDate("2026-04-22") → "22.04.2026"
  */
 export function formatShortDate(dateStr: string | Date): string {
   const date = typeof dateStr === "string" ? new Date(dateStr) : dateStr;
-  return new Intl.DateTimeFormat("tr-TR", {
+  return new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -84,8 +84,8 @@ export function formatShortDate(dateStr: string | Date): string {
 }
 
 /**
- * Göreceli zaman (kaç dakika/hours/gün önce).
- * @example formatRelativeTime("2026-04-21T10:00:00Z") → "1 gün önce"
+ * Relative time (how many minutes/hours/days ago).
+ * @example formatRelativeTime("2026-04-21T10:00:00Z") → "1 day ago"
  */
 export function formatRelativeTime(dateStr: string | Date): string {
   const date = typeof dateStr === "string" ? new Date(dateStr) : dateStr;
@@ -95,7 +95,7 @@ export function formatRelativeTime(dateStr: string | Date): string {
   const diffHour = Math.floor(diffMin / 60);
   const diffDay = Math.floor(diffHour / 24);
 
-  const rtf = new Intl.RelativeTimeFormat("tr", { numeric: "auto" });
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 
   if (diffSec < 60) return rtf.format(-diffSec, "second");
   if (diffMin < 60) return rtf.format(-diffMin, "minute");
@@ -106,24 +106,24 @@ export function formatRelativeTime(dateStr: string | Date): string {
 }
 
 /**
- * ETA tarih aralığını formatlı string'e çevirir.
+ * Formats an ETA date range as a human-readable string.
  * @example formatEtaWindow("2026-04-23T09:00:00Z", "2026-04-23T18:00:00Z")
- *   → "23 Nisan, 09:00 – 18:00"
+ *   → "23 April, 09:00 – 18:00"
  */
 export function formatEtaWindow(start: string, end: string): string {
   const startDate = new Date(start);
   const endDate = new Date(end);
 
-  const dateStr = new Intl.DateTimeFormat("tr-TR", {
+  const dateStr = new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
     month: "long",
   }).format(startDate);
 
-  const startTime = startDate.toLocaleTimeString("tr-TR", {
+  const startTime = startDate.toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
   });
-  const endTime = endDate.toLocaleTimeString("tr-TR", {
+  const endTime = endDate.toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -131,13 +131,13 @@ export function formatEtaWindow(start: string, end: string): string {
   return `${dateStr}, ${startTime} – ${endTime}`;
 }
 
-// ── Sayı ──────────────────────────────────────────────────────────────────────
+// ── Numbers ───────────────────────────────────────────────────────────────────
 
 /**
- * Büyük sayıları kısaltır.
- * @example formatCompactNumber(1500) → "1,5B"
+ * Abbreviates large numbers.
+ * @example formatCompactNumber(1500) → "1.5K"
  */
-export function formatCompactNumber(n: number, locale = "tr-TR"): string {
+export function formatCompactNumber(n: number, locale = "en-GB"): string {
   return new Intl.NumberFormat(locale, {
     notation: "compact",
     maximumFractionDigits: 1,
@@ -145,21 +145,21 @@ export function formatCompactNumber(n: number, locale = "tr-TR"): string {
 }
 
 /**
- * Yüzde formatı.
- * @example formatPercent(0.1567) → "%15,67"
+ * Percentage format.
+ * @example formatPercent(0.1567) → "15.67%"
  */
 export function formatPercent(value: number, decimals = 1): string {
-  return new Intl.NumberFormat("tr-TR", {
+  return new Intl.NumberFormat("en-GB", {
     style: "percent",
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   }).format(value);
 }
 
-// ── Metin ─────────────────────────────────────────────────────────────────────
+// ── Text ──────────────────────────────────────────────────────────────────────
 
 /**
- * Uzun metni belirtilen karakter sayısında keser.
+ * Truncates a long string to the specified character limit.
  */
 export function truncate(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
@@ -167,7 +167,7 @@ export function truncate(text: string, maxLength: number): string {
 }
 
 /**
- * İlk harfi büyütür.
+ * Capitalises the first letter of a string.
  */
 export function capitalize(text: string): string {
   if (!text) return "";
@@ -175,8 +175,8 @@ export function capitalize(text: string): string {
 }
 
 /**
- * Slug'ı okunabilir başlığa çevirir.
- * @example slugToTitle("erkek-giyim") → "Erkek Giyim"
+ * Converts a slug to a readable title.
+ * @example slugToTitle("mens-clothing") → "Mens Clothing"
  */
 export function slugToTitle(slug: string): string {
   return slug
@@ -186,7 +186,7 @@ export function slugToTitle(slug: string): string {
 }
 
 /**
- * Metni slug'a çevirir (Türkçe karakter desteğiyle).
+ * Converts text to a URL slug (with Turkish character support).
  */
 export function toSlug(text: string): string {
   const trMap: Record<string, string> = {
@@ -212,7 +212,7 @@ export function toSlug(text: string): string {
     .replace(/^-|-$/g, "");
 }
 
-// ── Dosya boyutu ──────────────────────────────────────────────────────────────
+// ── File size ─────────────────────────────────────────────────────────────────
 
 export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -220,10 +220,10 @@ export function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// ── Phone ───────────────────────────────────────────────────────────────────
+// ── Phone ─────────────────────────────────────────────────────────────────────
 
 /**
- * Türk telefon numarasını formatlar.
+ * Formats a Turkish phone number.
  * @example formatPhone("05321234567") → "0532 123 45 67"
  */
 export function formatPhone(phone: string): string {
@@ -234,15 +234,15 @@ export function formatPhone(phone: string): string {
   return phone;
 }
 
-// ── Kargo takip numarası ──────────────────────────────────────────────────────
+// ── Tracking number ───────────────────────────────────────────────────────────
 
 /**
- * Takip numarasını gruplar halinde gösterir.
+ * Displays a tracking number in grouped segments.
  * @example formatTrackingNumber("MKT20260422ABCD") → "MKT-2026-0422-ABCD"
  */
 export function formatTrackingNumber(trackingNo: string): string {
-  // Zaten formatlanmışsa olduğu gibi döndür
+  // Return as-is if already formatted
   if (trackingNo.includes("-")) return trackingNo;
-  // 4'lü gruplar halinde böl
+  // Split into groups of 4
   return trackingNo.match(/.{1,4}/g)?.join("-") ?? trackingNo;
 }

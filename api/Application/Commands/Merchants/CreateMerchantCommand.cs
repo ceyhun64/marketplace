@@ -37,7 +37,7 @@ public class CreateMerchantCommandHandler
         );
 
         if (emailExists)
-            throw new InvalidOperationException("Bu e-posta adresi zaten kullanımda.");
+            throw new InvalidOperationException("This email address is already in use.");
 
         var user = new User
         {
@@ -51,7 +51,7 @@ public class CreateMerchantCommandHandler
 
         var slug = GenerateSlug(request.StoreName);
 
-        // Slug çakışması durumunda sayı ekle
+        // Append a number if there is a slug collision
         int suffix = 1;
         var baseSlug = slug;
         while (await _db.MerchantProfiles.AnyAsync(m => m.Slug == slug, cancellationToken))
