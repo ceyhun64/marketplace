@@ -352,17 +352,39 @@ public class OrdersController(
         order.CancellationReason = dto.Reason;
         order.UpdatedAt = DateTime.UtcNow;
 
-        // Restore stock for all items in the cancelled order
-        var productIds = order.Items.Select(i => i.ProductId).ToList();
+        // Restore stock — variant-aware: if an item was placed against a variant,
+        // restore to variant.Stock (not base product.Stock).
+        var productIds = order.Items.Select(i => i.ProductId).Distinct().ToList();
+        var variantIds = order
+            .Items.Where(i => i.VariantId.HasValue)
+            .Select(i => i.VariantId!.Value)
+            .Distinct()
+            .ToList();
+
         var products = await db.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
+        var variants = variantIds.Any()
+            ? await db.ProductVariants.Where(v => variantIds.Contains(v.Id)).ToListAsync()
+            : new List<ProductVariant>();
 
         foreach (var item in order.Items)
         {
-            var product = products.FirstOrDefault(p => p.Id == item.ProductId);
-            if (product != null)
+            if (item.VariantId.HasValue)
             {
-                product.Stock += item.Quantity;
-                product.UpdatedAt = DateTime.UtcNow;
+                var variant = variants.FirstOrDefault(v => v.Id == item.VariantId.Value);
+                if (variant != null)
+                {
+                    variant.Stock += item.Quantity;
+                    variant.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+            else
+            {
+                var product = products.FirstOrDefault(p => p.Id == item.ProductId);
+                if (product != null)
+                {
+                    product.Stock += item.Quantity;
+                    product.UpdatedAt = DateTime.UtcNow;
+                }
             }
         }
 
@@ -381,14 +403,7 @@ public class OrdersController(
         [FromQuery] int limit = 20
     )
     {
-        var query = db
-            .Orders.Include(o => o.Items)
-                .ThenInclude(i => i.Product)
-                    .ThenInclude(p => p.Merchant)
-            .Include(o => o.Customer)
-            .Include(o => o.Shipment)
-            .Include(o => o.Invoice)
-            .AsQueryable();
+        var query = db.Orders.AsQueryable();
 
         if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, out var ps))
             query = query.Where(o => o.Status == ps);
@@ -397,16 +412,102 @@ public class OrdersController(
             query = query.Where(o => o.Items.Any(i => i.MerchantId == merchantId.Value));
 
         var total = await query.CountAsync();
+
+        // Project to a DTO in SQL — no Include chain, no N+1 joins
         var orders = await query
             .OrderByDescending(o => o.CreatedAt)
             .Skip((page - 1) * limit)
             .Take(limit)
+            .Select(o => new
+            {
+                o.Id,
+                o.CustomerId,
+                CustomerName = (o.Customer.FirstName + " " + o.Customer.LastName).Trim(),
+                CustomerEmail = o.Customer.Email,
+                o.Status,
+                o.Source,
+                o.TotalAmount,
+                o.ShippingAmount,
+                o.PaymentId,
+                o.CreatedAt,
+                o.UpdatedAt,
+                o.RecipientName,
+                o.RecipientPhone,
+                o.AddressLine,
+                o.City,
+                o.District,
+                o.PostalCode,
+                o.CancellationReason,
+                ItemCount = o.Items.Count,
+                TrackingNumber = o.Shipment != null ? o.Shipment.TrackingNumber : null,
+                ShipmentStatus = o.Shipment != null ? (ShipmentStatus?)o.Shipment.Status : null,
+                InvoiceNumber = o.Invoice != null ? o.Invoice.InvoiceNumber : null,
+                VatAmount = o.Invoice != null ? (decimal?)o.Invoice.VatAmount : null,
+                FirstMerchantId = o.Items.Select(i => (Guid?)i.MerchantId).FirstOrDefault(),
+                FirstMerchantStoreName = o.Items.Select(i => i.Product.Merchant.StoreName)
+                    .FirstOrDefault()
+                    ?? string.Empty,
+                Items = o
+                    .Items.Select(i => new
+                    {
+                        i.Id,
+                        i.ProductId,
+                        i.ProductName,
+                        i.ProductImage,
+                        i.MerchantId,
+                        MerchantStoreName = i.Product.Merchant.StoreName,
+                        i.Quantity,
+                        i.UnitPrice,
+                        i.VariantId,
+                        i.VariantAttributes,
+                    })
+                    .ToList(),
+            })
             .ToListAsync();
 
         return Ok(
             new
             {
-                data = orders.Select(MapOrderToDto),
+                data = orders.Select(o => new OrderDto
+                {
+                    Id = o.Id,
+                    CustomerId = o.CustomerId,
+                    CustomerName = o.CustomerName,
+                    MerchantId = o.FirstMerchantId,
+                    MerchantStoreName = o.FirstMerchantStoreName,
+                    Source = o.Source.ToApiString(),
+                    Status = o.Status.ToApiString(),
+                    TotalAmount = o.TotalAmount,
+                    ShippingCost = o.ShippingAmount,
+                    VatAmount = o.VatAmount ?? 0,
+                    ShippingRate = string.Empty,
+                    PaymentId = o.PaymentId,
+                    ShippingAddress = new ShippingAddressDto
+                    {
+                        FullName = o.RecipientName,
+                        Phone = o.RecipientPhone,
+                        AddressLine = o.AddressLine,
+                        City = o.City,
+                        District = o.District,
+                        PostalCode = o.PostalCode,
+                    },
+                    Items = o
+                        .Items.Select(i => new OrderItemDto
+                        {
+                            Id = i.Id,
+                            ProductId = i.ProductId,
+                            ProductName = i.ProductName,
+                            ProductImageUrl = i.ProductImage,
+                            MerchantId = i.MerchantId,
+                            MerchantStoreName = i.MerchantStoreName,
+                            Quantity = i.Quantity,
+                            UnitPrice = i.UnitPrice,
+                            SubTotal = i.UnitPrice * i.Quantity,
+                        })
+                        .ToList(),
+                    CreatedAt = o.CreatedAt,
+                    UpdatedAt = o.UpdatedAt,
+                }),
                 pagination = new
                 {
                     page,

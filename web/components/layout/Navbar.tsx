@@ -479,13 +479,6 @@ export default function Navbar() {
 
   return (
     <>
-      {/*
-       * data-fixed-header: used by globals.css to compensate for the
-       * scrollbar-width shift that Radix adds when a dropdown opens.
-       *
-       * Outer padding uses Tailwind classes (not inline style) so responsive
-       * breakpoints work correctly.
-       */}
       <header
         data-fixed-header
         className="flex flex-col items-center pointer-events-none px-3 sm:px-5 transition-all duration-300 ease-out"

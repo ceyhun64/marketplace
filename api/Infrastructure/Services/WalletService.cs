@@ -17,30 +17,26 @@ public class WalletService : IWalletService
 
     public async Task<MerchantWallet> GetOrCreateWalletAsync(Guid merchantId)
     {
-        var wallet = await _db.MerchantWallets
-            .FirstOrDefaultAsync(w => w.MerchantId == merchantId);
+        // Use INSERT ... ON CONFLICT DO NOTHING to eliminate the TOCTOU race condition.
+        // Two concurrent calls for the same merchant will both try to insert;
+        // only one will succeed and the other will silently no-op.
+        var newId = Guid.NewGuid();
+        var now = DateTime.UtcNow;
+        await _db.Database.ExecuteSqlInterpolatedAsync(
+            $@"
+            INSERT INTO ""MerchantWallets"" (""Id"",""MerchantId"",""PendingBalance"",""AvailableBalance"",""TotalWithdrawn"",""CreatedAt"",""UpdatedAt"")
+            VALUES ({newId},{merchantId},0,0,0,{now},{now})
+            ON CONFLICT (""MerchantId"") DO NOTHING"
+        );
 
-        if (wallet != null) return wallet;
-
-        wallet = new MerchantWallet
-        {
-            Id = Guid.NewGuid(),
-            MerchantId = merchantId,
-            PendingBalance = 0m,
-            AvailableBalance = 0m,
-            TotalWithdrawn = 0m,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
-        _db.MerchantWallets.Add(wallet);
-        await _db.SaveChangesAsync();
-        return wallet;
+        return await _db.MerchantWallets.FirstAsync(w => w.MerchantId == merchantId);
     }
 
     public async Task HoldEscrowAsync(VendorOrder vendorOrder)
     {
         await using var tx = await _db.Database.BeginTransactionAsync(
-            System.Data.IsolationLevel.RepeatableRead);
+            System.Data.IsolationLevel.RepeatableRead
+        );
         try
         {
             var wallet = await GetOrCreateWalletAsync(vendorOrder.MerchantId);
@@ -72,7 +68,10 @@ public class WalletService : IWalletService
 
             _logger.LogInformation(
                 "Escrow held: MerchantId={MerchantId} Amount={Amount} VendorOrderId={VendorOrderId}",
-                vendorOrder.MerchantId, vendorOrder.MerchantNetAmount, vendorOrder.Id);
+                vendorOrder.MerchantId,
+                vendorOrder.MerchantNetAmount,
+                vendorOrder.Id
+            );
         }
         catch
         {
@@ -84,7 +83,8 @@ public class WalletService : IWalletService
     public async Task SettleVendorOrderAsync(VendorOrder vendorOrder)
     {
         await using var tx = await _db.Database.BeginTransactionAsync(
-            System.Data.IsolationLevel.RepeatableRead);
+            System.Data.IsolationLevel.RepeatableRead
+        );
         try
         {
             var wallet = await GetOrCreateWalletAsync(vendorOrder.MerchantId);
@@ -94,7 +94,9 @@ public class WalletService : IWalletService
             if (amount <= 0)
             {
                 _logger.LogWarning(
-                    "Settlement skipped (zero/negative amount): VendorOrderId={Id}", vendorOrder.Id);
+                    "Settlement skipped (zero/negative amount): VendorOrderId={Id}",
+                    vendorOrder.Id
+                );
                 await tx.RollbackAsync();
                 return;
             }
@@ -130,7 +132,10 @@ public class WalletService : IWalletService
 
             _logger.LogInformation(
                 "Settlement complete: MerchantId={MerchantId} Amount={Amount} VendorOrderId={VendorOrderId}",
-                vendorOrder.MerchantId, amount, vendorOrder.Id);
+                vendorOrder.MerchantId,
+                amount,
+                vendorOrder.Id
+            );
         }
         catch
         {
@@ -139,10 +144,16 @@ public class WalletService : IWalletService
         }
     }
 
-    public async Task DebitRefundAsync(Guid merchantId, decimal amount, Guid orderId, string reference)
+    public async Task DebitRefundAsync(
+        Guid merchantId,
+        decimal amount,
+        Guid orderId,
+        string reference
+    )
     {
         await using var tx = await _db.Database.BeginTransactionAsync(
-            System.Data.IsolationLevel.RepeatableRead);
+            System.Data.IsolationLevel.RepeatableRead
+        );
         try
         {
             var wallet = await GetOrCreateWalletAsync(merchantId);
@@ -185,10 +196,15 @@ public class WalletService : IWalletService
         }
     }
 
-    public async Task<WalletTransaction> WithdrawAsync(Guid merchantId, decimal amount, string reference)
+    public async Task<WalletTransaction> WithdrawAsync(
+        Guid merchantId,
+        decimal amount,
+        string reference
+    )
     {
         await using var tx = await _db.Database.BeginTransactionAsync(
-            System.Data.IsolationLevel.RepeatableRead);
+            System.Data.IsolationLevel.RepeatableRead
+        );
         try
         {
             var wallet = await GetOrCreateWalletAsync(merchantId);
@@ -230,10 +246,14 @@ public class WalletService : IWalletService
         }
     }
 
-    public async Task<List<WalletTransaction>> GetTransactionsAsync(Guid merchantId, int page, int limit)
+    public async Task<List<WalletTransaction>> GetTransactionsAsync(
+        Guid merchantId,
+        int page,
+        int limit
+    )
     {
-        return await _db.WalletTransactions
-            .Where(t => t.MerchantId == merchantId)
+        return await _db
+            .WalletTransactions.Where(t => t.MerchantId == merchantId)
             .OrderByDescending(t => t.CreatedAt)
             .Skip((page - 1) * limit)
             .Take(limit)

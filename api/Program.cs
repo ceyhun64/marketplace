@@ -61,7 +61,9 @@ try
     // ── Stripe — global API key, set once at startup ─────────────────────────
     Stripe.StripeConfiguration.ApiKey =
         config["STRIPE_SECRET_KEY"]
-        ?? throw new InvalidOperationException("STRIPE_SECRET_KEY environment variable is not defined.");
+        ?? throw new InvalidOperationException(
+            "STRIPE_SECRET_KEY environment variable is not defined."
+        );
 
     // ── Twilio — global client initialization, set once at startup ───────────
     var twilioSid = config["TWILIO_ACCOUNT_SID"];
@@ -236,6 +238,7 @@ try
     builder.Services.AddScoped<IInvoiceGeneratorService, InvoiceGeneratorService>();
     // Module 2: Wallet & Escrow
     builder.Services.AddScoped<IWalletService, WalletService>();
+    builder.Services.AddScoped<ICommissionService, CommissionService>();
 
     // ── Milestone 2: Webhook Service ─────────────────────────────────────────
     builder.Services.AddHttpClient("webhook");
@@ -271,7 +274,8 @@ try
             // Serialize enums as SCREAMING_SNAKE_CASE strings (matches frontend TypeScript union types).
             // Applies to enum-typed properties in anonymous objects and DTOs that don't call .ToString() manually.
             options.JsonSerializerOptions.Converters.Add(
-                new JsonStringEnumConverter(ScreamingSnakeCaseNamingPolicy.Instance));
+                new JsonStringEnumConverter(ScreamingSnakeCaseNamingPolicy.Instance)
+            );
         });
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(c =>

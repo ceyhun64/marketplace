@@ -87,7 +87,7 @@ public class WalletController : ControllerBase
         );
     }
 
-    /// <summary>POST /api/wallet/withdraw — Request a withdrawal</summary>
+    /// <summary>POST /api/wallet/withdraw — Submit a withdrawal request (pending admin approval)</summary>
     [HttpPost("withdraw")]
     public async Task<IActionResult> Withdraw([FromBody] WithdrawRequestDto dto)
     {
@@ -98,28 +98,105 @@ public class WalletController : ControllerBase
         if (dto.Amount <= 0)
             return BadRequest(new { message = "Withdrawal amount must be positive." });
 
-        try
-        {
-            var txn = await _wallet.WithdrawAsync(
-                merchantId.Value,
-                dto.Amount,
-                dto.Reference ?? Guid.NewGuid().ToString("N")
-            );
-            return Ok(
+        if (string.IsNullOrWhiteSpace(dto.BankIban))
+            return BadRequest(new { message = "Bank IBAN is required." });
+
+        if (string.IsNullOrWhiteSpace(dto.BankAccountName))
+            return BadRequest(new { message = "Bank account name is required." });
+
+        var wallet = await _wallet.GetOrCreateWalletAsync(merchantId.Value);
+
+        if (wallet.AvailableBalance < dto.Amount)
+            return BadRequest(
                 new
                 {
-                    message = "Withdrawal recorded successfully.",
-                    transactionId = txn.Id,
-                    amount = txn.Amount,
-                    availableAfter = txn.AvailableAfter,
+                    message = $"Insufficient available balance. Available: {wallet.AvailableBalance:F2}",
                 }
             );
-        }
-        catch (InvalidOperationException ex)
+
+        // Create a pending WithdrawalRequest — funds are NOT debited until admin approves
+        var withdrawalRequest = new api.Domain.Entities.WithdrawalRequest
         {
-            return BadRequest(new { message = ex.Message });
-        }
+            Id = Guid.NewGuid(),
+            MerchantId = merchantId.Value,
+            WalletId = wallet.Id,
+            Amount = dto.Amount,
+            BankIban = dto.BankIban.Trim().ToUpper(),
+            BankAccountName = dto.BankAccountName.Trim(),
+            BankName = dto.BankName,
+            Note = dto.Note,
+            Status = api.Domain.Entities.WithdrawalStatus.Pending,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+
+        _db.WithdrawalRequests.Add(withdrawalRequest);
+        await _db.SaveChangesAsync();
+
+        return Ok(
+            new
+            {
+                message = "Withdrawal request submitted. Pending admin approval.",
+                requestId = withdrawalRequest.Id,
+                amount = withdrawalRequest.Amount,
+                status = withdrawalRequest.Status.ToString(),
+            }
+        );
+    }
+
+    /// <summary>GET /api/wallet/withdrawals — Merchant's own withdrawal request history</summary>
+    [HttpGet("withdrawals")]
+    public async Task<IActionResult> GetWithdrawalRequests(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20
+    )
+    {
+        var merchantId = _currentUser.MerchantId;
+        if (merchantId == null)
+            return Forbid();
+
+        var query = _db
+            .WithdrawalRequests.Where(w => w.MerchantId == merchantId.Value)
+            .OrderByDescending(w => w.CreatedAt);
+
+        var total = await query.CountAsync();
+        var items = await query
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .Select(w => new
+            {
+                w.Id,
+                w.Amount,
+                w.BankIban,
+                w.BankAccountName,
+                w.BankName,
+                Status = w.Status.ToString(),
+                w.Note,
+                w.AdminNote,
+                w.ProcessedAt,
+                w.CreatedAt,
+            })
+            .ToListAsync();
+
+        return Ok(
+            new
+            {
+                data = items,
+                pagination = new
+                {
+                    page,
+                    limit,
+                    total,
+                },
+            }
+        );
     }
 }
 
-public record WithdrawRequestDto(decimal Amount, string? Reference);
+public record WithdrawRequestDto(
+    decimal Amount,
+    string BankIban,
+    string BankAccountName,
+    string? BankName,
+    string? Note
+);

@@ -5,6 +5,7 @@ using api.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Stripe;
 
 namespace api.Controllers;
 
@@ -15,11 +16,17 @@ public class MerchantsController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly ICurrentUserService _currentUser;
+    private readonly IConfiguration _config;
 
-    public MerchantsController(AppDbContext db, ICurrentUserService currentUser)
+    public MerchantsController(
+        AppDbContext db,
+        ICurrentUserService currentUser,
+        IConfiguration config
+    )
     {
         _db = db;
         _currentUser = currentUser;
+        _config = config;
     }
 
     // ── PROFILE ──────────────────────────────────────────────────────────────
@@ -673,6 +680,117 @@ public class MerchantsController : ControllerBase
 
     private async Task<MerchantProfile?> GetCurrentMerchantAsync() =>
         await _db.MerchantProfiles.FirstOrDefaultAsync(m => m.UserId == _currentUser.UserId);
+
+    // ── Stripe Connect Onboarding ─────────────────────────────────────────────
+
+    /// <summary>
+    /// POST /api/merchants/connect/onboard
+    /// Creates a Stripe Express account and returns an onboarding link.
+    /// The merchant must complete Stripe's onboarding before payouts can be received.
+    /// </summary>
+    [HttpPost("connect/onboard")]
+    public async Task<IActionResult> StripeConnectOnboard()
+    {
+        var merchant = await GetCurrentMerchantAsync();
+        if (merchant == null)
+            return NotFound(new { message = "Merchant profile not found." });
+
+        // If already onboarded, return the status
+        if (merchant.StripeOnboardingComplete)
+            return Ok(
+                new { onboardingComplete = true, stripeAccountId = merchant.StripeAccountId }
+            );
+
+        var stripeKey =
+            _config["Stripe:SecretKey"]
+            ?? throw new InvalidOperationException("Stripe secret key not configured.");
+
+        StripeClient.ApiKey = stripeKey;
+
+        // Create a Stripe Express account if not already created
+        if (string.IsNullOrEmpty(merchant.StripeAccountId))
+        {
+            var accountService = new Stripe.AccountService();
+            var account = await accountService.CreateAsync(
+                new Stripe.AccountCreateOptions
+                {
+                    Type = "express",
+                    Country = merchant.Country ?? "TR",
+                    Email = (await _db.Users.FindAsync(merchant.UserId))?.Email,
+                    Capabilities = new Stripe.AccountCapabilitiesOptions
+                    {
+                        CardPayments = new Stripe.AccountCapabilitiesCardPaymentsOptions
+                        {
+                            Requested = true,
+                        },
+                        Transfers = new Stripe.AccountCapabilitiesTransfersOptions
+                        {
+                            Requested = true,
+                        },
+                    },
+                }
+            );
+
+            merchant.StripeAccountId = account.Id;
+            await _db.SaveChangesAsync();
+        }
+
+        // Generate an onboarding link
+        var linkService = new Stripe.AccountLinkService();
+        var link = await linkService.CreateAsync(
+            new Stripe.AccountLinkCreateOptions
+            {
+                Account = merchant.StripeAccountId,
+                RefreshUrl = $"{_config["App:BaseUrl"]}/merchant/stripe/refresh",
+                ReturnUrl = $"{_config["App:BaseUrl"]}/merchant/stripe/return",
+                Type = "account_onboarding",
+            }
+        );
+
+        return Ok(
+            new
+            {
+                onboardingComplete = false,
+                stripeAccountId = merchant.StripeAccountId,
+                onboardingUrl = link.Url,
+            }
+        );
+    }
+
+    /// <summary>
+    /// POST /api/merchants/connect/onboard/complete
+    /// Called after Stripe redirects back — checks if onboarding is done.
+    /// </summary>
+    [HttpPost("connect/onboard/complete")]
+    public async Task<IActionResult> StripeConnectComplete()
+    {
+        var merchant = await GetCurrentMerchantAsync();
+        if (merchant == null || string.IsNullOrEmpty(merchant.StripeAccountId))
+            return BadRequest(new { message = "Stripe onboarding not started." });
+
+        var stripeKey =
+            _config["Stripe:SecretKey"]
+            ?? throw new InvalidOperationException("Stripe secret key not configured.");
+        StripeClient.ApiKey = stripeKey;
+
+        var accountService = new Stripe.AccountService();
+        var account = await accountService.GetAsync(merchant.StripeAccountId);
+
+        if (account.DetailsSubmitted)
+        {
+            merchant.StripeOnboardingComplete = true;
+            merchant.StripeOnboardedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+        }
+
+        return Ok(
+            new
+            {
+                onboardingComplete = merchant.StripeOnboardingComplete,
+                stripeAccountId = merchant.StripeAccountId,
+            }
+        );
+    }
 }
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────

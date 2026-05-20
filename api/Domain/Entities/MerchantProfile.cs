@@ -19,6 +19,17 @@ public class MerchantProfile
     public int HandlingHours { get; set; } = 24;
     public bool IsActive { get; set; } = true;
     public bool IsSuspended { get; set; } = false;
+
+    // ── Stripe Connect ──────────────────────────────────────────────────────
+    /// <summary>Stripe Express connected account ID, e.g. "acct_1MoKgHJhXxxx"</summary>
+    public string? StripeAccountId { get; set; }
+    public bool StripeOnboardingComplete { get; set; } = false;
+    public DateTime? StripeOnboardedAt { get; set; }
+
+    // ── Product moderation ──────────────────────────────────────────────────
+    /// <summary>KVKK/GDPR: date the merchant accepted the terms.</summary>
+    public DateTime? TermsAcceptedAt { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
