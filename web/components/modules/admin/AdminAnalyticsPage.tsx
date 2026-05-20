@@ -65,7 +65,7 @@ export default function AdminAnalyticsPage() {
       label: "Total GMV",
       value:
         overview?.totalGmv != null
-          ? `₺${(overview.totalGmv / 1_000_000).toFixed(2)}M`
+          ? `$${(overview.totalGmv / 1_000_000).toFixed(2)}M`
           : "—",
       sub: null as string | null,
     },
@@ -136,7 +136,9 @@ export default function AdminAnalyticsPage() {
     <div className="space-y-8">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-(--text-primary)">Analytics</h1>
+          <h1 className="text-2xl font-semibold text-(--text-primary)">
+            Analytics
+          </h1>
           <p className="text-sm text-(--text-tertiary) mt-1">
             Platform-wide performance overview
           </p>
@@ -172,10 +174,14 @@ export default function AdminAnalyticsPage() {
             {overviewLoading ? (
               <Skeleton className="h-8 w-24 mt-2" />
             ) : (
-              <p className="text-2xl font-bold text-(--text-primary) mt-2">{s.value}</p>
+              <p className="text-2xl font-bold text-(--text-primary) mt-2">
+                {s.value}
+              </p>
             )}
             {s.sub && !overviewLoading && (
-              <p className="text-xs mt-1 font-medium text-(--text-tertiary)">{s.sub}</p>
+              <p className="text-xs mt-1 font-medium text-(--text-tertiary)">
+                {s.sub}
+              </p>
             )}
           </div>
         ))}
@@ -185,7 +191,7 @@ export default function AdminAnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5">
           <h2 className="text-sm font-semibold text-(--text-secondary) mb-4">
-            Revenue (₺)
+            Revenue ($)
           </h2>
           {revenueLoading || overviewLoading ? (
             <ChartSkeleton />
@@ -194,7 +200,9 @@ export default function AdminAnalyticsPage() {
           )}
         </div>
         <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5">
-          <h2 className="text-sm font-semibold text-(--text-secondary) mb-4">Orders</h2>
+          <h2 className="text-sm font-semibold text-(--text-secondary) mb-4">
+            Orders
+          </h2>
           {revenueLoading || overviewLoading ? (
             <ChartSkeleton />
           ) : (
@@ -240,7 +248,7 @@ export default function AdminAnalyticsPage() {
                   label: "Total GMV",
                   value:
                     overview?.totalGmv != null
-                      ? `₺${(overview.totalGmv / 1_000_000).toFixed(2)}M`
+                      ? `$${(overview.totalGmv / 1_000_000).toFixed(2)}M`
                       : "—",
                 },
               ].map((item) => (

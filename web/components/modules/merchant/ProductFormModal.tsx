@@ -110,7 +110,7 @@ export default function ProductFormModal({
       if (isEdit && product) {
         await updateMutation.mutateAsync({ id: product.id, ...payload });
       } else {
-        const result = await createMutation.mutateAsync(payload) as any;
+        const result = (await createMutation.mutateAsync(payload)) as any;
         savedProductId = result?.id ?? result?.data?.id;
       }
 
@@ -143,7 +143,8 @@ export default function ProductFormModal({
     }
   };
 
-  const submitting = createMutation.isPending || updateMutation.isPending || savingVariants;
+  const submitting =
+    createMutation.isPending || updateMutation.isPending || savingVariants;
 
   return (
     <div
@@ -208,124 +209,126 @@ export default function ProductFormModal({
             />
           )}
 
-          {activeTab === "details" && <>
-          {/* Images */}
-          <MultiImageUploader
-            label="Product Images"
-            folder="marketplace/products"
-            maxFiles={6}
-            onUpdate={(urls) => set("images", urls)}
-          />
-
-          {/* Name */}
-          <Field label="Product Name" required>
-            <input
-              type="text"
-              placeholder="E.g. Bluetooth Headphones"
-              value={form.name}
-              onChange={(e) => set("name", e.target.value)}
-              className={inputCls}
-            />
-          </Field>
-
-          {/* Description */}
-          <Field label="Description">
-            <textarea
-              rows={3}
-              placeholder="Short product description..."
-              value={form.description}
-              onChange={(e) => set("description", e.target.value)}
-              className={`${inputCls} resize-none`}
-            />
-          </Field>
-
-          {/* Category */}
-          <Field label="Category" required>
-            <select
-              value={form.categoryId}
-              onChange={(e) => set("categoryId", e.target.value)}
-              className={inputCls}
-            >
-              <option value="">Select a category...</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          {/* Price & Stock */}
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Price (₺)" required>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                value={form.price}
-                onChange={(e) => set("price", e.target.value)}
-                className={inputCls}
+          {activeTab === "details" && (
+            <>
+              {/* Images */}
+              <MultiImageUploader
+                label="Product Images"
+                folder="marketplace/products"
+                maxFiles={6}
+                onUpdate={(urls) => set("images", urls)}
               />
-            </Field>
-            <Field label="Stock Quantity" required>
-              <input
-                type="number"
-                min="0"
-                placeholder="0"
-                value={form.stock}
-                onChange={(e) => set("stock", e.target.value)}
-                className={inputCls}
-              />
-            </Field>
-          </div>
 
-          {/* Tags */}
-          <Field label="Tags" hint="comma separated">
-            <input
-              type="text"
-              placeholder="electronics, audio, wireless"
-              value={form.tags}
-              onChange={(e) => set("tags", e.target.value)}
-              className={inputCls}
-            />
-          </Field>
+              {/* Name */}
+              <Field label="Product Name" required>
+                <input
+                  type="text"
+                  placeholder="E.g. Bluetooth Headphones"
+                  value={form.name}
+                  onChange={(e) => set("name", e.target.value)}
+                  className={inputCls}
+                />
+              </Field>
 
-          {/* Publish Channels */}
-          <div className="rounded-xl border border-(--border-light) p-4 space-y-3 bg-(--bg-sunken)/50">
-            <p className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-widest">
-              Publish Channels
-            </p>
-            <ToggleRow
-              label="Publish to My E-Store"
-              description="Visible on your store page"
-              checked={form.publishToStore}
-              onChange={(v) => set("publishToStore", v)}
-              color="bg-(--charcoal-mid)"
-            />
-            <ToggleRow
-              label="Publish to Marketplace"
-              description={
-                canPublishToMarket
-                  ? "Visible in general listing (approval may be required)"
-                  : "Pro or Enterprise plan required"
-              }
-              checked={form.publishToMarket && canPublishToMarket}
-              onChange={(v) => {
-                if (!canPublishToMarket) return;
-                set("publishToMarket", v);
-              }}
-              color="bg-(--info)"
-              disabled={!canPublishToMarket}
-            />
-          </div>
+              {/* Description */}
+              <Field label="Description">
+                <textarea
+                  rows={3}
+                  placeholder="Short product description..."
+                  value={form.description}
+                  onChange={(e) => set("description", e.target.value)}
+                  className={`${inputCls} resize-none`}
+                />
+              </Field>
 
-          {error && (
-            <p className="text-sm text-(--danger) bg-(--danger-bg) rounded-lg px-3 py-2 border border-(--danger-border)">
-              {error}
-            </p>
+              {/* Category */}
+              <Field label="Category" required>
+                <select
+                  value={form.categoryId}
+                  onChange={(e) => set("categoryId", e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="">Select a category...</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              {/* Price & Stock */}
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Price ($)" required>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={form.price}
+                    onChange={(e) => set("price", e.target.value)}
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="Stock Quantity" required>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={form.stock}
+                    onChange={(e) => set("stock", e.target.value)}
+                    className={inputCls}
+                  />
+                </Field>
+              </div>
+
+              {/* Tags */}
+              <Field label="Tags" hint="comma separated">
+                <input
+                  type="text"
+                  placeholder="electronics, audio, wireless"
+                  value={form.tags}
+                  onChange={(e) => set("tags", e.target.value)}
+                  className={inputCls}
+                />
+              </Field>
+
+              {/* Publish Channels */}
+              <div className="rounded-xl border border-(--border-light) p-4 space-y-3 bg-(--bg-sunken)/50">
+                <p className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-widest">
+                  Publish Channels
+                </p>
+                <ToggleRow
+                  label="Publish to My E-Store"
+                  description="Visible on your store page"
+                  checked={form.publishToStore}
+                  onChange={(v) => set("publishToStore", v)}
+                  color="bg-(--charcoal-mid)"
+                />
+                <ToggleRow
+                  label="Publish to Marketplace"
+                  description={
+                    canPublishToMarket
+                      ? "Visible in general listing (approval may be required)"
+                      : "Pro or Enterprise plan required"
+                  }
+                  checked={form.publishToMarket && canPublishToMarket}
+                  onChange={(v) => {
+                    if (!canPublishToMarket) return;
+                    set("publishToMarket", v);
+                  }}
+                  color="bg-(--info)"
+                  disabled={!canPublishToMarket}
+                />
+              </div>
+
+              {error && (
+                <p className="text-sm text-(--danger) bg-(--danger-bg) rounded-lg px-3 py-2 border border-(--danger-border)">
+                  {error}
+                </p>
+              )}
+            </>
           )}
-          </> }
         </div>
 
         {/* Footer */}

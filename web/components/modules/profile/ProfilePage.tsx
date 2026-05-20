@@ -376,8 +376,7 @@ export default function ProfilePage() {
   const displayName = meData
     ? `${meData.firstName} ${meData.lastName}`.trim() || meData.email
     : user?.name || user?.email || "";
-  const initials =
-    displayName.charAt(0)?.toUpperCase() ?? "?";
+  const initials = displayName.charAt(0)?.toUpperCase() ?? "?";
 
   const roleLabel =
     meData?.role === "Merchant"
@@ -456,7 +455,11 @@ export default function ProfilePage() {
             <div className="flex items-center gap-5 text-center">
               <div>
                 <p className="font-bold text-[1.25rem] text-(--text-primary)">
-                  {ordersLoading ? <Skeleton className="h-6 w-8 inline-block" /> : orders.length}
+                  {ordersLoading ? (
+                    <Skeleton className="h-6 w-8 inline-block" />
+                  ) : (
+                    orders.length
+                  )}
                 </p>
                 <p className="font-mono text-[10px] uppercase tracking-wide text-(--text-tertiary)">
                   Orders
@@ -465,7 +468,11 @@ export default function ProfilePage() {
               <Separator orientation="vertical" className="h-8" />
               <div>
                 <p className="font-bold text-[1.25rem] text-(--text-primary)">
-                  {wishlistLoading ? <Skeleton className="h-6 w-8 inline-block" /> : wishlistItems.length}
+                  {wishlistLoading ? (
+                    <Skeleton className="h-6 w-8 inline-block" />
+                  ) : (
+                    wishlistItems.length
+                  )}
                 </p>
                 <p className="font-mono text-[10px] uppercase tracking-wide text-(--text-tertiary)">
                   Wishlist
@@ -890,7 +897,7 @@ export default function ProfilePage() {
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-(--text-primary)">
-                            ₺{order.totalAmount.toFixed(2)}
+                            ${order.totalAmount.toFixed(2)}
                           </p>
                           <p className="font-mono text-[11px] text-(--text-tertiary)">
                             {order.items?.length ?? 0} item
@@ -999,7 +1006,7 @@ export default function ProfilePage() {
                           </p>
                           <div className="flex items-center justify-between mt-3">
                             <span className="font-bold text-(--text-primary)">
-                              ₺{product.price.toLocaleString("tr-TR")}
+                              ${product.price.toLocaleString("tr-TR")}
                             </span>
                             <Button
                               size="sm"

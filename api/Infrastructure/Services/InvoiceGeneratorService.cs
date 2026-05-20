@@ -255,8 +255,8 @@ public class InvoiceGeneratorService : IInvoiceGeneratorService
                             {
                                 dataRow.RelativeItem(4).Text(item.ProductName);
                                 dataRow.RelativeItem(1).AlignRight().Text(item.Quantity.ToString());
-                                dataRow.RelativeItem(2).AlignRight().Text($"₺{item.UnitPrice:F2}");
-                                dataRow.RelativeItem(2).AlignRight().Text($"₺{item.LineTotal:F2}");
+                                dataRow.RelativeItem(2).AlignRight().Text($"${item.UnitPrice:F2}");
+                                dataRow.RelativeItem(2).AlignRight().Text($"${item.LineTotal:F2}");
                             });
                     }
                 });
@@ -268,15 +268,15 @@ public class InvoiceGeneratorService : IInvoiceGeneratorService
                 .Width(240)
                 .Column(summary =>
                 {
-                    AddSummaryRow(summary, "Ara Toplam", $"₺{invoice.SubTotal:F2}");
+                    AddSummaryRow(summary, "Ara Toplam", $"${invoice.SubTotal:F2}");
 
                     if (invoice.ShippingAmount > 0)
-                        AddSummaryRow(summary, "Kargo", $"₺{invoice.ShippingAmount:F2}");
+                        AddSummaryRow(summary, "Kargo", $"${invoice.ShippingAmount:F2}");
 
                     AddSummaryRow(
                         summary,
                         $"KDV (%{invoice.VatRate * 100:F0})",
-                        $"₺{invoice.VatAmount:F2}"
+                        $"${invoice.VatAmount:F2}"
                     );
 
                     summary
@@ -287,7 +287,7 @@ public class InvoiceGeneratorService : IInvoiceGeneratorService
                         {
                             r.RelativeItem().Text("GENEL TOPLAM").FontColor(Colors.White).Bold();
                             r.AutoItem()
-                                .Text($"₺{invoice.TotalAmount:F2}")
+                                .Text($"${invoice.TotalAmount:F2}")
                                 .FontColor(Colors.White)
                                 .Bold();
                         });
@@ -403,10 +403,10 @@ public class InvoiceGeneratorService : IInvoiceGeneratorService
 
             {invoice.InvoiceNumber} numaralı faturanız hazırlanmıştır.
 
-            Sipariş Tutarı : ₺{invoice.SubTotal:F2}
-            KDV ({invoice.VatRate * 100:F0}%)    : ₺{invoice.VatAmount:F2}
-            Kargo          : ₺{invoice.ShippingAmount:F2}
-            Genel Toplam   : ₺{invoice.TotalAmount:F2}
+            Sipariş Tutarı : ${invoice.SubTotal:F2}
+            KDV ({invoice.VatRate * 100:F0}%)    : ${invoice.VatAmount:F2}
+            Kargo          : ${invoice.ShippingAmount:F2}
+            Genel Toplam   : ${invoice.TotalAmount:F2}
 
             Faturanızı aşağıdaki linkten indirebilirsiniz:
             {invoice.PdfUrl}

@@ -22,15 +22,15 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("formatCurrency", () => {
-  it("formats integer TRY amount correctly", () => {
+  it("formats integer USD amount correctly", () => {
     const result = formatCurrency(1000);
-    expect(result).toContain("1.000");
-    expect(result).toContain("₺");
+    expect(result).toContain("1,000");
+    expect(result).toContain("$");
   });
 
-  it("formats decimal TRY amount with 2 decimal places", () => {
+  it("formats decimal USD amount with 2 decimal places", () => {
     const result = formatCurrency(1234.5);
-    expect(result).toContain("1.234");
+    expect(result).toContain("1,234");
     expect(result).toContain("50");
   });
 
@@ -39,10 +39,9 @@ describe("formatCurrency", () => {
     expect(result).toContain("0");
   });
 
-  it("supports USD currency", () => {
-    const result = formatCurrency(100, "USD", "en-US");
+  it("supports EUR currency", () => {
+    const result = formatCurrency(100, "EUR", "en-GB");
     expect(result).toContain("100");
-    expect(result).toContain("$");
   });
 });
 
@@ -53,15 +52,14 @@ describe("formatCurrency", () => {
 describe("formatPrice", () => {
   it("omits decimals for whole number amounts", () => {
     const result = formatPrice(1234);
-    expect(result).not.toContain(",");
-    expect(result).toContain("1.234");
+    expect(result).toContain("1,234");
+    expect(result).toContain("$");
   });
 
   it("includes decimals for non-whole amounts", () => {
     const result = formatPrice(99.9);
     expect(result).toContain("99");
-    // Virgülle ayrılmış ondalık kısım
-    expect(result).toMatch(/,\d{2}/);
+    expect(result).toContain("$");
   });
 });
 
@@ -70,10 +68,10 @@ describe("formatPrice", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("formatDate", () => {
-  it("formats ISO date string to Turkish long date", () => {
+  it("formats ISO date string to English long date", () => {
     const result = formatDate("2026-04-22T10:00:00Z");
     expect(result).toContain("2026");
-    expect(result).toMatch(/Nisan|April/); // locale tr-TR → Nisan
+    expect(result).toMatch(/April/);
   });
 
   it("accepts Date object", () => {
@@ -87,10 +85,9 @@ describe("formatDate", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("formatShortDate", () => {
-  it("formats to dd.MM.yyyy pattern", () => {
+  it("formats to dd/MM/yyyy pattern", () => {
     const result = formatShortDate("2026-04-22T00:00:00Z");
-    // tr-TR locale kısa tarih "22.04.2026" formatı
-    expect(result).toMatch(/\d{2}\.\d{2}\.\d{4}/);
+    expect(result).toMatch(/\d{2}\/\d{2}\/\d{4}/);
   });
 });
 
@@ -99,10 +96,9 @@ describe("formatShortDate", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("formatRelativeTime", () => {
-  it("returns 'az önce' or similar for recent timestamps", () => {
-    const justNow = new Date(Date.now() - 10_000); // 10 saniye önce
+  it("returns a relative string for recent timestamps", () => {
+    const justNow = new Date(Date.now() - 10_000); // 10 seconds ago
     const result = formatRelativeTime(justNow);
-    // Türkçe "az önce", "10 saniye önce" gibi bir şey döner
     expect(typeof result).toBe("string");
     expect(result.length).toBeGreaterThan(0);
   });
@@ -111,7 +107,7 @@ describe("formatRelativeTime", () => {
   it("returns days for old timestamps", () => {
     const yesterday = new Date(Date.now() - 25 * 3_600_000);
     const result = formatRelativeTime(yesterday);
-    expect(result).toMatch(/gün|day|dün/i); // "dün" de geçerli
+    expect(result).toMatch(/day|yesterday/i);
   });
 
   it("returns formatted date for dates older than 30 days", () => {

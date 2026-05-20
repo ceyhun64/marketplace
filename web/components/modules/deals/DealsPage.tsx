@@ -148,7 +148,7 @@ export default function DealsPage() {
         <div className="max-w-[1300px] mx-auto flex items-center justify-between text-[13px]">
           <div className="flex items-center gap-2 font-semibold">
             <Star className="w-4 h-4 text-yellow-400" fill="currentColor" />
-            Free shipping on orders over ₺500
+            Free shipping on orders over $500
           </div>
           <Link
             href="/products"

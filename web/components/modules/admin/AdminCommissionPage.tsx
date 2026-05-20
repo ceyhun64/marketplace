@@ -59,7 +59,9 @@ function SettingRow({
     <div className="flex items-start justify-between gap-6 py-4">
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-(--text-primary)">{label}</p>
-        {hint && <p className="text-xs text-(--text-tertiary) mt-0.5">{hint}</p>}
+        {hint && (
+          <p className="text-xs text-(--text-tertiary) mt-0.5">{hint}</p>
+        )}
       </div>
       <div className="w-40 shrink-0">
         <div className="relative">
@@ -99,11 +101,11 @@ function SectionCard({
   return (
     <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden">
       <div className="flex items-center gap-3 px-6 py-4 border-b border-(--border-light) bg-(--bg-sunken)/50">
-        <div className="p-2 rounded-lg bg-(--off-white-2)">
-          {icon}
-        </div>
+        <div className="p-2 rounded-lg bg-(--off-white-2)">{icon}</div>
         <div>
-          <h3 className="text-sm font-semibold text-(--text-primary)">{title}</h3>
+          <h3 className="text-sm font-semibold text-(--text-primary)">
+            {title}
+          </h3>
           <p className="text-xs text-(--text-tertiary)">{subtitle}</p>
         </div>
       </div>
@@ -180,14 +182,17 @@ export default function AdminCommissionPage() {
       });
       setIsDirty(false);
       setDraft({});
-      queryClient.invalidateQueries({ queryKey: ["admin-commission-settings"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin-commission-settings"],
+      });
     },
     onError: () => toast.error("Failed to save settings"),
   });
 
   // Derived metrics
   const effectiveMktFee = parseFloat(getValue("marketplaceFeePercent")) || 0;
-  const effectiveProcFee = parseFloat(getValue("paymentProcessingFeePercent")) || 0;
+  const effectiveProcFee =
+    parseFloat(getValue("paymentProcessingFeePercent")) || 0;
   const effectiveFlat = parseFloat(getValue("paymentProcessingFlatFee")) || 0;
   const blendedFeeOnOrder100 =
     (100 * effectiveMktFee) / 100 +
@@ -235,8 +240,8 @@ export default function AdminCommissionPage() {
       <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl border border-(--border-mid) bg-(--bg-sunken)/60">
         <Info className="w-4 h-4 text-(--text-tertiary) mt-0.5 shrink-0" />
         <p className="text-xs text-(--text-secondary) leading-relaxed">
-          Commission rates are read from server configuration. Changes saved here
-          are logged and queued for the next deployment cycle. Contact your
+          Commission rates are read from server configuration. Changes saved
+          here are logged and queued for the next deployment cycle. Contact your
           DevOps team to apply changes without downtime.
         </p>
       </div>
@@ -269,7 +274,7 @@ export default function AdminCommissionPage() {
             icon={<CreditCard className="w-4 h-4 text-(--warning)" />}
           />
           <StatCard
-            label="Blended Fee (₺100 order)"
+            label="Blended Fee ($100 order)"
             value={`${data?.currencyCode ?? "TRY"} ${blendedFeeOnOrder100.toFixed(2)}`}
             sub="marketplace + processing"
             icon={<TrendingUp className="w-4 h-4 text-(--success)" />}
@@ -348,7 +353,7 @@ export default function AdminCommissionPage() {
                 hint="Stripe flat per-transaction charge"
                 value={getValue("paymentProcessingFlatFee")}
                 onChange={(v) => set("paymentProcessingFlatFee", v)}
-                prefix={data?.currencyCode ?? "₺"}
+                prefix={data?.currencyCode ?? "$"}
               />
             </>
           )}
@@ -376,7 +381,7 @@ export default function AdminCommissionPage() {
                 hint="Free tier — e-store access only"
                 value={getValue("subscriptionBasicMonthly")}
                 onChange={(v) => set("subscriptionBasicMonthly", v)}
-                prefix={data?.currencyCode ?? "₺"}
+                prefix={data?.currencyCode ?? "$"}
                 suffix="/mo"
               />
               <SettingRow
@@ -384,7 +389,7 @@ export default function AdminCommissionPage() {
                 hint="Marketplace listing + plugins"
                 value={getValue("subscriptionProMonthly")}
                 onChange={(v) => set("subscriptionProMonthly", v)}
-                prefix={data?.currencyCode ?? "₺"}
+                prefix={data?.currencyCode ?? "$"}
                 suffix="/mo"
               />
               <SettingRow
@@ -392,7 +397,7 @@ export default function AdminCommissionPage() {
                 hint="Custom domain + priority support + SLA"
                 value={getValue("subscriptionEnterpriseMonthly")}
                 onChange={(v) => set("subscriptionEnterpriseMonthly", v)}
-                prefix={data?.currencyCode ?? "₺"}
+                prefix={data?.currencyCode ?? "$"}
                 suffix="/mo"
               />
             </>
@@ -409,20 +414,36 @@ export default function AdminCommissionPage() {
             {[
               {
                 name: "Basic",
-                icon: <ShieldCheck className="w-3.5 h-3.5 text-(--text-tertiary)" />,
-                features: ["E-store page (/store/slug)", "20 product limit", "Basic analytics"],
+                icon: (
+                  <ShieldCheck className="w-3.5 h-3.5 text-(--text-tertiary)" />
+                ),
+                features: [
+                  "E-store page (/store/slug)",
+                  "20 product limit",
+                  "Basic analytics",
+                ],
                 highlight: false,
               },
               {
                 name: "Pro",
                 icon: <Zap className="w-3.5 h-3.5 text-(--info)" />,
-                features: ["Marketplace listing", "500 products", "Plugin access", "Custom subdomain"],
+                features: [
+                  "Marketplace listing",
+                  "500 products",
+                  "Plugin access",
+                  "Custom subdomain",
+                ],
                 highlight: true,
               },
               {
                 name: "Enterprise",
                 icon: <Crown className="w-3.5 h-3.5 text-(--warning)" />,
-                features: ["Unlimited products", "Custom domain", "Priority support", "SLA guarantee"],
+                features: [
+                  "Unlimited products",
+                  "Custom domain",
+                  "Priority support",
+                  "SLA guarantee",
+                ],
                 highlight: false,
               },
             ].map((plan) => (
@@ -435,7 +456,10 @@ export default function AdminCommissionPage() {
                 </div>
                 <ul className="space-y-0.5 pl-5">
                   {plan.features.map((f) => (
-                    <li key={f} className="text-xs text-(--text-tertiary) list-disc">
+                    <li
+                      key={f}
+                      className="text-xs text-(--text-tertiary) list-disc"
+                    >
                       {f}
                     </li>
                   ))}

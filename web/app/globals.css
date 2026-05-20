@@ -9,6 +9,7 @@
   --font-sans: var(--font-manrope);
   --font-mono: var(--font-jetbrains);
   --font-heading: var(--font-cormorant);
+  --font-numeric: var(--font-inter);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -122,6 +123,7 @@
   --font-display: "Cormorant Garamond", serif;
   --font-body: "Manrope", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+  --font-numeric-family: "Inter", system-ui, sans-serif;
 
   --text-2xs: 0.625rem;
   --text-xs: 0.6875rem;
@@ -546,6 +548,64 @@
     color: var(--charcoal);
   }
 
+  /* ─────────────────────────────────────────────────────────────
+   * NUMERIC RENDERING SYSTEM
+   *
+   * Three layers, from broadest to most specific:
+   *
+   * Layer 1 — html { font-variant-numeric: tabular-nums }
+   *   Global CSS inheritance: every number in the document is
+   *   tabular by default, including dynamic React/API values.
+   *
+   * Layer 2 — Semantic element rules below
+   *   Table cells, badges, inputs, and stat containers switch to
+   *   Inter (--font-numeric-family) for crisper digit rendering
+   *   in data-dense contexts.
+   *
+   * Layer 3 — .num utility class
+   *   Explicit opt-in that can be added to any element when the
+   *   Inter + tabular-nums combination is needed.
+   * ───────────────────────────────────────────────────────────── */
+
+  /* Table cells — numbers are always aligned and same-width */
+  td,
+  th {
+    font-family: var(--font-numeric-family);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Number inputs */
+  input[type="number"] {
+    font-family: var(--font-numeric-family);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Price / amount tags (add class="price" to any price span) */
+  .price,
+  [data-price] {
+    font-family: var(--font-numeric-family);
+    font-variant-numeric: tabular-nums lining-nums;
+    letter-spacing: -0.01em;
+  }
+
+  /* Badge-style counters (cart count, notification dot, etc.) */
+  .badge,
+  [data-badge] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Dashboard stat values */
+  .stat-label {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* .num — explicit opt-in utility for Inter + tabular-nums */
+  .num {
+    font-family: var(--font-numeric-family);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
   /* ── Stat cards (dashboard dark variant) ─────────────────── */
   .stat-card-dark,
   .stat-card {
@@ -776,4 +836,93 @@ body {
    miktarda sağa kayar ve layout titremez. */
 [data-fixed-header] {
   padding-right: var(--removed-body-scroll-bar-size, 0px);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TABULAR NUMBERS — FORCE LAYER
+   ═══════════════════════════════════════════════════════════════════════════
+
+   WHY THIS BLOCK EXISTS AT THE VERY BOTTOM
+   ─────────────────────────────────────────
+   CSS cascade order: later rules win over earlier ones at equal specificity.
+   Placing this block last (after Tailwind layers, Shadcn, phone-input, etc.)
+   means it beats every stylesheet-level override without needing to raise
+   specificity manually.
+
+   WHY !important IS USED HERE
+   ────────────────────────────
+   Third-party libraries (Radix UI, Recharts, Shadcn primitives) sometimes
+   set font properties through component-level class rules or Tailwind utility
+   classes that land inside @layer components / @layer utilities.  Those layers
+   have HIGHER cascade priority than @layer base, so an un-flagged base rule
+   would silently lose.  !important escapes the layer ordering entirely and
+   enforces the numeric feature across every stylesheet-injected rule.
+
+   WHAT IT CANNOT OVERRIDE
+   ────────────────────────
+   Browser-applied inline `style="..."` attributes always beat !important in
+   any stylesheet.  Recharts SVG tick labels and tooltip text are rendered as
+   SVG <text>/<tspan> elements and do NOT receive inline font-variant-numeric,
+   so they ARE covered by the svg text / svg tspan rules below.
+
+   WHAT "lnum" (lining-nums) ADDS
+   ────────────────────────────────
+   "tnum" = tabular (same-width) digits.
+   "lnum" = lining numerals (digits sit on the baseline, not below it).
+   Together they produce the clean, grid-aligned numbers seen in data tables.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer base {
+  html,
+  body,
+  div,
+  span,
+  p,
+  li,
+  a,
+  h1, h2, h3, h4, h5, h6,
+  td, th,
+  input, textarea, select, button,
+  label,
+  caption,
+  blockquote,
+  pre,
+  code,
+  small,
+  strong,
+  em,
+  time,
+  mark,
+  sup,
+  sub {
+    font-variant-numeric: tabular-nums !important;
+    -webkit-font-feature-settings: "tnum" 1, "lnum" 1 !important;
+    font-feature-settings: "tnum" 1, "lnum" 1 !important;
+  }
+
+  /* ── SVG text elements — used by Recharts tick labels, tooltips, legends ── */
+  svg text,
+  svg tspan,
+  svg foreignObject {
+    font-variant-numeric: tabular-nums !important;
+    -webkit-font-feature-settings: "tnum" 1, "lnum" 1 !important;
+    font-feature-settings: "tnum" 1, "lnum" 1 !important;
+  }
+
+  /* ── Data-dense contexts also switch to Inter for tighter digit rendering ── */
+  td,
+  th,
+  input[type="number"],
+  input[type="text"],
+  .price,
+  [data-price],
+  .num,
+  .stat-value,
+  .badge,
+  [data-badge] {
+    font-family: var(--font-numeric-family) !important;
+    font-variant-numeric: tabular-nums !important;
+    -webkit-font-feature-settings: "tnum" 1, "lnum" 1 !important;
+    font-feature-settings: "tnum" 1, "lnum" 1 !important;
+  }
 }

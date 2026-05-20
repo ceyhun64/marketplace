@@ -172,7 +172,7 @@ const CSR_INITIATIVES = [
     icon: HandHeart,
     title: "Community Giving",
     desc: "1% of every transaction goes to our partner charities focused on digital literacy and youth entrepreneurship.",
-    stat: "₺2.1M donated",
+    stat: "$2.1M donated",
   },
   {
     icon: Recycle,
@@ -584,7 +584,6 @@ export default function AboutPage() {
                 >
                   {member.bio}
                 </p>
-               
               </div>
             ))}
           </div>

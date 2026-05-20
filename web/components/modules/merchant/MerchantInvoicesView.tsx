@@ -59,19 +59,22 @@ function formatCurrency(amount: number) {
     currencyDisplay: "symbol",
   })
     .format(amount)
-    .replace("TRY", "₺");
+    .replace("TRY", "$");
 }
 
 export default function MerchantInvoicesView() {
   const [search, setSearch] = useState("");
   const [monthFilter, setMonthFilter] = useState("all");
-  const [activeTab, setActiveTab] = useState<"invoices" | "accounting">("invoices");
+  const [activeTab, setActiveTab] = useState<"invoices" | "accounting">(
+    "invoices",
+  );
   const [accountingEntryType, setAccountingEntryType] = useState("all");
 
   const { data: accountingData, isLoading: accountingLoading } =
     useMerchantAccountingEntries({
       limit: 100,
-      entryType: accountingEntryType !== "all" ? accountingEntryType : undefined,
+      entryType:
+        accountingEntryType !== "all" ? accountingEntryType : undefined,
     });
   const accountingEntries: AccountingEntry[] = accountingData?.items ?? [];
 
@@ -91,7 +94,9 @@ export default function MerchantInvoicesView() {
   const handleDownload = async (invoiceId: string, invoiceNumber: string) => {
     try {
       // Backend'den PDF URL'i al, sonra Cloudinary'den indir
-      const res = await api.get(`/api/merchants/invoices/${invoiceId}/download`);
+      const res = await api.get(
+        `/api/merchants/invoices/${invoiceId}/download`,
+      );
       const pdfUrl = res.data?.pdfUrl;
 
       if (pdfUrl) {
@@ -101,7 +106,7 @@ export default function MerchantInvoicesView() {
         // Fallback: blob olarak indir
         const blobRes = await api.get(
           `/api/merchants/invoices/${invoiceId}/download`,
-          { responseType: "blob" }
+          { responseType: "blob" },
         );
         const url = window.URL.createObjectURL(new Blob([blobRes.data]));
         const link = document.createElement("a");
@@ -145,12 +150,13 @@ export default function MerchantInvoicesView() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-(--text-primary)">Invoices</h1>
+        <h1 className="text-2xl font-semibold text-(--text-primary)">
+          Invoices
+        </h1>
         <p className="text-sm text-(--text-secondary) mt-1">
           View and download all sales invoices
         </p>
       </div>
-
       {/* Tab Switcher */}
       <div className="flex gap-1 bg-(--off-white-2) p-1 rounded-xl w-fit">
         <button
@@ -176,256 +182,269 @@ export default function MerchantInvoicesView() {
           Accounting Ledger
         </button>
       </div>
-
       {/* Stats */}
       {activeTab === "invoices" && (
-      <>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          {
-            label: "Total Invoices",
-            value: filtered.length,
-            icon: Receipt,
-            color: "text-(--text-secondary)",
-            bg: "bg-(--off-white-2)",
-          },
-          {
-            label: "Gross Revenue",
-            value: formatCurrency(totalRevenue),
-            icon: TrendingUp,
-            color: "text-(--success)",
-            bg: "bg-(--success-bg)",
-          },
-          {
-            label: "Net Revenue",
-            value: formatCurrency(netRevenue),
-            icon: FileText,
-            color: "text-(--info)",
-            bg: "bg-(--info-bg)",
-          },
-          {
-            label: "Total VAT",
-            value: formatCurrency(totalVat),
-            icon: Receipt,
-            color: "text-(--warning)",
-            bg: "bg-(--warning-bg)",
-          },
-        ].map((s) => (
-          <div
-            key={s.label}
-            className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-(--text-tertiary) font-medium uppercase tracking-wider">
-                {s.label}
-              </p>
-              <div className={`p-1.5 rounded-lg ${s.bg}`}>
-                <s.icon className={`w-4 h-4 ${s.color}`} />
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              {
+                label: "Total Invoices",
+                value: filtered.length,
+                icon: Receipt,
+                color: "text-(--text-secondary)",
+                bg: "bg-(--off-white-2)",
+              },
+              {
+                label: "Gross Revenue",
+                value: formatCurrency(totalRevenue),
+                icon: TrendingUp,
+                color: "text-(--success)",
+                bg: "bg-(--success-bg)",
+              },
+              {
+                label: "Net Revenue",
+                value: formatCurrency(netRevenue),
+                icon: FileText,
+                color: "text-(--info)",
+                bg: "bg-(--info-bg)",
+              },
+              {
+                label: "Total VAT",
+                value: formatCurrency(totalVat),
+                icon: Receipt,
+                color: "text-(--warning)",
+                bg: "bg-(--warning-bg)",
+              },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs text-(--text-tertiary) font-medium uppercase tracking-wider">
+                    {s.label}
+                  </p>
+                  <div className={`p-1.5 rounded-lg ${s.bg}`}>
+                    <s.icon className={`w-4 h-4 ${s.color}`} />
+                  </div>
+                </div>
+                <p className="text-xl font-bold text-(--text-primary)">
+                  {s.value}
+                </p>
               </div>
-            </div>
-            <p className="text-xl font-bold text-(--text-primary)">{s.value}</p>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-tertiary)" />
-          <Input
-            placeholder="Search by invoice no, customer or order..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 border-(--border-mid)"
-          />
-        </div>
-        <Select value={monthFilter} onValueChange={setMonthFilter}>
-          <SelectTrigger className="w-44 border-(--border-mid)">
-            <Calendar className="w-4 h-4 mr-2 text-(--text-tertiary)" />
-            <SelectValue placeholder="Filter by month" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Months</SelectItem>
-            {months.map((m) => {
-              const [year, month] = m.split("-");
-              const date = new Date(parseInt(year), parseInt(month) - 1);
-              return (
-                <SelectItem key={m} value={m}>
-                  {date.toLocaleDateString("en-US", {
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Table */}
-      <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden">
-        <div className="px-5 py-4 border-b border-(--border-light)">
-          <h2 className="text-sm font-semibold text-(--text-primary)">
-            Invoice List
-            <span className="ml-2 text-sm font-normal text-(--text-tertiary)">
-              ({filtered.length} invoices)
-            </span>
-          </h2>
-        </div>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-(--bg-sunken) border-b border-(--border-light)">
-                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">
-                  Invoice No.
-                </TableHead>
-                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">
-                  Order
-                </TableHead>
-                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">
-                  Customer
-                </TableHead>
-                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">
-                  Channel
-                </TableHead>
-                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide text-right">
-                  Net
-                </TableHead>
-                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide text-right">
-                  VAT
-                </TableHead>
-                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide text-right">
-                  Total
-                </TableHead>
-                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">
-                  Date
-                </TableHead>
-                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide text-right">
-                  PDF
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 6 }).map((_, i) => (
-                  <TableRow key={i}>
-                    {Array.from({ length: 9 }).map((_, j) => (
-                      <TableCell key={j}>
-                        <Skeleton className="h-4 w-full" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={9}
-                    className="text-center py-16 text-(--text-tertiary)"
-                  >
-                    <FileText className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                    <p className="text-sm font-medium">No invoices found</p>
-                    <p className="text-xs mt-1">
-                      Invoices are generated automatically after each sale
-                    </p>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filtered.map((invoice) => (
-                  <TableRow
-                    key={invoice.id}
-                    className="hover:bg-(--bg-sunken) border-b border-(--border-subtle)"
-                  >
-                    <TableCell className="font-mono text-xs text-(--info) font-medium">
-                      {invoice.invoiceNumber}
-                    </TableCell>
-                    <TableCell className="text-xs text-(--text-secondary) font-mono">
-                      {invoice.orderNumber}
-                    </TableCell>
-                    <TableCell className="text-sm text-(--text-secondary)">
-                      {invoice.customerName}
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                          invoice.source === "MARKETPLACE"
-                            ? "bg-(--info-bg) text-(--info)"
-                            : "bg-(--success-bg) text-(--success)"
-                        }`}
-                      >
-                        {invoice.source === "MARKETPLACE"
-                          ? "Marketplace"
-                          : "E-Store"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-medium text-(--text-primary)">
-                      {formatCurrency(invoice.subTotal)}
-                    </TableCell>
-                    <TableCell className="text-right text-xs text-(--text-secondary)">
-                      {formatCurrency(invoice.vatAmount)}
-                      <span className="ml-1 text-(--text-tertiary)">
-                        ({Math.round(invoice.vatRate * 100)}%)
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-bold text-(--text-primary)">
-                      {formatCurrency(invoice.totalAmount)}
-                    </TableCell>
-                    <TableCell className="text-xs text-(--text-secondary)">
-                      {new Date(invoice.issuedAt).toLocaleDateString("en-US", {
-                        day: "2-digit",
-                        month: "short",
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-tertiary)" />
+              <Input
+                placeholder="Search by invoice no, customer or order..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 border-(--border-mid)"
+              />
+            </div>
+            <Select value={monthFilter} onValueChange={setMonthFilter}>
+              <SelectTrigger className="w-44 border-(--border-mid)">
+                <Calendar className="w-4 h-4 mr-2 text-(--text-tertiary)" />
+                <SelectValue placeholder="Filter by month" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Months</SelectItem>
+                {months.map((m) => {
+                  const [year, month] = m.split("-");
+                  const date = new Date(parseInt(year), parseInt(month) - 1);
+                  return (
+                    <SelectItem key={m} value={m}>
+                      {date.toLocaleDateString("en-US", {
+                        month: "long",
                         year: "numeric",
                       })}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {invoice.pdfUrl && (
-                          <a
-                            href={invoice.pdfUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Table */}
+          <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden">
+            <div className="px-5 py-4 border-b border-(--border-light)">
+              <h2 className="text-sm font-semibold text-(--text-primary)">
+                Invoice List
+                <span className="ml-2 text-sm font-normal text-(--text-tertiary)">
+                  ({filtered.length} invoices)
+                </span>
+              </h2>
+            </div>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-(--bg-sunken) border-b border-(--border-light)">
+                    <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">
+                      Invoice No.
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">
+                      Order
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">
+                      Customer
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">
+                      Channel
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide text-right">
+                      Net
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide text-right">
+                      VAT
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide text-right">
+                      Total
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">
+                      Date
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide text-right">
+                      PDF
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <TableRow key={i}>
+                        {Array.from({ length: 9 }).map((_, j) => (
+                          <TableCell key={j}>
+                            <Skeleton className="h-4 w-full" />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : filtered.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={9}
+                        className="text-center py-16 text-(--text-tertiary)"
+                      >
+                        <FileText className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                        <p className="text-sm font-medium">No invoices found</p>
+                        <p className="text-xs mt-1">
+                          Invoices are generated automatically after each sale
+                        </p>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filtered.map((invoice) => (
+                      <TableRow
+                        key={invoice.id}
+                        className="hover:bg-(--bg-sunken) border-b border-(--border-subtle)"
+                      >
+                        <TableCell className="font-mono text-xs text-(--info) font-medium">
+                          {invoice.invoiceNumber}
+                        </TableCell>
+                        <TableCell className="text-xs text-(--text-secondary) font-mono">
+                          {invoice.orderNumber}
+                        </TableCell>
+                        <TableCell className="text-sm text-(--text-secondary)">
+                          {invoice.customerName}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                              invoice.source === "MARKETPLACE"
+                                ? "bg-(--info-bg) text-(--info)"
+                                : "bg-(--success-bg) text-(--success)"
+                            }`}
                           >
+                            {invoice.source === "MARKETPLACE"
+                              ? "Marketplace"
+                              : "E-Store"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-medium text-(--text-primary)">
+                          {formatCurrency(invoice.subTotal)}
+                        </TableCell>
+                        <TableCell className="text-right text-xs text-(--text-secondary)">
+                          {formatCurrency(invoice.vatAmount)}
+                          <span className="ml-1 text-(--text-tertiary)">
+                            ({Math.round(invoice.vatRate * 100)}%)
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-bold text-(--text-primary)">
+                          {formatCurrency(invoice.totalAmount)}
+                        </TableCell>
+                        <TableCell className="text-xs text-(--text-secondary)">
+                          {new Date(invoice.issuedAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            },
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            {invoice.pdfUrl && (
+                              <a
+                                href={invoice.pdfUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 w-7 p-0 text-(--text-tertiary) hover:text-(--info)"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </Button>
+                              </a>
+                            )}
                             <Button
                               size="sm"
-                              variant="ghost"
-                              className="h-7 w-7 p-0 text-(--text-tertiary) hover:text-(--info)"
+                              variant="outline"
+                              className="h-7 text-xs border-(--border-mid)"
+                              onClick={() =>
+                                handleDownload(
+                                  invoice.id,
+                                  invoice.invoiceNumber,
+                                )
+                              }
                             >
-                              <ExternalLink className="w-3.5 h-3.5" />
+                              <Download className="w-3 h-3 mr-1" />
+                              Download
                             </Button>
-                          </a>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs border-(--border-mid)"
-                          onClick={() =>
-                            handleDownload(invoice.id, invoice.invoiceNumber)
-                          }
-                        >
-                          <Download className="w-3 h-3 mr-1" />
-                          Download
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-      </> )} {/* end invoices tab */}
-
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </>
+      )}{" "}
+      {/* end invoices tab */}
       {/* Accounting Ledger Tab */}
       {activeTab === "accounting" && (
         <div className="bg-(--bg-surface) border border-(--border-light) rounded-2xl shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-(--border-light)">
             <div>
-              <h2 className="text-base font-semibold text-(--text-primary)">Accounting Ledger</h2>
+              <h2 className="text-base font-semibold text-(--text-primary)">
+                Accounting Ledger
+              </h2>
               <p className="text-xs text-(--text-secondary) mt-0.5">
                 Full audit trail linked to orders, invoices, and payments
               </p>
             </div>
-            <Select value={accountingEntryType} onValueChange={setAccountingEntryType}>
+            <Select
+              value={accountingEntryType}
+              onValueChange={setAccountingEntryType}
+            >
               <SelectTrigger className="w-36 h-8 text-xs rounded-lg">
                 <SelectValue placeholder="Entry type" />
               </SelectTrigger>
@@ -441,12 +460,24 @@ export default function MerchantInvoicesView() {
           <Table>
             <TableHeader>
               <TableRow className="bg-(--bg-sunken)">
-                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">Invoice #</TableHead>
-                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">Type</TableHead>
-                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">Amount</TableHead>
-                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">Description</TableHead>
-                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">Payment Ref</TableHead>
-                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">Date</TableHead>
+                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">
+                  Invoice #
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">
+                  Type
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">
+                  Amount
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">
+                  Description
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">
+                  Payment Ref
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wide">
+                  Date
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -454,12 +485,17 @@ export default function MerchantInvoicesView() {
                 ? Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
                       {Array.from({ length: 6 }).map((_, j) => (
-                        <TableCell key={j}><div className="h-4 w-24 bg-(--off-white-2) animate-pulse rounded" /></TableCell>
+                        <TableCell key={j}>
+                          <div className="h-4 w-24 bg-(--off-white-2) animate-pulse rounded" />
+                        </TableCell>
                       ))}
                     </TableRow>
                   ))
                 : accountingEntries.map((entry) => (
-                    <TableRow key={entry.id} className="hover:bg-(--bg-sunken) transition-colors">
+                    <TableRow
+                      key={entry.id}
+                      className="hover:bg-(--bg-sunken) transition-colors"
+                    >
                       <TableCell className="font-mono text-xs font-semibold text-(--text-secondary)">
                         {entry.invoiceNumber}
                       </TableCell>
@@ -469,8 +505,8 @@ export default function MerchantInvoicesView() {
                             entry.entryType === "SALE"
                               ? "bg-(--success-bg) text-(--success)"
                               : entry.entryType === "REFUND"
-                              ? "bg-(--danger-bg) text-(--danger)"
-                              : "bg-(--warning-bg) text-(--warning)"
+                                ? "bg-(--danger-bg) text-(--danger)"
+                                : "bg-(--warning-bg) text-(--warning)"
                           }`}
                         >
                           {entry.entryType === "SALE" ? (
@@ -483,10 +519,12 @@ export default function MerchantInvoicesView() {
                       </TableCell>
                       <TableCell
                         className={`text-sm font-semibold ${
-                          entry.amount >= 0 ? "text-(--success)" : "text-(--danger)"
+                          entry.amount >= 0
+                            ? "text-(--success)"
+                            : "text-(--danger)"
                         }`}
                       >
-                        {entry.amount >= 0 ? "+" : ""}₺{entry.amount.toFixed(2)}
+                        {entry.amount >= 0 ? "+" : ""}${entry.amount.toFixed(2)}
                       </TableCell>
                       <TableCell className="text-sm text-(--text-secondary) max-w-xs truncate">
                         {entry.description}
@@ -509,7 +547,8 @@ export default function MerchantInvoicesView() {
             </div>
           )}
         </div>
-      )} {/* end accounting tab */}
+      )}{" "}
+      {/* end accounting tab */}
     </div>
   );
 }

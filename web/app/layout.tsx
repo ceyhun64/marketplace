@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Manrope, Cormorant_Garamond, JetBrains_Mono } from "next/font/google";
+import { Manrope, Cormorant_Garamond, JetBrains_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/providers/QueryProvider";
@@ -25,6 +25,14 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains",
   weight: ["400", "500"],
+  display: "swap",
+  preload: false,
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  weight: ["400", "500", "600", "700"],
   display: "swap",
   preload: false,
 });
@@ -64,7 +72,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${manrope.variable} ${cormorant.variable} ${jetbrainsMono.variable}`}
+      className={`${manrope.variable} ${cormorant.variable} ${jetbrainsMono.variable} ${inter.variable}`}
     >
       <body
         style={{ fontFamily: "var(--font-manrope), sans-serif" }}

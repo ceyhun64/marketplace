@@ -10,7 +10,7 @@ import { useAnnouncements, type AnnouncementItem } from "@/queries/useSiteSettin
 const FALLBACK: AnnouncementItem[] = [
   {
     id: "fallback-1",
-    text: "Free shipping on orders over ₺500 — ",
+    text: "Free shipping on orders over $50 — ",
     ctaText: "Shop now",
     ctaUrl: "/products",
     backgroundColor: "#1e1e1e",

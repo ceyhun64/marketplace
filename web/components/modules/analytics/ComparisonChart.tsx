@@ -1,10 +1,5 @@
 "use client";
 
-/**
- * ComparisonChart — Marketplace vs E-Mağaza karşılaştırma görsel bileşeni.
- * Merchant Analytics Dashboard'da kanal bazlı karşılaştırma grafiği olarak kullanılır.
- */
-
 import {
   BarChart,
   Bar,
@@ -26,12 +21,12 @@ interface ComparisonChartProps {
 interface ChartDataPoint {
   metric: string;
   Marketplace: number;
-  "E-Mağaza": number;
+  "E-Store": number;
 }
 
 const CHART_COLORS = {
-  marketplace: "#3b82f6", // blue-500
-  estore: "#10b981",      // emerald-500
+  marketplace: "#3b82f6",
+  estore: "#10b981",
 };
 
 function CustomTooltip({
@@ -56,11 +51,11 @@ function CustomTooltip({
           />
           <span className="text-gray-500">{entry.name}:</span>
           <span className="font-semibold text-gray-900">
-            {label === "Gelir (₺)"
+            {label === "Revenue ($)"
               ? formatPrice(entry.value)
-              : label === "Dönüşüm Oranı (%)"
-                ? `%${entry.value.toFixed(1)}`
-                : entry.value.toLocaleString("tr-TR")}
+              : label === "Conversion Rate (%)"
+                ? `${entry.value.toFixed(1)}%`
+                : entry.value.toLocaleString("en-US")}
           </span>
         </div>
       ))}
@@ -71,19 +66,19 @@ function CustomTooltip({
 export default function ComparisonChart({ data, className }: ComparisonChartProps) {
   const chartData: ChartDataPoint[] = [
     {
-      metric: "Gelir (₺)",
+      metric: "Revenue ($)",
       Marketplace: data.marketplace.revenue,
-      "E-Mağaza": data.estore.revenue,
+      "E-Store": data.estore.revenue,
     },
     {
-      metric: "Sipariş",
+      metric: "Orders",
       Marketplace: data.marketplace.orders,
-      "E-Mağaza": data.estore.orders,
+      "E-Store": data.estore.orders,
     },
     {
-      metric: "Dönüşüm Oranı (%)",
+      metric: "Conversion Rate (%)",
       Marketplace: parseFloat((data.marketplace.conversionRate * 100).toFixed(1)),
-      "E-Mağaza": parseFloat((data.estore.conversionRate * 100).toFixed(1)),
+      "E-Store": parseFloat((data.estore.conversionRate * 100).toFixed(1)),
     },
   ];
 
@@ -94,10 +89,8 @@ export default function ComparisonChart({ data, className }: ComparisonChartProp
     data.estore.orders === 0
   ) {
     return (
-      <div
-        className={`flex items-center justify-center h-40 text-sm text-gray-400 ${className ?? ""}`}
-      >
-        Henüz karşılaştırma verisi yok
+      <div className={`flex items-center justify-center h-40 text-sm text-gray-400 ${className ?? ""}`}>
+        No comparison data available yet
       </div>
     );
   }
@@ -137,7 +130,7 @@ export default function ComparisonChart({ data, className }: ComparisonChartProp
             maxBarSize={48}
           />
           <Bar
-            dataKey="E-Mağaza"
+            dataKey="E-Store"
             fill={CHART_COLORS.estore}
             radius={[4, 4, 0, 0]}
             maxBarSize={48}

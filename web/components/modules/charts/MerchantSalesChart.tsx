@@ -1,7 +1,6 @@
 "use client";
 
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
-
 import {
   ChartContainer,
   ChartTooltip,
@@ -24,7 +23,7 @@ const chartConfig = {
 
 export default function MerchantSalesChart({ data }: { data: SalesData[] }) {
   return (
-    <ChartContainer config={chartConfig} className="h-[220px] w-full">
+    <ChartContainer config={chartConfig} className="h-55 w-full">
       <AreaChart data={data}>
         <defs>
           <linearGradient id="mktGrad" x1="0" y1="0" x2="0" y2="1">
@@ -40,13 +39,13 @@ export default function MerchantSalesChart({ data }: { data: SalesData[] }) {
         <XAxis dataKey="gun" tick={{ fontSize: 12 }} />
         <YAxis
           tick={{ fontSize: 12 }}
-          tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`}
+          tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`}
         />
         <ChartTooltip
           content={
             <ChartTooltipContent
               formatter={(value, name) => [
-                `₺${Number(value).toLocaleString("tr-TR")}`,
+                `$${Number(value).toLocaleString("en-US")}`,
                 name === "marketplace" ? "Marketplace" : "E-Store",
               ]}
             />

@@ -25,18 +25,20 @@ import { Separator } from "@/components/ui/separator";
 // ─────────────────────────────────────────────────────────────────────────────
 
 const FILTER_TABS = [
-  { key: "all",       label: "All"              },
-  { key: "active",    label: "Active"           },
-  { key: "DELIVERED", label: "Delivered"        },
+  { key: "all", label: "All" },
+  { key: "active", label: "Active" },
+  { key: "DELIVERED", label: "Delivered" },
   { key: "CANCELLED", label: "Cancelled/Failed" },
 ] as const;
 
 type FilterKey = (typeof FILTER_TABS)[number]["key"];
 
 function statusMatch(status: OrderStatus, filter: FilterKey | string): boolean {
-  if (filter === "all")       return true;
-  if (filter === "active")    return !["DELIVERED", "FAILED", "CANCELLED"].includes(status);
-  if (filter === "CANCELLED") return status === "CANCELLED" || status === "FAILED";
+  if (filter === "all") return true;
+  if (filter === "active")
+    return !["DELIVERED", "FAILED", "CANCELLED"].includes(status);
+  if (filter === "CANCELLED")
+    return status === "CANCELLED" || status === "FAILED";
   return status === filter;
 }
 
@@ -50,23 +52,23 @@ function statusTokens(status: OrderStatus): {
   switch (status) {
     case "DELIVERED":
       return {
-        text:   "var(--success)",
-        bg:     "var(--success-bg)",
+        text: "var(--success)",
+        bg: "var(--success-bg)",
         border: "var(--success-border)",
         accent: "var(--success)",
       };
     case "OUT_FOR_DELIVERY":
       return {
-        text:   "var(--danger)",
-        bg:     "var(--danger-bg)",
+        text: "var(--danger)",
+        bg: "var(--danger-bg)",
         border: "var(--danger-border)",
         accent: "var(--danger)",
       };
     case "IN_TRANSIT":
     case "PICKED_UP":
       return {
-        text:   "var(--info)",
-        bg:     "var(--info-bg)",
+        text: "var(--info)",
+        bg: "var(--info-bg)",
         border: "var(--info-border)",
         accent: null,
       };
@@ -74,23 +76,23 @@ function statusTokens(status: OrderStatus): {
     case "LABEL_GENERATED":
     case "COURIER_ASSIGNED":
       return {
-        text:   "var(--warning)",
-        bg:     "var(--warning-bg)",
+        text: "var(--warning)",
+        bg: "var(--warning-bg)",
         border: "var(--warning-border)",
         accent: null,
       };
     case "FAILED":
     case "CANCELLED":
       return {
-        text:   "var(--text-secondary)",
-        bg:     "rgba(51,51,51,0.06)",
+        text: "var(--text-secondary)",
+        bg: "rgba(51,51,51,0.06)",
         border: "rgba(51,51,51,0.12)",
         accent: null,
       };
     default: // PENDING
       return {
-        text:   "var(--charcoal-soft)",
-        bg:     "rgba(51,51,51,0.05)",
+        text: "var(--charcoal-soft)",
+        bg: "rgba(51,51,51,0.05)",
         border: "rgba(51,51,51,0.10)",
         accent: null,
       };
@@ -129,15 +131,15 @@ function OrderCardSkeleton() {
 function OrderCard({ order }: { order: Order }) {
   const [expanded, setExpanded] = useState(false);
 
-  const st         = statusTokens(order.status);
-  const label      = ORDER_STATUS_LABELS[order.status] ?? order.status;
+  const st = statusTokens(order.status);
+  const label = ORDER_STATUS_LABELS[order.status] ?? order.status;
   const isDelivered = order.status === "DELIVERED";
   const hasTracking = !!order.shipment?.trackingNumber;
 
   // Derive typed extras that may exist after the Module 3 / architecture upgrade
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const anyOrder   = order as any;
-  const address    = anyOrder.shippingAddress ?? null;
+  const anyOrder = order as any;
+  const address = anyOrder.shippingAddress ?? null;
 
   return (
     <article
@@ -161,17 +163,15 @@ function OrderCard({ order }: { order: Order }) {
         style={{ minHeight: 72 }}
       >
         <div className="flex items-start justify-between gap-3 md:gap-4">
-
           {/* Left column */}
           <div className="flex-1 min-w-0">
-
             {/* Status badge + meta chips */}
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <span
                 className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border"
                 style={{
-                  color:       st.text,
-                  background:  st.bg,
+                  color: st.text,
+                  background: st.bg,
                   borderColor: st.border,
                   letterSpacing: "0.06em",
                   textTransform: "uppercase",
@@ -184,18 +184,26 @@ function OrderCard({ order }: { order: Order }) {
               {/* Source + rate — visible sm+ only (shown in expanded panel on mobile) */}
               <span
                 className="hidden sm:inline text-[11px]"
-                style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-mono)" }}
+                style={{
+                  color: "var(--charcoal-soft)",
+                  fontFamily: "var(--font-mono)",
+                }}
               >
                 {order.source === "MARKETPLACE" ? "Marketplace" : "E-Store"}
                 {" · "}
-                {order.shippingRate === "EXPRESS" ? "⚡ Express" : "📦 Standard"}
+                {order.shippingRate === "EXPRESS"
+                  ? "⚡ Express"
+                  : "📦 Standard"}
               </span>
             </div>
 
             {/* Product name summary */}
             <p
               className="text-sm font-medium mb-1 pr-2"
-              style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
+              style={{
+                color: "var(--charcoal)",
+                fontFamily: "var(--font-body)",
+              }}
             >
               <span className="line-clamp-1">
                 {order.items
@@ -204,7 +212,8 @@ function OrderCard({ order }: { order: Order }) {
                   .join(", ")}
                 {order.items.length > 2 && (
                   <span style={{ color: "var(--charcoal-soft)" }}>
-                    {" "}+{order.items.length - 2} more
+                    {" "}
+                    +{order.items.length - 2} more
                   </span>
                 )}
               </span>
@@ -215,11 +224,12 @@ function OrderCard({ order }: { order: Order }) {
               className="font-mono text-[11px]"
               style={{ color: "var(--charcoal-soft)" }}
             >
-              #{order.id.slice(0, 8).toUpperCase()}{" · "}
+              #{order.id.slice(0, 8).toUpperCase()}
+              {" · "}
               {new Date(order.createdAt).toLocaleDateString("en-US", {
-                day:   "numeric",
+                day: "numeric",
                 month: "short",
-                year:  "numeric",
+                year: "numeric",
               })}
             </p>
           </div>
@@ -229,16 +239,19 @@ function OrderCard({ order }: { order: Order }) {
             <p
               className="font-bold leading-none"
               style={{
-                color:       "var(--charcoal)",
-                fontFamily:  "var(--font-display)",
-                fontSize:    "1.125rem",
+                color: "var(--charcoal)",
+                fontFamily: "var(--font-display)",
+                fontSize: "1.125rem",
               }}
             >
-              ₺{order.totalAmount.toLocaleString("tr-TR")}
+              ${order.totalAmount.toLocaleString("tr-TR")}
             </p>
             <span
               className="text-[10px]"
-              style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-mono)" }}
+              style={{
+                color: "var(--charcoal-soft)",
+                fontFamily: "var(--font-mono)",
+              }}
             >
               {order.items.length} item{order.items.length !== 1 ? "s" : ""}
             </span>
@@ -293,9 +306,11 @@ function OrderCard({ order }: { order: Order }) {
             <div className="space-y-3">
               {order.items.map((item) => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const anyItem     = item as any;
-                const image: string | null  = anyItem.productImage ?? anyItem.productImageUrl ?? null;
-                const variants: Record<string, string> | null = anyItem.variantAttributes ?? null;
+                const anyItem = item as any;
+                const image: string | null =
+                  anyItem.productImage ?? anyItem.productImageUrl ?? null;
+                const variants: Record<string, string> | null =
+                  anyItem.variantAttributes ?? null;
 
                 return (
                   <div key={item.id} className="flex items-start gap-3">
@@ -312,7 +327,10 @@ function OrderCard({ order }: { order: Order }) {
                         className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shrink-0"
                         style={{ background: "rgba(51,51,51,0.06)" }}
                       >
-                        <Package size={14} style={{ color: "var(--charcoal-soft)" }} />
+                        <Package
+                          size={14}
+                          style={{ color: "var(--charcoal-soft)" }}
+                        />
                       </div>
                     )}
 
@@ -320,14 +338,20 @@ function OrderCard({ order }: { order: Order }) {
                     <div className="flex-1 min-w-0">
                       <p
                         className="text-sm font-medium leading-snug"
-                        style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
+                        style={{
+                          color: "var(--charcoal)",
+                          fontFamily: "var(--font-body)",
+                        }}
                       >
                         {item.productName}
                       </p>
                       {variants && Object.keys(variants).length > 0 && (
                         <p
                           className="text-[10px] mt-0.5"
-                          style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-mono)" }}
+                          style={{
+                            color: "var(--charcoal-soft)",
+                            fontFamily: "var(--font-mono)",
+                          }}
                         >
                           {Object.entries(variants)
                             .map(([k, v]) => `${k}: ${v}`)
@@ -336,18 +360,26 @@ function OrderCard({ order }: { order: Order }) {
                       )}
                       <p
                         className="text-[11px] mt-0.5"
-                        style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-mono)" }}
+                        style={{
+                          color: "var(--charcoal-soft)",
+                          fontFamily: "var(--font-mono)",
+                        }}
                       >
-                        ×{item.quantity} · ₺{item.unitPrice.toLocaleString("tr-TR")} each
+                        ×{item.quantity} · $
+                        {item.unitPrice.toLocaleString("tr-TR")} each
                       </p>
                     </div>
 
                     {/* Line total */}
                     <p
                       className="text-sm font-bold shrink-0"
-                      style={{ color: "var(--charcoal)", fontFamily: "var(--font-display)" }}
+                      style={{
+                        color: "var(--charcoal)",
+                        fontFamily: "var(--font-display)",
+                      }}
                     >
-                      ₺{(item.unitPrice * item.quantity).toLocaleString("tr-TR")}
+                      $
+                      {(item.unitPrice * item.quantity).toLocaleString("tr-TR")}
                     </p>
                   </div>
                 );
@@ -361,19 +393,22 @@ function OrderCard({ order }: { order: Order }) {
           <div className="flex items-center justify-between">
             <span
               className="text-sm font-semibold"
-              style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
+              style={{
+                color: "var(--charcoal-soft)",
+                fontFamily: "var(--font-body)",
+              }}
             >
               Order Total
             </span>
             <span
               className="font-bold"
               style={{
-                color:      "var(--charcoal)",
+                color: "var(--charcoal)",
                 fontFamily: "var(--font-display)",
-                fontSize:   "1.1rem",
+                fontSize: "1.1rem",
               }}
             >
-              ₺{order.totalAmount.toLocaleString("tr-TR")}
+              ${order.totalAmount.toLocaleString("tr-TR")}
             </span>
           </div>
 
@@ -383,7 +418,7 @@ function OrderCard({ order }: { order: Order }) {
               className="flex items-start gap-2.5 px-3.5 py-3 rounded-xl"
               style={{
                 background: "white",
-                border:     "1px solid rgba(51,51,51,0.08)",
+                border: "1px solid rgba(51,51,51,0.08)",
               }}
             >
               <MapPin
@@ -393,9 +428,17 @@ function OrderCard({ order }: { order: Order }) {
               />
               <p
                 className="text-xs leading-relaxed"
-                style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
+                style={{
+                  color: "var(--charcoal-soft)",
+                  fontFamily: "var(--font-body)",
+                }}
               >
-                {address.fullName && <><strong>{address.fullName}</strong>{" — "}</>}
+                {address.fullName && (
+                  <>
+                    <strong>{address.fullName}</strong>
+                    {" — "}
+                  </>
+                )}
                 {address.addressLine}, {address.city}
                 {address.postalCode && ` ${address.postalCode}`}
               </p>
@@ -409,15 +452,14 @@ function OrderCard({ order }: { order: Order }) {
            * All buttons: min-h-[44px] to meet the 44px touch-target rule
            */}
           <div className="flex flex-col sm:flex-row gap-2 pt-1">
-
             {/* Track order — primary, only when tracking exists */}
             {hasTracking && (
               <Link
                 href={`/orders/${order.id}/tracking`}
                 className="flex-1 flex items-center justify-center gap-2 min-h-[44px] px-4 text-sm font-semibold text-white rounded-xl transition-opacity hover:opacity-85"
                 style={{
-                  background:  "var(--charcoal)",
-                  fontFamily:  "var(--font-body)",
+                  background: "var(--charcoal)",
+                  fontFamily: "var(--font-body)",
                 }}
               >
                 <Truck size={14} />
@@ -432,8 +474,8 @@ function OrderCard({ order }: { order: Order }) {
                 href={`/?reorder=${order.id}`}
                 className="flex-1 flex items-center justify-center gap-2 min-h-[44px] px-4 text-sm font-semibold rounded-xl transition-colors hover:bg-(--off-white)"
                 style={{
-                  border:     "1.5px solid rgba(51,51,51,0.15)",
-                  color:      "var(--charcoal)",
+                  border: "1.5px solid rgba(51,51,51,0.15)",
+                  color: "var(--charcoal)",
                   fontFamily: "var(--font-body)",
                 }}
               >
@@ -448,8 +490,8 @@ function OrderCard({ order }: { order: Order }) {
                 href={`/orders/${order.id}/review`}
                 className="flex-1 flex items-center justify-center gap-2 min-h-[44px] px-4 text-sm font-semibold rounded-xl transition-colors hover:bg-(--off-white)"
                 style={{
-                  border:     "1.5px solid rgba(51,51,51,0.15)",
-                  color:      "var(--charcoal)",
+                  border: "1.5px solid rgba(51,51,51,0.15)",
+                  color: "var(--charcoal)",
                   fontFamily: "var(--font-body)",
                 }}
               >
@@ -463,8 +505,8 @@ function OrderCard({ order }: { order: Order }) {
               href={`/orders/${order.id}`}
               className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-4 text-sm font-semibold rounded-xl transition-colors hover:bg-(--off-white)"
               style={{
-                border:     "1.5px solid rgba(51,51,51,0.15)",
-                color:      "var(--charcoal)",
+                border: "1.5px solid rgba(51,51,51,0.15)",
+                color: "var(--charcoal)",
                 fontFamily: "var(--font-body)",
               }}
             >
@@ -492,12 +534,11 @@ export default function OrdersPage() {
     FILTER_TABS.map((t) => [
       t.key,
       orders.filter((o) => statusMatch(o.status, t.key)).length,
-    ])
+    ]),
   ) as Record<FilterKey, number>;
 
   return (
     <div className="min-h-screen" style={{ background: "var(--off-white)" }}>
-
       {/* ── Page header ─────────────────────────────────────────────────────── */}
       <div
         className="bg-white"
@@ -521,14 +562,12 @@ export default function OrdersPage() {
             className="font-normal text-(--charcoal) text-[1.9rem] md:text-[2.2rem] leading-tight"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            My{" "}
-            <em style={{ color: "var(--red)" }}>Orders</em>
+            My <em style={{ color: "var(--red)" }}>Orders</em>
           </h1>
         </div>
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-6 md:py-8">
-
         {/*
          * Filter tab bar
          *
@@ -542,14 +581,14 @@ export default function OrdersPage() {
         <div
           className="flex gap-2 mb-6 md:mb-8 overflow-x-auto pb-1"
           style={{
-            scrollbarWidth:          "none",   // Firefox
-            msOverflowStyle:         "none",   // IE / Edge legacy
-            WebkitOverflowScrolling: "touch",  // iOS momentum scroll
+            scrollbarWidth: "none", // Firefox
+            msOverflowStyle: "none", // IE / Edge legacy
+            WebkitOverflowScrolling: "touch", // iOS momentum scroll
           }}
         >
           {FILTER_TABS.map((tab) => {
             const active = filter === tab.key;
-            const count  = counts[tab.key];
+            const count = counts[tab.key];
 
             return (
               <button
@@ -557,10 +596,10 @@ export default function OrdersPage() {
                 onClick={() => setFilter(tab.key)}
                 className="inline-flex items-center gap-1.5 px-4 rounded-xl text-[13px] font-semibold transition-all whitespace-nowrap shrink-0"
                 style={{
-                  minHeight:  44,
+                  minHeight: 44,
                   background: active ? "var(--charcoal)" : "white",
-                  color:      active ? "white" : "var(--charcoal-soft)",
-                  border:     active
+                  color: active ? "white" : "var(--charcoal-soft)",
+                  border: active
                     ? "1.5px solid var(--charcoal)"
                     : "1.5px solid rgba(51,51,51,0.12)",
                   fontFamily: "var(--font-body)",
@@ -573,12 +612,12 @@ export default function OrdersPage() {
                   <span
                     className="inline-flex items-center justify-center text-[10px] font-bold rounded-full px-1.5 leading-none"
                     style={{
-                      minWidth:  18,
-                      height:    18,
+                      minWidth: 18,
+                      height: 18,
                       background: active
                         ? "rgba(255,255,255,0.22)"
                         : "rgba(51,51,51,0.08)",
-                      color:      active ? "white" : "var(--charcoal-soft)",
+                      color: active ? "white" : "var(--charcoal-soft)",
                       fontFamily: "var(--font-mono)",
                     }}
                   >
@@ -593,9 +632,10 @@ export default function OrdersPage() {
         {/* ── Content ──────────────────────────────────────────────────────── */}
         {isLoading ? (
           <div className="space-y-3">
-            {[1, 2, 3].map((i) => <OrderCardSkeleton key={i} />)}
+            {[1, 2, 3].map((i) => (
+              <OrderCardSkeleton key={i} />
+            ))}
           </div>
-
         ) : filtered.length === 0 ? (
           /* ── Empty state ──────────────────────────────────────────────────── */
           <div className="text-center py-16 md:py-24">
@@ -603,17 +643,26 @@ export default function OrdersPage() {
               className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5 mx-auto"
               style={{ background: "rgba(51,51,51,0.05)" }}
             >
-              <ShoppingBag size={28} style={{ color: "var(--charcoal-soft)" }} />
+              <ShoppingBag
+                size={28}
+                style={{ color: "var(--charcoal-soft)" }}
+              />
             </div>
             <p
               className="text-base font-semibold mb-1"
-              style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
+              style={{
+                color: "var(--charcoal)",
+                fontFamily: "var(--font-body)",
+              }}
             >
               {filter === "all" ? "No orders yet" : "No orders here"}
             </p>
             <p
               className="text-sm mb-6"
-              style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
+              style={{
+                color: "var(--charcoal-soft)",
+                fontFamily: "var(--font-body)",
+              }}
             >
               {filter === "all"
                 ? "Your order history will appear here once you place your first order."
@@ -624,8 +673,8 @@ export default function OrdersPage() {
                 href="/"
                 className="inline-flex items-center gap-2 px-5 min-h-[44px] text-sm font-semibold text-white rounded-xl transition-opacity hover:opacity-85"
                 style={{
-                  background:  "var(--charcoal)",
-                  fontFamily:  "var(--font-body)",
+                  background: "var(--charcoal)",
+                  fontFamily: "var(--font-body)",
                 }}
               >
                 Start Shopping
@@ -633,7 +682,6 @@ export default function OrdersPage() {
               </Link>
             )}
           </div>
-
         ) : (
           /* ── Order list ──────────────────────────────────────────────────── */
           <div className="space-y-3">

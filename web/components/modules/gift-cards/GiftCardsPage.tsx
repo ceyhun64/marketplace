@@ -38,7 +38,7 @@ const HOW_IT_WORKS = [
     step: "01",
     icon: Tag,
     title: "Choose an amount",
-    desc: "Pick from preset amounts or enter a custom value between ₺10 and ₺5,000.",
+    desc: "Pick from preset amounts or enter a custom value between $10 and $5,000.",
   },
   {
     step: "02",
@@ -197,7 +197,7 @@ export default function GiftCardsPage() {
                 Gift Card Sent!
               </h2>
               <p className="text-[14px] text-[var(--charcoal-soft)] mb-6">
-                A ₺{finalAmount} gift card has been sent to{" "}
+                A ${finalAmount} gift card has been sent to{" "}
                 <strong>{recipientEmail}</strong>. The code is also shown below.
               </p>
               <div className="flex items-center gap-2 justify-center mb-6">
@@ -260,7 +260,7 @@ export default function GiftCardsPage() {
                           : "border-black/10 text-[var(--charcoal)] hover:border-[var(--red)]/40"
                       }`}
                     >
-                      ₺{amt}
+                      ${amt}
                     </button>
                   ))}
                 </div>
@@ -272,7 +272,7 @@ export default function GiftCardsPage() {
                     type="number"
                     min={10}
                     max={5000}
-                    placeholder="₺ Enter amount"
+                    placeholder="$ Enter amount"
                     value={customAmount}
                     onChange={(e) => {
                       setCustomAmount(e.target.value);
@@ -284,7 +284,7 @@ export default function GiftCardsPage() {
                     (parseInt(customAmount) < 10 ||
                       parseInt(customAmount) > 5000) && (
                       <span className="text-[12px] text-[var(--red)] flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5" /> ₺10–₺5,000 only
+                        <AlertCircle className="w-3.5 h-3.5" /> $10–$5,000 only
                       </span>
                     )}
                 </div>
@@ -378,7 +378,7 @@ export default function GiftCardsPage() {
                 <Gift className="w-4 h-4 mr-2" />
                 {purchaseState === "loading"
                   ? "Processing…"
-                  : `Send Gift Card — ₺${finalAmount || "–"}`}
+                  : `Send Gift Card — $${finalAmount || "–"}`}
               </Button>
               <p className="text-[12px] text-[var(--charcoal-mist)] mt-3">
                 By purchasing, you agree to our{" "}
@@ -421,7 +421,7 @@ export default function GiftCardsPage() {
                 )}
                 <p className="text-white/80 text-[12px] mb-1">Gift Card</p>
                 <p className="text-white text-[32px] font-bold leading-none">
-                  {finalAmount ? `₺${finalAmount}` : "₺–"}
+                  {finalAmount ? `$${finalAmount}` : "$–"}
                 </p>
                 {senderName && (
                   <p className="text-white/60 text-[11px] mt-1">
@@ -494,7 +494,7 @@ export default function GiftCardsPage() {
                 </div>
                 <p className="text-[13px] text-green-700">
                   Remaining balance:{" "}
-                  <strong>₺{balanceState.balance.toFixed(2)}</strong>
+                  <strong>${balanceState.balance.toFixed(2)}</strong>
                 </p>
                 <p className="text-[11px] text-green-600/70 mt-1">
                   Code: {balanceState.code}

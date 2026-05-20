@@ -157,8 +157,8 @@ export function TagFilter({
             }}
           />
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>₺{(value.minPrice ?? 0).toLocaleString("tr-TR")}</span>
-            <span>₺{(value.maxPrice ?? maxPrice).toLocaleString("tr-TR")}</span>
+            <span>${(value.minPrice ?? 0).toLocaleString("tr-TR")}</span>
+            <span>${(value.maxPrice ?? maxPrice).toLocaleString("tr-TR")}</span>
           </div>
         </CollapsibleContent>
       </Collapsible>

@@ -22,7 +22,9 @@ import type { Order } from "@/types/entities";
 
 function SkeletonBox({ className }: { className?: string }) {
   return (
-    <div className={`animate-pulse rounded bg-(--off-white-2) ${className ?? ""}`} />
+    <div
+      className={`animate-pulse rounded bg-(--off-white-2) ${className ?? ""}`}
+    />
   );
 }
 
@@ -107,8 +109,7 @@ export default function MerchantDashboard() {
     pendingOrders: orders.length,
   };
 
-  const storeName =
-    profile?.storeName ?? profile?.StoreName ?? "My Store";
+  const storeName = profile?.storeName ?? profile?.StoreName ?? "My Store";
   const slug = profile?.slug ?? profile?.Slug;
   const plan =
     profile?.subscriptionPlan ??
@@ -359,7 +360,7 @@ export default function MerchantDashboard() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-semibold text-sm text-(--text-primary)">
-                    ₺{order.totalAmount?.toLocaleString("en-US")}
+                    ${order.totalAmount?.toLocaleString("en-US")}
                   </span>
                   <span className="text-xs px-2 py-0.5 rounded-md font-medium bg-(--off-white-2) text-(--text-secondary) capitalize">
                     {order.status}
@@ -386,10 +387,16 @@ export default function MerchantDashboard() {
               style={{ color: "var(--red)" }}
             />
             <div>
-              <p className="font-medium text-sm" style={{ color: "var(--charcoal)" }}>
+              <p
+                className="font-medium text-sm"
+                style={{ color: "var(--charcoal)" }}
+              >
                 Your E-Store is Live
               </p>
-              <p className="text-xs mt-0.5" style={{ color: "var(--charcoal-soft)" }}>
+              <p
+                className="text-xs mt-0.5"
+                style={{ color: "var(--charcoal-soft)" }}
+              >
                 marketplace.com/store/{slug}
               </p>
             </div>

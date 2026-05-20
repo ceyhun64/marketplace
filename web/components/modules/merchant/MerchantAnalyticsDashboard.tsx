@@ -29,8 +29,8 @@ const ComparisonChart = dynamic(
 );
 
 const PERIODS: { value: AnalyticsPeriod; label: string }[] = [
-  { value: "daily",   label: "Daily"   },
-  { value: "weekly",  label: "Weekly"  },
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
   { value: "monthly", label: "Monthly" },
 ];
 
@@ -54,18 +54,20 @@ function KpiSkeleton() {
 export default function MerchantAnalyticsDashboard() {
   const [period, setPeriod] = useState<AnalyticsPeriod>("weekly");
 
-  const { data: stats,       isLoading: statsLoading  } = useMerchantStats();
-  const { data: comparison,  isLoading: compLoading   } = useMerchantComparison();
-  const { data: topProducts, isLoading: topLoading    } = useMerchantTopProducts(5);
-  const { data: salesChart,  isLoading: chartLoading  } = useMerchantSalesChart(period);
+  const { data: stats, isLoading: statsLoading } = useMerchantStats();
+  const { data: comparison, isLoading: compLoading } = useMerchantComparison();
+  const { data: topProducts, isLoading: topLoading } =
+    useMerchantTopProducts(5);
+  const { data: salesChart, isLoading: chartLoading } =
+    useMerchantSalesChart(period);
 
   function toArray(data: unknown): any[] {
     if (Array.isArray(data)) return data;
     if (data && typeof data === "object") {
       const obj = data as Record<string, unknown>;
-      if (Array.isArray(obj.items))        return obj.items;
-      if (Array.isArray(obj.data))         return obj.data;
-      if (Array.isArray(obj.salesChart))   return obj.salesChart;
+      if (Array.isArray(obj.items)) return obj.items;
+      if (Array.isArray(obj.data)) return obj.data;
+      if (Array.isArray(obj.salesChart)) return obj.salesChart;
       if (Array.isArray(obj.salesByPeriod)) return obj.salesByPeriod;
     }
     return [];
@@ -78,47 +80,49 @@ export default function MerchantAnalyticsDashboard() {
         ? new Date(d.date).toLocaleDateString("en-US", { weekday: "short" })
         : "—",
     marketplace: d.source === "MARKETPLACE" || !d.source ? (d.revenue ?? 0) : 0,
-    estore:      d.source === "ESTORE" ? (d.revenue ?? 0) : 0,
+    estore: d.source === "ESTORE" ? (d.revenue ?? 0) : 0,
   }));
 
   // ── KPI definitions ──────────────────────────────────────────────────────────
 
   const kpis = [
     {
-      label:     "Total Revenue",
-      value:     stats ? formatPrice(stats.totalRevenue) : "—",
-      sub:       "All channels",
-      icon:      TrendingUp,
+      label: "Total Revenue",
+      value: stats ? formatPrice(stats.totalRevenue) : "—",
+      sub: "All channels",
+      icon: TrendingUp,
       iconColor: "var(--success)",
-      iconBg:    "rgba(13,122,78,0.10)",
+      iconBg: "rgba(13,122,78,0.10)",
     },
     {
-      label:     "Total Orders",
-      value:     stats?.totalOrders?.toString() ?? "—",
-      sub:       "This period",
-      icon:      ShoppingBag,
+      label: "Total Orders",
+      value: stats?.totalOrders?.toString() ?? "—",
+      sub: "This period",
+      icon: ShoppingBag,
       iconColor: "var(--info)",
-      iconBg:    "rgba(27,94,168,0.10)",
+      iconBg: "rgba(27,94,168,0.10)",
     },
     {
-      label:     "Marketplace",
-      value:     stats ? formatPrice(stats.marketplaceRevenue) : "—",
-      sub:       stats && stats.totalRevenue > 0
-                   ? `${Math.round((stats.marketplaceRevenue / stats.totalRevenue) * 100)}% of total`
-                   : "—",
-      icon:      Store,
+      label: "Marketplace",
+      value: stats ? formatPrice(stats.marketplaceRevenue) : "—",
+      sub:
+        stats && stats.totalRevenue > 0
+          ? `${Math.round((stats.marketplaceRevenue / stats.totalRevenue) * 100)}% of total`
+          : "—",
+      icon: Store,
       iconColor: "var(--info)",
-      iconBg:    "rgba(27,94,168,0.10)",
+      iconBg: "rgba(27,94,168,0.10)",
     },
     {
-      label:     "E-Store",
-      value:     stats ? formatPrice(stats.estoreRevenue) : "—",
-      sub:       stats && stats.totalRevenue > 0
-                   ? `${Math.round((stats.estoreRevenue / stats.totalRevenue) * 100)}% of total`
-                   : "—",
-      icon:      Package,
+      label: "E-Store",
+      value: stats ? formatPrice(stats.estoreRevenue) : "—",
+      sub:
+        stats && stats.totalRevenue > 0
+          ? `${Math.round((stats.estoreRevenue / stats.totalRevenue) * 100)}% of total`
+          : "—",
+      icon: Package,
       iconColor: "var(--success)",
-      iconBg:    "rgba(13,122,78,0.10)",
+      iconBg: "rgba(13,122,78,0.10)",
     },
   ] as const;
 
@@ -138,12 +142,19 @@ export default function MerchantAnalyticsDashboard() {
         },
         {
           label: "Avg. Order",
-          mk: comparison.marketplace.orders > 0
-                ? formatPrice(comparison.marketplace.revenue / comparison.marketplace.orders)
-                : "—",
-          es: comparison.estore.orders > 0
-                ? formatPrice(comparison.estore.revenue / comparison.estore.orders)
-                : "—",
+          mk:
+            comparison.marketplace.orders > 0
+              ? formatPrice(
+                  comparison.marketplace.revenue /
+                    comparison.marketplace.orders,
+                )
+              : "—",
+          es:
+            comparison.estore.orders > 0
+              ? formatPrice(
+                  comparison.estore.revenue / comparison.estore.orders,
+                )
+              : "—",
         },
         {
           label: "Conv. Rate",
@@ -157,7 +168,6 @@ export default function MerchantAnalyticsDashboard() {
 
   return (
     <div className="space-y-5 md:space-y-6 lg:space-y-8">
-
       {/* ── Page header ────────────────────────────────────────────────────── */}
       <div>
         <h1 className="text-xl md:text-2xl font-semibold text-(--text-primary)">
@@ -205,11 +215,10 @@ export default function MerchantAnalyticsDashboard() {
 
       {/* ── Sales chart ────────────────────────────────────────────────────── */}
       <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-4 md:p-5">
-
         {/* Header — stacks on mobile, inline on sm+ */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h2 className="text-sm font-semibold text-(--text-secondary)">
-            Marketplace vs E-Store Revenue (₺)
+            Marketplace vs E-Store Revenue ($)
           </h2>
 
           {/* Mobile period selector — full-width shadcn Select, min 44px height */}
@@ -278,7 +287,6 @@ export default function MerchantAnalyticsDashboard() {
       {/* ── Channel comparison + Top products ──────────────────────────────── */}
       {/*   1 col mobile · 2 cols tablet · 2 cols desktop                     */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
         {/* ── Channel comparison ─────────────────────────────────────────── */}
         <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-4 md:p-5">
           <h2 className="text-sm font-semibold text-(--text-secondary) mb-4">
@@ -311,21 +319,34 @@ export default function MerchantAnalyticsDashboard() {
                       <div className="text-right">
                         <p
                           className="text-[9px] uppercase tracking-wide mb-0.5"
-                          style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
+                          style={{
+                            color: "var(--text-tertiary)",
+                            fontFamily: "var(--font-mono)",
+                          }}
                         >
                           MKT
                         </p>
-                        <p className="text-xs font-semibold text-(--info)">{row.mk}</p>
+                        <p className="text-xs font-semibold text-(--info)">
+                          {row.mk}
+                        </p>
                       </div>
-                      <Separator orientation="vertical" className="h-7 opacity-30" />
+                      <Separator
+                        orientation="vertical"
+                        className="h-7 opacity-30"
+                      />
                       <div className="text-right">
                         <p
                           className="text-[9px] uppercase tracking-wide mb-0.5"
-                          style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
+                          style={{
+                            color: "var(--text-tertiary)",
+                            fontFamily: "var(--font-mono)",
+                          }}
                         >
                           E-STR
                         </p>
-                        <p className="text-xs font-semibold text-(--success)">{row.es}</p>
+                        <p className="text-xs font-semibold text-(--success)">
+                          {row.es}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -340,10 +361,17 @@ export default function MerchantAnalyticsDashboard() {
                   <span className="text-right">E-Store</span>
                 </div>
                 {comparisonRows.map((row) => (
-                  <div key={row.label} className="grid grid-cols-3 py-3 text-sm">
+                  <div
+                    key={row.label}
+                    className="grid grid-cols-3 py-3 text-sm"
+                  >
                     <span className="text-(--text-secondary)">{row.label}</span>
-                    <span className="text-center font-semibold text-(--info)">{row.mk}</span>
-                    <span className="text-right font-semibold text-(--success)">{row.es}</span>
+                    <span className="text-center font-semibold text-(--info)">
+                      {row.mk}
+                    </span>
+                    <span className="text-right font-semibold text-(--success)">
+                      {row.es}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -378,7 +406,10 @@ export default function MerchantAnalyticsDashboard() {
                     <div className="flex items-start gap-2.5">
                       <span
                         className="text-[11px] font-black w-4 shrink-0 pt-0.5 text-center"
-                        style={{ color: i === 0 ? "var(--red)" : "var(--text-tertiary)" }}
+                        style={{
+                          color:
+                            i === 0 ? "var(--red)" : "var(--text-tertiary)",
+                        }}
                       >
                         {i + 1}
                       </span>

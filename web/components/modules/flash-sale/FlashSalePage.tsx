@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Zap, Clock, ChevronRight, Flame, Tag, Star, AlertTriangle } from "lucide-react";
+import {
+  Zap,
+  Clock,
+  ChevronRight,
+  Flame,
+  Tag,
+  Star,
+  AlertTriangle,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -61,16 +69,28 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
 }
 
 /** Stock progress bar — shows how much of initial stock remains */
-function StockBar({ stock, maxStock = 50 }: { stock?: number; maxStock?: number }) {
+function StockBar({
+  stock,
+  maxStock = 50,
+}: {
+  stock?: number;
+  maxStock?: number;
+}) {
   if (stock === undefined) return null;
   const pct = Math.min(100, Math.round((stock / maxStock) * 100));
-  const color =
-    pct <= 20 ? "var(--red)" : pct <= 50 ? "#d97706" : "#16a34a";
+  const color = pct <= 20 ? "var(--red)" : pct <= 50 ? "#d97706" : "#16a34a";
   return (
     <div className="mt-2">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color }}>
-          {stock <= 0 ? "Sold Out" : stock <= 5 ? `Only ${stock} left!` : `${stock} in stock`}
+        <span
+          className="text-[10px] font-mono font-bold uppercase tracking-wider"
+          style={{ color }}
+        >
+          {stock <= 0
+            ? "Sold Out"
+            : stock <= 5
+              ? `Only ${stock} left!`
+              : `${stock} in stock`}
         </span>
         <span className="text-[10px] text-[var(--charcoal-mist)]">{pct}%</span>
       </div>
@@ -87,9 +107,21 @@ function StockBar({ stock, maxStock = 50 }: { stock?: number; maxStock?: number 
 type SortKey = "discount" | "lowstock" | "price_asc";
 
 const SORT_OPTIONS: { key: SortKey; label: string; icon: React.ReactNode }[] = [
-  { key: "discount", label: "Biggest Discount", icon: <Tag className="w-3.5 h-3.5" /> },
-  { key: "lowstock", label: "Almost Gone", icon: <AlertTriangle className="w-3.5 h-3.5" /> },
-  { key: "price_asc", label: "Lowest Price", icon: <Flame className="w-3.5 h-3.5" /> },
+  {
+    key: "discount",
+    label: "Biggest Discount",
+    icon: <Tag className="w-3.5 h-3.5" />,
+  },
+  {
+    key: "lowstock",
+    label: "Almost Gone",
+    icon: <AlertTriangle className="w-3.5 h-3.5" />,
+  },
+  {
+    key: "price_asc",
+    label: "Lowest Price",
+    icon: <Flame className="w-3.5 h-3.5" />,
+  },
 ];
 
 export default function FlashSalePage() {
@@ -126,11 +158,11 @@ export default function FlashSalePage() {
                 className="text-[var(--off-white)] text-[36px] lg:text-[52px] leading-tight mb-2"
                 style={{ fontFamily: "var(--font-display)" }}
               >
-                Flash{" "}
-                <span className="text-[var(--red)]">Sale</span>
+                Flash <span className="text-[var(--red)]">Sale</span>
               </h1>
               <p className="text-[var(--charcoal-soft)] text-[15px] max-w-md">
-                Up to 50% off on selected products. Don&apos;t miss out before time runs out!
+                Up to 50% off on selected products. Don&apos;t miss out before
+                time runs out!
               </p>
             </div>
 
@@ -142,9 +174,13 @@ export default function FlashSalePage() {
               </p>
               <div className="flex items-center gap-2">
                 <CountdownUnit value={countdown.hours} label="Hours" />
-                <span className="text-white text-[22px] font-bold mb-4 opacity-60">:</span>
+                <span className="text-white text-[22px] font-bold mb-4 opacity-60">
+                  :
+                </span>
                 <CountdownUnit value={countdown.minutes} label="Min" />
-                <span className="text-white text-[22px] font-bold mb-4 opacity-60">:</span>
+                <span className="text-white text-[22px] font-bold mb-4 opacity-60">
+                  :
+                </span>
                 <CountdownUnit value={countdown.seconds} label="Sec" />
               </div>
             </div>
@@ -175,7 +211,7 @@ export default function FlashSalePage() {
         <div className="max-w-[1300px] mx-auto flex items-center justify-between text-[13px]">
           <div className="flex items-center gap-2 font-semibold">
             <Star className="w-4 h-4 text-yellow-300" fill="currentColor" />
-            Free shipping on orders over ₺500
+            Free shipping on orders over $500
           </div>
           <Link
             href="/products"
@@ -227,7 +263,9 @@ export default function FlashSalePage() {
         {!isLoading && !isError && sorted.length > 0 && (
           <>
             <p className="text-[13px] text-[var(--charcoal-soft)] mb-6">
-              <strong className="text-[var(--charcoal)]">{sorted.length}</strong>{" "}
+              <strong className="text-[var(--charcoal)]">
+                {sorted.length}
+              </strong>{" "}
               products in this flash sale
             </p>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">

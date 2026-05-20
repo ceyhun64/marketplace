@@ -37,7 +37,7 @@ const HOW_IT_WORKS = [
     step: "03",
     icon: Gift,
     title: "İkisi de Kazansın",
-    desc: "Sen ₺50 bonus, arkadaşın ₺25 indirim kazanır. Herkes kazanır!",
+    desc: "Sen $50 bonus, arkadaşın $25 indirim kazanır. Herkes kazanır!",
     color: "#0d7a4e",
   },
 ];
@@ -46,7 +46,7 @@ const REWARD_TIERS = [
   {
     count: "1–4",
     label: "Arkadaş",
-    reward: "₺50",
+    reward: "$50",
     desc: "Davet başına",
     color: "#cd7f32",
     bg: "rgba(205,127,50,0.07)",
@@ -55,7 +55,7 @@ const REWARD_TIERS = [
   {
     count: "5–14",
     label: "Arkadaş",
-    reward: "₺75",
+    reward: "$75",
     desc: "Davet başına",
     color: "#9ca3af",
     bg: "rgba(156,163,175,0.07)",
@@ -64,7 +64,7 @@ const REWARD_TIERS = [
   {
     count: "15–29",
     label: "Arkadaş",
-    reward: "₺100",
+    reward: "$100",
     desc: "Davet başına",
     color: "#eab308",
     bg: "rgba(234,179,8,0.07)",
@@ -74,7 +74,7 @@ const REWARD_TIERS = [
   {
     count: "30+",
     label: "Arkadaş",
-    reward: "₺150",
+    reward: "$150",
     desc: "Davet başına",
     color: "var(--red)",
     bg: "rgba(200,16,46,0.07)",
@@ -211,8 +211,8 @@ export default function ReferralPage() {
             }}
           >
             Arkadaşlarını BAZR&apos;a davet et — her başarılı davet için sen{" "}
-            <strong style={{ color: "white" }}>₺50</strong>, arkadaşın{" "}
-            <strong style={{ color: "white" }}>₺25</strong> kazanır.
+            <strong style={{ color: "white" }}>$50</strong>, arkadaşın{" "}
+            <strong style={{ color: "white" }}>$25</strong> kazanır.
           </p>
 
           {/* Stats row */}
@@ -233,7 +233,7 @@ export default function ReferralPage() {
                   value: MOCK_REFERRALS.filter((r) => r.status === "completed")
                     .length,
                 },
-                { label: "Kazanılan", value: `₺${totalEarned}` },
+                { label: "Kazanılan", value: `$${totalEarned}` },
               ].map((stat) => (
                 <div key={stat.label} style={{ textAlign: "center" }}>
                   <div
@@ -738,7 +738,7 @@ export default function ReferralPage() {
                 },
                 {
                   label: "Kazanılan",
-                  value: `₺${totalEarned}`,
+                  value: `$${totalEarned}`,
                   icon: Wallet,
                   color: "#6366f1",
                 },
@@ -904,7 +904,7 @@ export default function ReferralPage() {
                           color: "#0d7a4e",
                         }}
                       >
-                        +₺{ref.earned}
+                        +${ref.earned}
                       </div>
                     )}
                   </div>
@@ -962,7 +962,7 @@ export default function ReferralPage() {
                   fontSize: "1rem",
                 }}
               >
-                Hesap oluştur, referans linkini paylaş, ₺50 kazan.
+                Hesap oluştur, referans linkini paylaş, $50 kazan.
               </p>
               <Link
                 href="/auth/register"

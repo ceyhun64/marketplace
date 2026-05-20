@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface VariantRow {
-  id?: string;          // undefined = new (not yet saved)
+  id?: string; // undefined = new (not yet saved)
   sku: string;
   attributes: Record<string, string>;
   priceOverride: string;
@@ -74,7 +74,7 @@ export default function ProductVariantEditor({
         const attrs = { ...v.attributes };
         delete attrs[axis];
         return { ...v, attributes: attrs };
-      })
+      }),
     );
   };
 
@@ -130,7 +130,11 @@ export default function ProductVariantEditor({
         </Label>
         <div className="flex flex-wrap gap-2 mb-3">
           {axes.map((axis) => (
-            <AxisBadge key={axis} name={axis} onRemove={() => removeAxis(axis)} />
+            <AxisBadge
+              key={axis}
+              name={axis}
+              onRemove={() => removeAxis(axis)}
+            />
           ))}
         </div>
         <div className="flex gap-2">
@@ -138,7 +142,9 @@ export default function ProductVariantEditor({
             placeholder="Add axis (e.g. Size)"
             value={newAxis}
             onChange={(e) => setNewAxis(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addAxis())}
+            onKeyDown={(e) =>
+              e.key === "Enter" && (e.preventDefault(), addAxis())
+            }
             className="h-9 text-sm border-(--border-mid) max-w-48"
           />
           <Button
@@ -159,7 +165,8 @@ export default function ProductVariantEditor({
       {/* Variant Rows */}
       {variants.length === 0 ? (
         <p className="text-sm text-(--text-tertiary) italic">
-          No variants yet. Add attribute axes above, then create variant combinations below.
+          No variants yet. Add attribute axes above, then create variant
+          combinations below.
         </p>
       ) : (
         <div className="space-y-2">
@@ -219,7 +226,9 @@ export default function ProductVariantEditor({
                   <div className="border-t border-(--border-light) px-4 pb-4 pt-3 space-y-4">
                     {/* Attribute values */}
                     {axes.length > 0 && (
-                      <div className={`grid gap-3 ${axes.length > 2 ? "grid-cols-3" : "grid-cols-2"}`}>
+                      <div
+                        className={`grid gap-3 ${axes.length > 2 ? "grid-cols-3" : "grid-cols-2"}`}
+                      >
                         {axes.map((axis) => (
                           <div key={axis}>
                             <Label className="text-xs text-(--text-secondary) mb-1 block">
@@ -232,8 +241,13 @@ export default function ProductVariantEditor({
                                 updateAttr(idx, axis, e.target.value);
                                 // Auto-suggest SKU if still empty
                                 if (!variant.sku) {
-                                  const updated = { ...variant.attributes, [axis]: e.target.value };
-                                  updateVariant(idx, { sku: suggestSku(updated) });
+                                  const updated = {
+                                    ...variant.attributes,
+                                    [axis]: e.target.value,
+                                  };
+                                  updateVariant(idx, {
+                                    sku: suggestSku(updated),
+                                  });
                                 }
                               }}
                               className="h-9 text-sm border-(--border-mid)"
@@ -253,7 +267,9 @@ export default function ProductVariantEditor({
                           placeholder="e.g. SHIRT-L-RED"
                           value={variant.sku}
                           onChange={(e) =>
-                            updateVariant(idx, { sku: e.target.value.toUpperCase() })
+                            updateVariant(idx, {
+                              sku: e.target.value.toUpperCase(),
+                            })
                           }
                           className="h-9 text-sm font-mono border-(--border-mid)"
                         />
@@ -262,7 +278,7 @@ export default function ProductVariantEditor({
                         <Label className="text-xs text-(--text-secondary) mb-1 block">
                           Price Override
                           <span className="ml-1 text-(--text-tertiary)">
-                            (base: ₺{basePrice.toFixed(2)})
+                            (base: ${basePrice.toFixed(2)})
                           </span>
                         </Label>
                         <Input
@@ -272,7 +288,9 @@ export default function ProductVariantEditor({
                           placeholder="Leave blank to use base price"
                           value={variant.priceOverride}
                           onChange={(e) =>
-                            updateVariant(idx, { priceOverride: e.target.value })
+                            updateVariant(idx, {
+                              priceOverride: e.target.value,
+                            })
                           }
                           className="h-9 text-sm border-(--border-mid)"
                         />
@@ -344,7 +362,9 @@ export default function ProductVariantEditor({
         <Plus className="w-4 h-4 mr-2" />
         Add Variant Combination
         {axes.length === 0 && (
-          <span className="ml-2 text-xs text-(--text-tertiary)">(add axes first)</span>
+          <span className="ml-2 text-xs text-(--text-tertiary)">
+            (add axes first)
+          </span>
         )}
       </Button>
     </div>

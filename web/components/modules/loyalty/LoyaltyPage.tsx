@@ -30,7 +30,7 @@ const TIERS = [
     bg: "rgba(205,127,50,0.08)",
     border: "rgba(205,127,50,0.25)",
     perks: [
-      "Earn 1 point per ₺10 spent",
+      "Earn 1 point per $10 spent",
       "Birthday bonus: +50 points",
       "Early access to flash sales",
     ],
@@ -46,7 +46,7 @@ const TIERS = [
     border: "rgba(156,163,175,0.25)",
     perks: [
       "Earn 1.5× points on all purchases",
-      "Free standard shipping on orders ₺200+",
+      "Free standard shipping on orders $200+",
       "Priority customer support",
       "Exclusive member-only discounts",
     ],
@@ -112,7 +112,7 @@ const HOW_IT_WORKS = [
 ];
 
 const WAYS_TO_EARN = [
-  { action: "Make a purchase", points: "1 pt per ₺10", icon: ShoppingBag },
+  { action: "Make a purchase", points: "1 pt per $10", icon: ShoppingBag },
   { action: "Write a product review", points: "+25 pts", icon: Star },
   { action: "Refer a friend", points: "+100 pts", icon: HeartHandshake },
   { action: "Birthday month bonus", points: "+50 pts", icon: Sparkles },
@@ -121,12 +121,12 @@ const WAYS_TO_EARN = [
 ];
 
 const REDEEM_OPTIONS = [
-  { label: "₺10 Discount", points: 200, desc: "Off your next order" },
-  { label: "₺25 Discount", points: 450, desc: "Off your next order" },
+  { label: "$10 Discount", points: 200, desc: "Off your next order" },
+  { label: "$25 Discount", points: 450, desc: "Off your next order" },
   { label: "Free Shipping", points: 150, desc: "On any single order" },
-  { label: "₺100 Discount", points: 1800, desc: "Off your next order" },
+  { label: "$100 Discount", points: 1800, desc: "Off your next order" },
   { label: "Mystery Box", points: 2500, desc: "Curated surprise products" },
-  { label: "₺250 Discount", points: 4200, desc: "Off your next order" },
+  { label: "$250 Discount", points: 4200, desc: "Off your next order" },
 ];
 
 // Tier ladder: total points scale endpoints for visualization

@@ -5,13 +5,13 @@
 // ── Currency ──────────────────────────────────────────────────────────────────
 
 /**
- * Formats a number as Turkish Lira.
- * @example formatCurrency(1234.5) → "₺1.234,50"
+ * Formats a number as US Dollars.
+ * @example formatCurrency(1234.5) → "$1,234.50"
  */
 export function formatCurrency(
   amount: number,
-  currency = "TRY",
-  locale = "tr-TR",
+  currency = "USD",
+  locale = "en-US",
 ): string {
   return new Intl.NumberFormat(locale, {
     style: "currency",
@@ -23,13 +23,13 @@ export function formatCurrency(
 
 /**
  * Short price format — omits decimals when the amount is a whole number.
- * @example formatPrice(1234) → "₺1.234"
+ * @example formatPrice(1234) → "$1,234"
  */
 export function formatPrice(amount: number): string {
   if (amount % 1 === 0) {
-    return new Intl.NumberFormat("tr-TR", {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "TRY",
+      currency: "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
@@ -72,7 +72,7 @@ export function formatDateTime(
 
 /**
  * Short date format.
- * @example formatShortDate("2026-04-22") → "22.04.2026"
+ * @example formatShortDate("2026-04-22") → "22/04/2026"
  */
 export function formatShortDate(dateStr: string | Date): string {
   const date = typeof dateStr === "string" ? new Date(dateStr) : dateStr;
@@ -137,7 +137,7 @@ export function formatEtaWindow(start: string, end: string): string {
  * Abbreviates large numbers.
  * @example formatCompactNumber(1500) → "1.5K"
  */
-export function formatCompactNumber(n: number, locale = "en-GB"): string {
+export function formatCompactNumber(n: number, locale = "en-US"): string {
   return new Intl.NumberFormat(locale, {
     notation: "compact",
     maximumFractionDigits: 1,
@@ -149,7 +149,7 @@ export function formatCompactNumber(n: number, locale = "en-GB"): string {
  * @example formatPercent(0.1567) → "15.67%"
  */
 export function formatPercent(value: number, decimals = 1): string {
-  return new Intl.NumberFormat("en-GB", {
+  return new Intl.NumberFormat("en-US", {
     style: "percent",
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
@@ -186,22 +186,13 @@ export function slugToTitle(slug: string): string {
 }
 
 /**
- * Converts text to a URL slug (with Turkish character support).
+ * Converts text to a URL-safe slug.
  */
 export function toSlug(text: string): string {
   const trMap: Record<string, string> = {
-    ç: "c",
-    Ç: "c",
-    ğ: "g",
-    Ğ: "g",
-    ı: "i",
-    İ: "i",
-    ö: "o",
-    Ö: "o",
-    ş: "s",
-    Ş: "s",
-    ü: "u",
-    Ü: "u",
+    ç: "c", Ç: "c", ğ: "g", Ğ: "g",
+    ı: "i", İ: "i", ö: "o", Ö: "o",
+    ş: "s", Ş: "s", ü: "u", Ü: "u",
   };
   return text
     .split("")
@@ -223,7 +214,7 @@ export function formatFileSize(bytes: number): string {
 // ── Phone ─────────────────────────────────────────────────────────────────────
 
 /**
- * Formats a Turkish phone number.
+ * Formats a phone number with space-separated groups.
  * @example formatPhone("05321234567") → "0532 123 45 67"
  */
 export function formatPhone(phone: string): string {
@@ -241,8 +232,6 @@ export function formatPhone(phone: string): string {
  * @example formatTrackingNumber("MKT20260422ABCD") → "MKT-2026-0422-ABCD"
  */
 export function formatTrackingNumber(trackingNo: string): string {
-  // Return as-is if already formatted
   if (trackingNo.includes("-")) return trackingNo;
-  // Split into groups of 4
   return trackingNo.match(/.{1,4}/g)?.join("-") ?? trackingNo;
 }

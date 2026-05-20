@@ -136,7 +136,7 @@ const PLANS = [
   },
   {
     name: "Pro",
-    price: "₺299/mo",
+    price: "$299/mo",
     products: "500",
     marketplace: true,
     analytics: "Advanced",
@@ -146,7 +146,7 @@ const PLANS = [
   },
   {
     name: "Enterprise",
-    price: "₺799/mo",
+    price: "$799/mo",
     products: "Unlimited",
     marketplace: true,
     analytics: "Full + Custom",

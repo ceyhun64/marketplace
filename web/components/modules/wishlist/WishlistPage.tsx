@@ -14,7 +14,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
-import { useWishlist, useRemoveFromWishlist, useClearWishlist } from "@/queries/useWishlist";
+import {
+  useWishlist,
+  useRemoveFromWishlist,
+  useClearWishlist,
+} from "@/queries/useWishlist";
 import { useLocalWishlist } from "@/hooks/use-wishlist-local";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,7 +28,10 @@ function WishlistSkeleton() {
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="bg-white rounded-2xl overflow-hidden border border-black/5">
+        <div
+          key={i}
+          className="bg-white rounded-2xl overflow-hidden border border-black/5"
+        >
           <Skeleton className="aspect-square w-full" />
           <div className="p-5 space-y-3">
             <Skeleton className="h-3 w-1/3" />
@@ -123,7 +130,7 @@ function GuestWishlist() {
               <div className="flex items-center justify-between mt-3">
                 {item.price != null ? (
                   <span className="text-xl font-bold font-heading text-[var(--charcoal)]">
-                    ₺{item.price.toFixed(2)}
+                    ${item.price.toFixed(2)}
                   </span>
                 ) : (
                   <span className="text-sm text-[var(--charcoal-soft)]">—</span>
@@ -236,7 +243,9 @@ function AuthWishlist() {
         });
       }
     });
-    toast.success(`${available.length} item${available.length !== 1 ? "s" : ""} added to cart!`);
+    toast.success(
+      `${available.length} item${available.length !== 1 ? "s" : ""} added to cart!`,
+    );
   };
 
   const handleShare = async () => {
@@ -370,7 +379,7 @@ function AuthWishlist() {
 
               <div className="flex items-center justify-between">
                 <span className="text-xl font-bold font-heading text-[var(--charcoal)]">
-                  ₺{item.product.price.toFixed(2)}
+                  ${item.product.price.toFixed(2)}
                 </span>
                 <Button
                   onClick={() => handleAddToCart(item)}
@@ -387,7 +396,9 @@ function AuthWishlist() {
                 </p>
               )}
               {item.product.stock === 0 && (
-                <p className="text-xs text-gray-400 font-semibold mt-2">Out of Stock</p>
+                <p className="text-xs text-gray-400 font-semibold mt-2">
+                  Out of Stock
+                </p>
               )}
             </div>
           </div>
@@ -423,13 +434,18 @@ export default function WishlistPage() {
         <div className="mb-10 flex items-start justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <Heart className="w-7 h-7 text-[var(--red)]" fill="currentColor" />
+              <Heart
+                className="w-7 h-7 text-[var(--red)]"
+                fill="currentColor"
+              />
               <h1 className="text-4xl font-heading font-bold text-[var(--charcoal)]">
                 My Wishlist
               </h1>
             </div>
             <p className="text-[var(--charcoal-soft)]">
-              {itemCount > 0 ? `${itemCount} item${itemCount !== 1 ? "s" : ""} saved` : "No favorites yet"}
+              {itemCount > 0
+                ? `${itemCount} item${itemCount !== 1 ? "s" : ""} saved`
+                : "No favorites yet"}
             </p>
           </div>
         </div>

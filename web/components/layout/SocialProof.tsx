@@ -25,21 +25,21 @@ const HIDDEN_PATHS = [
 ];
 
 const LOCATIONS = [
-  "İstanbul",
-  "Ankara",
-  "İzmir",
-  "Bursa",
-  "Antalya",
-  "Konya",
-  "Kayseri",
-  "Denizli",
-  "Eskişehir",
-  "Trabzon",
-  "Adana",
-  "Gaziantep",
-  "Mersin",
-  "Diyarbakır",
-  "Kocaeli",
+  "New York",
+  "London",
+  "Los Angeles",
+  "Chicago",
+  "Houston",
+  "Phoenix",
+  "Philadelphia",
+  "San Antonio",
+  "San Diego",
+  "Dallas",
+  "San Jose",
+  "Austin",
+  "Jacksonville",
+  "San Francisco",
+  "Seattle",
 ];
 
 const PRODUCTS = [
@@ -64,7 +64,7 @@ function randomFrom<T>(arr: T[]): T {
 
 function minutesAgo() {
   const mins = Math.floor(Math.random() * 12) + 1;
-  return `${mins}d önce`;
+  return `${mins}m ago`;
 }
 
 function generateEvent(): SocialEvent {
@@ -77,7 +77,7 @@ function generateEvent(): SocialEvent {
       id: Math.random().toString(36).slice(2),
       type: "purchase",
       icon: <ShoppingBag size={13} />,
-      message: `${product} satın alındı`,
+      message: `Purchased ${product}`,
       location: loc,
       time: minutesAgo(),
     };
@@ -86,7 +86,7 @@ function generateEvent(): SocialEvent {
       id: Math.random().toString(36).slice(2),
       type: "review",
       icon: <Star size={13} />,
-      message: `${product} için 5★ yorum`,
+      message: `Left a 5★ review for ${product}`,
       location: loc,
       time: minutesAgo(),
     };
@@ -96,9 +96,9 @@ function generateEvent(): SocialEvent {
       id: Math.random().toString(36).slice(2),
       type: "viewing",
       icon: <Eye size={13} />,
-      message: `${count} kişi şu an inceliyor`,
+      message: `${count} people are viewing this right now`,
       location: loc,
-      time: "şu an",
+      time: "live",
     };
   } else {
     const left = Math.floor(Math.random() * 4) + 1;
@@ -106,7 +106,7 @@ function generateEvent(): SocialEvent {
       id: Math.random().toString(36).slice(2),
       type: "stock",
       icon: <Package size={13} />,
-      message: `Son ${left} adet — ${product}`,
+      message: `Only ${left} left in stock — ${product}`,
       location: loc,
       time: minutesAgo(),
     };
@@ -326,7 +326,7 @@ export default function SocialProof() {
               setVisible(null);
               setDismissed(true);
             }}
-            aria-label="Kapat"
+            aria-label="Dismiss"
             style={{
               display: "flex",
               alignItems: "center",
@@ -372,4 +372,3 @@ export default function SocialProof() {
     </div>
   );
 }
-

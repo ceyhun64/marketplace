@@ -94,9 +94,9 @@ export default function WalletPage() {
   const { user } = useAuth();
   const [topUpAmount, setTopUpAmount] = useState<number | "">("");
   const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<"overview" | "topup" | "history" | "withdraw">(
-    "overview",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "topup" | "history" | "withdraw"
+  >("overview");
   const [withdrawAmount, setWithdrawAmount] = useState<number | "">("");
 
   // Mock balance
@@ -232,7 +232,7 @@ export default function WalletPage() {
                     marginBottom: "0.5rem",
                   }}
                 >
-                  ₺{balance?.toFixed(2)}
+                  ${balance?.toFixed(2)}
                 </div>
                 <div
                   style={{
@@ -312,36 +312,40 @@ export default function WalletPage() {
                 borderBottom: "1px solid var(--border-light)",
               }}
             >
-              {(["overview", "topup", "withdraw", "history"] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  style={{
-                    padding: "0.75rem 1.25rem",
-                    background: "none",
-                    border: "none",
-                    borderBottom:
-                      activeTab === tab
-                        ? "2px solid var(--red)"
-                        : "2px solid transparent",
-                    color:
-                      activeTab === tab ? "var(--red)" : "var(--charcoal-soft)",
-                    fontWeight: 600,
-                    fontSize: "0.875rem",
-                    cursor: "pointer",
-                    marginBottom: -1,
-                    textTransform: "capitalize",
-                  }}
-                >
-                  {tab === "topup"
-                    ? "Add Funds"
-                    : tab === "overview"
-                      ? "Overview"
-                      : tab === "withdraw"
-                        ? "Withdraw"
-                        : "History"}
-                </button>
-              ))}
+              {(["overview", "topup", "withdraw", "history"] as const).map(
+                (tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    style={{
+                      padding: "0.75rem 1.25rem",
+                      background: "none",
+                      border: "none",
+                      borderBottom:
+                        activeTab === tab
+                          ? "2px solid var(--red)"
+                          : "2px solid transparent",
+                      color:
+                        activeTab === tab
+                          ? "var(--red)"
+                          : "var(--charcoal-soft)",
+                      fontWeight: 600,
+                      fontSize: "0.875rem",
+                      cursor: "pointer",
+                      marginBottom: -1,
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {tab === "topup"
+                      ? "Add Funds"
+                      : tab === "overview"
+                        ? "Overview"
+                        : tab === "withdraw"
+                          ? "Withdraw"
+                          : "History"}
+                  </button>
+                ),
+              )}
             </div>
 
             {/* Overview */}
@@ -358,25 +362,25 @@ export default function WalletPage() {
                   {[
                     {
                       label: "Total Loaded",
-                      value: "₺1,050.00",
+                      value: "$1,050.00",
                       icon: Plus,
                       color: "#0d7a4e",
                     },
                     {
                       label: "Total Spent",
-                      value: "₺699.10",
+                      value: "$699.10",
                       icon: ArrowUpRight,
                       color: "var(--red)",
                     },
                     {
                       label: "Refunds Received",
-                      value: "₺149.90",
+                      value: "$149.90",
                       icon: ArrowDownLeft,
                       color: "#2563eb",
                     },
                     {
                       label: "Bonus Credits",
-                      value: "₺50.00",
+                      value: "$50.00",
                       icon: Gift,
                       color: "#7c3aed",
                     },
@@ -437,33 +441,93 @@ export default function WalletPage() {
                     padding: "1.75rem",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
-                    <BarChart3 style={{ width: 18, height: 18, color: "var(--red)" }} />
-                    <h3 style={{ fontWeight: 700, fontSize: "1rem", color: "var(--charcoal)" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.75rem",
+                      marginBottom: "1.5rem",
+                    }}
+                  >
+                    <BarChart3
+                      style={{ width: 18, height: 18, color: "var(--red)" }}
+                    />
+                    <h3
+                      style={{
+                        fontWeight: 700,
+                        fontSize: "1rem",
+                        color: "var(--charcoal)",
+                      }}
+                    >
                       Spending Analytics
                     </h3>
-                    <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "var(--charcoal-mist)" }}>
+                    <span
+                      style={{
+                        marginLeft: "auto",
+                        fontSize: "0.75rem",
+                        color: "var(--charcoal-mist)",
+                      }}
+                    >
                       Last 30 days
                     </span>
                   </div>
 
                   {/* Category breakdown */}
                   {[
-                    { label: "Electronics", amount: 849, pct: 72, color: "var(--red)" },
-                    { label: "Fashion", amount: 2199, pct: 55, color: "#7c3aed" },
-                    { label: "Home & Garden", amount: 320, pct: 28, color: "#2563eb" },
+                    {
+                      label: "Electronics",
+                      amount: 849,
+                      pct: 72,
+                      color: "var(--red)",
+                    },
+                    {
+                      label: "Fashion",
+                      amount: 2199,
+                      pct: 55,
+                      color: "#7c3aed",
+                    },
+                    {
+                      label: "Home & Garden",
+                      amount: 320,
+                      pct: 28,
+                      color: "#2563eb",
+                    },
                     { label: "Books", amount: 89, pct: 8, color: "#059669" },
                   ].map((cat) => (
                     <div key={cat.label} style={{ marginBottom: "1rem" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.375rem" }}>
-                        <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--charcoal)" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: "0.375rem",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            color: "var(--charcoal)",
+                          }}
+                        >
                           {cat.label}
                         </span>
-                        <span style={{ fontSize: "0.8125rem", color: "var(--charcoal-soft)" }}>
-                          ₺{cat.amount.toFixed(2)}
+                        <span
+                          style={{
+                            fontSize: "0.8125rem",
+                            color: "var(--charcoal-soft)",
+                          }}
+                        >
+                          ${cat.amount.toFixed(2)}
                         </span>
                       </div>
-                      <div style={{ height: 8, borderRadius: 99, background: "var(--off-white-3)", overflow: "hidden" }}>
+                      <div
+                        style={{
+                          height: 8,
+                          borderRadius: 99,
+                          background: "var(--off-white-3)",
+                          overflow: "hidden",
+                        }}
+                      >
                         <div
                           style={{
                             height: "100%",
@@ -489,8 +553,14 @@ export default function WalletPage() {
                       color: "var(--charcoal-soft)",
                     }}
                   >
-                    <TrendingUp style={{ width: 14, height: 14, color: "#0d7a4e" }} />
-                    You&apos;ve spent <strong style={{ color: "var(--charcoal)" }}>₺699.10</strong> this month — 12% less than last month.
+                    <TrendingUp
+                      style={{ width: 14, height: 14, color: "#0d7a4e" }}
+                    />
+                    You&apos;ve spent{" "}
+                    <strong style={{ color: "var(--charcoal)" }}>
+                      $699.10
+                    </strong>{" "}
+                    this month — 12% less than last month.
                   </div>
                 </div>
               </div>
@@ -561,7 +631,7 @@ export default function WalletPage() {
                             cursor: "pointer",
                           }}
                         >
-                          ₺{amt}
+                          ${amt}
                         </button>
                       ))}
                     </div>
@@ -590,7 +660,7 @@ export default function WalletPage() {
                           color: "var(--charcoal-mid)",
                         }}
                       >
-                        ₺
+                        $
                       </span>
                       <Input
                         type="number"
@@ -614,7 +684,7 @@ export default function WalletPage() {
                         marginTop: "0.5rem",
                       }}
                     >
-                      Minimum ₺10 — Maximum ₺5,000 per top-up
+                      Minimum $10 — Maximum $5,000 per top-up
                     </p>
                   </div>
                   <div style={{ marginBottom: "1.5rem" }}>
@@ -690,7 +760,7 @@ export default function WalletPage() {
                           : "not-allowed",
                     }}
                   >
-                    Add ₺{topUpAmount || "0"} to Wallet
+                    Add ${topUpAmount || "0"} to Wallet
                   </button>
                 </div>
               </div>
@@ -707,31 +777,75 @@ export default function WalletPage() {
                     padding: "2rem",
                   }}
                 >
-                  <h3 style={{ fontWeight: 700, fontSize: "1.125rem", marginBottom: "0.5rem", color: "var(--charcoal)" }}>
+                  <h3
+                    style={{
+                      fontWeight: 700,
+                      fontSize: "1.125rem",
+                      marginBottom: "0.5rem",
+                      color: "var(--charcoal)",
+                    }}
+                  >
                     Withdraw Funds
                   </h3>
-                  <p style={{ fontSize: "0.875rem", color: "var(--charcoal-soft)", marginBottom: "1.5rem" }}>
-                    Transfer your wallet balance to your registered bank account. Processing takes 1–3 business days.
+                  <p
+                    style={{
+                      fontSize: "0.875rem",
+                      color: "var(--charcoal-soft)",
+                      marginBottom: "1.5rem",
+                    }}
+                  >
+                    Transfer your wallet balance to your registered bank
+                    account. Processing takes 1–3 business days.
                   </p>
 
                   <div style={{ marginBottom: "1.5rem" }}>
-                    <label style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--charcoal-mid)", letterSpacing: "0.04em", display: "block", marginBottom: "0.5rem" }}>
+                    <label
+                      style={{
+                        fontSize: "0.8125rem",
+                        fontWeight: 600,
+                        color: "var(--charcoal-mid)",
+                        letterSpacing: "0.04em",
+                        display: "block",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
                       AMOUNT
                     </label>
                     <div style={{ position: "relative" }}>
-                      <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontWeight: 700, color: "var(--charcoal-mid)" }}>₺</span>
+                      <span
+                        style={{
+                          position: "absolute",
+                          left: 14,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          fontWeight: 700,
+                          color: "var(--charcoal-mid)",
+                        }}
+                      >
+                        $
+                      </span>
                       <Input
                         type="number"
                         min={10}
                         max={balance ?? 0}
                         value={withdrawAmount}
-                        onChange={(e) => setWithdrawAmount(e.target.value ? Number(e.target.value) : "")}
+                        onChange={(e) =>
+                          setWithdrawAmount(
+                            e.target.value ? Number(e.target.value) : "",
+                          )
+                        }
                         placeholder="Enter amount"
                         style={{ paddingLeft: "2rem" }}
                       />
                     </div>
-                    <p style={{ fontSize: "0.75rem", color: "var(--charcoal-mist)", marginTop: "0.5rem" }}>
-                      Available: ₺{balance?.toFixed(2)} — Minimum withdrawal ₺10
+                    <p
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "var(--charcoal-mist)",
+                        marginTop: "0.5rem",
+                      }}
+                    >
+                      Available: ${balance?.toFixed(2)} — Minimum withdrawal $10
                     </p>
                   </div>
 
@@ -747,30 +861,71 @@ export default function WalletPage() {
                       marginBottom: "1.5rem",
                     }}
                   >
-                    <Banknote style={{ width: 18, height: 18, color: "var(--charcoal-soft)" }} />
+                    <Banknote
+                      style={{
+                        width: 18,
+                        height: 18,
+                        color: "var(--charcoal-soft)",
+                      }}
+                    />
                     <div>
-                      <div style={{ fontSize: "0.875rem", color: "var(--charcoal)", fontWeight: 600 }}>IBAN ending ••• 4821</div>
-                      <div style={{ fontSize: "0.75rem", color: "var(--charcoal-mist)" }}>Default bank account</div>
+                      <div
+                        style={{
+                          fontSize: "0.875rem",
+                          color: "var(--charcoal)",
+                          fontWeight: 600,
+                        }}
+                      >
+                        IBAN ending ••• 4821
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "0.75rem",
+                          color: "var(--charcoal-mist)",
+                        }}
+                      >
+                        Default bank account
+                      </div>
                     </div>
                   </div>
 
                   <button
-                    disabled={!withdrawAmount || Number(withdrawAmount) < 10 || Number(withdrawAmount) > (balance ?? 0)}
+                    disabled={
+                      !withdrawAmount ||
+                      Number(withdrawAmount) < 10 ||
+                      Number(withdrawAmount) > (balance ?? 0)
+                    }
                     style={{
                       width: "100%",
                       padding: "0.875rem",
-                      background: withdrawAmount && Number(withdrawAmount) >= 10 ? "var(--charcoal)" : "var(--off-white-3)",
-                      color: withdrawAmount && Number(withdrawAmount) >= 10 ? "white" : "var(--charcoal-mist)",
+                      background:
+                        withdrawAmount && Number(withdrawAmount) >= 10
+                          ? "var(--charcoal)"
+                          : "var(--off-white-3)",
+                      color:
+                        withdrawAmount && Number(withdrawAmount) >= 10
+                          ? "white"
+                          : "var(--charcoal-mist)",
                       border: "none",
                       borderRadius: 12,
                       fontWeight: 700,
                       fontSize: "0.9375rem",
-                      cursor: withdrawAmount && Number(withdrawAmount) >= 10 ? "pointer" : "not-allowed",
+                      cursor:
+                        withdrawAmount && Number(withdrawAmount) >= 10
+                          ? "pointer"
+                          : "not-allowed",
                     }}
                   >
-                    Withdraw ₺{withdrawAmount || "0"} to Bank
+                    Withdraw ${withdrawAmount || "0"} to Bank
                   </button>
-                  <p style={{ fontSize: "0.75rem", color: "var(--charcoal-mist)", marginTop: "0.75rem", textAlign: "center" }}>
+                  <p
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "var(--charcoal-mist)",
+                      marginTop: "0.75rem",
+                      textAlign: "center",
+                    }}
+                  >
                     Withdrawals are processed within 1–3 business days.
                   </p>
                 </div>
@@ -854,7 +1009,7 @@ export default function WalletPage() {
                         flexShrink: 0,
                       }}
                     >
-                      {tx.type === "credit" ? "+" : ""}₺
+                      {tx.type === "credit" ? "+" : ""}$
                       {Math.abs(tx.amount).toFixed(2)}
                     </div>
                   </div>

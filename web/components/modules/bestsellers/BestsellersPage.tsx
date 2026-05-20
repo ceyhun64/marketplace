@@ -210,7 +210,7 @@ export default function BestsellersPage() {
                             className="text-2xl font-bold text-[var(--charcoal)]"
                             style={{ fontFamily: "var(--font-display)" }}
                           >
-                            ₺{product.price.toFixed(2)}
+                            ${product.price.toFixed(2)}
                           </span>
                           <Link
                             href={`/product/${product.id}`}

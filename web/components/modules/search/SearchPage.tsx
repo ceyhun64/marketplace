@@ -101,11 +101,11 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
 ];
 
 const PRICE_PRESETS = [
-  { label: "₺0 – ₺100", min: 0, max: 100 },
-  { label: "₺100 – ₺500", min: 100, max: 500 },
-  { label: "₺500 – ₺1000", min: 500, max: 1000 },
-  { label: "₺1000 – ₺5000", min: 1000, max: 5000 },
-  { label: "₺5000+", min: 5000, max: 999999 },
+  { label: "$0 – $100", min: 0, max: 100 },
+  { label: "$100 – $500", min: 100, max: 500 },
+  { label: "$500 – $1000", min: 500, max: 1000 },
+  { label: "$1000 – $5000", min: 1000, max: 5000 },
+  { label: "$5000+", min: 5000, max: 999999 },
 ];
 
 // ─── Highlight Helper ─────────────────────────────────────────────────────────
@@ -356,7 +356,7 @@ function SearchProductCard({
                   letterSpacing: "-0.03em",
                 }}
               >
-                ₺{product.price.toLocaleString("tr-TR")}
+                ${product.price.toLocaleString("tr-TR")}
               </div>
             </div>
             <button
@@ -528,7 +528,7 @@ function SearchProductCard({
                 letterSpacing: "-0.02em",
               }}
             >
-              ₺{product.price.toLocaleString("tr-TR")}
+              ${product.price.toLocaleString("tr-TR")}
             </span>
             <button
               onClick={(e) => {
@@ -1113,7 +1113,7 @@ export default function SearchPage() {
         >
           <input
             type="number"
-            placeholder="Min ₺"
+            placeholder="Min $"
             value={minPriceInput}
             onChange={(e) => setMinPriceInput(e.target.value)}
             style={{
@@ -1130,7 +1130,7 @@ export default function SearchPage() {
           <span style={{ color: "var(--charcoal-mist)", fontSize: 12 }}>—</span>
           <input
             type="number"
-            placeholder="Max ₺"
+            placeholder="Max $"
             value={maxPriceInput}
             onChange={(e) => setMaxPriceInput(e.target.value)}
             style={{
@@ -1505,7 +1505,7 @@ export default function SearchPage() {
                   fontWeight: 600,
                 }}
               >
-                ₺{minPrice || "0"} – ₺{maxPrice || "∞"}
+                ${minPrice || "0"} – ${maxPrice || "∞"}
                 <button
                   onClick={() =>
                     navigate({ minPrice: "", maxPrice: "", page: undefined })
@@ -1884,8 +1884,8 @@ export default function SearchPage() {
                   margin: "0 auto 24px",
                 }}
               >
-                No products found for &ldquo;<strong>{q}</strong>&rdquo;.
-                Try different keywords or adjust your filters.
+                No products found for &ldquo;<strong>{q}</strong>&rdquo;. Try
+                different keywords or adjust your filters.
               </p>
               <div
                 style={{

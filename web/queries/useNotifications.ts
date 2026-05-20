@@ -81,7 +81,7 @@ export function ordersToNotifications(orders: Order[]): Notification[] {
         id: id++,
         type: "order",
         title: `${label} — #${shortId}`,
-        message: `Your order of ₺${order.totalAmount.toLocaleString("tr-TR")} is ${label.toLowerCase()}.`,
+        message: `Your order of $${order.totalAmount.toLocaleString("tr-TR")} is ${label.toLowerCase()}.`,
         time: relativeTime(order.createdAt),
         read: order.status !== "PENDING",
         link: `/orders/${order.id}`,

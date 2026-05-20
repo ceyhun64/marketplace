@@ -327,10 +327,10 @@ marketplace/
 | Plan           | Price        | Product Limit | Marketplace Listing | Subdomain | Custom Domain |
 | -------------- | ------------ | ------------- | ------------------- | --------- | ------------- |
 | **Basic**      | Free         | 50            | No                  | No        | No            |
-| **Pro**        | ₺299 / month | Unlimited     | Yes                 | Yes       | No            |
-| **Enterprise** | ₺799 / month | Unlimited     | Yes                 | Yes       | Yes           |
+| **Pro**        | $299 / month | Unlimited     | Yes                 | Yes       | No            |
+| **Enterprise** | $799 / month | Unlimited     | Yes                 | Yes       | Yes           |
 
-Platform commission: **8%** marketplace fee + **2.9% + ₺0.30** payment processing fee.
+Platform commission: **8%** marketplace fee + **2.9% + $0.30** payment processing fee.
 
 ---
 

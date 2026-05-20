@@ -116,7 +116,7 @@ function ShippingOptionCard({
 
         {option.eta && (
           <div className="mt-1 text-xs text-muted-foreground">
-            {option.eta.distanceKm.toFixed(0)} km · Kargo: ₺
+            {option.eta.distanceKm.toFixed(0)} km · Kargo: $
             {option.eta.shippingCost.toFixed(2)}
           </div>
         )}

@@ -358,14 +358,14 @@ export default function CartPage() {
                         className="text-[1.25rem] font-bold text-[var(--charcoal)]"
                         style={{ fontFamily: "var(--font-display)" }}
                       >
-                        ₺{(item.price * item.quantity).toFixed(2)}
+                        ${(item.price * item.quantity).toFixed(2)}
                       </div>
                       {item.quantity > 1 && (
                         <div
                           className="font-mono text-[11px]"
                           style={{ color: "var(--charcoal-soft)" }}
                         >
-                          ₺{item.price.toFixed(2)} each
+                          ${item.price.toFixed(2)} each
                         </div>
                       )}
                     </div>
@@ -458,7 +458,7 @@ export default function CartPage() {
                           fontSize: "1.1rem",
                         }}
                       >
-                        ₺{rate === "EXPRESS" ? "59.90" : "29.90"}
+                        ${rate === "EXPRESS" ? "59.90" : "29.90"}
                       </span>
                     </div>
                   </button>
@@ -595,7 +595,7 @@ export default function CartPage() {
                     Subtotal ({summary.itemCount} items)
                   </span>
                   <span className="font-semibold text-[var(--charcoal)]">
-                    ₺{summary.subtotal.toFixed(2)}
+                    ${summary.subtotal.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between text-[0.875rem]">
@@ -610,7 +610,7 @@ export default function CartPage() {
                     )
                   </span>
                   <span className="font-semibold text-[var(--charcoal)]">
-                    ₺{summary.shipping.toFixed(2)}
+                    ${summary.shipping.toFixed(2)}
                   </span>
                 </div>
                 {couponApplied && (
@@ -627,7 +627,7 @@ export default function CartPage() {
                       className="font-semibold"
                       style={{ color: "#2d7a4f" }}
                     >
-                      –₺0.00
+                      –$0.00
                     </span>
                   </div>
                 )}
@@ -648,7 +648,7 @@ export default function CartPage() {
                       fontSize: "1.6rem",
                     }}
                   >
-                    ₺{summary.total.toFixed(2)}
+                    ${summary.total.toFixed(2)}
                   </span>
                 </div>
                 <p

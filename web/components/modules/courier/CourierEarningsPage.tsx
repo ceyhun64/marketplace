@@ -38,7 +38,7 @@ interface DeliveryRecord {
 // ── Formatters ─────────────────────────────────────────────────────────────────
 
 function formatCurrency(amount: number) {
-  return `₺${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatDate(dateStr: string) {

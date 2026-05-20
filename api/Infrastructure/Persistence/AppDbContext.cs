@@ -513,7 +513,7 @@ public class AppDbContext : DbContext
                 new AnnouncementItem
                 {
                     Id = new Guid("11111111-0000-0000-0000-000000000001"),
-                    Text = "Free shipping on orders over ₺500 — ",
+                    Text = "Free shipping on orders over $500 — ",
                     CtaText = "Shop now",
                     CtaUrl = "/products",
                     IsActive = true,

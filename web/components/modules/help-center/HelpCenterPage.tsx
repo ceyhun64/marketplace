@@ -64,7 +64,7 @@ const CATEGORIES = [
       },
       {
         q: "Do you offer free shipping?",
-        a: "Orders over ₺500 qualify for free standard shipping. Promotional free shipping events are announced on our Deals page.",
+        a: "Orders over $500 qualify for free standard shipping. Promotional free shipping events are announced on our Deals page.",
       },
       {
         q: "Can I ship to multiple addresses?",

@@ -40,7 +40,7 @@ const SECTIONS = [
   {
     id: "payments",
     title: "7. Payments & Fees",
-    content: `All prices are displayed in Turkish Lira (₺) and include applicable VAT unless stated otherwise. Platform commission rates are defined in your merchant agreement and may vary by category and subscription tier. Payouts to merchants are processed weekly, subject to the return window period. We reserve the right to hold funds if fraud or policy violations are suspected.`,
+    content: `All prices are displayed in Turkish Lira ($) and include applicable VAT unless stated otherwise. Platform commission rates are defined in your merchant agreement and may vary by category and subscription tier. Payouts to merchants are processed weekly, subject to the return window period. We reserve the right to hold funds if fraud or policy violations are suspected.`,
   },
   {
     id: "returns",
@@ -60,7 +60,7 @@ const SECTIONS = [
   {
     id: "liability",
     title: "11. Limitation of Liability",
-    content: `To the maximum extent permitted by law, BAZR shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Platform. Our total liability to you for any claim shall not exceed the greater of (a) the amount you paid to us in the 12 months preceding the claim, or (b) ₺500. BAZR acts as an intermediary and is not liable for seller conduct, product quality, or delivery delays.`,
+    content: `To the maximum extent permitted by law, BAZR shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Platform. Our total liability to you for any claim shall not exceed the greater of (a) the amount you paid to us in the 12 months preceding the claim, or (b) $500. BAZR acts as an intermediary and is not liable for seller conduct, product quality, or delivery delays.`,
   },
   {
     id: "governing",

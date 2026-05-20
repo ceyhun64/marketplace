@@ -294,7 +294,7 @@ function PluginCard({ plugin }: { plugin: Plugin }) {
             className="text-xl font-bold text-[var(--charcoal)]"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            ₺{plugin.monthlyPrice.toFixed(2)}
+            ${plugin.monthlyPrice.toFixed(2)}
           </span>
           <span className="font-mono text-[10px] text-[var(--charcoal-soft)] ml-1">
             /mo

@@ -61,7 +61,9 @@ interface InvoiceSummary {
 export default function AdminInvoicesPage() {
   const [search, setSearch] = useState("");
   const [merchantFilter, setMerchantFilter] = useState("all");
-  const [activeTab, setActiveTab] = useState<"invoices" | "accounting">("invoices");
+  const [activeTab, setActiveTab] = useState<"invoices" | "accounting">(
+    "invoices",
+  );
   const [accountingEntryType, setAccountingEntryType] = useState("all");
 
   const { data: invoices, isLoading } = useQuery<AdminInvoice[]>({
@@ -103,7 +105,8 @@ export default function AdminInvoicesPage() {
   const { data: accountingData, isLoading: accountingLoading } =
     useAdminAccountingEntries({
       limit: 50,
-      entryType: accountingEntryType !== "all" ? accountingEntryType : undefined,
+      entryType:
+        accountingEntryType !== "all" ? accountingEntryType : undefined,
     });
 
   const accountingEntries: AccountingEntry[] = accountingData?.items ?? [];
@@ -113,7 +116,7 @@ export default function AdminInvoicesPage() {
       // First try to get the PDF URL directly
       const checkRes = await api.get(`/api/invoices/${invoiceId}`);
       const pdfUrl = checkRes.data?.pdfUrl;
-      
+
       if (pdfUrl) {
         // If there's a direct URL, open it
         window.open(pdfUrl, "_blank");
@@ -124,11 +127,13 @@ export default function AdminInvoicesPage() {
       const res = await api.get(`/api/invoices/${invoiceId}/download`, {
         responseType: "blob",
       });
-      
+
       // Check if response is actually a PDF blob (not an error JSON)
       const contentType = res.headers?.["content-type"] ?? "";
       if (contentType.includes("application/pdf")) {
-        const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+        const url = URL.createObjectURL(
+          new Blob([res.data], { type: "application/pdf" }),
+        );
         const a = document.createElement("a");
         a.href = url;
         a.download = `${invoiceNumber}.pdf`;
@@ -183,7 +188,6 @@ export default function AdminInvoicesPage() {
           All platform invoices — accounting overview
         </p>
       </div>
-
       {/* Tab Switcher */}
       <div className="flex gap-1 bg-(--off-white-2) p-1 rounded-xl w-fit">
         <button
@@ -209,160 +213,169 @@ export default function AdminInvoicesPage() {
           Accounting Ledger
         </button>
       </div>
-
       {/* Stats */}
       {activeTab === "invoices" && (
-      <>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {statCards.map((s) => (
-          <div
-            key={s.label}
-            className="bg-(--bg-surface) border border-(--border-light) rounded-2xl p-4 shadow-sm"
-          >
-            <div className="flex items-center gap-3">
-              <div className={`${s.bg} p-2 rounded-lg`}>
-                <s.icon className={`w-4 h-4 ${s.color}`} />
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {statCards.map((s) => (
+              <div
+                key={s.label}
+                className="bg-(--bg-surface) border border-(--border-light) rounded-2xl p-4 shadow-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`${s.bg} p-2 rounded-lg`}>
+                    <s.icon className={`w-4 h-4 ${s.color}`} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-(--text-tertiary)">{s.label}</p>
+                    <p className="text-lg font-semibold text-(--text-primary)">
+                      {s.value}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-(--text-tertiary)">{s.label}</p>
-                <p className="text-lg font-semibold text-(--text-primary)">{s.value}</p>
+            ))}
+          </div>
+
+          {/* Filters */}
+          <div className="bg-(--bg-surface) border border-(--border-light) rounded-2xl shadow-sm">
+            <div className="p-4 border-b border-(--border-light) flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-tertiary)" />
+                <Input
+                  placeholder="Search by invoice number or customer..."
+                  className="pl-9 rounded-xl border-(--border-mid)"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
               </div>
+              <Select value={merchantFilter} onValueChange={setMerchantFilter}>
+                <SelectTrigger className="w-44 rounded-xl border-(--border-mid)">
+                  <Building2 className="w-4 h-4 mr-2 text-(--text-tertiary)" />
+                  <SelectValue placeholder="All Merchants" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Merchants</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </div>
-        ))}
-      </div>
 
-      {/* Filters */}
-      <div className="bg-(--bg-surface) border border-(--border-light) rounded-2xl shadow-sm">
-        <div className="p-4 border-b border-(--border-light) flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-tertiary)" />
-            <Input
-              placeholder="Search by invoice number or customer..."
-              className="pl-9 rounded-xl border-(--border-mid)"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <Select value={merchantFilter} onValueChange={setMerchantFilter}>
-            <SelectTrigger className="w-44 rounded-xl border-(--border-mid)">
-              <Building2 className="w-4 h-4 mr-2 text-(--text-tertiary)" />
-              <SelectValue placeholder="All Merchants" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Merchants</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-(--bg-sunken)">
-              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
-                Invoice #
-              </TableHead>
-              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
-                Merchant
-              </TableHead>
-              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
-                Customer
-              </TableHead>
-              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
-                Subtotal
-              </TableHead>
-              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
-                VAT
-              </TableHead>
-              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
-                Total
-              </TableHead>
-              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
-                Date
-              </TableHead>
-              <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
-                PDF
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading
-              ? Array.from({ length: 6 }).map((_, i) => (
-                  <TableRow key={i}>
-                    {Array.from({ length: 8 }).map((_, j) => (
-                      <TableCell key={j}>
-                        <Skeleton className="h-4 w-24 rounded" />
-                      </TableCell>
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-(--bg-sunken)">
+                  <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
+                    Invoice #
+                  </TableHead>
+                  <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
+                    Merchant
+                  </TableHead>
+                  <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
+                    Customer
+                  </TableHead>
+                  <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
+                    Subtotal
+                  </TableHead>
+                  <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
+                    VAT
+                  </TableHead>
+                  <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
+                    Total
+                  </TableHead>
+                  <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
+                    Date
+                  </TableHead>
+                  <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
+                    PDF
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading
+                  ? Array.from({ length: 6 }).map((_, i) => (
+                      <TableRow key={i}>
+                        {Array.from({ length: 8 }).map((_, j) => (
+                          <TableCell key={j}>
+                            <Skeleton className="h-4 w-24 rounded" />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  : (invoices ?? []).map((inv) => (
+                      <TableRow
+                        key={inv.id}
+                        className="hover:bg-(--bg-sunken) transition-colors"
+                      >
+                        <TableCell className="font-mono text-xs font-semibold text-(--text-secondary)">
+                          {inv.invoiceNumber}
+                        </TableCell>
+                        <TableCell className="text-sm text-(--text-secondary)">
+                          {inv.merchantName}
+                        </TableCell>
+                        <TableCell className="text-sm text-(--text-secondary)">
+                          {inv.customerName}
+                        </TableCell>
+                        <TableCell className="text-sm text-(--text-secondary)">
+                          ${(inv.subTotal / 100).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-sm text-(--text-tertiary)">
+                          ${(inv.vatAmount / 100).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-sm font-semibold text-(--text-primary)">
+                          ${(inv.totalAmount / 100).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-sm text-(--text-tertiary)">
+                          {new Date(inv.issuedAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          {inv.pdfUrl ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="rounded-lg text-xs h-7 gap-1"
+                              onClick={() =>
+                                handleDownload(inv.id, inv.invoiceNumber)
+                              }
+                            >
+                              <Download className="w-3 h-3" />
+                              PDF
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-(--text-tertiary)">
+                              Pending
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </TableRow>
-                ))
-              : (invoices ?? []).map((inv) => (
-                  <TableRow
-                    key={inv.id}
-                    className="hover:bg-(--bg-sunken) transition-colors"
-                  >
-                    <TableCell className="font-mono text-xs font-semibold text-(--text-secondary)">
-                      {inv.invoiceNumber}
-                    </TableCell>
-                    <TableCell className="text-sm text-(--text-secondary)">
-                      {inv.merchantName}
-                    </TableCell>
-                    <TableCell className="text-sm text-(--text-secondary)">
-                      {inv.customerName}
-                    </TableCell>
-                    <TableCell className="text-sm text-(--text-secondary)">
-                      ${(inv.subTotal / 100).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-sm text-(--text-tertiary)">
-                      ${(inv.vatAmount / 100).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-sm font-semibold text-(--text-primary)">
-                      ${(inv.totalAmount / 100).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-sm text-(--text-tertiary)">
-                      {new Date(inv.issuedAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      {inv.pdfUrl ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="rounded-lg text-xs h-7 gap-1"
-                          onClick={() =>
-                            handleDownload(inv.id, inv.invoiceNumber)
-                          }
-                        >
-                          <Download className="w-3 h-3" />
-                          PDF
-                        </Button>
-                      ) : (
-                        <span className="text-xs text-(--text-tertiary)">Pending</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-          </TableBody>
-        </Table>
+              </TableBody>
+            </Table>
 
-        {!isLoading && (invoices ?? []).length === 0 && (
-          <div className="text-center py-16 text-(--text-tertiary)">
-            <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">No invoices found</p>
+            {!isLoading && (invoices ?? []).length === 0 && (
+              <div className="text-center py-16 text-(--text-tertiary)">
+                <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">No invoices found</p>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-      </> )} {/* end invoices tab */}
-
+        </>
+      )}{" "}
+      {/* end invoices tab */}
       {/* Accounting Ledger Tab */}
       {activeTab === "accounting" && (
         <div className="bg-(--bg-surface) border border-(--border-light) rounded-2xl shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-(--border-light)">
             <div>
-              <h2 className="text-base font-semibold text-(--text-primary)">Accounting Ledger</h2>
+              <h2 className="text-base font-semibold text-(--text-primary)">
+                Accounting Ledger
+              </h2>
               <p className="text-xs text-(--text-tertiary) mt-0.5">
                 Tam muhasebe izi — sipariş/fatura/ödeme bağlantılı tüm kayıtlar
               </p>
             </div>
-            <Select value={accountingEntryType} onValueChange={setAccountingEntryType}>
+            <Select
+              value={accountingEntryType}
+              onValueChange={setAccountingEntryType}
+            >
               <SelectTrigger className="w-36 h-8 text-xs rounded-lg">
                 <SelectValue placeholder="Entry type" />
               </SelectTrigger>
@@ -378,13 +391,27 @@ export default function AdminInvoicesPage() {
           <Table>
             <TableHeader>
               <TableRow className="bg-(--bg-sunken)">
-                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">Invoice #</TableHead>
-                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">Merchant</TableHead>
-                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">Type</TableHead>
-                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">Amount</TableHead>
-                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">Description</TableHead>
-                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">Payment Ref</TableHead>
-                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">Date</TableHead>
+                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
+                  Invoice #
+                </TableHead>
+                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
+                  Merchant
+                </TableHead>
+                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
+                  Type
+                </TableHead>
+                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
+                  Amount
+                </TableHead>
+                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
+                  Description
+                </TableHead>
+                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
+                  Payment Ref
+                </TableHead>
+                <TableHead className="font-semibold text-(--text-secondary) text-xs uppercase">
+                  Date
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -392,24 +419,31 @@ export default function AdminInvoicesPage() {
                 ? Array.from({ length: 6 }).map((_, i) => (
                     <TableRow key={i}>
                       {Array.from({ length: 7 }).map((_, j) => (
-                        <TableCell key={j}><Skeleton className="h-4 w-24 rounded" /></TableCell>
+                        <TableCell key={j}>
+                          <Skeleton className="h-4 w-24 rounded" />
+                        </TableCell>
                       ))}
                     </TableRow>
                   ))
                 : accountingEntries.map((entry) => (
-                    <TableRow key={entry.id} className="hover:bg-(--bg-sunken) transition-colors">
+                    <TableRow
+                      key={entry.id}
+                      className="hover:bg-(--bg-sunken) transition-colors"
+                    >
                       <TableCell className="font-mono text-xs font-semibold text-(--text-secondary)">
                         {entry.invoiceNumber}
                       </TableCell>
-                      <TableCell className="text-sm text-(--text-secondary)">{entry.merchantStoreName}</TableCell>
+                      <TableCell className="text-sm text-(--text-secondary)">
+                        {entry.merchantStoreName}
+                      </TableCell>
                       <TableCell>
                         <span
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                             entry.entryType === "SALE"
                               ? "bg-(--success-bg) text-(--success)"
                               : entry.entryType === "REFUND"
-                              ? "bg-red-50 text-(--danger)"
-                              : "bg-(--warning-bg) text-(--warning)"
+                                ? "bg-red-50 text-(--danger)"
+                                : "bg-(--warning-bg) text-(--warning)"
                           }`}
                         >
                           {entry.entryType === "SALE" ? (
@@ -422,10 +456,12 @@ export default function AdminInvoicesPage() {
                       </TableCell>
                       <TableCell
                         className={`text-sm font-semibold ${
-                          entry.amount >= 0 ? "text-(--success)" : "text-(--danger)"
+                          entry.amount >= 0
+                            ? "text-(--success)"
+                            : "text-(--danger)"
                         }`}
                       >
-                        {entry.amount >= 0 ? "+" : ""}₺{entry.amount.toFixed(2)}
+                        {entry.amount >= 0 ? "+" : ""}${entry.amount.toFixed(2)}
                       </TableCell>
                       <TableCell className="text-sm text-(--text-secondary) max-w-xs truncate">
                         {entry.description}
@@ -448,7 +484,8 @@ export default function AdminInvoicesPage() {
             </div>
           )}
         </div>
-      )} {/* end accounting tab */}
+      )}{" "}
+      {/* end accounting tab */}
     </div>
   );
 }

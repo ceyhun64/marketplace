@@ -30,11 +30,11 @@ export default function CourierProfilePage() {
       await toggleAvailability.mutateAsync();
       toast.success(
         profile?.isAvailable
-          ? "Çevrimdışı olarak işaretlendiniz"
-          : "Çevrimiçi olarak işaretlendiniz",
+          ? "You are now offline"
+          : "You are now online",
       );
     } catch {
-      toast.error("Durum güncellenemedi");
+      toast.error("Status could not be updated");
     }
   };
 
@@ -54,19 +54,19 @@ export default function CourierProfilePage() {
       <div className="text-center py-20">
         <User className="w-12 h-12 mx-auto mb-3 text-(--text-tertiary) opacity-30" />
         <p className="text-(--text-secondary) text-sm">
-          Profil bilgisi yüklenemedi
+          Profile information could not be loaded
         </p>
       </div>
     );
   }
 
-  const memberSince = new Date(profile.createdAt).toLocaleDateString("tr-TR", {
+  const memberSince = new Date(profile.createdAt).toLocaleDateString("en-GB", {
     year: "numeric",
     month: "long",
     day: "numeric",
   });
   const lastLocationTime = profile.lastLocationUpdate
-    ? new Date(profile.lastLocationUpdate).toLocaleString("tr-TR", {
+    ? new Date(profile.lastLocationUpdate).toLocaleString("en-GB", {
         day: "2-digit",
         month: "short",
         hour: "2-digit",
@@ -78,10 +78,10 @@ export default function CourierProfilePage() {
     <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-semibold text-(--text-primary)">
-          Profilim
+          My Profile
         </h1>
         <p className="text-sm text-(--text-tertiary) mt-1">
-          Kurye bilgileriniz ve müsaitlik durumunuz
+          Your courier details and availability status
         </p>
       </div>
 
@@ -102,7 +102,7 @@ export default function CourierProfilePage() {
               <h2 className="text-white font-semibold text-lg leading-none">
                 {profile.fullName}
               </h2>
-              <p className="text-white/50 text-xs mt-1">Kurye</p>
+              <p className="text-white/50 text-xs mt-1">Courier</p>
             </div>
           </div>
           <div className="flex flex-col items-end gap-1.5">
@@ -121,41 +121,41 @@ export default function CourierProfilePage() {
               {profile.isAvailable ? (
                 <>
                   <ToggleRight className="w-4 h-4" />
-                  Çevrimiçi
+                  Online
                 </>
               ) : (
                 <>
                   <ToggleLeft className="w-4 h-4" />
-                  Çevrimdışı
+                  Offline
                 </>
               )}
             </button>
             <span className="text-[10px] text-white/30">
               {toggleAvailability.isPending
-                ? "Güncelleniyor..."
-                : "Durumu değiştir"}
+                ? "Updating..."
+                : "Toggle status"}
             </span>
           </div>
         </div>
 
         <div className="divide-y divide-(--border-subtle) px-6">
           {[
-            { icon: Mail, label: "E-posta", value: profile.email },
-            { icon: Phone, label: "Telefon", value: profile.phone ?? "—" },
+            { icon: Mail, label: "Email", value: profile.email },
+            { icon: Phone, label: "Phone", value: profile.phone ?? "—" },
             {
               icon: Truck,
-              label: "Araç Tipi",
+              label: "Vehicle Type",
               value:
                 profile.vehicleType === "Motorcycle"
-                  ? "🏍️ Motosiklet"
+                  ? "🏍️ Motorcycle"
                   : profile.vehicleType === "Car"
-                    ? "🚗 Otomobil"
+                    ? "🚗 Car"
                     : profile.vehicleType === "Bicycle"
-                      ? "🚲 Bisiklet"
+                      ? "🚲 Bicycle"
                       : profile.vehicleType,
             },
-            { icon: Truck, label: "Plaka", value: profile.plateNumber ?? "—" },
-            { icon: Calendar, label: "Üyelik Tarihi", value: memberSince },
+            { icon: Truck, label: "Plate", value: profile.plateNumber ?? "—" },
+            { icon: Calendar, label: "Member Since", value: memberSince },
           ].map((row) => (
             <div key={row.label} className="flex items-center gap-3 py-3.5">
               <row.icon className="w-4 h-4 text-(--text-tertiary) shrink-0" />
@@ -174,21 +174,21 @@ export default function CourierProfilePage() {
       <div className="grid grid-cols-3 gap-4">
         {[
           {
-            label: "Bugün Teslim",
+            label: "Delivered Today",
             value: profile.stats.todayDelivered,
             text: "text-(--success)",
             bg: "bg-(--success-bg)",
             icon: CheckCircle2,
           },
           {
-            label: "Aktif Kargo",
+            label: "Active Shipments",
             value: profile.stats.totalActive,
             text: "text-(--info)",
             bg: "bg-(--info-bg)",
             icon: Package,
           },
           {
-            label: "Toplam Teslimat",
+            label: "Total Deliveries",
             value: profile.stats.totalDelivered,
             text: "text-(--text-primary)",
             bg: "bg-(--off-white-2)",
@@ -216,7 +216,7 @@ export default function CourierProfilePage() {
       <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-5">
         <h3 className="text-sm font-semibold text-(--text-primary) mb-4 flex items-center gap-2">
           <MapPin className="w-4 h-4 text-(--text-tertiary)" />
-          Konum Bilgisi
+          Location
         </h3>
         {profile.currentLatitude && profile.currentLongitude ? (
           <div className="space-y-3">
@@ -229,18 +229,18 @@ export default function CourierProfilePage() {
                 className="text-sm text-(--success) font-medium"
                 style={{ color: "var(--success)" }}
               >
-                Konum aktif
+                Location active
               </span>
             </div>
             <div className="grid grid-cols-2 gap-3 text-xs text-(--text-secondary)">
               <div>
-                <span className="text-(--text-tertiary)">Enlem</span>
+                <span className="text-(--text-tertiary)">Latitude</span>
                 <p className="font-mono font-medium text-(--text-primary) mt-0.5">
                   {profile.currentLatitude.toFixed(6)}
                 </p>
               </div>
               <div>
-                <span className="text-(--text-tertiary)">Boylam</span>
+                <span className="text-(--text-tertiary)">Longitude</span>
                 <p className="font-mono font-medium text-(--text-primary) mt-0.5">
                   {profile.currentLongitude.toFixed(6)}
                 </p>
@@ -248,7 +248,7 @@ export default function CourierProfilePage() {
             </div>
             {lastLocationTime && (
               <p className="text-xs text-(--text-tertiary)">
-                Son güncelleme: {lastLocationTime}
+                Last updated: {lastLocationTime}
               </p>
             )}
             <a
@@ -258,15 +258,14 @@ export default function CourierProfilePage() {
               className="inline-flex items-center gap-1.5 text-xs text-(--info) hover:underline font-medium"
             >
               <MapPin className="w-3.5 h-3.5" />
-              Google Maps'te aç
+              Open in Google Maps
             </a>
           </div>
         ) : (
           <div className="flex items-center gap-3 text-(--text-tertiary)">
             <WifiOff className="w-4 h-4" />
             <p className="text-sm">
-              Konum bilgisi yok — kargo detay sayfasından konum yayını
-              başlatabilirsiniz
+              No location data — start location broadcast from the shipment detail page
             </p>
           </div>
         )}
@@ -291,12 +290,12 @@ export default function CourierProfilePage() {
               color: profile.isActive ? "var(--success)" : "var(--danger)",
             }}
           >
-            Hesap {profile.isActive ? "Aktif" : "Pasif"}
+            Account {profile.isActive ? "Active" : "Inactive"}
           </p>
           <p className="text-xs mt-0.5 text-(--text-secondary)">
             {profile.isActive
-              ? "Hesabınız aktif, yeni görevler alabilirsiniz."
-              : "Hesabınız pasif durumda. Admin ile iletişime geçin."}
+              ? "Your account is active and you can receive new assignments."
+              : "Your account is inactive. Please contact an administrator."}
           </p>
         </div>
       </div>

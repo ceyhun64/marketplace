@@ -433,7 +433,7 @@ function DynamicVariantSelector({
                       fontFamily: "var(--font-display)",
                     }}
                   >
-                    ₺{matched.priceOverride.toFixed(2)}
+                    ${matched.priceOverride.toFixed(2)}
                   </span>
                 )}
             </>
@@ -707,7 +707,7 @@ function StickyAddToCart({
             className="text-base font-black text-white"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            ₺{price.toFixed(2)}
+            ${price.toFixed(2)}
           </p>
         </div>
         <Button
@@ -789,7 +789,7 @@ function ShippingSection({ shipping }: { shipping: ProductData["shipping"] }) {
         >
           {shipping.freeShipping
             ? "FREE"
-            : `₺${shipping.shippingCost.toFixed(2)}`}
+            : `$${shipping.shippingCost.toFixed(2)}`}
         </span>
       </div>
 
@@ -824,7 +824,7 @@ function ShippingSection({ shipping }: { shipping: ProductData["shipping"] }) {
             className="text-xs font-bold"
             style={{ color: "var(--charcoal)" }}
           >
-            ₺{shipping.expressCost.toFixed(2)}
+            ${shipping.expressCost.toFixed(2)}
           </span>
         </div>
       )}
@@ -840,7 +840,7 @@ function ShippingSection({ shipping }: { shipping: ProductData["shipping"] }) {
             style={{ color: "var(--charcoal-soft)" }}
           >
             Add items worth{" "}
-            <strong style={{ color: "var(--success)" }}>₺500</strong> for free
+            <strong style={{ color: "var(--success)" }}>$500</strong> for free
             shipping
           </span>
         </div>
@@ -1848,7 +1848,7 @@ export default function ProductDetailPage() {
                   className="font-bold"
                   style={{ color: "var(--charcoal)" }}
                 >
-                  ₺{subtotal.toFixed(2)}
+                  ${subtotal.toFixed(2)}
                 </span>
               </div>
               {bulkDiscount.hasDiscount && (
@@ -1867,7 +1867,7 @@ export default function ProductDetailPage() {
                     className="font-bold"
                     style={{ color: "var(--success)" }}
                   >
-                    -₺
+                    -$
                     {(
                       activePrice *
                       quantity *
@@ -1882,7 +1882,7 @@ export default function ProductDetailPage() {
                   className="font-bold"
                   style={{ color: "var(--charcoal)" }}
                 >
-                  ₺{vatAmount.toFixed(2)}
+                  ${vatAmount.toFixed(2)}
                 </span>
               </div>
               <div
@@ -1902,7 +1902,7 @@ export default function ProductDetailPage() {
                     fontFamily: "var(--font-display)",
                   }}
                 >
-                  ₺{totalWithVat.toFixed(2)}
+                  ${totalWithVat.toFixed(2)}
                 </span>
               </div>
             </div>

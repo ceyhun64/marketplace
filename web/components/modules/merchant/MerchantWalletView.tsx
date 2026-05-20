@@ -32,7 +32,7 @@ import { toast } from "sonner";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmt(n: number) {
-  return `₺${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function fmtDate(s: string) {
@@ -122,8 +122,11 @@ export default function MerchantWalletView() {
       return;
     }
     try {
-      await withdraw.mutateAsync({ amount, reference: withdrawRef || undefined });
-      toast.success(`₺${amount.toFixed(2)} withdrawal recorded.`);
+      await withdraw.mutateAsync({
+        amount,
+        reference: withdrawRef || undefined,
+      });
+      toast.success(`$${amount.toFixed(2)} withdrawal recorded.`);
       setWithdrawOpen(false);
       setWithdrawAmount("");
       setWithdrawRef("");
@@ -139,7 +142,9 @@ export default function MerchantWalletView() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-(--text-primary)">Wallet & Payouts</h1>
+        <h1 className="text-2xl font-semibold text-(--text-primary)">
+          Wallet & Payouts
+        </h1>
         <p className="text-sm text-(--text-tertiary) mt-1">
           Escrow balance, cleared funds, and transaction ledger
         </p>
@@ -184,7 +189,7 @@ export default function MerchantWalletView() {
               value={fmt(
                 (wallet?.availableBalance ?? 0) +
                   (wallet?.pendingBalance ?? 0) +
-                  (wallet?.totalWithdrawn ?? 0)
+                  (wallet?.totalWithdrawn ?? 0),
               )}
               sub="Gross (before withdrawals)"
             />
@@ -197,8 +202,9 @@ export default function MerchantWalletView() {
         <div className="flex items-start gap-3 rounded-xl border border-(--warning-border) bg-(--warning-bg) px-4 py-3">
           <AlertCircle className="w-4 h-4 text-(--warning) shrink-0 mt-0.5" />
           <p className="text-sm text-(--warning)">
-            <span className="font-semibold">{fmt(wallet!.pendingBalance)}</span> is currently
-            held in escrow. Funds are cleared automatically 3 days after delivery is confirmed.
+            <span className="font-semibold">{fmt(wallet!.pendingBalance)}</span>{" "}
+            is currently held in escrow. Funds are cleared automatically 3 days
+            after delivery is confirmed.
           </p>
         </div>
       )}
@@ -229,16 +235,22 @@ export default function MerchantWalletView() {
 
       {/* Transaction Ledger */}
       <div>
-        <h2 className="text-sm font-semibold text-(--text-primary) mb-4">Transaction Ledger</h2>
+        <h2 className="text-sm font-semibold text-(--text-primary) mb-4">
+          Transaction Ledger
+        </h2>
         <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) overflow-hidden">
           {txLoading ? (
             <div className="divide-y divide-(--border-subtle)">
-              {Array.from({ length: 6 }).map((_, i) => <RowSkeleton key={i} />)}
+              {Array.from({ length: 6 }).map((_, i) => (
+                <RowSkeleton key={i} />
+              ))}
             </div>
           ) : transactions.length === 0 ? (
             <div className="py-16 text-center">
               <Wallet className="w-10 h-10 text-(--text-tertiary) opacity-20 mx-auto mb-3" />
-              <p className="text-sm text-(--text-secondary) font-medium">No transactions yet</p>
+              <p className="text-sm text-(--text-secondary) font-medium">
+                No transactions yet
+              </p>
             </div>
           ) : (
             <div className="divide-y divide-(--border-subtle)">
@@ -249,8 +261,12 @@ export default function MerchantWalletView() {
                     key={txn.id}
                     className="flex items-center gap-4 px-5 py-4 hover:bg-(--bg-sunken) transition-colors"
                   >
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${meta.bg}`}>
-                      <span className={`text-sm font-bold ${meta.color}`}>{meta.sign}</span>
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${meta.bg}`}
+                    >
+                      <span className={`text-sm font-bold ${meta.color}`}>
+                        {meta.sign}
+                      </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -268,7 +284,9 @@ export default function MerchantWalletView() {
                       <p className="text-xs text-(--text-tertiary) mt-0.5">
                         {txn.notes ?? txn.reference ?? "—"}
                       </p>
-                      <p className="text-[11px] text-(--text-tertiary) mt-0.5">{fmtDate(txn.createdAt)}</p>
+                      <p className="text-[11px] text-(--text-tertiary) mt-0.5">
+                        {fmtDate(txn.createdAt)}
+                      </p>
                     </div>
                     <div className="text-right shrink-0">
                       <p className={`text-sm font-bold ${meta.color}`}>
@@ -302,7 +320,9 @@ export default function MerchantWalletView() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
+                onClick={() =>
+                  setPage((p) => Math.min(pagination.pages, p + 1))
+                }
                 disabled={page === pagination.pages}
               >
                 Next
@@ -321,10 +341,12 @@ export default function MerchantWalletView() {
           <div className="space-y-4 py-2">
             <p className="text-sm text-(--text-secondary)">
               Available:{" "}
-              <span className="font-semibold text-(--success)">{fmt(wallet?.availableBalance ?? 0)}</span>
+              <span className="font-semibold text-(--success)">
+                {fmt(wallet?.availableBalance ?? 0)}
+              </span>
             </p>
             <div>
-              <Label className="text-sm mb-1 block">Amount (₺)</Label>
+              <Label className="text-sm mb-1 block">Amount ($)</Label>
               <Input
                 type="number"
                 min="1"
@@ -391,12 +413,16 @@ function BalanceCard({
       }`}
     >
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs text-(--text-tertiary) font-medium uppercase tracking-wider">{label}</p>
+        <p className="text-xs text-(--text-tertiary) font-medium uppercase tracking-wider">
+          {label}
+        </p>
         <div className={`p-1.5 rounded-lg ${iconBg}`}>
           <Icon className={`w-4 h-4 ${iconColor}`} />
         </div>
       </div>
-      <p className={`text-xl font-bold ${highlight ? "text-(--success)" : "text-(--text-primary)"}`}>
+      <p
+        className={`text-xl font-bold ${highlight ? "text-(--success)" : "text-(--text-primary)"}`}
+      >
         {value}
       </p>
       <p className="text-xs text-(--text-tertiary) mt-1">{sub}</p>

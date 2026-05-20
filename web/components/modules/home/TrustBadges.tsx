@@ -1,12 +1,19 @@
 "use client";
 
-import { ShieldCheck, Truck, RotateCcw, Headphones, CreditCard, Lock } from "lucide-react";
+import {
+  ShieldCheck,
+  Truck,
+  RotateCcw,
+  Headphones,
+  CreditCard,
+  Lock,
+} from "lucide-react";
 
 const BADGES = [
   {
     icon: <Truck className="w-5 h-5" />,
     title: "Free Shipping",
-    subtitle: "On orders over ₺500",
+    subtitle: "On orders over $500",
   },
   {
     icon: <ShieldCheck className="w-5 h-5" />,

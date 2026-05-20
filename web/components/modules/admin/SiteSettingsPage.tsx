@@ -1,29 +1,54 @@
 "use client";
 
 import { useState, useEffect, type KeyboardEvent } from "react";
-import { Button }    from "@/components/ui/button";
-import { Input }     from "@/components/ui/input";
-import { Label }     from "@/components/ui/label";
-import { Textarea }  from "@/components/ui/textarea";
-import { Switch }    from "@/components/ui/switch";
-import { Skeleton }  from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Badge }     from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Tabs, TabsContent, TabsList, TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
-  Megaphone, Layout, Plus, Pencil, Trash2, RefreshCw, Save,
-  ExternalLink, Loader2, X, ImageIcon, Info, Eye, ToggleRight, ToggleLeft,
-  GripVertical, Type, MousePointerClick, Paintbrush, Tag as TagIcon,
+  Megaphone,
+  Layout,
+  Plus,
+  Pencil,
+  Trash2,
+  RefreshCw,
+  Save,
+  ExternalLink,
+  Loader2,
+  X,
+  ImageIcon,
+  Info,
+  Eye,
+  ToggleRight,
+  ToggleLeft,
+  GripVertical,
+  Type,
+  MousePointerClick,
+  Paintbrush,
+  Tag as TagIcon,
 } from "lucide-react";
 import {
   useAdminAnnouncements,
@@ -60,11 +85,17 @@ function SectionCard({
     <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden">
       <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-(--border-light) bg-(--bg-sunken)/50">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="p-2 rounded-lg bg-(--off-white-2) shrink-0">{icon}</div>
+          <div className="p-2 rounded-lg bg-(--off-white-2) shrink-0">
+            {icon}
+          </div>
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-(--text-primary) truncate">{title}</h3>
+            <h3 className="text-sm font-semibold text-(--text-primary) truncate">
+              {title}
+            </h3>
             {subtitle && (
-              <p className="text-xs text-(--text-tertiary) truncate">{subtitle}</p>
+              <p className="text-xs text-(--text-tertiary) truncate">
+                {subtitle}
+              </p>
             )}
           </div>
         </div>
@@ -90,7 +121,9 @@ function FieldRow({
         {label}
       </Label>
       {hint && (
-        <p className="text-xs text-(--text-tertiary) leading-snug -mt-0.5">{hint}</p>
+        <p className="text-xs text-(--text-tertiary) leading-snug -mt-0.5">
+          {hint}
+        </p>
       )}
       {children}
     </div>
@@ -142,8 +175,9 @@ export default function SiteSettingsPage() {
       <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl border border-(--border-mid) bg-(--bg-sunken)/60">
         <Info className="w-4 h-4 text-(--text-tertiary) mt-0.5 shrink-0" />
         <p className="text-xs text-(--text-secondary) leading-relaxed">
-          Changes are live immediately after saving. The frontend caches content for 5 minutes —
-          visitors on the site will see updates within that window.
+          Changes are live immediately after saving. The frontend caches content
+          for 5 minutes — visitors on the site will see updates within that
+          window.
         </p>
       </div>
 
@@ -183,13 +217,13 @@ export default function SiteSettingsPage() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const EMPTY_ANN: UpsertAnnouncementPayload = {
-  text:            "",
-  ctaText:         "",
-  ctaUrl:          "",
+  text: "",
+  ctaText: "",
+  ctaUrl: "",
   backgroundColor: "#1e1e1e",
-  textColor:       "rgba(255,255,255,0.85)",
-  isActive:        true,
-  sortOrder:       0,
+  textColor: "rgba(255,255,255,0.85)",
+  isActive: true,
+  sortOrder: 0,
 };
 
 function AnnouncementsTab() {
@@ -197,15 +231,23 @@ function AnnouncementsTab() {
   const toggleMutation = useToggleAnnouncement();
   const deleteMutation = useDeleteAnnouncement();
 
-  const [formOpen, setFormOpen]         = useState(false);
-  const [editing, setEditing]           = useState<AnnouncementItem | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<AnnouncementItem | null>(null);
-  const [previewIdx, setPreviewIdx]     = useState(0);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<AnnouncementItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AnnouncementItem | null>(
+    null,
+  );
+  const [previewIdx, setPreviewIdx] = useState(0);
 
   const activeItems = items.filter((i) => i.isActive);
 
-  const openAdd  = () => { setEditing(null); setFormOpen(true); };
-  const openEdit = (item: AnnouncementItem) => { setEditing(item); setFormOpen(true); };
+  const openAdd = () => {
+    setEditing(null);
+    setFormOpen(true);
+  };
+  const openEdit = (item: AnnouncementItem) => {
+    setEditing(item);
+    setFormOpen(true);
+  };
 
   return (
     <>
@@ -284,7 +326,9 @@ function AnnouncementsTab() {
             <div className="flex flex-col items-center justify-center py-14 gap-3">
               <Megaphone className="w-8 h-8 text-(--border-mid)" />
               <div className="text-center">
-                <p className="text-sm font-medium text-(--text-secondary)">No announcements yet</p>
+                <p className="text-sm font-medium text-(--text-secondary)">
+                  No announcements yet
+                </p>
                 <p className="text-xs text-(--text-tertiary) mt-0.5">
                   Click "Add" to create the first one.
                 </p>
@@ -300,13 +344,16 @@ function AnnouncementsTab() {
                   onToggle={() =>
                     toggleMutation.mutate(item.id, {
                       onSuccess: () =>
-                        toast.success(item.isActive ? "Deactivated." : "Activated."),
+                        toast.success(
+                          item.isActive ? "Deactivated." : "Activated.",
+                        ),
                       onError: () => toast.error("Failed to update status."),
                     })
                   }
                   onDelete={() => setDeleteTarget(item)}
                   isToggling={
-                    toggleMutation.isPending && toggleMutation.variables === item.id
+                    toggleMutation.isPending &&
+                    toggleMutation.variables === item.id
                   }
                 />
               ))}
@@ -328,15 +375,22 @@ function AnnouncementsTab() {
             <div
               className="flex items-center justify-center gap-3 py-2.5 px-4 text-xs"
               style={{
-                background: activeItems[previewIdx % activeItems.length]?.backgroundColor,
-                color:      activeItems[previewIdx % activeItems.length]?.textColor,
+                background:
+                  activeItems[previewIdx % activeItems.length]?.backgroundColor,
+                color: activeItems[previewIdx % activeItems.length]?.textColor,
               }}
             >
               {activeItems.length > 1 && (
                 <button
-                  onClick={() => setPreviewIdx((p) => (p - 1 + activeItems.length) % activeItems.length)}
+                  onClick={() =>
+                    setPreviewIdx(
+                      (p) => (p - 1 + activeItems.length) % activeItems.length,
+                    )
+                  }
                   className="opacity-50 hover:opacity-100 transition-opacity"
-                >←</button>
+                >
+                  ←
+                </button>
               )}
               <span>
                 {activeItems[previewIdx % activeItems.length]?.text}
@@ -348,9 +402,13 @@ function AnnouncementsTab() {
               </span>
               {activeItems.length > 1 && (
                 <button
-                  onClick={() => setPreviewIdx((p) => (p + 1) % activeItems.length)}
+                  onClick={() =>
+                    setPreviewIdx((p) => (p + 1) % activeItems.length)
+                  }
                   className="opacity-50 hover:opacity-100 transition-opacity"
-                >→</button>
+                >
+                  →
+                </button>
               )}
             </div>
           </div>
@@ -365,12 +423,16 @@ function AnnouncementsTab() {
       />
 
       {/* ── Delete confirmation ── */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => !o && setDeleteTarget(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete announcement?</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently removes the item from rotation. This cannot be undone.
+              This permanently removes the item from rotation. This cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -379,13 +441,18 @@ function AnnouncementsTab() {
               disabled={deleteMutation.isPending}
               onClick={() =>
                 deleteMutation.mutate(deleteTarget!.id, {
-                  onSuccess: () => { toast.success("Announcement deleted."); setDeleteTarget(null); },
-                  onError:   () => toast.error("Failed to delete."),
+                  onSuccess: () => {
+                    toast.success("Announcement deleted.");
+                    setDeleteTarget(null);
+                  },
+                  onError: () => toast.error("Failed to delete."),
                 })
               }
               className="bg-red-600 hover:bg-red-700 text-white gap-2"
             >
-              {deleteMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {deleteMutation.isPending && (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              )}
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -398,12 +465,16 @@ function AnnouncementsTab() {
 // ── Single announcement row ───────────────────────────────────────────────────
 
 function AnnouncementRow({
-  item, onEdit, onToggle, onDelete, isToggling,
+  item,
+  onEdit,
+  onToggle,
+  onDelete,
+  isToggling,
 }: {
   item: AnnouncementItem;
-  onEdit:    (i: AnnouncementItem) => void;
-  onToggle:  () => void;
-  onDelete:  (i: AnnouncementItem) => void;
+  onEdit: (i: AnnouncementItem) => void;
+  onToggle: () => void;
+  onDelete: (i: AnnouncementItem) => void;
   isToggling: boolean;
 }) {
   return (
@@ -419,7 +490,9 @@ function AnnouncementRow({
           className="w-2.5 h-2.5 rounded-full shrink-0 border border-(--border-light)"
           style={{ background: item.backgroundColor }}
         />
-        <span className="truncate text-sm text-(--text-primary)">{item.text}</span>
+        <span className="truncate text-sm text-(--text-primary)">
+          {item.text}
+        </span>
       </div>
 
       {/* CTA */}
@@ -449,10 +522,15 @@ function AnnouncementRow({
         {isToggling ? (
           <Loader2 className="w-4 h-4 animate-spin text-(--text-tertiary)" />
         ) : (
-          <button onClick={onToggle} className="transition-opacity duration-150 hover:opacity-80">
-            {item.isActive
-              ? <ToggleRight className="w-5 h-5 text-(--success)" />
-              : <ToggleLeft  className="w-5 h-5 text-(--text-tertiary)" />}
+          <button
+            onClick={onToggle}
+            className="transition-opacity duration-150 hover:opacity-80"
+          >
+            {item.isActive ? (
+              <ToggleRight className="w-5 h-5 text-(--success)" />
+            ) : (
+              <ToggleLeft className="w-5 h-5 text-(--text-tertiary)" />
+            )}
           </button>
         )}
       </div>
@@ -481,51 +559,65 @@ function AnnouncementRow({
 // ── Add / Edit dialog ─────────────────────────────────────────────────────────
 
 function AnnouncementDialog({
-  open, onClose, editing,
+  open,
+  onClose,
+  editing,
 }: {
-  open:    boolean;
+  open: boolean;
   onClose: () => void;
   editing: AnnouncementItem | null;
 }) {
   const [form, setForm] = useState<UpsertAnnouncementPayload>(EMPTY_ANN);
-  const createMutation  = useCreateAnnouncement();
-  const updateMutation  = useUpdateAnnouncement();
-  const isPending       = createMutation.isPending || updateMutation.isPending;
-  const isEdit          = !!editing;
+  const createMutation = useCreateAnnouncement();
+  const updateMutation = useUpdateAnnouncement();
+  const isPending = createMutation.isPending || updateMutation.isPending;
+  const isEdit = !!editing;
 
   // Pre-fill on open
   useEffect(() => {
     setForm(
       editing
         ? {
-            text:            editing.text,
-            ctaText:         editing.ctaText  ?? "",
-            ctaUrl:          editing.ctaUrl   ?? "",
+            text: editing.text,
+            ctaText: editing.ctaText ?? "",
+            ctaUrl: editing.ctaUrl ?? "",
             backgroundColor: editing.backgroundColor,
-            textColor:       editing.textColor,
-            isActive:        editing.isActive,
-            sortOrder:       editing.sortOrder,
+            textColor: editing.textColor,
+            isActive: editing.isActive,
+            sortOrder: editing.sortOrder,
           }
         : EMPTY_ANN,
     );
   }, [editing, open]);
 
-  const set = (key: keyof UpsertAnnouncementPayload, value: string | boolean | number) =>
-    setForm((f) => ({ ...f, [key]: value }));
+  const set = (
+    key: keyof UpsertAnnouncementPayload,
+    value: string | boolean | number,
+  ) => setForm((f) => ({ ...f, [key]: value }));
 
   const handleSubmit = () => {
-    if (!form.text.trim()) { toast.error("Text is required."); return; }
+    if (!form.text.trim()) {
+      toast.error("Text is required.");
+      return;
+    }
     const payload = {
       ...form,
       ctaText: form.ctaText?.trim() || undefined,
-      ctaUrl:  form.ctaUrl?.trim()  || undefined,
+      ctaUrl: form.ctaUrl?.trim() || undefined,
     };
     const opts = {
-      onSuccess: () => { toast.success(isEdit ? "Announcement updated." : "Announcement created."); onClose(); },
-      onError:   () => toast.error(isEdit ? "Failed to update." : "Failed to create."),
+      onSuccess: () => {
+        toast.success(
+          isEdit ? "Announcement updated." : "Announcement created.",
+        );
+        onClose();
+      },
+      onError: () =>
+        toast.error(isEdit ? "Failed to update." : "Failed to create."),
     };
-    if (isEdit && editing) updateMutation.mutate({ id: editing.id, ...payload }, opts);
-    else                   createMutation.mutate(payload, opts);
+    if (isEdit && editing)
+      updateMutation.mutate({ id: editing.id, ...payload }, opts);
+    else createMutation.mutate(payload, opts);
   };
 
   return (
@@ -546,7 +638,7 @@ function AnnouncementDialog({
             <Textarea
               value={form.text}
               onChange={(e) => set("text", e.target.value)}
-              placeholder="Free shipping on orders over ₺500 — "
+              placeholder="Free shipping on orders over $500 — "
               maxLength={200}
               rows={2}
               className="resize-none text-sm border-(--border-mid) bg-(--bg-surface) focus:border-(--charcoal)"
@@ -625,7 +717,9 @@ function AnnouncementDialog({
                 type="number"
                 min={0}
                 value={form.sortOrder}
-                onChange={(e) => set("sortOrder", parseInt(e.target.value, 10) || 0)}
+                onChange={(e) =>
+                  set("sortOrder", parseInt(e.target.value, 10) || 0)
+                }
                 className="text-sm h-9 border-(--border-mid) bg-(--bg-surface) text-center"
               />
             </div>
@@ -690,38 +784,38 @@ function HeroTab() {
   const saveMutation = useUpdateHeroSettings();
 
   const [form, setForm] = useState<UpdateHeroPayload>({
-    badgeText:          "",
-    headline:           "",
-    headlineAccent:     "",
-    subtitle:           "",
-    searchPlaceholder:  "",
-    primaryCtaText:     "",
-    primaryCtaHref:     "",
-    secondaryCtaText:   "",
-    secondaryCtaHref:   "",
+    badgeText: "",
+    headline: "",
+    headlineAccent: "",
+    subtitle: "",
+    searchPlaceholder: "",
+    primaryCtaText: "",
+    primaryCtaHref: "",
+    secondaryCtaText: "",
+    secondaryCtaHref: "",
     backgroundImageUrl: "",
-    tags:               [],
-    isActive:           true,
+    tags: [],
+    isActive: true,
   });
   const [tagInput, setTagInput] = useState("");
-  const [isDirty,  setIsDirty]  = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   // Pre-fill when server data arrives
   useEffect(() => {
     if (!existing) return;
     setForm({
-      badgeText:          existing.badgeText,
-      headline:           existing.headline,
-      headlineAccent:     existing.headlineAccent  ?? "",
-      subtitle:           existing.subtitle,
-      searchPlaceholder:  existing.searchPlaceholder,
-      primaryCtaText:     existing.primaryCtaText,
-      primaryCtaHref:     existing.primaryCtaHref,
-      secondaryCtaText:   existing.secondaryCtaText  ?? "",
-      secondaryCtaHref:   existing.secondaryCtaHref  ?? "",
+      badgeText: existing.badgeText,
+      headline: existing.headline,
+      headlineAccent: existing.headlineAccent ?? "",
+      subtitle: existing.subtitle,
+      searchPlaceholder: existing.searchPlaceholder,
+      primaryCtaText: existing.primaryCtaText,
+      primaryCtaHref: existing.primaryCtaHref,
+      secondaryCtaText: existing.secondaryCtaText ?? "",
+      secondaryCtaHref: existing.secondaryCtaHref ?? "",
       backgroundImageUrl: existing.backgroundImageUrl ?? "",
-      tags:               existing.tags ?? [],
-      isActive:           existing.isActive,
+      tags: existing.tags ?? [],
+      isActive: existing.isActive,
     });
     setIsDirty(false);
   }, [existing]);
@@ -737,30 +831,51 @@ function HeroTab() {
   // Tag management
   const addTag = () => {
     const t = tagInput.trim();
-    if (t && !form.tags.includes(t)) { set("tags", [...form.tags, t]); setTagInput(""); }
+    if (t && !form.tags.includes(t)) {
+      set("tags", [...form.tags, t]);
+      setTagInput("");
+    }
   };
-  const removeTag = (t: string) => set("tags", form.tags.filter((x) => x !== t));
-  const onTagKey  = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter")     { e.preventDefault(); addTag(); }
+  const removeTag = (t: string) =>
+    set(
+      "tags",
+      form.tags.filter((x) => x !== t),
+    );
+  const onTagKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addTag();
+    }
     if (e.key === "Backspace" && !tagInput && form.tags.length)
       removeTag(form.tags[form.tags.length - 1]);
   };
 
   const handleSave = () => {
-    if (!form.headline.trim())     { toast.error("Headline is required.");     return; }
-    if (!form.primaryCtaText.trim()) { toast.error("Primary CTA text is required."); return; }
+    if (!form.headline.trim()) {
+      toast.error("Headline is required.");
+      return;
+    }
+    if (!form.primaryCtaText.trim()) {
+      toast.error("Primary CTA text is required.");
+      return;
+    }
 
     saveMutation.mutate(
       {
         ...form,
-        headlineAccent:     form.headlineAccent     || undefined,
-        secondaryCtaText:   form.secondaryCtaText   || undefined,
-        secondaryCtaHref:   form.secondaryCtaHref   || undefined,
+        headlineAccent: form.headlineAccent || undefined,
+        secondaryCtaText: form.secondaryCtaText || undefined,
+        secondaryCtaHref: form.secondaryCtaHref || undefined,
         backgroundImageUrl: form.backgroundImageUrl || undefined,
       } as UpdateHeroPayload,
       {
-        onSuccess: () => { toast.success("Hero section saved.", { description: "Visible to visitors within 5 minutes." }); setIsDirty(false); },
-        onError:   () => toast.error("Failed to save hero section."),
+        onSuccess: () => {
+          toast.success("Hero section saved.", {
+            description: "Visible to visitors within 5 minutes.",
+          });
+          setIsDirty(false);
+        },
+        onError: () => toast.error("Failed to save hero section."),
       },
     );
   };
@@ -790,7 +905,10 @@ function HeroTab() {
             checked={form.isActive}
             onCheckedChange={(v) => set("isActive", v)}
           />
-          <Label htmlFor="hero-active" className="text-sm cursor-pointer text-(--text-secondary)">
+          <Label
+            htmlFor="hero-active"
+            className="text-sm cursor-pointer text-(--text-secondary)"
+          >
             {form.isActive ? "Hero section is live" : "Hero section is hidden"}
           </Label>
         </div>
@@ -802,9 +920,17 @@ function HeroTab() {
               disabled={saveMutation.isPending}
               className="gap-2 bg-(--charcoal) hover:bg-(--charcoal-2) text-white min-w-30"
             >
-              {saveMutation.isPending
-                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Saving…</>
-                : <><Save className="w-3.5 h-3.5" />Save Changes</>}
+              {saveMutation.isPending ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                <>
+                  <Save className="w-3.5 h-3.5" />
+                  Save Changes
+                </>
+              )}
             </Button>
           )}
           {!isDirty && !saveMutation.isPending && (
@@ -817,10 +943,8 @@ function HeroTab() {
 
       {/* ── Two-column layout ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
         {/* LEFT column */}
         <div className="space-y-6">
-
           {/* Badge + Headline */}
           <SectionCard
             icon={<Type className="w-4 h-4 text-(--info)" />}
@@ -883,7 +1007,9 @@ function HeroTab() {
 
           {/* Search bar */}
           <SectionCard
-            icon={<MousePointerClick className="w-4 h-4 text-(--text-tertiary)" />}
+            icon={
+              <MousePointerClick className="w-4 h-4 text-(--text-tertiary)" />
+            }
             title="Search Bar"
             subtitle="Placeholder text inside the search input"
           >
@@ -901,7 +1027,6 @@ function HeroTab() {
 
         {/* RIGHT column */}
         <div className="space-y-6">
-
           {/* CTAs */}
           <SectionCard
             icon={<MousePointerClick className="w-4 h-4 text-(--warning)" />}
@@ -956,11 +1081,13 @@ function HeroTab() {
               <div
                 className="flex flex-wrap items-center gap-1.5 p-2.5 rounded-lg min-h-11 cursor-text"
                 style={{
-                  border:     "1.5px solid var(--border-mid)",
+                  border: "1.5px solid var(--border-mid)",
                   background: "var(--bg-surface)",
                 }}
                 onClick={(e) =>
-                  (e.currentTarget.querySelector("input") as HTMLInputElement)?.focus()
+                  (
+                    e.currentTarget.querySelector("input") as HTMLInputElement
+                  )?.focus()
                 }
               >
                 {form.tags.map((tag) => (
@@ -984,7 +1111,9 @@ function HeroTab() {
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={onTagKey}
-                  placeholder={form.tags.length === 0 ? "Add a tag and press Enter…" : ""}
+                  placeholder={
+                    form.tags.length === 0 ? "Add a tag and press Enter…" : ""
+                  }
                   className="flex-1 min-w-30 text-xs outline-none bg-transparent text-(--text-primary) placeholder:text-(--text-tertiary)"
                 />
               </div>
@@ -1042,15 +1171,18 @@ function HeroTab() {
                   src={form.backgroundImageUrl}
                   alt="Background preview"
                   className="w-full h-full object-cover"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display =
+                      "none";
+                  }}
                 />
               </div>
             ) : (
               <div
                 className="mb-4 rounded-xl flex items-center justify-center gap-2 border-(--border-light)"
                 style={{
-                  height:  72,
-                  border:  "1.5px dashed var(--border-mid)",
+                  height: 72,
+                  border: "1.5px dashed var(--border-mid)",
                   background: "var(--bg-sunken)",
                 }}
               >
@@ -1069,8 +1201,8 @@ function HeroTab() {
         <div
           className="fixed bottom-6 right-8 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl"
           style={{
-            background:     "var(--charcoal)",
-            border:         "1px solid rgba(255,255,255,0.1)",
+            background: "var(--charcoal)",
+            border: "1px solid rgba(255,255,255,0.1)",
             backdropFilter: "blur(8px)",
           }}
         >
@@ -1083,9 +1215,17 @@ function HeroTab() {
             disabled={saveMutation.isPending}
             className="gap-1.5 text-xs bg-(--red) hover:bg-(--red-dark) text-white"
           >
-            {saveMutation.isPending
-              ? <><Loader2 className="w-3 h-3 animate-spin" />Saving…</>
-              : <><Save className="w-3 h-3" />Save Now</>}
+            {saveMutation.isPending ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Saving…
+              </>
+            ) : (
+              <>
+                <Save className="w-3 h-3" />
+                Save Now
+              </>
+            )}
           </Button>
         </div>
       )}
