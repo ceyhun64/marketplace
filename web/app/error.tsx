@@ -1,7 +1,7 @@
 "use client";
 
-// app/error.tsx — Uygulama geneli hata sınırı (Next.js App Router)
-// Beklenmedik runtime hatalarını yakalar ve kullanıcıya dostu bir arayüz sunar.
+// app/error.tsx — Application-wide error boundary (Next.js App Router)
+// Catches unexpected runtime errors and presents a user-friendly interface.
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -17,32 +17,32 @@ export default function GlobalError({ error, reset }: ErrorProps) {
   const router = useRouter();
 
   useEffect(() => {
-    // Hata izleme servisi (Sentry vb.) buraya entegre edilebilir.
+    // Error tracking services (like Sentry) can be integrated here.
     console.error("[GlobalError]", error);
   }, [error]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center space-y-6">
-        {/* İkon */}
+        {/* Icon */}
         <div className="flex justify-center">
           <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center">
             <AlertTriangle className="w-10 h-10 text-destructive" />
           </div>
         </div>
 
-        {/* Başlık */}
+        {/* Heading */}
         <div className="space-y-2">
           <h1 className="text-2xl font-bold text-foreground">
-            Bir hata oluştu
+            Something went wrong
           </h1>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            Beklenmedik bir sorun yaşandı. Lütfen sayfayı yenileyin ya da ana
-            sayfaya dönün.
+            An unexpected error occurred. Please try refreshing the page or
+            return to the home page.
           </p>
         </div>
 
-        {/* Hata detayı (sadece geliştirme ortamında) */}
+        {/* Error detail (development environment only) */}
         {process.env.NODE_ENV === "development" && error?.message && (
           <div className="rounded-lg bg-muted p-4 text-left">
             <p className="text-xs font-mono text-muted-foreground break-all">
@@ -56,7 +56,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
           </div>
         )}
 
-        {/* Aksiyon butonları */}
+        {/* Action buttons */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button
             variant="default"
@@ -64,7 +64,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
             className="flex items-center gap-2"
           >
             <RefreshCw className="w-4 h-4" />
-            Tekrar Dene
+            Try Again
           </Button>
           <Button
             variant="outline"
@@ -72,18 +72,18 @@ export default function GlobalError({ error, reset }: ErrorProps) {
             className="flex items-center gap-2"
           >
             <Home className="w-4 h-4" />
-            Ana Sayfa
+            Home Page
           </Button>
         </div>
 
-        {/* Destek linki */}
+        {/* Support link */}
         <p className="text-xs text-muted-foreground">
-          Sorun devam ediyorsa{" "}
+          If the problem persists,{" "}
           <a
             href="/contact"
             className="underline underline-offset-4 hover:text-foreground transition-colors inline-flex items-center gap-0.5"
           >
-            destek ekibimize ulaşın
+            contact our support team
             <ChevronRight className="w-3 h-3" />
           </a>
         </p>

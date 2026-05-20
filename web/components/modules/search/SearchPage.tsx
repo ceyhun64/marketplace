@@ -863,7 +863,7 @@ export default function SearchPage() {
         suggestion: data?.suggestion,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bir hata oluştu");
+      setError(err instanceof Error ? err.message : "Error fetching results");
     } finally {
       setLoading(false);
     }

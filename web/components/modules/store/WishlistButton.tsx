@@ -11,7 +11,8 @@ import { useAuth } from "@/hooks/use-auth";
 import api from "@/lib/api";
 import { toast } from "sonner";
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const isValidUUID = (id: string) => UUID_REGEX.test(id);
 
 interface WishlistButtonProps {
@@ -36,7 +37,7 @@ export function WishlistButton({
   const local = useLocalWishlist();
   const [isPending, setIsPending] = useState(false);
 
-  // Giriş yapmış kullanıcı → API'den kontrol et
+  // Logged in user → Check from API
   const { data: checkData } = useQuery({
     queryKey: wishlistKeys.check(productId),
     queryFn: async () => {
@@ -46,11 +47,11 @@ export function WishlistButton({
       }>(`/api/wishlist/check/${productId}`);
       return data;
     },
-    enabled: !!user && isValidUUID(productId), // Sadece giriş yapılmışsa ve geçerli UUID ise çalış
+    enabled: !!user && isValidUUID(productId), // Only run if logged in and valid UUID
     staleTime: 1000 * 60 * 2,
   });
 
-  // Aktif durum: giriş yapmışsa API verisi, yoksa local store
+  // Active state: API data if logged in, otherwise local store
   const inWishlist = user
     ? (checkData?.inWishlist ?? false)
     : local.hasItem(productId);
@@ -67,12 +68,12 @@ export function WishlistButton({
       if (added) {
         toast.success(
           productName
-            ? `"${productName}" favorilere eklendi`
-            : "Favorilere eklendi",
+            ? `"${productName}" added to wishlist`
+            : "Added to wishlist",
           {
-            // Giriş yapmamış kullanıcıya nazikçe hatırlat
+            // Gently remind the guest user
             description: !user
-              ? "Giriş yaptığınızda listanız hesabınıza aktarılacak."
+              ? "Your list will be transferred to your account when you log in."
               : undefined,
             duration: !user ? 4000 : 2000,
           },
@@ -80,13 +81,13 @@ export function WishlistButton({
       } else {
         toast.success(
           productName
-            ? `"${productName}" favorilerden çıkarıldı`
-            : "Favorilerden çıkarıldı",
+            ? `"${productName}" removed from wishlist`
+            : "Removed from wishlist",
           { duration: 2000 },
         );
       }
     } catch {
-      toast.error("Bir hata oluştu, tekrar deneyin.");
+      toast.error("Something went wrong, please try again.");
     } finally {
       setIsPending(false);
     }
@@ -98,8 +99,8 @@ export function WishlistButton({
         onClick={handleToggle}
         disabled={isPending}
         className={`relative flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 bg-white/90 backdrop-blur-sm shadow-sm hover:border-red-300 transition-all disabled:opacity-50 ${className}`}
-        aria-label={inWishlist ? "Favorilerden çıkar" : "Favorilere ekle"}
-        title={inWishlist ? "Favorilerden çıkar" : "Favorilere ekle"}
+        aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+        title={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
       >
         <Heart
           className={`w-5 h-5 transition-all duration-200 ${
@@ -108,7 +109,7 @@ export function WishlistButton({
               : "text-gray-400 hover:text-red-400"
           }`}
         />
-        {/* Guest badge: kaç ürün bekliyor */}
+        {/* Guest badge: how many items are waiting */}
         {!user && local.count() > 0 && local.hasItem(productId) && (
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
         )}
@@ -129,7 +130,7 @@ export function WishlistButton({
           inWishlist ? "fill-red-500 text-red-500" : ""
         }`}
       />
-      {inWishlist ? "Favorilerde" : "Favorilere Ekle"}
+      {inWishlist ? "In Wishlist" : "Add to Wishlist"}
     </Button>
   );
 }
