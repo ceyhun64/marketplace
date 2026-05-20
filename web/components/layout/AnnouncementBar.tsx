@@ -95,7 +95,7 @@ export default function AnnouncementBar() {
         justifyContent: "center",
         gap: "0.75rem",
         position: "relative",
-        zIndex: 60,
+        zIndex: 40,
       }}
     >
       {/* Prev */}
