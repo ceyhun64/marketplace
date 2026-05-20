@@ -114,7 +114,10 @@ const DASHBOARD_HREF: Record<UserRole, string> = {
 
 function LogoMark() {
   return (
-    <div className="flex items-center gap-2.5 group" style={{ textDecoration: "none" }}>
+    <div
+      className="flex items-center gap-2.5 group"
+      style={{ textDecoration: "none" }}
+    >
       <div
         className="group-hover:scale-105 transition-transform"
         style={{
@@ -130,8 +133,22 @@ function LogoMark() {
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <rect x="1" y="1" width="5" height="5" fill="white" rx="1" />
-          <rect x="8" y="1" width="5" height="5" fill="rgba(255,255,255,0.5)" rx="1" />
-          <rect x="1" y="8" width="5" height="5" fill="rgba(255,255,255,0.5)" rx="1" />
+          <rect
+            x="8"
+            y="1"
+            width="5"
+            height="5"
+            fill="rgba(255,255,255,0.5)"
+            rx="1"
+          />
+          <rect
+            x="1"
+            y="8"
+            width="5"
+            height="5"
+            fill="rgba(255,255,255,0.5)"
+            rx="1"
+          />
           <rect x="8" y="8" width="5" height="5" fill="white" rx="1" />
         </svg>
       </div>
@@ -172,13 +189,24 @@ function AvatarCircle({ user }: { user: CurrentUser }) {
   );
 }
 
-const NOTIF_META: Record<NotifType, { icon: React.ElementType; bg: string; color: string }> = {
-  order:    { icon: ShoppingCart, bg: "rgba(200,16,46,0.08)",  color: "var(--red)"           },
-  deal:     { icon: Tag,          bg: "rgba(234,179,8,0.08)",  color: "#ca8a04"               },
-  store:    { icon: Store,        bg: "rgba(59,130,246,0.08)", color: "#2563eb"               },
-  shipping: { icon: Truck,        bg: "rgba(34,197,94,0.08)",  color: "#16a34a"               },
-  review:   { icon: Star,         bg: "rgba(168,85,247,0.08)", color: "#7c3aed"               },
-  system:   { icon: Bell,         bg: "rgba(51,51,51,0.06)",   color: "var(--charcoal-soft)"  },
+const NOTIF_META: Record<
+  NotifType,
+  { icon: React.ElementType; bg: string; color: string }
+> = {
+  order: {
+    icon: ShoppingCart,
+    bg: "rgba(200,16,46,0.08)",
+    color: "var(--red)",
+  },
+  deal: { icon: Tag, bg: "rgba(234,179,8,0.08)", color: "#ca8a04" },
+  store: { icon: Store, bg: "rgba(59,130,246,0.08)", color: "#2563eb" },
+  shipping: { icon: Truck, bg: "rgba(34,197,94,0.08)", color: "#16a34a" },
+  review: { icon: Star, bg: "rgba(168,85,247,0.08)", color: "#7c3aed" },
+  system: {
+    icon: Bell,
+    bg: "rgba(51,51,51,0.06)",
+    color: "var(--charcoal-soft)",
+  },
 };
 
 function NotificationDropdown() {
@@ -231,7 +259,10 @@ function NotificationDropdown() {
             <Bell className="w-4 h-4" style={{ color: "var(--charcoal)" }} />
             <span
               className="text-sm font-semibold"
-              style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
+              style={{
+                color: "var(--charcoal)",
+                fontFamily: "var(--font-body)",
+              }}
             >
               Notifications
             </span>
@@ -250,7 +281,10 @@ function NotificationDropdown() {
           </div>
           {unreadCount > 0 && (
             <button
-              onClick={(e) => { e.preventDefault(); markAllRead(); }}
+              onClick={(e) => {
+                e.preventDefault();
+                markAllRead();
+              }}
               className="text-[11px] font-semibold"
               style={{ color: "var(--red)", fontFamily: "var(--font-body)" }}
             >
@@ -264,13 +298,24 @@ function NotificationDropdown() {
           {isLoading && (
             <div className="py-8 flex flex-col items-center gap-2">
               <div className="w-6 h-6 rounded-full border-2 border-gray-200 border-t-red-500 animate-spin" />
-              <p className="text-xs" style={{ color: "var(--charcoal-mist)" }}>Loading…</p>
+              <p className="text-xs" style={{ color: "var(--charcoal-mist)" }}>
+                Loading…
+              </p>
             </div>
           )}
           {!isLoading && preview.length === 0 && (
             <div className="py-10 flex flex-col items-center gap-2">
-              <Bell className="w-8 h-8" style={{ color: "rgba(51,51,51,0.15)" }} />
-              <p className="text-xs" style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}>
+              <Bell
+                className="w-8 h-8"
+                style={{ color: "rgba(51,51,51,0.15)" }}
+              />
+              <p
+                className="text-xs"
+                style={{
+                  color: "var(--charcoal-soft)",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
                 No notifications yet
               </p>
             </div>
@@ -284,7 +329,9 @@ function NotificationDropdown() {
                 className="flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-(--off-white)"
                 style={{
                   borderBottom: "1px solid rgba(51,51,51,0.04)",
-                  background: notif.read ? "transparent" : "rgba(200,16,46,0.02)",
+                  background: notif.read
+                    ? "transparent"
+                    : "rgba(200,16,46,0.02)",
                 }}
                 onClick={() => {
                   markRead(notif.id);
@@ -296,7 +343,10 @@ function NotificationDropdown() {
                     className="w-8 h-8 rounded-xl flex items-center justify-center"
                     style={{ background: meta.bg }}
                   >
-                    <Icon className="w-3.5 h-3.5" style={{ color: meta.color }} />
+                    <Icon
+                      className="w-3.5 h-3.5"
+                      style={{ color: meta.color }}
+                    />
                   </div>
                   {!notif.read && (
                     <div
@@ -308,20 +358,29 @@ function NotificationDropdown() {
                 <div className="flex-1 min-w-0">
                   <p
                     className="text-xs font-semibold leading-snug truncate"
-                    style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
+                    style={{
+                      color: "var(--charcoal)",
+                      fontFamily: "var(--font-body)",
+                    }}
                   >
                     {notif.title}
                   </p>
                   <p
                     className="text-[11px] leading-relaxed mt-0.5 line-clamp-2"
-                    style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
+                    style={{
+                      color: "var(--charcoal-soft)",
+                      fontFamily: "var(--font-body)",
+                    }}
                   >
                     {notif.message}
                   </p>
                 </div>
                 <span
                   className="text-[10px] shrink-0 mt-0.5"
-                  style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-body)" }}
+                  style={{
+                    color: "var(--charcoal-mist)",
+                    fontFamily: "var(--font-body)",
+                  }}
                 >
                   {notif.time}
                 </span>
@@ -331,11 +390,17 @@ function NotificationDropdown() {
         </div>
 
         {/* Footer */}
-        <div className="border-t" style={{ borderColor: "var(--border-light)" }}>
+        <div
+          className="border-t"
+          style={{ borderColor: "var(--border-light)" }}
+        >
           <a
             href="/notifications"
             className="flex items-center justify-center w-full py-3 text-xs font-semibold transition-colors hover:bg-(--off-white)"
-            style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
+            style={{
+              color: "var(--charcoal-soft)",
+              fontFamily: "var(--font-body)",
+            }}
           >
             View all notifications →
           </a>
@@ -359,23 +424,25 @@ function SheetDivider() {
 // ── Navbar ────────────────────────────────────────────────────────────────────
 
 export default function Navbar() {
-  const pathname  = usePathname();
-  const router    = useRouter();
+  const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuth();
   const cartCount = useCartCount();
-  const isMobile  = useIsMobile();
+  const isMobile = useIsMobile();
   const { openCart, openCommand } = useUI();
 
-  const [mounted,      setMounted]      = useState(false);
-  const [scrolled,     setScrolled]     = useState(false);
-  const [searchOpen,   setSearchOpen]   = useState(false);
-  const [searchQuery,  setSearchQuery]  = useState("");
+  const [mounted, setMounted] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   // ── Lifecycle ───────────────────────────────────────────────────────────────
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -421,13 +488,20 @@ export default function Navbar() {
        */}
       <header
         data-fixed-header
-        className="flex flex-col items-center pointer-events-none px-3 pt-3 sm:px-5 sm:pt-4"
+        className="flex flex-col items-center pointer-events-none px-3 sm:px-5 transition-all duration-300 ease-out"
+        style={{
+          paddingTop: scrolled ? "1rem" : "0rem", // Geçişin tetiklenmesi için ilk değeri "0rem" olarak netleştirdik
+        }}
       >
         <div
-          className={cn("w-full pointer-events-auto transition-all rounded-2xl")}
+          className={cn(
+            "w-full pointer-events-auto transition-all rounded-2xl",
+          )}
           style={{
             maxWidth: 1300,
-            background: scrolled ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0)",
+            background: scrolled
+              ? "rgba(255,255,255,0.92)"
+              : "rgba(255,255,255,0)",
             backdropFilter: scrolled ? "blur(16px)" : "blur(0px)",
             WebkitBackdropFilter: scrolled ? "blur(16px)" : "blur(0px)",
             border: "1px solid",
@@ -438,9 +512,12 @@ export default function Navbar() {
           }}
         >
           <div className="flex items-center h-10 gap-2 md:gap-3">
-
             {/* ── Logo ─────────────────────────────────────────────────────── */}
-            <Link href="/" style={{ textDecoration: "none" }} className="shrink-0">
+            <Link
+              href="/"
+              style={{ textDecoration: "none" }}
+              className="shrink-0"
+            >
               <LogoMark />
             </Link>
 
@@ -456,12 +533,18 @@ export default function Navbar() {
                     fontWeight: pathname === link.href ? 600 : 500,
                     color: link.highlight
                       ? "var(--red)"
-                      : pathname === link.href ? "var(--charcoal)" : "var(--charcoal-soft)",
+                      : pathname === link.href
+                        ? "var(--charcoal)"
+                        : "var(--charcoal-soft)",
                     padding: "0.5rem 0.875rem",
                     borderRadius: "0.5rem",
-                    background: pathname === link.href ? "var(--off-white-2)" : "transparent",
+                    background:
+                      pathname === link.href
+                        ? "var(--off-white-2)"
+                        : "transparent",
                     textDecoration: "none",
-                    transition: "color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out)",
+                    transition:
+                      "color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out)",
                     letterSpacing: "0.01em",
                     display: "inline-flex",
                     alignItems: "center",
@@ -534,7 +617,6 @@ export default function Navbar() {
 
             {/* ── Action cluster ────────────────────────────────────────────── */}
             <div className="flex items-center gap-0.5">
-
               {/* Desktop inline search — hidden on mobile (lives inside Sheet instead) */}
               <div className="hidden md:flex relative items-center">
                 <form
@@ -544,9 +626,15 @@ export default function Navbar() {
                     searchOpen ? "w-48 px-3" : "w-0 px-0",
                   )}
                   style={{
-                    background: searchOpen ? "var(--off-white-2)" : "transparent",
-                    border: searchOpen ? "1.5px solid var(--border-mid)" : "1.5px solid transparent",
-                    boxShadow: searchOpen ? "inset 0 1px 3px rgba(51,51,51,0.05)" : "none",
+                    background: searchOpen
+                      ? "var(--off-white-2)"
+                      : "transparent",
+                    border: searchOpen
+                      ? "1.5px solid var(--border-mid)"
+                      : "1.5px solid transparent",
+                    boxShadow: searchOpen
+                      ? "inset 0 1px 3px rgba(51,51,51,0.05)"
+                      : "none",
                     transition: "width var(--duration-slow) var(--ease-out)",
                   }}
                 >
@@ -556,7 +644,10 @@ export default function Navbar() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search..."
                     className="border-0 bg-transparent text-xs focus-visible:ring-0 h-8 p-0"
-                    style={{ fontFamily: "var(--font-body)", color: "var(--charcoal)" }}
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      color: "var(--charcoal)",
+                    }}
                   />
                   <button
                     type="button"
@@ -585,7 +676,10 @@ export default function Navbar() {
               <Link
                 href="/wishlist"
                 className="hidden sm:flex p-2.5 rounded-lg transition-all"
-                style={{ color: "var(--charcoal-soft)", textDecoration: "none" }}
+                style={{
+                  color: "var(--charcoal-soft)",
+                  textDecoration: "none",
+                }}
                 aria-label="Wishlist"
               >
                 <Heart className="w-4.25 h-4.25" strokeWidth={2} />
@@ -607,7 +701,12 @@ export default function Navbar() {
                 aria-label="Open search (Ctrl+K)"
               >
                 <Search className="w-3.5 h-3.5" />
-                <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem" }}>
+                <span
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.75rem",
+                  }}
+                >
                   Search…
                 </span>
                 <kbd
@@ -627,7 +726,10 @@ export default function Navbar() {
                 type="button"
                 onClick={openCart}
                 className="relative p-2.5 rounded-lg transition-all"
-                style={{ color: "var(--charcoal-soft)", background: "transparent" }}
+                style={{
+                  color: "var(--charcoal-soft)",
+                  background: "transparent",
+                }}
                 aria-label="Open cart"
               >
                 <ShoppingBag className="w-4.25 h-4.25" strokeWidth={2} />
@@ -675,7 +777,10 @@ export default function Navbar() {
                       className="outline-none flex items-center gap-1.5 hover:opacity-80 transition-opacity"
                     >
                       <AvatarCircle user={user} />
-                      <ChevronDown className="w-3 h-3" style={{ color: "var(--charcoal-soft)" }} />
+                      <ChevronDown
+                        className="w-3 h-3"
+                        style={{ color: "var(--charcoal-soft)" }}
+                      />
                     </button>
                   </DropdownMenuTrigger>
 
@@ -701,19 +806,26 @@ export default function Navbar() {
                       >
                         {user.name}
                       </p>
-                      <p className="text-[10px] truncate mt-0.5" style={{ color: "var(--charcoal-soft)" }}>
+                      <p
+                        className="text-[10px] truncate mt-0.5"
+                        style={{ color: "var(--charcoal-soft)" }}
+                      >
                         {user.email}
                       </p>
                     </div>
 
                     {[
-                      { href: "/profile",     icon: User,         label: "Profile"     },
-                      { href: "/orders",      icon: ClipboardList,label: "Orders"      },
-                      { href: "/track",       icon: MapPin,        label: "Track Order" },
-                      { href: "/wallet",      icon: Wallet,        label: "Wallet"      },
-                      { href: "/loyalty",     icon: Award,         label: "Loyalty"     },
-                      { href: "/referral",    icon: Users,         label: "Referral"    },
-                      { href: "/help-center", icon: HelpCircle,    label: "Help Center" },
+                      { href: "/profile", icon: User, label: "Profile" },
+                      { href: "/orders", icon: ClipboardList, label: "Orders" },
+                      { href: "/track", icon: MapPin, label: "Track Order" },
+                      { href: "/wallet", icon: Wallet, label: "Wallet" },
+                      { href: "/loyalty", icon: Award, label: "Loyalty" },
+                      { href: "/referral", icon: Users, label: "Referral" },
+                      {
+                        href: "/help-center",
+                        icon: HelpCircle,
+                        label: "Help Center",
+                      },
                     ].map(({ href, icon: Icon, label }) => (
                       <DropdownMenuItem key={href} asChild>
                         <Link
@@ -752,7 +864,10 @@ export default function Navbar() {
                       </DropdownMenuItem>
                     )}
 
-                    <DropdownMenuSeparator className="my-1" style={{ background: "var(--border-light)" }} />
+                    <DropdownMenuSeparator
+                      className="my-1"
+                      style={{ background: "var(--border-light)" }}
+                    />
 
                     <DropdownMenuItem asChild>
                       <button
@@ -819,10 +934,17 @@ export default function Navbar() {
           }}
         >
           {/* Sheet header */}
-          <SheetHeader className="px-4 pt-4 pb-3 border-b shrink-0" style={{ borderColor: "var(--border-light)" }}>
+          <SheetHeader
+            className="px-4 pt-4 pb-3 border-b shrink-0"
+            style={{ borderColor: "var(--border-light)" }}
+          >
             <div className="flex items-center justify-between">
               <SheetTitle asChild>
-                <Link href="/" onClick={() => setMobileMenuOpen(false)} style={{ textDecoration: "none" }}>
+                <Link
+                  href="/"
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{ textDecoration: "none" }}
+                >
                   <LogoMark />
                 </Link>
               </SheetTitle>
@@ -852,7 +974,6 @@ export default function Navbar() {
 
           {/* Scrollable nav content */}
           <nav className="flex-1 overflow-y-auto overscroll-contain px-3 py-2 pb-safe">
-
             {/* Primary nav links */}
             {PUBLIC_NAV.map((link) => (
               <Link
@@ -866,8 +987,13 @@ export default function Navbar() {
                   fontWeight: pathname === link.href ? 600 : 500,
                   color: link.highlight
                     ? "var(--red)"
-                    : pathname === link.href ? "var(--charcoal)" : "var(--charcoal-soft)",
-                  background: pathname === link.href ? "var(--off-white-2)" : "transparent",
+                    : pathname === link.href
+                      ? "var(--charcoal)"
+                      : "var(--charcoal-soft)",
+                  background:
+                    pathname === link.href
+                      ? "var(--off-white-2)"
+                      : "transparent",
                   textDecoration: "none",
                 }}
               >
@@ -901,13 +1027,13 @@ export default function Navbar() {
 
             {/* Utility links */}
             {[
-              { href: "/wishlist",   icon: Heart,       label: "Wishlist"    },
-              { href: "/wallet",     icon: Wallet,       label: "Wallet"      },
-              { href: "/loyalty",    icon: Award,        label: "Loyalty"     },
-              { href: "/referral",   icon: Users,        label: "Referral"    },
-              { href: "/gift-cards", icon: Gift,         label: "Gift Cards"  },
-              { href: "/track",      icon: MapPin,        label: "Track Order" },
-              { href: "/help-center",icon: HelpCircle,   label: "Help Center" },
+              { href: "/wishlist", icon: Heart, label: "Wishlist" },
+              { href: "/wallet", icon: Wallet, label: "Wallet" },
+              { href: "/loyalty", icon: Award, label: "Loyalty" },
+              { href: "/referral", icon: Users, label: "Referral" },
+              { href: "/gift-cards", icon: Gift, label: "Gift Cards" },
+              { href: "/track", icon: MapPin, label: "Track Order" },
+              { href: "/help-center", icon: HelpCircle, label: "Help Center" },
             ].map(({ href, icon: Icon, label }) => (
               <Link
                 key={href}
@@ -938,13 +1064,19 @@ export default function Navbar() {
                   <div className="min-w-0">
                     <p
                       className="text-sm font-semibold truncate"
-                      style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
+                      style={{
+                        color: "var(--charcoal)",
+                        fontFamily: "var(--font-body)",
+                      }}
                     >
                       {user.name}
                     </p>
                     <p
                       className="text-[11px] truncate"
-                      style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
+                      style={{
+                        color: "var(--charcoal-soft)",
+                        fontFamily: "var(--font-body)",
+                      }}
                     >
                       {user.email}
                     </p>
@@ -953,10 +1085,16 @@ export default function Navbar() {
 
                 {/* Profile links */}
                 {[
-                  { href: "/profile", icon: User,          label: "My Profile"  },
-                  { href: "/orders",  icon: ClipboardList, label: "My Orders"   },
+                  { href: "/profile", icon: User, label: "My Profile" },
+                  { href: "/orders", icon: ClipboardList, label: "My Orders" },
                   ...(user.role !== "customer"
-                    ? [{ href: DASHBOARD_HREF[user.role], icon: LayoutDashboard, label: "Dashboard" }]
+                    ? [
+                        {
+                          href: DASHBOARD_HREF[user.role],
+                          icon: LayoutDashboard,
+                          label: "Dashboard",
+                        },
+                      ]
                     : []),
                 ].map(({ href, icon: Icon, label }) => (
                   <Link
@@ -979,7 +1117,10 @@ export default function Navbar() {
 
                 <button
                   type="button"
-                  onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                  onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }}
                   className="flex items-center gap-3 w-full px-3 py-3 rounded-xl min-h-11 transition-colors mt-1"
                   style={{
                     fontFamily: "var(--font-body)",
