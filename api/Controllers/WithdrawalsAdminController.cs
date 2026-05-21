@@ -1,4 +1,5 @@
 using api.Domain.Entities;
+using api.Domain.Enums;
 using api.Infrastructure.Persistence;
 using api.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -18,11 +19,13 @@ public class WithdrawalsAdminController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IWalletService _wallet;
+    private readonly ICurrentUserService _currentUser;
 
-    public WithdrawalsAdminController(AppDbContext db, IWalletService wallet)
+    public WithdrawalsAdminController(AppDbContext db, IWalletService wallet, ICurrentUserService currentUser)
     {
         _db = db;
         _wallet = wallet;
+        _currentUser = currentUser;
     }
 
     /// <summary>GET /api/admin/withdrawals — List all withdrawal requests</summary>
@@ -104,7 +107,7 @@ public class WithdrawalsAdminController : ControllerBase
 
         request.Status = WithdrawalStatus.Approved;
         request.AdminNote = dto.Note;
-        request.ProcessedByAdminId = Guid.Empty; // TODO: inject ICurrentUserService for admin ID
+        request.ProcessedByAdminId = _currentUser.UserId;
         request.ProcessedAt = DateTime.UtcNow;
         request.UpdatedAt = DateTime.UtcNow;
 

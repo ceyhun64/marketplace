@@ -14,29 +14,33 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "portrait-primary",
     categories: ["shopping", "business"],
     lang: "en",
+    // NOTE: SVG icons serve as brand placeholders during development.
+    // Before launching to production, replace these with properly exported
+    // PNG files (192×192 and 512×512) generated from the final brand assets.
+    // Recommended tool: https://realfavicongenerator.net
     icons: [
       {
-        src: "/icons/icon-192x192.png",
+        src: "/icons/icon-192x192.svg",
         sizes: "192x192",
-        type: "image/png",
+        type: "image/svg+xml",
         purpose: "maskable",
       },
       {
-        src: "/icons/icon-512x512.png",
+        src: "/icons/icon-512x512.svg",
         sizes: "512x512",
-        type: "image/png",
+        type: "image/svg+xml",
         purpose: "maskable",
       },
       {
-        src: "/icons/icon-192x192.png",
+        src: "/icons/icon-192x192.svg",
         sizes: "192x192",
-        type: "image/png",
+        type: "image/svg+xml",
         purpose: "any",
       },
       {
-        src: "/icons/icon-512x512.png",
+        src: "/icons/icon-512x512.svg",
         sizes: "512x512",
-        type: "image/png",
+        type: "image/svg+xml",
         purpose: "any",
       },
     ],
@@ -46,31 +50,24 @@ export default function manifest(): MetadataRoute.Manifest {
         short_name: "Search",
         description: "Search for products across all sellers",
         url: "/search",
-        icons: [{ src: "/icons/icon-192x192.png", sizes: "192x192" }],
+        icons: [{ src: "/icons/icon-192x192.svg", sizes: "192x192" }],
       },
       {
         name: "My Orders",
         short_name: "Orders",
         description: "View and track your orders",
         url: "/orders",
-        icons: [{ src: "/icons/icon-192x192.png", sizes: "192x192" }],
+        icons: [{ src: "/icons/icon-192x192.svg", sizes: "192x192" }],
       },
       {
         name: "Today's Deals",
         short_name: "Deals",
         description: "Browse today's best deals",
         url: "/deals",
-        icons: [{ src: "/icons/icon-192x192.png", sizes: "192x192" }],
+        icons: [{ src: "/icons/icon-192x192.svg", sizes: "192x192" }],
       },
     ],
-    screenshots: [
-      {
-        src: "/screenshots/home.png",
-        sizes: "1280x800",
-        type: "image/png",
-        form_factor: "wide",
-        label: "Home page showing featured products",
-      },
-    ],
+    // Screenshot silindi — gerçek ekran görüntüsü olmadan 404 üretiyordu.
+    // Production'a geçmeden önce app store benzeri bir tanıtım ekranı ekleyin.
   };
 }

@@ -1,4 +1,3 @@
-// app/robots.ts — Next.js App Router robots.txt üreteci
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {

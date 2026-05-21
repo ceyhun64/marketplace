@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ShoppingCart, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatPrice } from "@/lib/format";
 import type { Product } from "@/types/entities";
 import { WishlistButton } from "@/components/modules/store/WishlistButton";
 
@@ -54,22 +55,24 @@ export function ProductCard({
   return (
     <div
       className={cn(
-        "group relative flex flex-col overflow-hidden bg-white transition-all duration-300 hover:-translate-y-1",
+        // Card shell — hover lifts slightly; group enables child group-hover: variants
+        "group relative flex flex-col overflow-hidden bg-white transition-all duration-300",
+        "hover:-translate-y-0.5 hover:shadow-(--shadow-md)",
         className,
       )}
       style={{
-        borderRadius: "6px",
-        border: "1px solid rgba(51,51,51,0.08)",
-        boxShadow: "0 1px 3px rgba(51,51,51,0.06)",
+        borderRadius: "var(--radius-lg)",
+        border: "1px solid var(--border-light)",
+        boxShadow: "var(--shadow-sm)",
       }}
     >
-      {/* Red top accent */}
+      {/* Brand red sweep — slides in from left on card hover */}
       <div
-        className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 z-10"
+        className="absolute inset-x-0 top-0 h-0.75 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 z-10"
         style={{ background: "var(--red)" }}
       />
 
-      {/* Image */}
+      {/* ── Product image ────────────────────────────────────────────────────── */}
       <Link
         href={href}
         className="relative block aspect-square overflow-hidden"
@@ -87,24 +90,21 @@ export function ProductCard({
           onError={(e) => {
             const el = e.currentTarget;
             const fallback = getLocalFallback(product.id);
-            // Prevent infinite loop if local image also fails
-            if (!el.src.includes("/products/product")) {
-              el.src = fallback;
-            }
+            if (!el.src.includes("/products/product")) el.src = fallback;
           }}
         />
 
+        {/* Out-of-stock overlay */}
         {isOutOfStock && (
           <div
             className="absolute inset-0 flex items-center justify-center backdrop-blur-sm"
             style={{ background: "rgba(245,245,243,0.7)" }}
           >
             <span
-              className="rounded-full px-3 py-1 text-xs font-mono font-medium"
+              className="rounded-full px-3 py-1 text-xs font-mono font-medium tracking-wide"
               style={{
                 background: "rgba(51,51,51,0.08)",
                 color: "var(--charcoal-soft)",
-                letterSpacing: "0.05em",
               }}
             >
               Out of Stock
@@ -112,17 +112,17 @@ export function ProductCard({
           </div>
         )}
 
+        {/* Tag badges */}
         {product.tags && product.tags.length > 0 && (
           <div className="absolute left-2.5 top-2.5 flex flex-wrap gap-1">
             {product.tags.slice(0, 2).map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium"
+                className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium tracking-wide"
                 style={{
                   background: "rgba(200,16,46,0.08)",
                   color: "var(--red)",
                   border: "1px solid rgba(200,16,46,0.15)",
-                  letterSpacing: "0.05em",
                 }}
               >
                 {tag}
@@ -131,6 +131,7 @@ export function ProductCard({
           </div>
         )}
 
+        {/* Wishlist — revealed on hover */}
         <div className="absolute right-2.5 top-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <WishlistButton
             productId={product.id}
@@ -140,86 +141,73 @@ export function ProductCard({
         </div>
       </Link>
 
-      {/* Info */}
+      {/* ── Info ─────────────────────────────────────────────────────────────── */}
       <div className="flex flex-1 flex-col gap-2 p-3.5">
+        {/* Store name */}
         {context === "marketplace" && product.merchantStoreName && (
           <Link
             href={`/store/${product.merchantSlug}`}
-            className="flex items-center gap-1 text-[11px] font-mono transition-colors"
-            style={{ color: "var(--charcoal-soft)", letterSpacing: "0.05em" }}
+            className="flex items-center gap-1 text-[11px] font-mono tracking-wide transition-colors hover:text-(--red)"
+            style={{ color: "var(--charcoal-soft)" }}
             onClick={(e) => e.stopPropagation()}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--red)")}
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.color = "var(--charcoal-soft)")
-            }
           >
-            <Store className="h-3 w-3" />
+            <Store className="h-3 w-3 shrink-0" />
             {product.merchantStoreName}
           </Link>
         )}
 
-        <Link href={href}>
+        {/* Product title — Tailwind hover instead of JS event handlers */}
+        <Link href={href} className="group/title block">
           <h3
-            className="line-clamp-2 text-[0.875rem] font-bold leading-snug transition-colors text-[var(--charcoal)]"
+            className={cn(
+              "line-clamp-2 text-sm font-bold leading-snug transition-colors duration-150",
+              "text-(--charcoal) group-hover/title:text-(--red)",
+            )}
             style={{ fontFamily: "var(--font-body)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--red)")}
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.color = "var(--charcoal))")
-            }
           >
             {product.name}
           </h3>
         </Link>
 
+        {/* Price + add-to-cart */}
         <div className="mt-auto flex items-center justify-between gap-2">
           <span
-            className="text-base font-bold text-[var(--charcoal)]"
+            className="text-base font-bold text-(--charcoal) num"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            {product.price.toLocaleString("tr-TR", {
-              style: "currency",
-              currency: "TRY",
-            })}
+            {formatPrice(product.price)}
           </span>
 
           {onAddToCart && (
             <button
-              className="h-8 w-8 shrink-0 flex items-center justify-center rounded-lg border transition-all"
-              style={{
-                border: "1.5px solid rgba(51,51,51,0.15)",
-                color: "var(--charcoal)",
-                background: "transparent",
-              }}
+              // Min 44 × 44 px touch target on mobile, 36 × 36 on desktop
+              className={cn(
+                "h-11 w-11 sm:h-9 sm:w-9 shrink-0",
+                "flex items-center justify-center rounded-lg",
+                "border transition-all duration-150",
+                "border-[rgba(51,51,51,0.15)] bg-transparent text-(--charcoal)",
+                "hover:bg-(--red) hover:border-(--red) hover:text-white",
+                "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-[rgba(51,51,51,0.15)] disabled:hover:text-(--charcoal)",
+              )}
               disabled={isOutOfStock}
               onClick={(e) => {
                 e.preventDefault();
                 onAddToCart(product);
               }}
-              aria-label="Sepete ekle"
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.background = "var(--red)";
-                el.style.borderColor = "var(--red)";
-                el.style.color = "#fff";
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.background = "transparent";
-                el.style.borderColor = "rgba(51,51,51,0.15)";
-                el.style.color = "var(--charcoal)";
-              }}
+              aria-label="Add to cart"
             >
               <ShoppingCart className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
 
+        {/* Low-stock nudge */}
         {product.stock > 0 && product.stock <= 5 && (
           <p
-            className="font-mono text-[10px] font-medium"
-            style={{ color: "var(--red)", letterSpacing: "0.05em" }}
+            className="font-mono text-[10px] font-medium tracking-wide"
+            style={{ color: "var(--red)" }}
           >
-            Son {product.stock} adet!
+            Only {product.stock} left!
           </p>
         )}
       </div>

@@ -25,16 +25,37 @@ Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger()
 // ── Helper: postgresql:// URL → Npgsql connection string ─────────────────────
 static string ToNpgsql(string url, bool isDevelopment)
 {
-    var uri = new Uri(url);
+    var uri      = new Uri(url);
     var userInfo = uri.UserInfo.Split(':');
-    var host = uri.Host;
-    var port = uri.Port > 0 ? uri.Port : 5432;
-    var db = uri.AbsolutePath.TrimStart('/');
-    var user = userInfo[0];
-    var pass = userInfo.Length > 1 ? userInfo[1] : "";
-    var sslMode = isDevelopment ? "Disable" : "Require";
+    var host     = uri.Host;
+    var port     = uri.Port > 0 ? uri.Port : 5432;
+    var db       = uri.AbsolutePath.TrimStart('/');
+    var user     = userInfo[0];
+    var pass     = userInfo.Length > 1 ? userInfo[1] : "";
+    var sslMode  = isDevelopment ? "Disable" : "Require";
     var trustCert = isDevelopment ? "" : ";Trust Server Certificate=true";
-    return $"Host={host};Port={port};Database={db};Username={user};Password={pass};SSL Mode={sslMode}{trustCert}";
+
+    // ── Connection pool tuning ────────────────────────────────────────────────
+    // These values assume a single API pod against a managed PostgreSQL instance
+    // (e.g. RDS db.t3.medium or Azure Database for PostgreSQL Flexible Server GP-2).
+    //
+    // Rule of thumb: MaxPoolSize ≤ (DB max_connections / number_of_pods) × 0.8
+    // Typical managed DB: 500 max_connections, 2 pods → 500 / 2 × 0.8 = 200.
+    // Err on the conservative side; a single pod consuming 100 connections is fine.
+    //
+    // Connection Idle Lifetime: recycle idle connections to avoid stale TCP sessions
+    // after a DB failover (cloud DBs frequently change IPs on failover).
+    const int maxPool            = 100;
+    const int minPool            = 5;   // keep warm to avoid cold-start latency
+    const int connLifetime       = 300; // seconds — force TCP recycle every 5 minutes
+    const int connIdleLifetime   = 60;  // seconds — evict connections idle > 1 minute
+    const int commandTimeout     = 30;  // seconds — kill runaway queries
+
+    return $"Host={host};Port={port};Database={db};Username={user};Password={pass};" +
+           $"SSL Mode={sslMode}{trustCert};" +
+           $"Maximum Pool Size={maxPool};Minimum Pool Size={minPool};" +
+           $"Connection Lifetime={connLifetime};Connection Idle Lifetime={connIdleLifetime};" +
+           $"Command Timeout={commandTimeout};Pooling=true";
 }
 
 // ── Helper: redis:// URL → StackExchange.Redis connection string ──────────────
@@ -59,6 +80,26 @@ try
             lc.ReadFrom.Configuration(ctx.Configuration).Enrich.FromLogContext().WriteTo.Console()
     );
 
+    // ── Production environment guard — fail fast on missing critical config ────
+    // This prevents silent failures (localhost links in emails, etc.) when a
+    // required env var is omitted from the production deployment.
+    if (!builder.Environment.IsDevelopment())
+    {
+        static void Require(IConfiguration cfg, string key)
+        {
+            if (string.IsNullOrWhiteSpace(cfg[key]))
+                throw new InvalidOperationException(
+                    $"Required environment variable '{key}' is not set. " +
+                    "Refusing to start in a non-Development environment without it.");
+        }
+
+        Require(config, "DATABASE_URL");
+        Require(config, "REDIS_URL");
+        Require(config, "JWT_SECRET");
+        Require(config, "FRONTEND_URL");
+        Require(config, "STRIPE_SECRET_KEY");
+    }
+
     // ── Stripe — global API key, set once at startup ─────────────────────────
     Stripe.StripeConfiguration.ApiKey =
         config["STRIPE_SECRET_KEY"]
@@ -71,6 +112,21 @@ try
     var twilioToken = config["TWILIO_AUTH_TOKEN"];
     if (!string.IsNullOrEmpty(twilioSid) && !string.IsNullOrEmpty(twilioToken))
         Twilio.TwilioClient.Init(twilioSid, twilioToken);
+
+    // ── Kestrel / Form upload limits ─────────────────────────────────────────
+    // Default ASP.NET Core multipart limit is 128 MB — dangerously large for a
+    // marketplace where only product images (≤ 5 MB) are expected.
+    builder.WebHost.ConfigureKestrel(k =>
+    {
+        // Max request body: 6 MB (5 MB file + overhead for form fields)
+        k.Limits.MaxRequestBodySize = 6 * 1024 * 1024;
+    });
+
+    builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o =>
+    {
+        o.MultipartBodyLengthLimit = 6 * 1024 * 1024; // 6 MB
+        o.ValueLengthLimit         = 1024 * 1024;      // 1 MB for non-file values
+    });
 
     // ── PostgreSQL + EF Core ──────────────────────────────────────────────────
     var npgsqlConn = ToNpgsql(config["DATABASE_URL"]!, builder.Environment.IsDevelopment());
@@ -137,6 +193,27 @@ try
         opt.AddPolicy("AdminOrCourier", p => p.RequireRole("Admin", "Courier")); // ← EKLE
     });
 
+    // ── Health Checks ─────────────────────────────────────────────────────────
+    // AspNetCore.HealthChecks.NpgSql  → extension method: AddNpgSql  (capital S)
+    // AspNetCore.HealthChecks.Redis   → extension method: AddRedis
+    // Positional args used to avoid named-parameter mismatches across patch versions.
+    // AddNpgSql signature: (connectionString, healthQuery, configure, name, failureStatus, tags, timeout)
+    // AddRedis  signature: (connectionString, name, failureStatus, tags, timeout)
+    builder.Services
+        .AddHealthChecks()
+        .AddNpgSql(
+            npgsqlConn,
+            "SELECT 1;",
+            null,
+            "postgres",
+            Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
+            ["db", "sql", "postgres"])
+        .AddRedis(
+            redisConn,
+            "redis",
+            Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded,
+            ["cache", "redis"]);
+
     // ── MediatR ───────────────────────────────────────────────────────────────
     builder.Services.AddMediatR(cfg =>
     {
@@ -178,21 +255,36 @@ try
     builder.Services.Configure<IpRateLimitOptions>(opt =>
     {
         opt.EnableEndpointRateLimiting = true;
-        opt.StackBlockedRequests = false;
+        opt.StackBlockedRequests       = false;
+        opt.HttpStatusCode             = 429;
+        opt.RealIpHeader               = "X-Real-IP";   // honour reverse-proxy header
+        opt.ClientIdHeader             = "X-Client-ID";
+
         opt.GeneralRules = new List<RateLimitRule>
         {
-            new()
-            {
-                Endpoint = "*:/api/auth/*",
-                Period = "1m",
-                Limit = 10,
-            },
-            new()
-            {
-                Endpoint = "*",
-                Period = "1m",
-                Limit = 100,
-            },
+            // ── High-sensitivity: authentication + account creation ─────────────
+            // Brute-force / credential-stuffing protection.
+            new() { Endpoint = "POST:/api/auth/login",            Period = "1m",  Limit = 5   },
+            new() { Endpoint = "POST:/api/auth/login",            Period = "15m", Limit = 15  },
+            new() { Endpoint = "POST:/api/auth/register",         Period = "1h",  Limit = 5   },
+            new() { Endpoint = "POST:/api/auth/forgot-password",  Period = "1h",  Limit = 5   },
+            new() { Endpoint = "POST:/api/auth/reset-password",   Period = "1h",  Limit = 5   },
+            new() { Endpoint = "POST:/api/auth/refresh",          Period = "1m",  Limit = 10  },
+
+            // ── Financial endpoints: stricter limits to prevent fraud loops ─────
+            new() { Endpoint = "POST:/api/payments/checkout",     Period = "1m",  Limit = 5   },
+            new() { Endpoint = "POST:/api/payments/confirm",      Period = "1m",  Limit = 5   },
+            new() { Endpoint = "POST:/api/orders",                Period = "1m",  Limit = 5   },
+
+            // ── Communication: prevent email/SMS bombing ───────────────────────
+            new() { Endpoint = "POST:/api/notifications/*",       Period = "1m",  Limit = 5   },
+
+            // ── Product / search: moderate limits for scraping prevention ──────
+            new() { Endpoint = "GET:/api/products*",              Period = "1m",  Limit = 60  },
+            new() { Endpoint = "GET:/api/products/search*",       Period = "1m",  Limit = 30  },
+
+            // ── Global fallback ────────────────────────────────────────────────
+            new() { Endpoint = "*",                               Period = "1m",  Limit = 120 },
         };
     });
     builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
@@ -258,6 +350,7 @@ try
     builder.Services.AddTransient<ShipmentStatusSyncJob>();
     builder.Services.AddTransient<EscrowSettlementJob>(); // Module 2: wallet settlement
     builder.Services.AddTransient<CourierDispatchJob>(); // Module 4: geo dispatch
+    builder.Services.AddTransient<PostPaymentSideEffectsJob>(); // Outbox: invoice + notification
 
     // ── Controllers + Swagger ─────────────────────────────────────────────────
     builder
@@ -335,18 +428,55 @@ try
 
         try
         {
-            // EF Core's MigrateAsync is idempotent:
-            // - Creates __EFMigrationsHistory table if it does not exist
-            // - Applies pending migrations in order
-            // - Skips already-applied migrations
-            // Even if tables exist, the AddAccountStatusToUsers migration
-            // runs safely with an IF NOT EXISTS check.
-            await db.Database.MigrateAsync();
-            logger.LogInformation("Database migration completed.");
+            if (app.Environment.IsDevelopment())
+            {
+                // Development: auto-migrate on startup for convenience.
+                await db.Database.MigrateAsync();
+                logger.LogInformation("Database migration completed (development).");
+            }
+            else
+            {
+                // Production: NEVER auto-migrate at startup.
+                //
+                // Reasons:
+                //  1. Rolling deployments — multiple pods starting simultaneously
+                //     will race on the same migration, causing lock conflicts.
+                //  2. Long-running migrations can lock hot tables and cause downtime.
+                //  3. Migrations should be reviewed and applied as a deliberate CI/CD
+                //     step, not silently on every cold start.
+                //
+                // Recommended production strategy:
+                //  - Generate a SQL script: `dotnet ef migrations script --idempotent`
+                //  - Apply the script in your CI/CD pipeline against the live DB
+                //    BEFORE deploying the new application image.
+                //  - Alternatively run a dedicated "migration job" container that
+                //    runs `dotnet ef database update` once before the main fleet starts.
+                //
+                // We still verify connectivity so the app fails fast if the DB
+                // is unreachable rather than crashing on the first request.
+                var pendingMigrations = (await db.Database.GetPendingMigrationsAsync()).ToList();
+                if (pendingMigrations.Count > 0)
+                {
+                    logger.LogError(
+                        "STARTUP BLOCKED — {Count} pending migration(s) detected in production: {Migrations}. " +
+                        "Apply migrations via the CI/CD pipeline before deploying this image.",
+                        pendingMigrations.Count,
+                        string.Join(", ", pendingMigrations));
+                    throw new InvalidOperationException(
+                        $"Production startup blocked: {pendingMigrations.Count} pending EF migrations. " +
+                        "Run `dotnet ef migrations script --idempotent` and apply via CI/CD.");
+                }
+
+                logger.LogInformation("Database schema is up to date. No pending migrations.");
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            throw; // propagate the startup-block exception above
         }
         catch (Exception ex)
         {
-            Log.Fatal(ex, "Unexpected error occurred during migration.");
+            Log.Fatal(ex, "Database connectivity check failed at startup.");
             throw;
         }
 
@@ -378,8 +508,16 @@ try
     );
 
     // ── Middleware Pipeline ───────────────────────────────────────────────────
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Marketplace API v1"));
+
+    // [KRİTİK] Global exception handler must be FIRST to catch all downstream exceptions.
+    app.UseGlobalExceptionHandler();
+
+    // [KRİTİK] Swagger must NEVER be exposed in production.
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Marketplace API v1"));
+    }
 
     if (!app.Environment.IsDevelopment())
         app.UseHsts();
@@ -396,6 +534,46 @@ try
 
     app.MapControllers();
     app.MapHub<TrackingHub>("/hubs/tracking");
+
+    // ── Health Check endpoints ────────────────────────────────────────────────
+    // /health        → liveness probe (used by Docker/K8s/load balancer)
+    // /health/ready  → readiness probe (only healthy when DB + Redis are reachable)
+    app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        // Liveness: always returns 200 if the process is running, regardless of dependencies.
+        Predicate = _ => false,
+        ResponseWriter = async (ctx, _) =>
+        {
+            ctx.Response.ContentType = "application/json";
+            await ctx.Response.WriteAsync(
+                System.Text.Json.JsonSerializer.Serialize(new { status = "alive", timestamp = DateTime.UtcNow }));
+        },
+    });
+
+    app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        // Readiness: checks all registered dependencies (postgres + redis).
+        Predicate = _ => true,
+        ResponseWriter = async (ctx, report) =>
+        {
+            ctx.Response.ContentType = "application/json";
+            var result = new
+            {
+                status    = report.Status.ToString(),
+                timestamp = DateTime.UtcNow,
+                checks    = report.Entries.Select(e => new
+                {
+                    name     = e.Key,
+                    status   = e.Value.Status.ToString(),
+                    duration = e.Value.Duration.TotalMilliseconds,
+                    error    = e.Value.Exception?.Message,
+                }),
+            };
+            ctx.Response.StatusCode = report.Status ==
+                Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Healthy ? 200 : 503;
+            await ctx.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(result));
+        },
+    });
     app.MapHangfireDashboard(
         "/hangfire",
         new DashboardOptions { Authorization = new[] { new HangfireAdminAuthFilter() } }

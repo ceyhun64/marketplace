@@ -67,7 +67,9 @@ export const useAuth = create<AuthState>()(
           });
           const { accessToken, refreshToken } = data;
 
-          setTokens(accessToken, refreshToken);
+          // await is required — setTokens is now async (sets httpOnly cookies
+          // via a Route Handler to prevent XSS token theft).
+          await setTokens(accessToken, refreshToken);
 
           const role = getRoleFromToken(accessToken);
           if (!role) throw new Error("Role not found in token");
@@ -166,7 +168,7 @@ export const useAuth = create<AuthState>()(
         } catch {
           // silently ignore
         } finally {
-          clearTokens();
+          await clearTokens(); // async — clears httpOnly cookies via Route Handler
           set({ user: null });
           // NOTE: Wishlist and cart remain in local storage after logout.
           // If you need to handle the case where a different user logs in on the

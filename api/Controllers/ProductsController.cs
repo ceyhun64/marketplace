@@ -17,12 +17,18 @@ public class ProductsController : ControllerBase
     private readonly AppDbContext _db;
     private readonly IMediator _mediator;
     private readonly IConfiguration _config;
+    private readonly ILogger<ProductsController> _logger;
 
-    public ProductsController(AppDbContext db, IMediator mediator, IConfiguration config)
+    public ProductsController(
+        AppDbContext db,
+        IMediator mediator,
+        IConfiguration config,
+        ILogger<ProductsController> logger)
     {
         _db = db;
         _mediator = mediator;
         _config = config;
+        _logger = logger;
     }
 
     // ── PUBLIC ──────────────────────────────────────────────────────────────
@@ -851,6 +857,51 @@ public class ProductsController : ControllerBase
         product.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
+
+        // ── Cache invalidation ────────────────────────────────────────────────
+        // Invalidate Redis keys so the next read returns the updated price/stock.
+        // Fire-and-forget: cache miss is acceptable; a stale read is not critical
+        // because the authoritative check is always at order-creation time.
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var redis = HttpContext.RequestServices.GetService<StackExchange.Redis.IConnectionMultiplexer>();
+                if (redis != null)
+                {
+                    var db = redis.GetDatabase();
+                    await Task.WhenAll(
+                        db.KeyDeleteAsync($"product:{product.Id}"),
+                        db.KeyDeleteAsync($"products:merchant:{product.MerchantId}"),
+                        db.KeyDeleteAsync("products:featured"),
+                        db.KeyDeleteAsync("products:listing")
+                    );
+                }
+
+                // Trigger Next.js on-demand ISR revalidation for the product page.
+                var webhookUrl = _config["FRONTEND_URL"];
+                var secret     = _config["REVALIDATION_SECRET"];
+                if (!string.IsNullOrEmpty(webhookUrl) && !string.IsNullOrEmpty(secret))
+                {
+                    using var http = new System.Net.Http.HttpClient();
+                    await http.PostAsync(
+                        $"{webhookUrl}/api/revalidate",
+                        new System.Net.Http.StringContent(
+                            System.Text.Json.JsonSerializer.Serialize(new
+                            {
+                                secret,
+                                tags = new[] { $"product-{product.Id}", "products" },
+                            }),
+                            System.Text.Encoding.UTF8,
+                            "application/json"));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Cache invalidation failed for ProductId={Id}", product.Id);
+            }
+        });
+
         return Ok(
             new ApiResponse<object>(
                 new

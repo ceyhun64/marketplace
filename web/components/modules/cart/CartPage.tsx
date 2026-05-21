@@ -146,7 +146,7 @@ export default function CartPage() {
       className="min-h-screen py-12 px-4"
       style={{ background: "var(--off-white)" }}
     >
-      <div className="max-w-[1300px] mx-auto">
+      <div className="max-w-325 mx-auto">
         {/* ── Page Header ─────────────────────────────────────────────────── */}
         <div className="flex items-start justify-between mb-10">
           <div>
@@ -226,7 +226,7 @@ export default function CartPage() {
             {items.map((item) => (
               <div
                 key={item.offerId}
-                className="bg-white rounded-2xl p-5 flex gap-5 transition-all duration-300"
+                className="bg-white rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row gap-4 sm:gap-5 transition-all duration-300"
                 style={{
                   border: "1px solid rgba(51,51,51,0.08)",
                   boxShadow: "0 1px 4px rgba(51,51,51,0.04)",
@@ -237,7 +237,7 @@ export default function CartPage() {
               >
                 {/* Product Image */}
                 <div
-                  className="w-[100px] h-[100px] rounded-xl flex-shrink-0 overflow-hidden"
+                  className="w-full sm:w-25 h-48 sm:h-25 rounded-xl flex-shrink-0 overflow-hidden"
                   style={{ background: "var(--off-white)" }}
                 >
                   {item.productImage ? (
@@ -284,18 +284,7 @@ export default function CartPage() {
                     </div>
                     <button
                       onClick={() => handleRemove(item.offerId)}
-                      className="p-2 rounded-full transition-all flex-shrink-0"
-                      style={{ color: "var(--charcoal-soft)" }}
-                      onMouseEnter={(e) => {
-                        const el = e.currentTarget as HTMLElement;
-                        el.style.color = "var(--red)";
-                        el.style.background = "rgba(187,16,35,0.08)";
-                      }}
-                      onMouseLeave={(e) => {
-                        const el = e.currentTarget as HTMLElement;
-                        el.style.color = "var(--charcoal-soft)";
-                        el.style.background = "transparent";
-                      }}
+                      className="p-2 rounded-full transition-all flex-shrink-0 text-(--charcoal-soft) hover:text-(--red) hover:bg-[rgba(187,16,35,0.08)] min-h-[44px] min-w-[44px] flex items-center justify-center"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -507,19 +496,7 @@ export default function CartPage() {
                       setCouponApplied(false);
                       setCoupon("");
                     }}
-                    className="font-mono text-[11px] transition-colors"
-                    style={{
-                      color: "var(--charcoal-soft)",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.color = "var(--red)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.color = "var(--charcoal-soft)")
-                    }
+                    className="font-mono text-[11px] transition-colors bg-transparent border-none cursor-pointer text-(--charcoal-soft) hover:text-(--red)"
                   >
                     Remove
                   </button>
@@ -544,25 +521,8 @@ export default function CartPage() {
                   />
                   <button
                     onClick={handleApplyCoupon}
-                    className="px-5 py-2 rounded-xl text-sm font-semibold transition-all flex-shrink-0"
-                    style={{
-                      border: "1.5px solid rgba(51,51,51,0.15)",
-                      color: "var(--charcoal)",
-                      background: "transparent",
-                      fontFamily: "var(--font-body)",
-                    }}
-                    onMouseEnter={(e) => {
-                      const el = e.currentTarget as HTMLElement;
-                      el.style.background = "var(--charcoal)";
-                      el.style.color = "#fff";
-                      el.style.borderColor = "var(--charcoal)";
-                    }}
-                    onMouseLeave={(e) => {
-                      const el = e.currentTarget as HTMLElement;
-                      el.style.background = "transparent";
-                      el.style.color = "var(--charcoal)";
-                      el.style.borderColor = "rgba(51,51,51,0.15)";
-                    }}
+                    className="px-5 py-2 rounded-xl text-sm font-semibold transition-all flex-shrink-0 border border-[rgba(51,51,51,0.15)] text-(--charcoal) bg-transparent hover:bg-(--charcoal) hover:text-white hover:border-(--charcoal) min-h-[44px]"
+                    style={{ fontFamily: "var(--font-body)" }}
                   >
                     Apply
                   </button>
@@ -662,19 +622,12 @@ export default function CartPage() {
               {/* Checkout Button */}
               <button
                 onClick={handleCheckout}
-                className="w-full mt-6 h-13 py-3.5 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold text-white transition-all"
+                className="w-full mt-6 h-13 py-3.5 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold text-white transition-all bg-(--charcoal) hover:bg-(--red)"
                 style={{
-                  background: "var(--charcoal)",
                   fontFamily: "var(--font-body)",
-                  boxShadow: "0 4px 20px rgba(51,51,51,0.15)",
+                  boxShadow: "var(--shadow-md)",
                   letterSpacing: "0.02em",
                 }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "var(--red)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "var(--charcoal)")
-                }
               >
                 {user ? "Complete Order" : "Sign In & Place Order"}
                 <ArrowRight className="w-4 h-4" />

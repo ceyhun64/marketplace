@@ -2,7 +2,14 @@
 // For use in Server Components and Route Handlers only.
 // DO NOT import this file in Client Components.
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5010";
+// API_INTERNAL_URL is a server-only variable (no NEXT_PUBLIC_ prefix).
+// It is never included in the browser bundle and may point to an internal
+// network address (e.g. http://api:5010 in Docker / Kubernetes).
+// Fall back to NEXT_PUBLIC_API_URL for local development convenience.
+const API_URL =
+  process.env.API_INTERNAL_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  "http://localhost:5010";
 
 type FetchOptions = RequestInit & {
   revalidate?: number | false;

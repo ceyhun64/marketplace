@@ -1,44 +1,48 @@
 services:
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
   postgres:
     image: postgres:16
     restart: always
     environment:
-      POSTGRES_DB: marketplace
-      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB:       marketplace
+      POSTGRES_USER:     ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - internal
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d marketplace"]
+      test:     ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d marketplace"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout:  5s
+      retries:  5
 
+  # ── Redis ────────────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     restart: always
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server --requirepass ${REDIS_PASSWORD} --save 60 1 --loglevel warning
     volumes:
       - redis_data:/data
     networks:
       - internal
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:     ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout:  5s
+      retries:  5
 
+  # ── .NET API ─────────────────────────────────────────────────────────────────
   api:
     image: ${API_IMAGE}
     restart: always
     env_file: .env.prod
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ASPNETCORE_URLS: http://+:5000
-      DATABASE_URL: "Host=postgres;Port=5432;Database=marketplace;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
-      REDIS_URL: "redis:6379,password=${REDIS_PASSWORD}"
+      ASPNETCORE_URLS:        http://+:5000
+      DATABASE_URL:  "Host=postgres;Port=5432;Database=marketplace;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      REDIS_URL:     "redis:6379,password=${REDIS_PASSWORD}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -48,28 +52,45 @@ services:
       - internal
       - external
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test:         ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      interval:     30s
+      timeout:      10s
+      retries:      3
       start_period: 40s
 
+  # ── Next.js Frontend ─────────────────────────────────────────────────────────
   web:
     image: ${WEB_IMAGE}
     restart: always
     environment:
-      NODE_ENV: production
-      NEXT_PUBLIC_API_URL: https://${API_DOMAIN}
-      NEXT_PUBLIC_SIGNALR_HUB: https://${API_DOMAIN}/hubs/tracking
-      NEXT_TELEMETRY_DISABLED: "1"
+      NODE_ENV:                  production
+      # Public URL for browser-side requests (goes through Nginx/CDN)
+      NEXT_PUBLIC_API_URL:       https://${API_DOMAIN}
+      NEXT_PUBLIC_SITE_URL:      https://${WEB_DOMAIN}
+      NEXT_PUBLIC_SIGNALR_HUB:  https://${API_DOMAIN}/hubs/tracking
+      # Internal URL for Server Component / Route Handler requests (direct Docker network)
+      # This avoids a public internet roundtrip from the container to the API.
+      API_INTERNAL_URL:          http://api:5000
+      # Cookie domain: set to .${ROOT_DOMAIN} if API and web are on separate subdomains.
+      # Example: ROOT_DOMAIN=bazr.com → COOKIE_DOMAIN=.bazr.com
+      COOKIE_DOMAIN:             ${COOKIE_DOMAIN:-}
+      NEXT_TELEMETRY_DISABLED:   "1"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     networks:
       - internal
       - external
+    healthcheck:
+      test:         ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval:     30s
+      timeout:      10s
+      retries:      3
+      start_period: 30s
 
+  # ── Nginx reverse proxy ───────────────────────────────────────────────────────
   nginx:
-    image: nginx:alpine
+    image: nginx:1.27-alpine
     restart: always
     ports:
       - "80:80"
@@ -80,10 +101,17 @@ services:
       - certbot_certs:/etc/letsencrypt:ro
       - certbot_www:/var/www/certbot:ro
     depends_on:
-      - api
-      - web
+      web:
+        condition: service_healthy
+      api:
+        condition: service_healthy
     networks:
       - external
+    healthcheck:
+      test:     ["CMD-SHELL", "nginx -t && curl -f http://localhost/health || exit 1"]
+      interval: 30s
+      timeout:  5s
+      retries:  3
 
 volumes:
   postgres_data:
@@ -92,7 +120,10 @@ volumes:
   certbot_www:
 
 networks:
+  # internal: only reachable by containers — never exposed to the internet
   internal:
     driver: bridge
+    internal: true
+  # external: Nginx faces the internet; api and web are also here for Nginx to proxy
   external:
     driver: bridge

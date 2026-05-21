@@ -134,6 +134,25 @@ public class CreateOrderCommandHandler
                 }
 
                 var effectivePrice = variant?.PriceOverride ?? product.Price;
+
+                // ── Price sanity guard ────────────────────────────────────────
+                // Prevents orders on products priced suspiciously low:
+                //   • A merchant typo (e.g. $0.01 instead of $100)
+                //   • A race-condition exploit: add-to-cart at $100, price
+                //     slashed to $0.01 by merchant, checkout at $0.01
+                //
+                // A price is suspicious when:
+                //   (a) Below the absolute floor ($0.50 — covers Stripe minimum)
+                //   (b) More than 95 % below its category average (future enhancement)
+                //
+                // This guard reads the live DB price (already inside the
+                // Serializable transaction) so it reflects the latest value.
+                const decimal MinimumUnitPrice = 0.50m;
+                if (effectivePrice < MinimumUnitPrice)
+                    return ServiceResult<OrderDto>.Fail(
+                        $"Product '{product.Name}' has an invalid price (${effectivePrice:F2}). " +
+                        "Minimum allowed unit price is $0.50. Please contact the seller.");
+
                 total += effectivePrice * item.Quantity;
                 product.UpdatedAt = DateTime.UtcNow;
 

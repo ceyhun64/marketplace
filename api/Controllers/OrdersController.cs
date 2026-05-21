@@ -55,7 +55,8 @@ public class OrdersController(
     )
     {
         var query = db
-            .Orders.Include(o => o.Items)
+            .Orders.AsNoTracking()
+            .Include(o => o.Items)
                 .ThenInclude(i => i.Product)
             .Include(o => o.Shipment)
             .Include(o => o.Invoice)
@@ -90,7 +91,8 @@ public class OrdersController(
     public async Task<IActionResult> GetOrder(Guid id)
     {
         var order = await db
-            .Orders.Include(o => o.Items)
+            .Orders.AsNoTracking()
+            .Include(o => o.Items)
                 .ThenInclude(i => i.Product)
                     .ThenInclude(p => p.Category)
             .Include(o => o.Shipment)
@@ -117,7 +119,8 @@ public class OrdersController(
     public async Task<IActionResult> GetTracking(Guid id)
     {
         var order = await db
-            .Orders.Include(o => o.Shipment)
+            .Orders.AsNoTracking()
+            .Include(o => o.Shipment)
                 .ThenInclude(s => s!.StatusHistory)
             .Include(o => o.Shipment)
                 .ThenInclude(s => s!.Courier)

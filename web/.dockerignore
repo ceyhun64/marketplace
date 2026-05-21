@@ -1,0 +1,37 @@
+# Build artifacts
+node_modules/
+.next/
+out/
+
+# Environment files — injected at runtime, never baked into the image
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+
+# Testing
+coverage/
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Docker itself
+Dockerfile
+.dockerignore
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+npm-debug.log*

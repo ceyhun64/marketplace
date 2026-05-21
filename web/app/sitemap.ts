@@ -28,27 +28,16 @@ const staticRoutes: MetadataRoute.Sitemap = [
   { url: `${BASE_URL}/returns`, priority: 0.5, changeFrequency: "monthly" },
   { url: `${BASE_URL}/privacy`, priority: 0.3, changeFrequency: "yearly" },
   { url: `${BASE_URL}/terms`, priority: 0.3, changeFrequency: "yearly" },
-  {
-    url: `${BASE_URL}/auth/login`,
-    priority: 0.4,
-    changeFrequency: "monthly",
-  },
-  {
-    url: `${BASE_URL}/auth/register`,
-    priority: 0.4,
-    changeFrequency: "monthly",
-  },
-  {
-    url: `${BASE_URL}/auth/apply-merchant`,
-    priority: 0.5,
-    changeFrequency: "monthly",
-  },
+  // Auth routes are intentionally excluded: they are disallowed in robots.txt
+  // and have no indexable content.
 ];
 
 async function fetchDynamicRoutes(): Promise<MetadataRoute.Sitemap> {
   try {
     const apiBase =
-      process.env.NEXT_PUBLIC_API_URL ?? "https://api.marketplace.example.com";
+      process.env.API_INTERNAL_URL ??
+      process.env.NEXT_PUBLIC_API_URL ??
+      "https://api.marketplace.example.com";
 
     const [productsRes, categoriesRes] = await Promise.allSettled([
       fetch(`${apiBase}/api/products?limit=1000&fields=id,updatedAt`, {

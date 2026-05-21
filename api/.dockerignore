@@ -1,0 +1,37 @@
+# Build artifacts
+bin/
+obj/
+out/
+
+# Development-only config — NEVER bake secrets into the image
+appsettings.Development.json
+appsettings.Production.json
+
+# EF Core migrations tool output
+Migrations/
+
+# Test projects
+**/*.Tests/
+**/*.Test/
+
+# IDE / OS
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+.DS_Store
+Thumbs.db
+
+# Docker itself
+Dockerfile
+.dockerignore
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Local logs
+logs/
+*.log

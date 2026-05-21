@@ -129,6 +129,13 @@ export function useProduct(id: string) {
       return data;
     },
     enabled: !!id,
+    // 30 seconds — keeps price and stock reasonably fresh on the product page.
+    // The authoritative price/stock check is always enforced server-side at
+    // order creation (CreateOrderCommandHandler), so a brief stale window is
+    // acceptable for display purposes.
+    staleTime: 30_000,
+    // Refetch when the user returns to the tab to catch price/stock changes.
+    refetchOnWindowFocus: true,
   });
 }
 

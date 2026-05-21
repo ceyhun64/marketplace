@@ -1,7 +1,10 @@
 using api.Common.DTOs;
 using api.Domain.Enums;
+using api.Infrastructure.Jobs;
 using api.Infrastructure.Persistence;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Stripe;
 
 namespace api.Infrastructure.Services;
@@ -21,6 +24,7 @@ public class PaymentService : IPaymentService
     private readonly IInvoiceGeneratorService _invoiceGenerator;
     private readonly INotificationService _notification;
     private readonly ICurrentUserService _currentUser;
+    private readonly IDistributedCache _cache;
 
     public PaymentService(
         AppDbContext db,
@@ -28,7 +32,8 @@ public class PaymentService : IPaymentService
         ILogger<PaymentService> logger,
         IInvoiceGeneratorService invoiceGenerator,
         INotificationService notification,
-        ICurrentUserService currentUser
+        ICurrentUserService currentUser,
+        IDistributedCache cache
     )
     {
         _db = db;
@@ -37,6 +42,7 @@ public class PaymentService : IPaymentService
         _invoiceGenerator = invoiceGenerator;
         _notification = notification;
         _currentUser = currentUser;
+        _cache = cache;
     }
 
     // ── 1. Create Payment Intent ──────────────────────────────────────────────
@@ -218,38 +224,69 @@ public class PaymentService : IPaymentService
             return;
         }
 
+        Stripe.Event stripeEvent;
         try
         {
-            var stripeEvent = EventUtility.ConstructEvent(rawBody, stripeSignature, webhookSecret);
-
-            _logger.LogInformation("📨 Stripe webhook received: {EventType}", stripeEvent.Type);
-
-            switch (stripeEvent.Type)
-            {
-                case "payment_intent.succeeded":
-                    if (stripeEvent.Data.Object is PaymentIntent successIntent)
-                        await HandlePaymentSucceededAsync(successIntent);
-                    break;
-
-                case "payment_intent.payment_failed":
-                    if (stripeEvent.Data.Object is PaymentIntent failedIntent)
-                        await HandlePaymentFailedAsync(failedIntent);
-                    break;
-
-                case "charge.refunded":
-                    _logger.LogInformation("💸 Refund confirmed by Stripe.");
-                    break;
-
-                default:
-                    _logger.LogDebug("Unknown Stripe event: {Type}", stripeEvent.Type);
-                    break;
-            }
+            stripeEvent = EventUtility.ConstructEvent(rawBody, stripeSignature, webhookSecret);
         }
         catch (StripeException ex)
         {
             _logger.LogError(ex, "❌ Stripe webhook signature verification error");
             throw;
         }
+
+        // ── Webhook Event Idempotency ─────────────────────────────────────────
+        // Stripe retries webhooks when it receives a non-2xx response (e.g. DB
+        // was temporarily unavailable).  We deduplicate by caching the Stripe
+        // event ID in Redis for 48 hours — the retry window Stripe uses.
+        // If the key already exists the event has been processed successfully;
+        // we return immediately to avoid duplicate order confirmations, invoice
+        // generation, or notification emails.
+        var idempotencyKey = $"stripe_event:{stripeEvent.Id}";
+        var alreadyProcessed = await _cache.GetStringAsync(idempotencyKey);
+        if (alreadyProcessed is not null)
+        {
+            _logger.LogInformation(
+                "⚡ Stripe webhook deduplicated (already processed): EventId={EventId} Type={Type}",
+                stripeEvent.Id,
+                stripeEvent.Type);
+            return;
+        }
+
+        _logger.LogInformation("📨 Stripe webhook received: {EventType} EventId={EventId}",
+            stripeEvent.Type, stripeEvent.Id);
+
+        switch (stripeEvent.Type)
+        {
+            case "payment_intent.succeeded":
+                if (stripeEvent.Data.Object is PaymentIntent successIntent)
+                    await HandlePaymentSucceededAsync(successIntent);
+                break;
+
+            case "payment_intent.payment_failed":
+                if (stripeEvent.Data.Object is PaymentIntent failedIntent)
+                    await HandlePaymentFailedAsync(failedIntent);
+                break;
+
+            case "charge.refunded":
+                _logger.LogInformation("💸 Refund confirmed by Stripe: EventId={EventId}", stripeEvent.Id);
+                break;
+
+            default:
+                _logger.LogDebug("Unknown Stripe event: {Type} EventId={EventId}", stripeEvent.Type, stripeEvent.Id);
+                break;
+        }
+
+        // Mark this event as processed — 48-hour TTL matches Stripe's retry window.
+        // We only reach this line on success; if the handler throws, the key is NOT
+        // set and Stripe will retry (which is the correct behaviour).
+        await _cache.SetStringAsync(
+            idempotencyKey,
+            "1",
+            new Microsoft.Extensions.Caching.Distributed.DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(48),
+            });
     }
 
     // ── 4. Refund ─────────────────────────────────────────────────────────────
@@ -521,40 +558,61 @@ public class PaymentService : IPaymentService
             throw;
         }
 
-        // Side effects outside transaction — payment is not affected if these fail
+        // ── Post-payment side effects — Outbox / Hangfire pattern ────────────
+        //
+        // Why NOT inline here:
+        //   If invoice generation or notification fails AFTER the payment commit,
+        //   the order is in a paid-but-no-invoice state with no retry path.
+        //   On the next Stripe webhook retry, FinalizeOrderPaymentAsync returns
+        //   early (order.IsPaid == true) so these side effects would never run.
+        //
+        // Solution: enqueue each side effect as a separate Hangfire job.
+        //   - Hangfire persists jobs in PostgreSQL — they survive pod restarts.
+        //   - Each job retries independently up to 10 times with exponential backoff.
+        //   - Invoice generation and notification are idempotent (they check if an
+        //     invoice already exists before creating a new one).
+        //
+        // This is a lightweight Outbox Pattern: the "outbox" is Hangfire's job store.
+        //
+        // BackgroundJob.Enqueue uses Hangfire's static API which resolves the
+        // job processor from the global DI container registered in Program.cs.
+        // This is safe to call from a scoped service.
         try
         {
-            var orderForInvoice = await _db
-                .Orders.Include(o => o.Items)
-                .Include(o => o.Customer)
-                .FirstOrDefaultAsync(o => o.Id == orderId);
+            BackgroundJob.Enqueue<PostPaymentSideEffectsJob>(
+                j => j.RunAsync(orderId, trackingNumber));
+        }
+        catch (Exception ex)
+        {
+            // If Hangfire itself fails (e.g. DB connection lost), fall back to a
+            // best-effort inline attempt so the customer at least gets a notification.
+            _logger.LogError(ex, "⚠️ Failed to enqueue post-payment job for OrderId={Id} — attempting inline fallback", orderId);
 
-            if (orderForInvoice != null)
+            _ = Task.Run(async () =>
             {
-                var invoice = await _invoiceGenerator.GenerateAndSaveAsync(orderForInvoice);
-                if (!string.IsNullOrEmpty(invoice.PdfUrl))
-                    await _notification.SendInvoiceEmailAsync(orderId, invoice.PdfUrl);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex,
-                "⚠️ Invoice generation error (order not affected): OrderId={Id}",
-                orderId
-            );
-        }
+                try
+                {
+                    var orderForInvoice = await _db.Orders
+                        .Include(o => o.Items)
+                        .Include(o => o.Customer)
+                        .FirstOrDefaultAsync(o => o.Id == orderId);
 
-        try
-        {
-            await _notification.SendOrderStatusNotificationAsync(
-                orderId,
-                $"Your order #{orderId.ToString()[..8].ToUpper()} has been confirmed! Tracking number: {trackingNumber}"
-            );
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "⚠️ Notification error: OrderId={Id}", orderId);
+                    if (orderForInvoice != null)
+                    {
+                        var invoice = await _invoiceGenerator.GenerateAndSaveAsync(orderForInvoice);
+                        if (!string.IsNullOrEmpty(invoice.PdfUrl))
+                            await _notification.SendInvoiceEmailAsync(orderId, invoice.PdfUrl);
+                    }
+
+                    await _notification.SendOrderStatusNotificationAsync(
+                        orderId,
+                        $"Your order #{orderId.ToString()[..8].ToUpper()} has been confirmed! Tracking: {trackingNumber}");
+                }
+                catch (Exception fallbackEx)
+                {
+                    _logger.LogError(fallbackEx, "⚠️ Inline fallback also failed for OrderId={Id}", orderId);
+                }
+            });
         }
 
         return ServiceResult<Guid>.Ok(orderId);

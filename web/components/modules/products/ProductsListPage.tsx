@@ -702,7 +702,7 @@ export default function ProductsListPage() {
 
             {isLoading ? (
               <div className={viewMode === "grid"
-                ? "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
+                ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4"
                 : "space-y-3"}>
                 {Array.from({ length: 12 }).map((_, i) => <ProductSkeleton key={i} />)}
               </div>
@@ -726,7 +726,7 @@ export default function ProductsListPage() {
             ) : !isLoading && (
               <>
                 <div className={viewMode === "grid"
-                  ? "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
+                  ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4"
                   : "space-y-3"}>
                   {items.map((p) => <ProductCard key={p.id} product={p} />)}
                 </div>
@@ -737,7 +737,7 @@ export default function ProductsListPage() {
                     <button
                       onClick={() => handleFilter("page", (filters.page ?? 1) - 1)}
                       disabled={(filters.page ?? 1) <= 1}
-                      className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm transition-all disabled:opacity-30"
+                      className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-bold text-sm transition-all disabled:opacity-30"
                       style={{ border: "1.5px solid rgba(51,51,51,0.15)", background: "#fff", color: "var(--charcoal)" }}
                     >
                       ‹

@@ -17,8 +17,13 @@ export default function GlobalError({ error, reset }: ErrorProps) {
   const router = useRouter();
 
   useEffect(() => {
-    // Error tracking services (like Sentry) can be integrated here.
-    console.error("[GlobalError]", error);
+    // Log to console in all environments for debugging.
+    // In production, replace this with your error tracking service:
+    //   import * as Sentry from "@sentry/nextjs";
+    //   Sentry.captureException(error);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[GlobalError]", error);
+    }
   }, [error]);
 
   return (

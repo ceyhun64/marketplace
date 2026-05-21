@@ -24,6 +24,14 @@ public class IdempotencyMiddleware
         "/api/orders",
     };
 
+    // These paths must NEVER be intercepted — webhook handlers read the raw
+    // request body themselves for signature verification and buffering the
+    // body here would cause the downstream reader to see an empty stream.
+    private static readonly HashSet<string> ExcludedPaths = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "/api/payments/webhook",
+    };
+
     private readonly RequestDelegate _next;
     private readonly ILogger<IdempotencyMiddleware> _logger;
 
@@ -35,6 +43,13 @@ public class IdempotencyMiddleware
 
     public async Task InvokeAsync(HttpContext ctx, IDistributedCache cache)
     {
+        // Skip excluded paths first (webhook body must not be buffered here)
+        if (ExcludedPaths.Any(p => ctx.Request.Path.StartsWithSegments(p, StringComparison.OrdinalIgnoreCase)))
+        {
+            await _next(ctx);
+            return;
+        }
+
         // Only intercept POST requests on covered paths
         if (!HttpMethods.IsPost(ctx.Request.Method) ||
             !CoveredPaths.Any(p => ctx.Request.Path.StartsWithSegments(p, StringComparison.OrdinalIgnoreCase)))
