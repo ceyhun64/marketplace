@@ -25,14 +25,12 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Principle of least privilege: run as a dedicated non-root user.
-RUN addgroup --system --gid 1001 appgroup \
-    && adduser  --system --uid 1001 --ingroup appgroup appuser
-
+# The mcr.microsoft.com/dotnet/aspnet image already ships with a non-root
+# user called "app" (uid 1654). No need to create a custom user.
 WORKDIR /app
-COPY --from=builder --chown=appuser:appgroup /app/out .
+COPY --from=builder --chown=app:app /app/out .
 
-USER appuser
+USER app
 
 EXPOSE 5000
 
