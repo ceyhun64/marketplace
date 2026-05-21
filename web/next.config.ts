@@ -4,42 +4,31 @@ const IS_PROD = process.env.NODE_ENV === "production";
 
 // ── Content Security Policy ───────────────────────────────────────────────────
 //
-// WHY script-src differs between dev and prod
-// ───────────────────────────────────────────
-// Next.js / Turbopack in development mode injects:
-//   • __NEXT_DATA__ inline <script> block on every page
-//   • Hot Module Replacement (HMR) inline event handlers
-//   • Fast-refresh runtime inline scripts
-//   • Error overlay bootstrapper scripts
+// Next.js injects inline <script> blocks (__NEXT_DATA__, hydration bootstrap,
+// Turbopack HMR) in both development AND production builds. None carry a
+// cryptographic nonce/hash, so 'unsafe-inline' and 'unsafe-eval' are required
+// in every environment to prevent the app from hanging on a blank skeleton.
 //
-// None of these carry a cryptographic hash, so the browser blocks them under a
-// strict script-src that only allows 'self' — causing the
-// "InvariantError: Expected a request ID to be defined" chain failure.
-//
-// In PRODUCTION Next.js emits no inline scripts; all runtime JS is in external
-// files served from /_next/static/, so 'unsafe-inline' is NOT needed there.
-// The production policy intentionally omits it.
+// connect-src uses the broad 'https:' and 'wss:' wildcards so that the Next.js
+// data-fetching layer and any WebSocket connections (including Render's wss://
+// endpoints) are never blocked regardless of which backend URL is in use.
 
-// Development: relaxed to allow Turbopack / HMR inline scripts.
-const devScriptSrc =
-  "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com";
-
-// Production: strict — only same-origin files + Stripe.js.
-const prodScriptSrc =
-  "script-src 'self' https://js.stripe.com";
+const scriptSrc =
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com";
 
 const cspDirectives = [
   "default-src 'self'",
-  IS_PROD ? prodScriptSrc : devScriptSrc,
-  // Styles: unsafe-inline is required by Tailwind + Shadcn (CSS-in-JS class generation)
+  scriptSrc,
+  // Styles: unsafe-inline required by Tailwind + Shadcn CSS-in-JS
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   // Fonts
   "font-src 'self' https://fonts.gstatic.com data:",
   // Images: self + Cloudinary CDN + placeholder services
   "img-src 'self' data: blob: https://res.cloudinary.com https://placehold.co https://images.unsplash.com",
-  // Connections: API backend + Stripe + SignalR (wss)
-  // In dev, also allow localhost variants for HMR websocket
-  `connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL ?? ""} https://api.stripe.com wss:${IS_PROD ? "" : " ws: http://localhost:* ws://localhost:*"}`,
+  // Connections: https: covers all HTTPS APIs (backend, Stripe, etc.)
+  // wss: covers all secure WebSocket connections (Render, SignalR, HMR)
+  // ws:/http://localhost:* retained for local dev convenience
+  `connect-src 'self' https: wss:${IS_PROD ? "" : " ws: http://localhost:* ws://localhost:*"}`,
   // Frames: only Stripe payment frame is allowed
   "frame-src https://js.stripe.com https://hooks.stripe.com",
   // Workers: blob: needed by some chart libs
