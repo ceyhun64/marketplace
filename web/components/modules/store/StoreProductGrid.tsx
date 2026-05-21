@@ -111,13 +111,12 @@ export function StoreProductGrid({
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
-            className="pl-9 pr-8 py-2 text-sm rounded-lg appearance-none cursor-pointer outline-none"
+            className="w-full sm:w-48 pl-9 pr-8 py-2 text-sm rounded-lg appearance-none cursor-pointer outline-none"
             style={{
               background: "#fafafa",
               border: "1px solid rgba(30,30,30,0.12)",
               color: "#1e1e1e",
             }}
-            className="w-full sm:w-48"
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
