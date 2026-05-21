@@ -633,15 +633,8 @@ function HeroSkeleton() {
           width: "100%",
         }}
       >
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "5rem",
-            alignItems: "center",
-          }}
-          className="lg:grid-cols-2 grid-cols-1"
-        >
+        {/* Skeleton grid — same fix as the live grid: no inline gridTemplateColumns */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-10 lg:gap-20">
           {/* Left — text skeleton */}
           <div className="space-y-5">
             {/* Badge pill */}

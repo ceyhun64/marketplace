@@ -44,41 +44,19 @@ const BADGES = [
 
 export default function TrustBadges() {
   return (
-    <section
-      style={{
-        background: "var(--charcoal)",
-        padding: "0",
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1300,
-          margin: "0 auto",
-          padding: "2.5rem 2rem",
-        }}
-      >
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-            gap: "0",
-          }}
-        >
+    <section className="bg-(--charcoal) overflow-hidden">
+      <div className="max-w-325 mx-auto px-4 sm:px-8 py-10">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
           {BADGES.map((badge, i) => (
             <div
               key={badge.title}
+              className="flex items-center gap-3.5 px-4 py-4 sm:px-6"
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.875rem",
-                padding: "1rem 1.5rem",
                 borderRight:
                   i < BADGES.length - 1
                     ? "1px solid rgba(255,255,255,0.08)"
                     : "none",
               }}
-              className="last:border-r-0"
             >
               <div
                 style={{

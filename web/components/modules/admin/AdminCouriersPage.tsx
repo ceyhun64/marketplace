@@ -235,7 +235,7 @@ export default function AdminCouriersPage() {
       </Dialog>
 
       {/* Couriers Table */}
-      <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden">
+      <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-(--bg-sunken) border-b border-(--border-light) hover:bg-(--bg-sunken)">

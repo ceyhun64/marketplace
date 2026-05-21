@@ -357,16 +357,10 @@ export default function FeaturedStores() {
           </Link>
         </div>
 
-        {/* Grid */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: "1.25rem",
-            marginBottom: "2.5rem",
-          }}
-          className="lg:grid-cols-4 md:grid-cols-2 grid-cols-1"
-        >
+        {/* Grid — Tailwind controls columns; NO inline gridTemplateColumns.
+            Same class-vs-inline-style conflict that broke HeroSection was
+            present here: repeat(4,1fr) always produced 4 columns on mobile. */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
           {isLoading &&
             Array.from({ length: 4 }).map((_, i) => (
               <StoreCardSkeleton key={i} />
@@ -387,19 +381,15 @@ export default function FeaturedStores() {
             ))}
         </div>
 
-        {/* Merchant CTA banner */}
+        {/* Merchant CTA banner —
+            padding: "3rem 3.5rem" was 56 px each side on 320 px phones
+            (leaving only 208 px for content). Replaced with responsive
+            Tailwind padding that breathes properly on all screen sizes. */}
         <div
+          className="flex flex-wrap items-center justify-between gap-6 sm:gap-8 relative overflow-hidden px-5 py-10 sm:px-10 sm:py-12 lg:px-14"
           style={{
             borderRadius: "var(--radius-xl)",
-            padding: "3rem 3.5rem",
             background: "var(--charcoal)",
-            position: "relative",
-            overflow: "hidden",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "2rem",
-            flexWrap: "wrap" as const,
           }}
         >
           <div

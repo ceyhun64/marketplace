@@ -57,27 +57,21 @@ export default function NewsletterSection() {
       />
 
       <div
-        style={{
-          maxWidth: 1300,
-          margin: "0 auto",
-          padding: "0 2rem",
-          position: "relative",
-          zIndex: 1,
-        }}
+        className="max-w-325 mx-auto px-4 sm:px-8 relative z-10"
       >
+        {/*
+         * padding: "4rem" was 64px on every side — on 320px phones that left
+         * only 192px for content AND forced a 2-column layout via inline
+         * gridTemplateColumns which overrode the Tailwind grid-cols-1 class.
+         * Fixed: responsive Tailwind padding + grid classes only (no inline).
+         */}
         <div
+          className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 md:gap-16 px-6 py-10 sm:px-10 sm:py-14 lg:px-16 lg:py-20 shadow-(--shadow-md)"
           style={{
             background: "var(--white)",
             border: "1px solid var(--border-light)",
             borderRadius: 28,
-            padding: "4rem",
-            boxShadow: "var(--shadow-md)",
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "4rem",
-            alignItems: "center",
           }}
-          className="grid-cols-1 md:grid-cols-2"
         >
           {/* Left: Copy */}
           <div>

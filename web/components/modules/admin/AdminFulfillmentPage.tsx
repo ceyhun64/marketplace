@@ -326,7 +326,7 @@ export default function AdminFulfillmentPage() {
       </div>
 
       {/* Shipments Table */}
-      <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden">
+      <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden overflow-x-auto">
         <div className="px-5 py-4 border-b border-(--border-light)">
           <h2 className="text-sm font-semibold text-(--text-primary)">
             Shipments

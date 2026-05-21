@@ -239,7 +239,7 @@ export default function AdminDashboardPage() {
         <h2 className="text-sm font-semibold text-(--text-primary) mb-4">
           Quick Actions
         </h2>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2 md:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 md:gap-3">
           {quickLinks.map((link) => (
             <Link key={link.href} href={link.href}>
               <div className="flex flex-col items-center justify-center p-4 border border-dashed border-(--border-mid) rounded-xl hover:border-(--border-strong) hover:bg-(--bg-sunken) transition-all cursor-pointer gap-2">

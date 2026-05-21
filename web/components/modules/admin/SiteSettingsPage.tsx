@@ -101,7 +101,12 @@ function SectionCard({
         </div>
         {action && <div className="shrink-0">{action}</div>}
       </div>
-      <div className="px-6">{children}</div>
+      {/* overflow-x-auto on the content area allows tabular data with fixed
+          column widths to scroll horizontally on narrow viewports without
+          breaking the outer card's rounded corners (which needs overflow-hidden). */}
+      <div className="overflow-x-auto">
+        <div className="px-6">{children}</div>
+      </div>
     </div>
   );
 }
