@@ -94,7 +94,7 @@ export default function DealsPage() {
         <div className="absolute -top-10 -right-10 w-48 h-48 border-[20px] border-[var(--red)]/10 rounded-full" />
         <div className="absolute -bottom-16 left-32 w-32 h-32 border-[16px] border-[var(--charcoal-mid)]/15 rounded-full" />
 
-        <div className="max-w-[1300px] mx-auto relative z-10">
+        <div className="max-w-325 mx-auto relative z-10">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 mb-5 text-[12px] text-[var(--charcoal-soft)]">
             <Link
@@ -145,7 +145,7 @@ export default function DealsPage() {
 
       {/* CTA banner */}
       <div className="bg-[var(--charcoal-mid)] text-white py-3 px-4">
-        <div className="max-w-[1300px] mx-auto flex items-center justify-between text-[13px]">
+        <div className="max-w-325 mx-auto flex items-center justify-between text-[13px]">
           <div className="flex items-center gap-2 font-semibold">
             <Star className="w-4 h-4 text-yellow-400" fill="currentColor" />
             Free shipping on orders over $500
@@ -160,7 +160,7 @@ export default function DealsPage() {
       </div>
 
       {/* Product grid */}
-      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-12">
+      <div className="max-w-325 mx-auto px-4 lg:px-8 py-12">
         {isError && (
           <div className="text-center py-20 text-[var(--red)] font-semibold">
             Failed to load deals. Please try again.

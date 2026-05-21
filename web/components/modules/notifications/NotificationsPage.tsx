@@ -55,7 +55,7 @@ export default function NotificationsPage() {
         className="relative overflow-hidden py-12 px-4"
         style={{ background: "var(--charcoal)" }}
       >
-        <div className="max-w-[1300px] mx-auto flex items-end justify-between gap-4 flex-wrap">
+        <div className="max-w-325 mx-auto flex items-end justify-between gap-4 flex-wrap">
           <div>
             <div className="inline-flex items-center gap-2 mb-3">
               <Bell className="w-4 h-4" style={{ color: "var(--red)" }} />
@@ -115,7 +115,7 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-8">
+      <div className="max-w-325 mx-auto px-4 lg:px-8 py-8">
         {/* Filter tabs */}
         <div className="flex flex-wrap gap-2 mb-6">
           {FILTERS.map((f) => (

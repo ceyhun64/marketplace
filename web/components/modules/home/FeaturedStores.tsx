@@ -282,7 +282,7 @@ export default function FeaturedStores() {
         borderTop: "1px solid var(--border-subtle)",
       }}
     >
-      <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 2rem" }}>
+      <div className="max-w-325 mx-auto px-4 sm:px-8">
         {/* Header */}
         <div
           style={{

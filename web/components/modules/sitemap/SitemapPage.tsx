@@ -70,7 +70,7 @@ export default function SitemapPageComponent() {
         className="relative overflow-hidden py-12 px-4"
         style={{ background: "var(--charcoal)" }}
       >
-        <div className="max-w-[1300px] mx-auto">
+        <div className="max-w-325 mx-auto">
           <div className="inline-flex items-center gap-2 mb-3">
             <Map className="w-4 h-4" style={{ color: "var(--red)" }} />
             <span
@@ -95,7 +95,7 @@ export default function SitemapPageComponent() {
         </div>
       </div>
 
-      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-12">
+      <div className="max-w-325 mx-auto px-4 lg:px-8 py-12">
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
           {SITEMAP.map(({ section, links }) => (
             <div key={section}>

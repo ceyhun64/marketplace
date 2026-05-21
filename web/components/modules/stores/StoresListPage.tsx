@@ -122,7 +122,7 @@ export default function StoresListPage() {
     <main className="min-h-screen ">
       {/* Hero */}
       <div className="bg-[var(--charcoal)] py-14 px-4">
-        <div className="max-w-[1300px] mx-auto">
+        <div className="max-w-325 mx-auto">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
             <div>
               <div className="inline-flex items-center gap-2 mb-4">
@@ -173,7 +173,7 @@ export default function StoresListPage() {
       {/* Stats + Sort bar */}
       {!isLoading && !isError && stores && (
         <div className="bg-white border-b border-black/5 py-3 px-4">
-          <div className="max-w-[1300px] mx-auto flex items-center justify-between text-[13px] text-[var(--charcoal-soft)]">
+          <div className="max-w-325 mx-auto flex items-center justify-between text-[13px] text-[var(--charcoal-soft)]">
             <div className="flex items-center gap-4">
               <span className="font-semibold text-[var(--charcoal)]">
                 {filtered.length} stores
@@ -215,7 +215,7 @@ export default function StoresListPage() {
       )}
 
       {/* Grid */}
-      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-12">
+      <div className="max-w-325 mx-auto px-4 lg:px-8 py-12">
         {isError && (
           <div className="text-center py-20 text-[var(--red)] font-semibold">
             Failed to load stores. Please try again.

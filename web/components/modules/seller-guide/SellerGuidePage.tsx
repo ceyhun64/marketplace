@@ -196,7 +196,7 @@ export default function SellerGuidePage() {
             transform: "translate(30%, -30%)",
           }}
         />
-        <div className="max-w-[1300px] mx-auto relative z-10">
+        <div className="max-w-325 mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 mb-5">
             <Store className="w-4 h-4" style={{ color: "var(--red)" }} />
             <span
@@ -256,7 +256,7 @@ export default function SellerGuidePage() {
         </div>
       </div>
 
-      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-16 space-y-20">
+      <div className="max-w-325 mx-auto px-4 lg:px-8 py-16 space-y-20">
         {/* Steps */}
         <section>
           <div className="mb-10">

@@ -121,7 +121,7 @@ export default function NewArrivalsPage() {
           }}
         />
 
-        <div className="max-w-[1300px] mx-auto relative z-10">
+        <div className="max-w-325 mx-auto relative z-10">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
             <div>
               <div className="inline-flex items-center gap-2 mb-4">
@@ -167,7 +167,7 @@ export default function NewArrivalsPage() {
       </div>
 
       {/* Content */}
-      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-10">
+      <div className="max-w-325 mx-auto px-4 lg:px-8 py-10">
         {/* Controls bar */}
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           {/* Time filters */}

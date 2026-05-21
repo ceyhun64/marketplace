@@ -73,7 +73,7 @@ export default function RecentlyViewed() {
 
   return (
     <section style={{ padding: "4rem 0", background: "var(--off-white-2)" }}>
-      <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 2rem" }}>
+      <div className="max-w-325 mx-auto px-4 sm:px-8">
         {/* Header */}
         <div
           style={{

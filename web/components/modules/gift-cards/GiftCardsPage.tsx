@@ -159,7 +159,7 @@ export default function GiftCardsPage() {
       <div className="bg-[var(--charcoal)] py-14 px-4 relative overflow-hidden">
         <div className="absolute -top-10 -right-10 w-52 h-52 border-[20px] border-[var(--red)]/10 rounded-full" />
         <div className="absolute -bottom-16 left-36 w-36 h-36 border-[16px] border-white/5 rounded-full" />
-        <div className="max-w-[1200px] mx-auto relative z-10">
+        <div className="max-w-300 mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 mb-3">
             <Gift className="w-4 h-4 text-[var(--red)]" />
             <span className="font-mono text-[10px] uppercase tracking-[3px] text-[var(--charcoal-soft)]">
@@ -181,7 +181,7 @@ export default function GiftCardsPage() {
         </div>
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-4 lg:px-8 py-14 grid lg:grid-cols-[1fr_400px] gap-12">
+      <div className="max-w-300 mx-auto px-4 lg:px-8 py-14 grid lg:grid-cols-[1fr_400px] gap-12">
         {/* Left — Purchase form */}
         <div className="space-y-8">
           {purchaseState === "success" ? (
@@ -573,7 +573,7 @@ export default function GiftCardsPage() {
 
       {/* How it works */}
       <div className="bg-[var(--off-white)] border-t border-black/5 py-16 px-4">
-        <div className="max-w-[1200px] mx-auto">
+        <div className="max-w-300 mx-auto">
           <h2
             className="text-center text-[28px] text-[var(--charcoal)] mb-10"
             style={{ fontFamily: "var(--font-display)" }}

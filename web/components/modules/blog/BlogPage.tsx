@@ -160,7 +160,7 @@ export default function BlogPage() {
               "radial-gradient(circle, rgba(200,16,46,0.08) 0%, transparent 70%)",
           }}
         />
-        <div className="max-w-[1300px] mx-auto relative z-10">
+        <div className="max-w-325 mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 mb-4">
             <BookOpen className="w-4 h-4" style={{ color: "var(--red)" }} />
             <span
@@ -225,7 +225,7 @@ export default function BlogPage() {
         </div>
       </div>
 
-      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-12">
+      <div className="max-w-325 mx-auto px-4 lg:px-8 py-12">
         {/* Category Filter */}
         <div className="flex flex-wrap gap-2 mb-10">
           {CATEGORIES.map((cat) => (

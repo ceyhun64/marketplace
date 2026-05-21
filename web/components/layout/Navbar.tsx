@@ -488,10 +488,9 @@ export default function Navbar() {
       >
         <div
           className={cn(
-            "w-full pointer-events-auto transition-all rounded-2xl",
+            "w-full max-w-325 pointer-events-auto transition-all rounded-2xl",
           )}
           style={{
-            maxWidth: 1300,
             background: scrolled
               ? "rgba(255,255,255,0.92)"
               : "rgba(255,255,255,0)",

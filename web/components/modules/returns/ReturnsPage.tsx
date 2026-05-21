@@ -178,7 +178,7 @@ export default function ReturnsPage() {
             transform: "translate(30%, -30%)",
           }}
         />
-        <div className="max-w-[1300px] mx-auto relative z-10">
+        <div className="max-w-325 mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 mb-5">
             <RotateCcw className="w-4 h-4" style={{ color: "var(--red)" }} />
             <span
@@ -235,7 +235,7 @@ export default function ReturnsPage() {
 
       {/* Info banner */}
       <div
-        className="mx-4 lg:mx-auto max-w-[1300px] -mt-6 relative z-10 rounded-2xl px-6 py-4 flex items-center gap-4"
+        className="mx-4 lg:mx-auto max-w-325 -mt-6 relative z-10 rounded-2xl px-6 py-4 flex items-center gap-4"
         style={{
           background: "var(--info-bg)",
           border: "1.5px solid var(--info-border)",
@@ -271,7 +271,7 @@ export default function ReturnsPage() {
         </div>
       </div>
 
-      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-16 space-y-20">
+      <div className="max-w-325 mx-auto px-4 lg:px-8 py-16 space-y-20">
         {/* ── NEW: Return Ticket Tracker ── */}
         <section
           className="rounded-2xl p-6 lg:p-8"

@@ -28,7 +28,7 @@ export default function FeaturedProducts() {
 
   return (
     <section className="py-20 lg:py-24">
-      <div className="max-w-[1300px] mx-auto px-6 lg:px-8">
+      <div className="max-w-325 mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="space-y-3">
@@ -60,15 +60,17 @@ export default function FeaturedProducts() {
         </div>
 
         {/* Tabs */}
+        {/* overflow-x-auto + pb-1 — tabs scroll horizontally on xs if they
+            don't fit; pb-1 prevents the active underline from being clipped */}
         <div
-          className="flex gap-8 mb-10 border-b"
-          style={{ borderColor: "rgba(51,51,51,0.08)" }}
+          className="flex gap-6 sm:gap-8 mb-10 border-b overflow-x-auto pb-1 -mx-1 px-1"
+          style={{ borderColor: "rgba(51,51,51,0.08)", scrollbarWidth: "none" }}
         >
           {TABS.map((tab) => (
             <button
               key={tab.value}
               onClick={() => setActiveTab(tab.value)}
-              className="relative pb-4 text-sm font-semibold transition-colors duration-200"
+              className="relative pb-4 text-sm font-semibold transition-colors duration-200 shrink-0"
               style={{
                 fontFamily: "var(--font-body)",
                 color:
@@ -121,25 +123,8 @@ export default function FeaturedProducts() {
         <div className="mt-16 text-center">
           <Link
             href="/products"
-            className="inline-flex items-center gap-2 px-8 py-3.5 border font-semibold text-sm transition-all duration-250 rounded-lg"
-            style={{
-              fontFamily: "var(--font-body)",
-              borderColor: "rgba(51,51,51,0.15)",
-              color: "var(--charcoal)",
-              letterSpacing: "0.02em",
-            }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = "var(--red)";
-              el.style.borderColor = "var(--red)";
-              el.style.color = "#fff";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = "transparent";
-              el.style.borderColor = "rgba(51,51,51,0.15)";
-              el.style.color = "var(--charcoal)";
-            }}
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg font-semibold text-sm transition-all border border-[rgba(51,51,51,0.15)] text-(--charcoal) hover:bg-(--red) hover:border-(--red) hover:text-white min-h-11"
+            style={{ fontFamily: "var(--font-body)", letterSpacing: "0.02em" }}
           >
             Explore Full Catalog
             <ArrowRight className="w-4 h-4" />

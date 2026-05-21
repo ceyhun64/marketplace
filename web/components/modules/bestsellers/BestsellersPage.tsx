@@ -98,7 +98,7 @@ export default function BestsellersPage() {
         <div className="absolute -top-10 -right-10 w-48 h-48 border-[20px] border-[var(--red)]/10 rounded-full pointer-events-none" />
         <div className="absolute -bottom-16 left-32 w-32 h-32 border-[16px] border-white/5 rounded-full pointer-events-none" />
 
-        <div className="max-w-[1300px] mx-auto relative z-10">
+        <div className="max-w-325 mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 mb-4">
             <Trophy className="w-4 h-4 text-[var(--red)]" />
             <span className="font-mono text-[10px] uppercase tracking-[3px] text-[var(--charcoal-soft)]">
@@ -146,7 +146,7 @@ export default function BestsellersPage() {
       </div>
 
       {/* Content */}
-      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-10">
+      <div className="max-w-325 mx-auto px-4 lg:px-8 py-10">
         {/* Top 3 podium */}
         {!isLoading &&
           !isError &&

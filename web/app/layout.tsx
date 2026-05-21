@@ -76,7 +76,7 @@ export default function RootLayout({
     >
       <body
         style={{ fontFamily: "var(--font-manrope), sans-serif" }}
-        className="antialiased"
+        className="antialiased overflow-x-hidden"
       >
         <QueryProvider>
           <ClientLayoutWrapper>{children}</ClientLayoutWrapper>

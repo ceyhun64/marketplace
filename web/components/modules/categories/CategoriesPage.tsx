@@ -110,7 +110,7 @@ export default function CategoriesPage() {
     <main className="min-h-screen ">
       {/* Hero bar */}
       <div className="bg-[var(--charcoal)] py-14 px-4">
-        <div className="max-w-[1300px] mx-auto">
+        <div className="max-w-325 mx-auto">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 mb-5 text-[12px] text-[var(--charcoal-soft)]">
             <Link href="/" className="flex items-center gap-1 hover:text-white transition-colors">
@@ -154,7 +154,7 @@ export default function CategoriesPage() {
       </div>
 
       {/* Grid */}
-      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-12">
+      <div className="max-w-325 mx-auto px-4 lg:px-8 py-12">
         {isError && (
           <div className="text-center py-16 text-[var(--red)] font-semibold">
             Failed to load categories. Please try again.

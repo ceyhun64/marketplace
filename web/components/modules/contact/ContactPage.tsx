@@ -349,7 +349,7 @@ export default function ContactPage() {
         {/* Hero */}
         <div className="bg-[var(--charcoal)] py-16 px-4 relative overflow-hidden">
           <div className="absolute -top-10 -right-10 w-48 h-48 border-[20px] border-[var(--red)]/10 rounded-full pointer-events-none" />
-          <div className="max-w-[1300px] mx-auto relative z-10">
+          <div className="max-w-325 mx-auto relative z-10">
             <div className="inline-flex items-center gap-2 mb-4">
               <MessageSquare
                 className="w-4 h-4"
@@ -381,7 +381,7 @@ export default function ContactPage() {
           </div>
         </div>
 
-        <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-12">
+        <div className="max-w-325 mx-auto px-4 lg:px-8 py-12">
           <div className="grid lg:grid-cols-[1fr_380px] gap-10 items-start">
             {/* Left: Form */}
             <div>

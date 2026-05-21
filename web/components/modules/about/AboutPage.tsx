@@ -198,7 +198,7 @@ export default function AboutPage() {
             transform: "translate(30%, -30%)",
           }}
         />
-        <div className="max-w-[1300px] mx-auto relative z-10">
+        <div className="max-w-325 mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 mb-6">
             <div className="w-1 h-4" style={{ background: "var(--red)" }} />
             <span
@@ -261,7 +261,7 @@ export default function AboutPage() {
           borderColor: "rgba(51,51,51,0.07)",
         }}
       >
-        <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-12 grid grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="max-w-325 mx-auto px-4 lg:px-8 py-12 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
           {STATS.map(({ value, label, icon: Icon }) => (
             <div key={label} className="text-center">
               <div
@@ -293,7 +293,7 @@ export default function AboutPage() {
         </div>
       </div>
 
-      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-16 space-y-20">
+      <div className="max-w-325 mx-auto px-4 lg:px-8 py-16 space-y-20">
         {/* Mission */}
         <section className="grid lg:grid-cols-2 gap-12 items-center">
           <div>

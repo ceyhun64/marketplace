@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, ShoppingCart, Star, SlidersHorizontal } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
+import { formatPrice } from "@/lib/format";
 
 interface StoreOffer {
   id: string;
@@ -115,8 +116,8 @@ export function StoreProductGrid({
               background: "#fafafa",
               border: "1px solid rgba(30,30,30,0.12)",
               color: "#1e1e1e",
-              minWidth: "200px",
             }}
+            className="w-full sm:w-48"
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -273,13 +274,10 @@ export function StoreProductGrid({
                 }}
               >
                 <span
-                  className="font-bold text-sm"
-                  style={{ fontFamily: "monospace", color: "#1e1e1e" }}
+                  className="font-bold text-sm num"
+                  style={{ color: "#1e1e1e" }}
                 >
-                  {offer.price.toLocaleString("tr-TR", {
-                    style: "currency",
-                    currency: "TRY",
-                  })}
+                  {formatPrice(offer.price)}
                 </span>
 
                 <button
@@ -298,7 +296,7 @@ export function StoreProductGrid({
                       source: "ESTORE",
                     })
                   }
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed min-h-11 sm:min-h-0"
                   style={{
                     background:
                       offer.stock > 0 ? "#c8102e" : "rgba(30,30,30,0.08)",

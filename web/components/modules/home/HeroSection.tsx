@@ -111,24 +111,17 @@ export default function HeroSection() {
         />
       </div>
 
-      <div
-        style={{
-          position: "relative",
-          maxWidth: 1300,
-          margin: "0 auto",
-          padding: "0 2rem",
-          width: "100%",
-        }}
-      >
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "5rem",
-            alignItems: "center",
-          }}
-          className="lg:grid-cols-2 grid-cols-1"
-        >
+      {/* Outer container — px-4 guarantees safe edge zones on 320 px screens */}
+      <div className="relative max-w-325 mx-auto w-full px-4 sm:px-8">
+        {/*
+         * Grid — Tailwind controls columns, NOT inline style.
+         * The previous inline  gridTemplateColumns: "1fr 1fr"  overrode the
+         * Tailwind  grid-cols-1  class on every viewport, forcing a 2-column
+         * layout even on 320 px phones and causing horizontal overflow.
+         * Rule: never mix inline `display: grid` + `gridTemplateColumns` with
+         * Tailwind grid utilities on the same element — inline style wins.
+         */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-10 lg:gap-20">
           {/* ── Left: Text ── */}
           <div style={{ zIndex: 10 }}>
             {/* Badge */}

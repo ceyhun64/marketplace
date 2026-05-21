@@ -49,7 +49,7 @@ export default function HowItWorksSection() {
         style={{ border: "50px solid rgba(200,16,46,0.08)" }}
       />
 
-      <div className="max-w-[1300px] mx-auto px-6 lg:px-8 relative z-10">
+      <div className="max-w-325 mx-auto px-6 lg:px-8 relative z-10">
         {/* Header */}
         <div className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-3">

@@ -389,7 +389,7 @@ export default function HelpCenterPage() {
       {/* Category pills */}
       {!search && (
         <div className="bg-[var(--charcoal-mid)] border-b border-white/5 px-4 py-4">
-          <div className="max-w-[1200px] mx-auto flex items-center gap-2 flex-wrap">
+          <div className="max-w-300 mx-auto flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setActiveCategory(null)}
               className={`px-4 py-2 rounded-full text-[13px] font-bold transition-all ${
@@ -426,7 +426,7 @@ export default function HelpCenterPage() {
       )}
 
       {/* Content */}
-      <div className="max-w-[1200px] mx-auto px-4 lg:px-8 py-14">
+      <div className="max-w-300 mx-auto px-4 lg:px-8 py-14">
         {displayCategories.length === 0 && (
           <div className="text-center py-20">
             <Search className="w-14 h-14 text-[var(--charcoal)]/10 mx-auto mb-4" />

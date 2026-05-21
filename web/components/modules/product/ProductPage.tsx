@@ -1853,7 +1853,7 @@ export default function ProductDetailPage() {
               </div>
               {bulkDiscount.hasDiscount && (
                 <div
-                  className="flex justify-between text-sm -mx-4 px-4 py-1.5"
+                  className="flex justify-between text-sm px-3 py-1.5 rounded-lg"
                   style={{ background: "rgba(13,122,78,0.07)" }}
                 >
                   <span

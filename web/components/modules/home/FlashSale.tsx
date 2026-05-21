@@ -130,18 +130,7 @@ export default function FlashSale() {
       />
 
       <div
-        style={{
-          maxWidth: 1300,
-          margin: "0 auto",
-          padding: "1.5rem 2rem",
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "1.5rem",
-          position: "relative",
-          zIndex: 1,
-        }}
+        className="max-w-325 mx-auto px-4 sm:px-8 py-5 sm:py-6 flex flex-wrap items-center justify-between gap-4 sm:gap-6 relative z-10"
       >
         {/* Left: Label + rotating deal */}
         <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>

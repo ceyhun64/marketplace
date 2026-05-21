@@ -144,7 +144,7 @@ export default function FlashSalePage() {
         <div className="absolute top-8 -right-4 w-28 h-28 border-[12px] border-[var(--red)]/8 rounded-full" />
         <div className="absolute -bottom-16 left-32 w-32 h-32 border-[16px] border-[var(--charcoal-mid)]/15 rounded-full" />
 
-        <div className="max-w-[1300px] mx-auto relative z-10">
+        <div className="max-w-325 mx-auto relative z-10">
           <div className="flex flex-col lg:flex-row lg:items-end gap-8 justify-between">
             {/* Title block */}
             <div>
@@ -208,7 +208,7 @@ export default function FlashSalePage() {
 
       {/* Info banner */}
       <div className="bg-[var(--red)] text-white py-3 px-4">
-        <div className="max-w-[1300px] mx-auto flex items-center justify-between text-[13px]">
+        <div className="max-w-325 mx-auto flex items-center justify-between text-[13px]">
           <div className="flex items-center gap-2 font-semibold">
             <Star className="w-4 h-4 text-yellow-300" fill="currentColor" />
             Free shipping on orders over $500
@@ -223,7 +223,7 @@ export default function FlashSalePage() {
       </div>
 
       {/* Product grid */}
-      <div className="max-w-[1300px] mx-auto px-4 lg:px-8 py-12">
+      <div className="max-w-325 mx-auto px-4 lg:px-8 py-12">
         {isError && (
           <div className="text-center py-20 text-[var(--red)] font-semibold">
             Could not load products. Please try again.

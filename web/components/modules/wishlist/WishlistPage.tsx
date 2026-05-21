@@ -429,7 +429,7 @@ export default function WishlistPage() {
 
   return (
     <main className="min-h-screen py-12 px-4">
-      <div className="max-w-[1300px] mx-auto">
+      <div className="max-w-325 mx-auto">
         {/* Header */}
         <div className="mb-10 flex items-start justify-between">
           <div>
