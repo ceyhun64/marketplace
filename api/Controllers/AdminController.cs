@@ -1,3 +1,4 @@
+using System.Text.Json;
 using api.Common.DTOs;
 using api.Domain.Entities;
 using api.Domain.Enums;
@@ -6,6 +7,7 @@ using api.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace api.Controllers;
 
@@ -18,13 +20,17 @@ public class AdminController : ControllerBase
     private readonly ICurrentUserService _currentUser;
     private readonly INotificationService _notification;
     private readonly IConfiguration _config;
+    private readonly IDistributedCache _cache;
     private readonly ILogger<AdminController> _logger;
+
+    private const string CommissionCacheKey = "admin:commission:overrides";
 
     public AdminController(
         AppDbContext db,
         ICurrentUserService currentUser,
         INotificationService notification,
         IConfiguration config,
+        IDistributedCache cache,
         ILogger<AdminController> logger
     )
     {
@@ -32,6 +38,7 @@ public class AdminController : ControllerBase
         _currentUser = currentUser;
         _notification = notification;
         _config = config;
+        _cache = cache;
         _logger = logger;
     }
 
@@ -658,42 +665,80 @@ public class AdminController : ControllerBase
 
     // ── COMMISSION SETTINGS ──────────────────────────────────────────────────
 
-    /// <summary>Returns platform commission and fee configuration.</summary>
+    /// <summary>
+    /// Returns platform commission and fee configuration.
+    /// Redis overrides (set via PATCH) take precedence over appsettings.json values.
+    /// </summary>
     [HttpGet("settings/commission")]
-    public IActionResult GetCommissionSettings()
+    public async Task<IActionResult> GetCommissionSettings()
     {
-        return Ok(
-            new
-            {
-                marketplaceFeePercent = _config.GetValue<decimal>(
-                    "Commission:MarketplaceFeePercent",
-                    8.0m
-                ),
-                paymentProcessingFeePercent = _config.GetValue<decimal>(
-                    "Commission:PaymentProcessingFeePercent",
-                    2.9m
-                ),
-                paymentProcessingFlatFee = _config.GetValue<decimal>(
-                    "Commission:PaymentProcessingFlatFee",
-                    0.30m
-                ),
-                subscriptionBasicMonthly = _config.GetValue<decimal>(
-                    "Commission:SubscriptionBasicMonthly",
-                    0m
-                ),
-                subscriptionProMonthly = _config.GetValue<decimal>(
-                    "Commission:SubscriptionProMonthly",
-                    299m
-                ),
-                subscriptionEnterpriseMonthly = _config.GetValue<decimal>(
-                    "Commission:SubscriptionEnterpriseMonthly",
-                    799m
-                ),
-                refundFeePercent = _config.GetValue<decimal>("Commission:RefundFeePercent", 0m),
-                currencyCode = _config["Commission:CurrencyCode"] ?? "TRY",
-                updatedAt = DateTime.UtcNow,
-            }
-        );
+        // Check for admin overrides stored in Redis
+        CommissionOverrides? overrides = null;
+        var cached = await _cache.GetStringAsync(CommissionCacheKey);
+        if (cached != null)
+        {
+            overrides = JsonSerializer.Deserialize<CommissionOverrides>(cached,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+
+        decimal Resolve(string key, decimal fallback, decimal? overrideValue = null)
+            => overrideValue ?? _config.GetValue(key, fallback);
+
+        return Ok(new
+        {
+            marketplaceFeePercent        = Resolve("Commission:MarketplaceFeePercent",       8.0m,  overrides?.MarketplaceFeePercent),
+            paymentProcessingFeePercent  = Resolve("Commission:PaymentProcessingFeePercent", 2.9m,  overrides?.PaymentProcessingFeePercent),
+            paymentProcessingFlatFee     = Resolve("Commission:PaymentProcessingFlatFee",    0.30m, overrides?.PaymentProcessingFlatFee),
+            subscriptionBasicMonthly     = Resolve("Commission:SubscriptionBasicMonthly",    0m,    overrides?.SubscriptionBasicMonthly),
+            subscriptionProMonthly       = Resolve("Commission:SubscriptionProMonthly",      299m,  overrides?.SubscriptionProMonthly),
+            subscriptionEnterpriseMonthly= Resolve("Commission:SubscriptionEnterpriseMonthly", 799m, overrides?.SubscriptionEnterpriseMonthly),
+            refundFeePercent             = Resolve("Commission:RefundFeePercent",            0m,    overrides?.RefundFeePercent),
+            currencyCode                 = _config["Commission:CurrencyCode"] ?? "USD",
+            updatedAt                    = overrides?.UpdatedAt ?? DateTime.UtcNow,
+        });
+    }
+
+    /// <summary>
+    /// Persists commission overrides to Redis so they survive restarts.
+    /// Merges with existing overrides — only supplied fields are updated.
+    /// </summary>
+    [HttpPatch("settings/commission")]
+    public async Task<IActionResult> UpdateCommissionSettings(
+        [FromBody] CommissionOverrideRequest req)
+    {
+        if (req is null) return BadRequest(new { message = "Request body is required." });
+
+        // Load existing overrides (if any) to merge
+        CommissionOverrides existing = new();
+        var cached = await _cache.GetStringAsync(CommissionCacheKey);
+        if (cached != null)
+        {
+            existing = JsonSerializer.Deserialize<CommissionOverrides>(cached,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+        }
+
+        // Apply only the fields supplied in the request
+        if (req.MarketplaceFeePercent.HasValue)        existing.MarketplaceFeePercent       = req.MarketplaceFeePercent;
+        if (req.PaymentProcessingFeePercent.HasValue)  existing.PaymentProcessingFeePercent = req.PaymentProcessingFeePercent;
+        if (req.PaymentProcessingFlatFee.HasValue)     existing.PaymentProcessingFlatFee    = req.PaymentProcessingFlatFee;
+        if (req.SubscriptionBasicMonthly.HasValue)     existing.SubscriptionBasicMonthly    = req.SubscriptionBasicMonthly;
+        if (req.SubscriptionProMonthly.HasValue)       existing.SubscriptionProMonthly      = req.SubscriptionProMonthly;
+        if (req.SubscriptionEnterpriseMonthly.HasValue)existing.SubscriptionEnterpriseMonthly = req.SubscriptionEnterpriseMonthly;
+        if (req.RefundFeePercent.HasValue)             existing.RefundFeePercent            = req.RefundFeePercent;
+        existing.UpdatedAt = DateTime.UtcNow;
+
+        var json = JsonSerializer.Serialize(existing);
+        await _cache.SetStringAsync(CommissionCacheKey, json, new DistributedCacheEntryOptions
+        {
+            // 365-day TTL — effectively permanent until explicitly cleared
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(365),
+        });
+
+        _logger.LogInformation(
+            "Commission settings updated by admin {UserId}: {Settings}",
+            _currentUser.UserId, json);
+
+        return Ok(new { message = "Commission settings saved.", updatedAt = existing.UpdatedAt });
     }
 
     // ── AUDIT LOGS ────────────────────────────────────────────────────────────
@@ -891,7 +936,7 @@ public class AdminController : ControllerBase
             query = query.Where(u => u.Role == parsedRole);
 
         var total = await query.CountAsync();
-        var items = await query
+        var users = await query
             .OrderByDescending(u => u.CreatedAt)
             .Skip((page - 1) * limit)
             .Take(limit)
@@ -901,22 +946,58 @@ public class AdminController : ControllerBase
                 u.Email,
                 u.FirstName,
                 u.LastName,
-                Role = u.Role.ToString(),
+                Role          = u.Role.ToString(),
+                AccountStatus = u.AccountStatus.ToString(),
                 IsEmailVerified = u.IsVerified,
                 u.IsDeleted,
                 u.CreatedAt,
             })
             .ToListAsync();
 
-        return Ok(
-            new
-            {
-                total,
-                page,
-                limit,
-                items,
-            }
-        );
+        return Ok(new { total, page, limit, items = users });
+    }
+
+    /// <summary>PATCH /api/admin/users/{id}/ban — Toggle user suspension.</summary>
+    [HttpPatch("users/{id:guid}/ban")]
+    public async Task<IActionResult> ToggleUserBan(Guid id)
+    {
+        var user = await _db.Users.FindAsync(id);
+        if (user is null) return NotFound(new { message = "User not found." });
+
+        if (user.AccountStatus == AccountStatus.Suspended)
+        {
+            user.AccountStatus = AccountStatus.Active;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+            return Ok(new { message = "User unsuspended.", accountStatus = user.AccountStatus.ToString() });
+        }
+
+        user.AccountStatus = AccountStatus.Suspended;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "User suspended.", accountStatus = user.AccountStatus.ToString() });
+    }
+
+    /// <summary>PATCH /api/admin/users/{id}/role — Change a user's role.</summary>
+    [HttpPatch("users/{id:guid}/role")]
+    public async Task<IActionResult> ChangeUserRole(Guid id, [FromBody] ChangeRoleDto dto)
+    {
+        var user = await _db.Users.FindAsync(id);
+        if (user is null) return NotFound(new { message = "User not found." });
+
+        if (!Enum.TryParse<UserRole>(dto.Role, ignoreCase: true, out var newRole))
+            return BadRequest(new { message = $"Invalid role: {dto.Role}" });
+
+        var previousRole = user.Role;
+        user.Role = newRole;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Admin {AdminId} changed role for user {UserId}: {From} → {To}",
+            _currentUser.UserId, id, previousRole, newRole);
+
+        return Ok(new { message = $"Role changed to {newRole}.", role = newRole.ToString() });
     }
 }
 
@@ -946,6 +1027,8 @@ public record UpdateMerchantDto(
 
 public record UpdateStatusDto(string Status);
 
+public record ChangeRoleDto(string Role);
+
 public record AdminStoreSetupDto(
     string? StoreName,
     string? Slug,
@@ -966,3 +1049,29 @@ public record AuditLogEntry(
     Guid ResourceId,
     DateTime OccurredAt
 );
+
+/// <summary>Redis-persisted commission overrides. All fields nullable — only set fields override appsettings.json.</summary>
+public class CommissionOverrides
+{
+    public decimal? MarketplaceFeePercent        { get; set; }
+    public decimal? PaymentProcessingFeePercent  { get; set; }
+    public decimal? PaymentProcessingFlatFee     { get; set; }
+    public decimal? SubscriptionBasicMonthly     { get; set; }
+    public decimal? SubscriptionProMonthly       { get; set; }
+    public decimal? SubscriptionEnterpriseMonthly{ get; set; }
+    public decimal? RefundFeePercent             { get; set; }
+    public DateTime UpdatedAt                    { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>PATCH /api/admin/settings/commission request body.</summary>
+public class CommissionOverrideRequest
+{
+    public decimal? MarketplaceFeePercent        { get; set; }
+    public decimal? PaymentProcessingFeePercent  { get; set; }
+    public decimal? PaymentProcessingFlatFee     { get; set; }
+    public decimal? SubscriptionBasicMonthly     { get; set; }
+    public decimal? SubscriptionProMonthly       { get; set; }
+    public decimal? SubscriptionEnterpriseMonthly{ get; set; }
+    public decimal? RefundFeePercent             { get; set; }
+}
+

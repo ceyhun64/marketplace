@@ -171,22 +171,23 @@ export default function AdminCommissionPage() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      // In production this would PATCH /api/admin/settings/commission
-      // For now we show a success toast and log the intent
-      await new Promise((r) => setTimeout(r, 400)); // simulated latency
-      return draft;
+      const { data } = await api.patch("/api/admin/settings/commission", draft);
+      return data;
     },
     onSuccess: () => {
       toast.success("Commission settings saved", {
-        description: "Changes will take effect on the next server restart.",
+        description: "Changes are active immediately and will persist until overridden.",
       });
       setIsDirty(false);
       setDraft({});
-      queryClient.invalidateQueries({
-        queryKey: ["admin-commission-settings"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["admin-commission-settings"] });
     },
-    onError: () => toast.error("Failed to save settings"),
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        "Failed to save settings. Please try again.";
+      toast.error(msg);
+    },
   });
 
   // Derived metrics
@@ -240,9 +241,9 @@ export default function AdminCommissionPage() {
       <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl border border-(--border-mid) bg-(--bg-sunken)/60">
         <Info className="w-4 h-4 text-(--text-tertiary) mt-0.5 shrink-0" />
         <p className="text-xs text-(--text-secondary) leading-relaxed">
-          Commission rates are read from server configuration. Changes saved
-          here are logged and queued for the next deployment cycle. Contact your
-          DevOps team to apply changes without downtime.
+          Changes are saved to the live configuration store and take effect
+          immediately — no restart required. Base defaults come from
+          appsettings.json; values set here override those defaults.
         </p>
       </div>
 

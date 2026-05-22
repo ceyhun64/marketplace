@@ -39,8 +39,11 @@ internal sealed class InMemoryAppDbContext : AppDbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // NpgsqlTsVector (full-text search) InMemory provider tarafından
-        // desteklenmez; test ortamında bu sütunu yok sayıyoruz.
+        // NpgsqlTsVector and native JSONB types are not supported by the
+        // InMemory provider. Ignore them in tests; the real PostgreSQL
+        // provider handles them natively without a value converter.
         modelBuilder.Entity<Product>().Ignore(p => p.SearchVector);
+        modelBuilder.Entity<ProductVariant>().Ignore(v => v.Attributes);
+        modelBuilder.Entity<OrderItem>().Ignore(i => i.VariantAttributes);
     }
 }

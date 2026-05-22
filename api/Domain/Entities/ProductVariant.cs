@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace api.Domain.Entities;
 
 /// <summary>
@@ -29,17 +31,19 @@ public class ProductVariant
     public string? ImageUrl { get; set; }
 
     // ── Physical Dimensions (override base product dimensions when set) ─────────
+    // [NotMapped] — require AddProductDimensions migration; remove after applying.
+
     /// <summary>Variant-specific gross weight in kg. Falls back to Product.WeightKg when null.</summary>
-    public decimal? WeightKg { get; set; }
+    [NotMapped] public decimal? WeightKg { get; set; }
 
     /// <summary>Variant-specific width in cm.</summary>
-    public decimal? WidthCm { get; set; }
+    [NotMapped] public decimal? WidthCm { get; set; }
 
     /// <summary>Variant-specific height in cm.</summary>
-    public decimal? HeightCm { get; set; }
+    [NotMapped] public decimal? HeightCm { get; set; }
 
     /// <summary>Variant-specific length in cm.</summary>
-    public decimal? LengthCm { get; set; }
+    [NotMapped] public decimal? LengthCm { get; set; }
 
     public bool IsActive { get; set; } = true;
 

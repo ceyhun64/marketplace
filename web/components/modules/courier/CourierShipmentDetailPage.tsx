@@ -6,6 +6,9 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   ArrowLeft, Package, MapPin, Clock, Printer, CheckCircle2,
@@ -103,6 +106,8 @@ export default function CourierShipmentDetailPage() {
   const queryClient = useQueryClient();
   const shipmentId = params.id as string;
   const [locationActive, setLocationActive] = useState(false);
+  const [deliveryDialog, setDeliveryDialog] = useState(false);
+  const [recipientName, setRecipientName] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["courier-shipment", shipmentId],
@@ -118,12 +123,15 @@ export default function CourierShipmentDetailPage() {
   });
 
   const deliveredMutation = useMutation({
-    mutationFn: async () => {
-      const recipientName = prompt("Enter the name of the recipient:");
-      if (!recipientName) return;
-      return (await api.post(`/api/fulfillment/${shipmentId}/delivered`, { recipientName })).data;
+    mutationFn: async (name: string) =>
+      (await api.post(`/api/fulfillment/${shipmentId}/delivered`, { recipientName: name || undefined })).data,
+    onSuccess: () => {
+      toast.success("Delivery completed ✓");
+      setLocationActive(false);
+      setDeliveryDialog(false);
+      setRecipientName("");
+      queryClient.invalidateQueries({ queryKey: ["courier-shipment", shipmentId] });
     },
-    onSuccess: () => { toast.success("Delivery completed ✓"); setLocationActive(false); queryClient.invalidateQueries({ queryKey: ["courier-shipment", shipmentId] }); },
     onError: () => toast.error("Operation failed"),
   });
 
@@ -221,10 +229,10 @@ export default function CourierShipmentDetailPage() {
             className="h-14 text-sm font-semibold text-white rounded-xl"
             style={{ backgroundColor: canDeliver ? "var(--success)" : undefined }}
             disabled={!canDeliver || deliveredMutation.isPending}
-            onClick={() => deliveredMutation.mutate()}
+            onClick={() => setDeliveryDialog(true)}
           >
             <CheckCircle2 className="w-5 h-5 mr-2" />
-            {deliveredMutation.isPending ? "Processing..." : "Delivered"}
+            Delivered
           </Button>
         </div>
       )}
@@ -377,6 +385,46 @@ export default function CourierShipmentDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Delivery confirmation dialog — replaces the broken window.prompt() */}
+      <Dialog open={deliveryDialog} onOpenChange={(v) => { if (!v) { setDeliveryDialog(false); setRecipientName(""); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Confirm Delivery</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="rounded-xl bg-(--bg-sunken) border border-(--border-light) p-4 text-sm">
+              <p className="font-semibold text-(--text-primary)">{shipment?.customer?.name}</p>
+              <p className="text-xs text-(--text-secondary) mt-0.5">{shipment?.customer?.address}</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm text-(--text-primary)">
+                Recipient name <span className="text-(--text-tertiary) font-normal">(optional)</span>
+              </Label>
+              <Input
+                placeholder="Full name of the person who received the package"
+                value={recipientName}
+                onChange={(e) => setRecipientName(e.target.value)}
+                className="border-(--border-mid)"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" onClick={() => { setDeliveryDialog(false); setRecipientName(""); }}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={deliveredMutation.isPending}
+              onClick={() => deliveredMutation.mutate(recipientName)}
+              style={{ backgroundColor: "var(--success)" }}
+              className="text-white"
+            >
+              {deliveredMutation.isPending ? "Processing…" : "Confirm Delivery"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

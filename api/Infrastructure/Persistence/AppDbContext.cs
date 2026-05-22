@@ -1,4 +1,3 @@
-using System.Text.Json;
 using api.Domain.Entities;
 using api.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -148,17 +147,11 @@ public class AppDbContext : DbContext
             .HasConversion<string>();
 
         // ── JSONB columns ─────────────────────────────────────────────────────
-        modelBuilder.Entity<ProductVariant>().Property(v => v.Attributes)
-            .HasColumnType("jsonb")
-            .HasConversion(
-                v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null) ?? new());
-
-        modelBuilder.Entity<OrderItem>().Property(i => i.VariantAttributes)
-            .HasColumnType("jsonb")
-            .HasConversion(
-                v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null) ?? new());
+        // Npgsql handles Dictionary<string,string> ↔ jsonb natively.
+        // No value converter needed; the InMemory test provider uses
+        // TestDbContextFactory which ignores these columns entirely.
+        modelBuilder.Entity<ProductVariant>().Property(v => v.Attributes).HasColumnType("jsonb");
+        modelBuilder.Entity<OrderItem>().Property(i => i.VariantAttributes).HasColumnType("jsonb");
 
         // ── Subscription → MerchantProfile (1:1) ─────────────────────────────
         modelBuilder
