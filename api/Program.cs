@@ -20,7 +20,13 @@ using Microsoft.OpenApi.Models;
 using Serilog;
 using StackExchange.Redis;
 
-Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
+// Bootstrap logger: minimal console output before host configuration loads.
+// Replaced by the full configuration-driven logger in UseSerilog() below.
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Warning()
+    .WriteTo.Console(outputTemplate:
+        "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .CreateBootstrapLogger();
 
 // ── Helper: postgresql:// URL → Npgsql connection string ─────────────────────
 static string ToNpgsql(string url, bool isDevelopment)
@@ -74,10 +80,18 @@ try
     var builder = WebApplication.CreateBuilder(args);
     var config = builder.Configuration;
 
-    // ── Serilog ───────────────────────────────────────────────────────────────
-    builder.Host.UseSerilog(
-        (ctx, lc) =>
-            lc.ReadFrom.Configuration(ctx.Configuration).Enrich.FromLogContext().WriteTo.Console()
+    // ── Serilog — configuration-driven structured logging ────────────────────
+    // Full settings come from appsettings.json / appsettings.{env}.json
+    // "Serilog" section. ReadFrom.Configuration() wires all sinks declared
+    // there (Console, File, Elasticsearch, Loki, etc.) so no sink-specific
+    // code needs to live here.
+    builder.Host.UseSerilog((ctx, services, lc) =>
+        lc.ReadFrom.Configuration(ctx.Configuration)
+          .ReadFrom.Services(services)
+          .Enrich.FromLogContext()
+          .Enrich.WithMachineName()
+          .Enrich.WithEnvironmentName()
+          .Enrich.WithProperty("Application", "marketplace-api")
     );
 
     // ── Production environment guard — fail fast on missing critical config ────
@@ -222,6 +236,8 @@ try
         cfg.AddOpenBehavior(typeof(api.Application.Behaviours.ValidationBehaviour<,>));
         // Cache invalidation: after commands implementing IInvalidatesCache succeed, Redis keys are deleted
         cfg.AddOpenBehavior(typeof(api.Application.Behaviours.CacheInvalidationBehaviour<,>));
+        // Stock reservation: Redis distributed lock wraps CreateOrderCommand to prevent overselling
+        cfg.AddBehavior(typeof(api.Application.Behaviours.StockReservationBehaviour));
     });
 
     // ── AutoMapper ────────────────────────────────────────────────────────────
@@ -322,6 +338,7 @@ try
     builder.Services.AddScoped<ITokenService, TokenService>();
     builder.Services.AddScoped<IFulfillmentService, FulfillmentService>();
     builder.Services.AddScoped<IShippingCalculatorService, ShippingCalculatorService>();
+    builder.Services.AddScoped<IStockReservationService, StockReservationService>();
     builder.Services.AddScoped<ILabelGeneratorService, LabelGeneratorService>();
     builder.Services.AddScoped<INotificationService, NotificationService>();
     builder.Services.AddScoped<IPaymentService, PaymentService>();

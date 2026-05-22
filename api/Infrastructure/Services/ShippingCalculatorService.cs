@@ -1,10 +1,36 @@
 using api.Domain.Enums;
+using Microsoft.Extensions.Configuration;
 
 namespace api.Infrastructure.Services;
 
 public class ShippingCalculatorService : IShippingCalculatorService
 {
     private const double EarthRadiusKm = 6371.0;
+
+    private readonly decimal _flatStandard;
+    private readonly decimal _flatExpress;
+    private readonly decimal _freeThreshold;
+    private readonly decimal _volumetricDivisor;
+    private readonly IReadOnlyList<WeightTier> _tiers;
+
+    public ShippingCalculatorService(IConfiguration config)
+    {
+        var section = config.GetSection("Shipping");
+
+        _flatStandard       = section.GetValue("StandardCost", 29.90m);
+        _flatExpress        = section.GetValue("ExpressCost",  59.90m);
+        _freeThreshold      = section.GetValue("FreeShippingThreshold", 500m);
+        _volumetricDivisor  = section.GetValue("DivisorForVolumetric", 3000m);
+
+        _tiers = section.GetSection("WeightTiers")
+            .Get<List<WeightTierConfig>>()
+            ?.Select(t => new WeightTier(t.MaxKg, t.StandardCost, t.ExpressCost))
+            .OrderBy(t => t.MaxKg)
+            .ToList()
+            ?? [];
+    }
+
+    // ── Interface implementation ───────────────────────────────────────────────
 
     /// <summary>Haversine formula — straight-line distance in km.</summary>
     public double CalculateDistanceKm(double lat1, double lng1, double lat2, double lng2)
@@ -23,10 +49,7 @@ public class ShippingCalculatorService : IShippingCalculatorService
         return EarthRadiusKm * c;
     }
 
-    /// <summary>
-    /// ETA = now + handlingHours + transit time.
-    /// Express: avg 80 km/h equivalent, Regular: 50 km/h + 20% buffer.
-    /// </summary>
+    /// <summary>ETA = now + handlingHours + transit time.</summary>
     public DateTime CalculateEta(
         double merchantLat,
         double merchantLng,
@@ -38,19 +61,14 @@ public class ShippingCalculatorService : IShippingCalculatorService
     {
         var distanceKm = CalculateDistanceKm(merchantLat, merchantLng, destLat, destLng);
 
-        double avgSpeedKmH = rate == ShippingRate.Express ? 80.0 : 50.0;
-        double bufferMultiplier = rate == ShippingRate.Express ? 1.0 : 1.2;
+        double avgSpeedKmH      = rate == ShippingRate.Express ? 80.0 : 50.0;
+        double bufferMultiplier = rate == ShippingRate.Express ? 1.0  : 1.2;
 
-        double transitHours = (distanceKm / avgSpeedKmH) * bufferMultiplier;
-
+        double transitHours = distanceKm / avgSpeedKmH * bufferMultiplier;
         return DateTime.UtcNow.AddHours(handlingHours).AddHours(transitHours);
     }
 
-    /// <summary>
-    /// ETA'yı saat olarak döner — /api/fulfillment/calculate-eta endpoint'i için.
-    /// Express minimum 4, Regular minimum 24 saat garantisi vardır.
-    /// </summary>
-    public int CalculateEtaHours( // ← EKLENDİ
+    public int CalculateEtaHours(
         double merchantLat,
         double merchantLng,
         double destLat,
@@ -59,11 +77,60 @@ public class ShippingCalculatorService : IShippingCalculatorService
         ShippingRate rate
     )
     {
-        var eta = CalculateEta(merchantLat, merchantLng, destLat, destLng, handlingHours, rate);
-        var hours = (int)Math.Ceiling((eta - DateTime.UtcNow).TotalHours);
+        var eta     = CalculateEta(merchantLat, merchantLng, destLat, destLng, handlingHours, rate);
+        var hours   = (int)Math.Ceiling((eta - DateTime.UtcNow).TotalHours);
         var minimum = rate == ShippingRate.Express ? 4 : 24;
         return Math.Max(hours, minimum);
     }
 
+    /// <summary>
+    /// Tiered pricing based on chargeable weight (max of actual vs volumetric/desi).
+    /// Falls back to flat rate when <paramref name="chargeableWeightKg"/> is null.
+    /// </summary>
+    public decimal CalculateShippingCost(ShippingRate rate, decimal? chargeableWeightKg = null)
+    {
+        if (chargeableWeightKg is null || _tiers.Count == 0)
+            return rate == ShippingRate.Express ? _flatExpress : _flatStandard;
+
+        var kg = chargeableWeightKg.Value;
+
+        foreach (var tier in _tiers)
+        {
+            if (kg <= tier.MaxKg)
+                return rate == ShippingRate.Express ? tier.ExpressCost : tier.StandardCost;
+        }
+
+        // Heavier than the last tier — use the last tier's cost
+        var last = _tiers[^1];
+        return rate == ShippingRate.Express ? last.ExpressCost : last.StandardCost;
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Computes volumetric (desi) weight: W × H × L / divisor.
+    /// Standard divisor is 3000 for most Turkish domestic carriers.
+    /// </summary>
+    public decimal CalculateVolumetricWeight(decimal widthCm, decimal heightCm, decimal lengthCm)
+        => Math.Round(widthCm * heightCm * lengthCm / _volumetricDivisor, 3);
+
+    /// <summary>Chargeable weight = Max(actual, volumetric).</summary>
+    public decimal ChargeableWeight(decimal actualKg, decimal widthCm, decimal heightCm, decimal lengthCm)
+    {
+        var volumetric = CalculateVolumetricWeight(widthCm, heightCm, lengthCm);
+        return Math.Max(actualKg, volumetric);
+    }
+
     private static double ToRad(double degrees) => degrees * (Math.PI / 180.0);
+
+    // ── Inner types ────────────────────────────────────────────────────────────
+
+    private sealed record WeightTier(decimal MaxKg, decimal StandardCost, decimal ExpressCost);
+
+    private sealed class WeightTierConfig
+    {
+        public decimal MaxKg        { get; set; }
+        public decimal StandardCost { get; set; }
+        public decimal ExpressCost  { get; set; }
+    }
 }

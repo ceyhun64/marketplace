@@ -25,6 +25,38 @@ public class Product
     /// </summary>
     public int Stock { get; set; }
 
+    // ── Physical Dimensions (for volumetric/desi shipping cost calculation) ────
+    /// <summary>Gross weight in kilograms.</summary>
+    public decimal? WeightKg { get; set; }
+
+    /// <summary>Width in centimetres.</summary>
+    public decimal? WidthCm { get; set; }
+
+    /// <summary>Height in centimetres.</summary>
+    public decimal? HeightCm { get; set; }
+
+    /// <summary>Length/depth in centimetres.</summary>
+    public decimal? LengthCm { get; set; }
+
+    /// <summary>
+    /// Volumetric (desi) weight = (W × H × L) / 3000.
+    /// Carriers charge whichever is greater: actual weight or desi weight.
+    /// Computed property — not stored in DB.
+    /// </summary>
+    public decimal? VolumetricWeightKg =>
+        WidthCm.HasValue && HeightCm.HasValue && LengthCm.HasValue
+            ? Math.Round(WidthCm.Value * HeightCm.Value * LengthCm.Value / 3000m, 3)
+            : null;
+
+    /// <summary>
+    /// Chargeable weight = Max(ActualWeight, VolumetricWeight).
+    /// Used by ShippingCalculatorService to determine shipping tier.
+    /// </summary>
+    public decimal? ChargeableWeightKg =>
+        WeightKg.HasValue && VolumetricWeightKg.HasValue
+            ? Math.Max(WeightKg.Value, VolumetricWeightKg.Value)
+            : WeightKg ?? VolumetricWeightKg;
+
     public ModerationStatus ModerationStatus { get; set; } = ModerationStatus.PendingReview;
 
     public bool PublishToMarket { get; set; } = false;

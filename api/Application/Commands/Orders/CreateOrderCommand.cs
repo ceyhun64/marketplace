@@ -196,48 +196,41 @@ public class CreateOrderCommandHandler
 
             // ── VendorOrder splitting (one per merchant) ──────────────────────
             var itemsByMerchant = orderItems.GroupBy(i => i.MerchantId);
+            var vendorOrders    = new List<VendorOrder>();
 
             foreach (var group in itemsByMerchant)
             {
                 var merchantId = group.Key;
-                var merchant = products.First(p => p.MerchantId == merchantId).Merchant;
-                var categoryId = products
-                    .FirstOrDefault(p => p.MerchantId == merchantId)
-                    ?.CategoryId;
-                var plan = merchant.Subscription?.Plan;
+                var merchant   = products.First(p => p.MerchantId == merchantId).Merchant;
+                var categoryId = products.FirstOrDefault(p => p.MerchantId == merchantId)?.CategoryId;
+                var plan       = merchant.Subscription?.Plan;
 
-                // Dynamic commission resolution (priority waterfall via CommissionRule table)
-                var feePercent = await _commissionService.ResolveRateAsync(
-                    merchantId,
-                    categoryId,
-                    plan
-                );
+                var feePercent = await _commissionService.ResolveRateAsync(merchantId, categoryId, plan);
 
                 var subTotal = group.Sum(i => i.UnitPrice * i.Quantity);
-                var fee = Math.Round(subTotal * feePercent / 100m, 2);
+                var fee      = Math.Round(subTotal * feePercent / 100m, 2);
 
                 var vendorOrder = new VendorOrder
                 {
-                    Id = Guid.NewGuid(),
-                    OrderId = order.Id,
-                    MerchantId = merchantId,
-                    Status = OrderStatus.Pending,
-                    SubTotal = subTotal,
-                    PlatformFee = fee,
+                    Id                = Guid.NewGuid(),
+                    OrderId           = order.Id,
+                    MerchantId        = merchantId,
+                    Status            = OrderStatus.Pending,
+                    SubTotal          = subTotal,
+                    PlatformFee       = fee,
                     MerchantNetAmount = subTotal - fee,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
+                    CreatedAt         = DateTime.UtcNow,
+                    UpdatedAt         = DateTime.UtcNow,
                 };
 
                 _context.VendorOrders.Add(vendorOrder);
                 await _context.SaveChangesAsync(cancellationToken); // materialise vendorOrder.Id
 
-                // Link items to their VendorOrder
                 foreach (var item in group)
                     item.VendorOrderId = vendorOrder.Id;
 
-                // Escrow hold — funds are pending until delivery window clears
                 await _walletService.HoldEscrowAsync(vendorOrder);
+                vendorOrders.Add(vendorOrder);
             }
 
             await _context.SaveChangesAsync(cancellationToken);
@@ -249,8 +242,32 @@ public class CreateOrderCommandHandler
             throw;
         }
 
-        // Shipments are created per VendorOrder by FulfillmentService
-        await _fulfillmentService.CreateShipmentForOrderAsync(order);
+        // ── Per-vendor independent shipments ──────────────────────────────────
+        // Each VendorOrder receives its own Shipment so merchants can dispatch,
+        // track, and deliver their items independently.
+        var vendorOrdersForShipment = order.Items
+            .GroupBy(i => i.VendorOrderId)
+            .Where(g => g.Key.HasValue)
+            .Select(g => g.Key!.Value)
+            .Distinct()
+            .ToList();
+
+        if (vendorOrdersForShipment.Count > 0)
+        {
+            // Load the newly created VendorOrder entities
+            var voEntities = await System.Linq.AsyncEnumerable.ToListAsync(
+                _context.VendorOrders
+                    .Where(vo => vendorOrdersForShipment.Contains(vo.Id))
+                    .AsAsyncEnumerable());
+
+            foreach (var vo in voEntities)
+                await _fulfillmentService.CreateShipmentForVendorOrderAsync(vo, order);
+        }
+        else
+        {
+            // Fallback: single-merchant order or VendorOrderId not yet linked
+            await _fulfillmentService.CreateShipmentForOrderAsync(order);
+        }
 
         return ServiceResult<OrderDto>.Ok(
             new OrderDto

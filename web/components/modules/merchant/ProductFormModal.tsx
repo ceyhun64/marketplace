@@ -110,8 +110,12 @@ export default function ProductFormModal({
       if (isEdit && product) {
         await updateMutation.mutateAsync({ id: product.id, ...payload });
       } else {
-        const result = (await createMutation.mutateAsync(payload)) as any;
-        savedProductId = result?.id ?? result?.data?.id;
+        const result = (await createMutation.mutateAsync(payload)) as {
+          data?: { id?: string };
+          id?: string;
+        };
+        // Backend returns { id, name, price, stock } — interceptor puts it in .data
+        savedProductId = result?.data?.id ?? result?.id;
       }
 
       // Persist new variants if any were added
@@ -138,8 +142,20 @@ export default function ProductFormModal({
       onSuccess();
       onClose();
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { message?: string } } };
-      setError(err?.response?.data?.message ?? "Operation failed.");
+      // Handle all ASP.NET Core error shapes:
+      //  • { message: "..." }            — standard controller errors
+      //  • { title, errors: {...} }      — ModelState / RFC 7807 validation
+      //  • { title: "..." }              — generic problem detail
+      const data = (e as { response?: { data?: Record<string, unknown> } })
+        ?.response?.data;
+      const message =
+        (data?.message as string | undefined) ??
+        (data?.errors
+          ? Object.values(data.errors as Record<string, string[]>).flat()[0]
+          : undefined) ??
+        (data?.title as string | undefined) ??
+        "Operation failed. Please try again.";
+      setError(message);
     }
   };
 
@@ -334,12 +350,14 @@ export default function ProductFormModal({
         {/* Footer */}
         <div className="flex gap-3 px-6 pb-6">
           <button
+            type="button"
             onClick={onClose}
             className="flex-1 border border-(--border-mid) text-(--text-secondary) rounded-xl py-2.5 text-sm font-medium hover:bg-(--bg-sunken) transition-colors"
           >
             Cancel
           </button>
           <button
+            type="button"
             onClick={handleSubmit}
             disabled={submitting}
             className="flex-1 bg-(--charcoal) text-white rounded-xl py-2.5 text-sm font-medium hover:bg-(--charcoal-2) disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"

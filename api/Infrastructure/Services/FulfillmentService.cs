@@ -159,37 +159,58 @@ public class FulfillmentService : IFulfillmentService
 
     public async Task<Shipment> CreateShipmentForOrderAsync(Order order)
     {
-        var trackingNumber =
-            $"TR{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}{new Random().Next(1000, 9999)}".ToUpper();
+        var shipment = BuildShipment(order.Id, null, order.ShippingRate);
+        await PersistShipmentAsync(shipment);
+        return shipment;
+    }
 
-        var shipment = new Shipment
+    /// <summary>
+    /// Creates one independent shipment per VendorOrder so each merchant's
+    /// fulfilment can be tracked and delivered separately.
+    /// </summary>
+    public async Task<Shipment> CreateShipmentForVendorOrderAsync(
+        VendorOrder vendorOrder,
+        Order order)
+    {
+        var shipment = BuildShipment(order.Id, vendorOrder.Id, order.ShippingRate);
+        await PersistShipmentAsync(shipment);
+        return shipment;
+    }
+
+    private Shipment BuildShipment(Guid orderId, Guid? vendorOrderId, ShippingRate rate)
+    {
+        // Prefix "TR" + unix seconds + 4-digit random makes tracking numbers
+        // unique enough for development and staging. Production deployments
+        // should replace this with a carrier-issued barcode.
+        var trackingNumber =
+            $"TR{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}{Random.Shared.Next(1000, 9999)}".ToUpper();
+
+        return new Shipment
         {
-            Id = Guid.NewGuid(),
-            OrderId = order.Id,
-            Status = ShipmentStatus.Pending,
-            TrackingNumber = trackingNumber,
+            Id               = Guid.NewGuid(),
+            OrderId          = orderId,
+            VendorOrderId    = vendorOrderId,
+            Status           = ShipmentStatus.Pending,
+            TrackingNumber   = trackingNumber,
             EstimatedDelivery = DateTime.UtcNow.AddDays(
-                order.ShippingRate == ShippingRate.Express ? 1 : 3
-            ),
+                rate == ShippingRate.Express ? 1 : 3),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
+    }
 
+    private async Task PersistShipmentAsync(Shipment shipment)
+    {
         _db.Shipments.Add(shipment);
-
-        _db.ShipmentStatusHistories.Add(
-            new ShipmentStatusHistory
-            {
-                Id = Guid.NewGuid(),
-                ShipmentId = shipment.Id,
-                Status = ShipmentStatus.Pending,
-                Note = "Shipment record created.",
-                ChangedAt = DateTime.UtcNow,
-            }
-        );
-
+        _db.ShipmentStatusHistories.Add(new ShipmentStatusHistory
+        {
+            Id         = Guid.NewGuid(),
+            ShipmentId = shipment.Id,
+            Status     = ShipmentStatus.Pending,
+            Note       = "Shipment record created.",
+            ChangedAt  = DateTime.UtcNow,
+        });
         await _db.SaveChangesAsync();
-        return shipment;
     }
 
     private static OrderStatus MapToOrderStatus(ShipmentStatus s) =>

@@ -73,8 +73,12 @@ export const productKeys = {
   featured: (limit?: number) => [...productKeys.all, "featured", limit] as const,
   search: (q: string, filters?: ProductFilters) =>
     [...productKeys.all, "search", q, filters] as const,
+  // Without filters → ["products","merchant"] — prefix for invalidateQueries/cancelQueries
+  // With filters    → ["products","merchant",{...}] — exact key for useQuery
   merchantProducts: (filters?: ProductFilters) =>
-    [...productKeys.all, "merchant", filters] as const,
+    filters !== undefined
+      ? ([...productKeys.all, "merchant", filters] as const)
+      : ([...productKeys.all, "merchant"] as const),
   storeProducts: (slug: string, filters?: ProductFilters) =>
     [...productKeys.all, "store", slug, filters] as const,
   pending: (filters?: object) => [...productKeys.all, "pending", filters] as const,

@@ -9,6 +9,16 @@ public interface IFulfillmentService
     /// SignalR bildirimi gönderir ve geçmişe ekler.</summary>
     Task TransitionStatusAsync(Shipment shipment, ShipmentStatus newStatus, string? note = null);
 
-    /// <summary>Yeni sipariş için Shipment kaydı ve tracking numarası oluşturur.</summary>
+    /// <summary>
+    /// Legacy: creates a single shipment for the whole order.
+    /// Use <see cref="CreateShipmentForVendorOrderAsync"/> for multi-vendor orders.
+    /// </summary>
     Task<Shipment> CreateShipmentForOrderAsync(Order order);
+
+    /// <summary>
+    /// Creates an independent shipment record scoped to one VendorOrder.
+    /// Each vendor's items get a separate tracking number so they can be
+    /// dispatched, tracked, and delivered independently.
+    /// </summary>
+    Task<Shipment> CreateShipmentForVendorOrderAsync(VendorOrder vendorOrder, Order order);
 }

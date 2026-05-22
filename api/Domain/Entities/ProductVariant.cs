@@ -28,6 +28,19 @@ public class ProductVariant
     /// <summary>Optional variant-specific image (e.g. red colourway photo).</summary>
     public string? ImageUrl { get; set; }
 
+    // ── Physical Dimensions (override base product dimensions when set) ─────────
+    /// <summary>Variant-specific gross weight in kg. Falls back to Product.WeightKg when null.</summary>
+    public decimal? WeightKg { get; set; }
+
+    /// <summary>Variant-specific width in cm.</summary>
+    public decimal? WidthCm { get; set; }
+
+    /// <summary>Variant-specific height in cm.</summary>
+    public decimal? HeightCm { get; set; }
+
+    /// <summary>Variant-specific length in cm.</summary>
+    public decimal? LengthCm { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

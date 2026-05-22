@@ -15,10 +15,6 @@ public interface IShippingCalculatorService
         ShippingRate rate
     );
 
-    /// <summary>
-    /// ETA'yı saat cinsinden döner. FulfillmentController'daki
-    /// /calculate-eta endpoint'i için kullanılır.
-    /// </summary>
     int CalculateEtaHours(
         double merchantLat,
         double merchantLng,
@@ -27,4 +23,15 @@ public interface IShippingCalculatorService
         int handlingHours,
         ShippingRate rate
     );
+
+    /// <summary>
+    /// Calculates shipping cost using the chargeable weight (the greater of
+    /// actual weight and volumetric/desi weight) and the configured weight-tier table.
+    /// Falls back to the flat <c>StandardCost</c>/<c>ExpressCost</c> values when
+    /// dimensions are unavailable.
+    /// </summary>
+    /// <param name="chargeableWeightKg">
+    /// Max(actualWeightKg, volumetricWeightKg). Pass null to use flat rate.
+    /// </param>
+    decimal CalculateShippingCost(ShippingRate rate, decimal? chargeableWeightKg = null);
 }

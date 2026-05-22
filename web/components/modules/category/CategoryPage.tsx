@@ -4,6 +4,7 @@ import { fetchISR } from "@/lib/fetch";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductCard } from "@/components/modules/store/ProductCard";
+import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import type { Product } from "@/types/entities";
 
 interface PageProps {
@@ -213,25 +214,39 @@ export default async function CategoryPage({
 }: PageProps) {
   const resolvedParams = await params;
   const resolvedSearch = await searchParams;
+  const siteUrl        = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bazr.com";
+
+  // Fetch category for breadcrumb (lightweight — shared ISR cache with CategoryProducts)
+  const data     = await fetchISR<{ category: { name: string; slug: string } }>(`/api/categories/${resolvedParams.slug}`);
+  const category = data?.category;
+
+  const breadcrumbs = [
+    { name: "Home",       url: siteUrl },
+    { name: "Categories", url: `${siteUrl}/categories` },
+    ...(category ? [{ name: category.name, url: `${siteUrl}/category/${category.slug}` }] : []),
+  ];
 
   return (
-    <Suspense
-      fallback={
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <Skeleton className="h-8 w-48 mb-6" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-64 rounded-xl" />
-            ))}
+    <>
+      <BreadcrumbJsonLd items={breadcrumbs} />
+      <Suspense
+        fallback={
+          <div className="max-w-7xl mx-auto px-4 py-8">
+            <Skeleton className="h-8 w-48 mb-6" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-64 rounded-xl" />
+              ))}
+            </div>
           </div>
-        </div>
-      }
-    >
-      <CategoryProducts
-        slug={resolvedParams.slug}
-        searchParams={resolvedSearch}
-      />
-    </Suspense>
+        }
+      >
+        <CategoryProducts
+          slug={resolvedParams.slug}
+          searchParams={resolvedSearch}
+        />
+      </Suspense>
+    </>
   );
 }
 
