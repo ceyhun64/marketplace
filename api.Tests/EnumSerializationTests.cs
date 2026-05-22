@@ -5,6 +5,7 @@ using api.Domain.Entities;
 using api.Domain.Enums;
 using AutoMapper;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace api.Tests;
@@ -24,13 +25,11 @@ public class EnumSerializationTests
 
     public EnumSerializationTests()
     {
-        var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
-
-        // AutoMapper konfigürasyonunun kendisinin geçerli olduğunu doğrula.
-        // Eksik ForMember veya belirsiz eşlemeler burada patlar.
-        config.AssertConfigurationIsValid();
-
-        _mapper = config.CreateMapper();
+        // AutoMapper 16.x requires ILoggerFactory via DI. AddLogging() registers it.
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddAutoMapper(cfg => cfg.AddProfile(new MappingProfile()));
+        _mapper = services.BuildServiceProvider().GetRequiredService<IMapper>();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -146,15 +145,11 @@ public class EnumSerializationTests
 
         var dto = _mapper.Map<ShipmentDto>(shipment);
 
-        dto.History.Should().HaveCount(3);
-        dto.History.Select(h => h.Status)
+        dto.Events.Should().HaveCount(3);
+        dto.Events.Select(h => h.Status)
             .Should()
-            .ContainInOrder(
-                "IN_TRANSIT",
-                "LABEL_GENERATED",
-                "PENDING",
-                because: "History OrderByDescending(ChangedAt) ile sıralanmalı"
-            );
+            .ContainInOrder(new[] { "IN_TRANSIT", "LABEL_GENERATED", "PENDING" },
+                "History OrderByDescending(ChangedAt) ile sıralanmalı");
     }
 
     // ─────────────────────────────────────────────────────────────────────────

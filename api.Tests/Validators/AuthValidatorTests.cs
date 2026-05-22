@@ -48,7 +48,7 @@ public class AuthValidatorTests
     [Theory]
     [InlineData("short")] // 7 karakter, 8 gerekli
     [InlineData("alllowercase1")] // büyük harf yok
-    [InlineData("NOLOWER123")] // küçük harf yok — bekle: validator bunu kontrol etmez
+    // "NOLOWER123" intentionally omitted — validator has no lowercase requirement
     [InlineData("NoDigitsHere")] // rakam yok
     public void Register_WithWeakPassword_FailsValidation(string password)
     {

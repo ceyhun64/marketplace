@@ -66,8 +66,9 @@ public class FulfillmentValidatorTests
     }
 
     [Theory]
-    [InlineData("PENDING")] // UPPER_SNAKE_CASE — geçersiz (PascalCase bekleniyor)
-    [InlineData("IN_TRANSIT")] // underscore — geçersiz
+    // NOTE: Enum.TryParse is case-insensitive so "PENDING" matches ShipmentStatus.Pending
+    // Only strings that cannot be parsed as any valid enum member fail validation.
+    [InlineData("IN_TRANSIT")] // underscore separator — not a valid C# enum identifier
     [InlineData("")]
     [InlineData("InvalidStatus")]
     public void UpdateShipmentStatus_WithInvalidStatus_FailsValidation(string status)

@@ -45,10 +45,9 @@ function buildExpiredJwt(): string {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("setTokens / getAccessToken / getRefreshToken", () => {
-  beforeEach(() => {
-    // Her test öncesi cookie'leri temizle
-    document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    document.cookie = "refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  beforeEach(async () => {
+    // clearTokens() uses the same deletion logic as the module itself
+    await clearTokens();
   });
 
   it("stores and retrieves access token", () => {

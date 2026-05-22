@@ -175,10 +175,18 @@ public class OrderValidatorTests
         result.IsValid.Should().BeTrue();
     }
 
+    // ShippingAddressDto is a class (not record) — use property mutation helpers
+    private static ShippingAddressDto AddressWith(Action<ShippingAddressDto> mutate)
+    {
+        var addr = ValidAddress();
+        mutate(addr);
+        return addr;
+    }
+
     [Fact]
     public void Address_WithEmptyFullName_FailsValidation()
     {
-        var address = ValidAddress() with { FullName = "" };
+        var address = AddressWith(a => a.FullName = "");
         var result = _addressValidator.Validate(address);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "FullName");
@@ -187,7 +195,7 @@ public class OrderValidatorTests
     [Fact]
     public void Address_WithFullNameOver100Chars_FailsValidation()
     {
-        var address = ValidAddress() with { FullName = new string('A', 101) };
+        var address = AddressWith(a => a.FullName = new string('A', 101));
         var result = _addressValidator.Validate(address);
         result.IsValid.Should().BeFalse();
     }
@@ -197,7 +205,7 @@ public class OrderValidatorTests
     [InlineData("+905321234567")] // geçerli uluslararası format
     public void Address_WithValidPhone_PassesValidation(string phone)
     {
-        var address = ValidAddress() with { Phone = phone };
+        var address = AddressWith(a => a.Phone = phone);
         var result = _addressValidator.Validate(address);
         result.IsValid.Should().BeTrue();
     }
@@ -208,7 +216,7 @@ public class OrderValidatorTests
     [InlineData("abcdefghijk")] // harf içeriyor
     public void Address_WithInvalidPhone_FailsValidation(string phone)
     {
-        var address = ValidAddress() with { Phone = phone };
+        var address = AddressWith(a => a.Phone = phone);
         var result = _addressValidator.Validate(address);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Phone");
@@ -217,7 +225,7 @@ public class OrderValidatorTests
     [Fact]
     public void Address_WithPostalCodeNot5Digits_FailsValidation()
     {
-        var address = ValidAddress() with { PostalCode = "3471" }; // 4 basamak
+        var address = AddressWith(a => a.PostalCode = "3471"); // 4 basamak
         var result = _addressValidator.Validate(address);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "PostalCode");
@@ -226,7 +234,7 @@ public class OrderValidatorTests
     [Fact]
     public void Address_WithLetterInPostalCode_FailsValidation()
     {
-        var address = ValidAddress() with { PostalCode = "3471A" };
+        var address = AddressWith(a => a.PostalCode = "3471A");
         var result = _addressValidator.Validate(address);
         result.IsValid.Should().BeFalse();
     }
@@ -234,7 +242,7 @@ public class OrderValidatorTests
     [Fact]
     public void Address_WithAddressLineOver250Chars_FailsValidation()
     {
-        var address = ValidAddress() with { AddressLine = new string('X', 251) };
+        var address = AddressWith(a => a.AddressLine = new string('X', 251));
         var result = _addressValidator.Validate(address);
         result.IsValid.Should().BeFalse();
     }

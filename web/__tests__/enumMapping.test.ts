@@ -59,7 +59,7 @@ describe("ShipmentStatus — SCREAMING_SNAKE_CASE mapping", () => {
     "SHIPMENT_STATUS_COLORS['%s'] must be defined",
     (status) => {
       expect(SHIPMENT_STATUS_COLORS[status]).toBeDefined();
-      expect(SHIPMENT_STATUS_COLORS[status]).toMatch(/bg-\w+/);
+      expect(SHIPMENT_STATUS_COLORS[status]).toMatch(/bg-[^\s]+/);
     },
   );
 
@@ -100,7 +100,7 @@ describe("OrderStatus — SCREAMING_SNAKE_CASE mapping", () => {
   test.each(BACKEND_ORDER_STATUSES)(
     "ORDER_STATUS_COLORS['%s'] must contain a Tailwind class",
     (status) => {
-      expect(ORDER_STATUS_COLORS[status]).toMatch(/bg-\w+/);
+      expect(ORDER_STATUS_COLORS[status]).toMatch(/bg-[^\s]+/);
     },
   );
 

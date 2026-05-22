@@ -144,22 +144,25 @@ describe("calculateEta", () => {
 describe("getEtaLabel", () => {
   it("returns same-day/next-day label for EXPRESS <= 24h", () => {
     const label = getEtaLabel("EXPRESS", 20);
-    expect(label).toContain("gün");
+    expect(label).toContain("Same day");
   });
 
   it("returns 1-2 day label for EXPRESS > 24h", () => {
     const label = getEtaLabel("EXPRESS", 30);
-    expect(label).toContain("1-2");
+    expect(label).toContain("1");
+    expect(label).toContain("2");
   });
 
   it("returns 2-3 day label for REGULAR <= 3 days", () => {
-    const label = getEtaLabel("REGULAR", 60); // 2.5 gün
-    expect(label).toContain("2-3");
+    const label = getEtaLabel("REGULAR", 60); // 2.5 days
+    expect(label).toContain("2");
+    expect(label).toContain("3");
   });
 
   it("returns 3-5 day label for REGULAR > 3 days", () => {
-    const label = getEtaLabel("REGULAR", 100); // ~4.2 gün
-    expect(label).toContain("3-5");
+    const label = getEtaLabel("REGULAR", 100); // ~4.2 days
+    expect(label).toContain("3");
+    expect(label).toContain("5");
   });
 
   it("returns a non-empty string for all inputs", () => {

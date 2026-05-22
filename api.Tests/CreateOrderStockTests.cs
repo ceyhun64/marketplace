@@ -1,8 +1,9 @@
-using api.Application.Commands.Orders;
+﻿using api.Application.Commands.Orders;
 using api.Common.DTOs;
 using api.Domain.Entities;
 using api.Domain.Enums;
 using api.Infrastructure.Persistence;
+using api.Tests.TestHelpers;
 using api.Infrastructure.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -29,15 +30,13 @@ public class CreateOrderStockTests : IDisposable
     private readonly AppDbContext _db;
     private readonly Mock<ICurrentUserService> _currentUser;
     private readonly Mock<IFulfillmentService> _fulfillment;
+    private readonly Mock<IWalletService> _wallet;
+    private readonly Mock<ICommissionService> _commission;
     private readonly Guid _customerId = Guid.NewGuid();
 
     public CreateOrderStockTests()
     {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        _db = new AppDbContext(options);
+        _db = TestDbContextFactory.Create();
 
         _currentUser = new Mock<ICurrentUserService>();
         _currentUser.Setup(x => x.UserId).Returns(_customerId);
@@ -45,7 +44,17 @@ public class CreateOrderStockTests : IDisposable
         _fulfillment = new Mock<IFulfillmentService>();
         _fulfillment
             .Setup(x => x.CreateShipmentForOrderAsync(It.IsAny<Order>()))
-            .ReturnsAsync(new Shipment()); // gerçek bir Shipment döner
+            .ReturnsAsync(new Shipment());
+
+        _wallet = new Mock<IWalletService>();
+        _wallet
+            .Setup(w => w.HoldEscrowAsync(It.IsAny<VendorOrder>()))
+            .Returns(Task.CompletedTask);
+
+        _commission = new Mock<ICommissionService>();
+        _commission
+            .Setup(c => c.ResolveRateAsync(It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<PlanType?>()))
+            .ReturnsAsync(10m);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -156,7 +165,7 @@ public class CreateOrderStockTests : IDisposable
         _fulfillment.Verify(
             x => x.CreateShipmentForOrderAsync(It.IsAny<Order>()),
             Times.Once,
-            because: "Her başarılı sipariş için shipment oluşturulmalı"
+            "Her başarılı sipariş için shipment oluşturulmalı"
         );
     }
 
@@ -216,7 +225,7 @@ public class CreateOrderStockTests : IDisposable
 
         // Assert — hata
         result.Success.Should().BeFalse();
-        result.Message.Should().Contain("Yetersiz stok");
+        result.Message.Should().Contain("Insufficient");
     }
 
     [Fact]
@@ -263,7 +272,7 @@ public class CreateOrderStockTests : IDisposable
         _fulfillment.Verify(
             x => x.CreateShipmentForOrderAsync(It.IsAny<Order>()),
             Times.Never,
-            because: "Yetersiz stokta shipment oluşturulmamalı"
+            "Yetersiz stokta shipment oluşturulmamalı"
         );
     }
 
@@ -278,7 +287,7 @@ public class CreateOrderStockTests : IDisposable
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message.Should().Contain("Ürün bulunamadı");
+        result.Message.Should().Contain("Product not found");
     }
 
     [Fact]
@@ -296,7 +305,7 @@ public class CreateOrderStockTests : IDisposable
         result
             .Message.Should()
             .Contain(
-                "Ürün bulunamadı",
+                "Product not found",
                 because: "IsDeleted=true ürünler filtrelendiğinden bulunamadı hatası beklenir"
             );
     }
@@ -326,7 +335,7 @@ public class CreateOrderStockTests : IDisposable
     // ─────────────────────────────────────────────────────────────────────────
 
     private CreateOrderCommandHandler BuildHandler() =>
-        new(_db, _currentUser.Object, _fulfillment.Object);
+        new(_db, _currentUser.Object, _fulfillment.Object, _wallet.Object, _commission.Object);
 
     private Task<ServiceResult<OrderDto>> Handle(CreateOrderCommand command) =>
         BuildHandler().Handle(command, CancellationToken.None);

@@ -1,10 +1,10 @@
-using api.Controllers;
+﻿using api.Controllers;
 using api.Domain.Entities;
 using api.Infrastructure.Persistence;
 using api.Infrastructure.Services;
+using api.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -28,11 +28,7 @@ public class AdminStoreSetupTests : IDisposable
 
     public AdminStoreSetupTests()
     {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()) // test izolasyonu
-            .Options;
-
-        _db = new AppDbContext(options);
+        _db = TestDbContextFactory.Create();
 
         // AdminController tüm bağımlılıklarını alır; Setup endpoint bunları kullanmaz.
         var currentUser = new Mock<ICurrentUserService>();

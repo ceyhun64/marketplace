@@ -16,17 +16,17 @@ public class MerchantValidatorTests
 
     private static readonly CreateMerchantRequestValidator _createValidator = new();
 
+    // CreateMerchantRequest(Email, Password, StoreName, Slug, Latitude, Longitude, HandlingHours, ...)
     private static CreateMerchantRequest ValidCreateMerchant() =>
-        new()
-        {
-            Email = "merchant@example.com",
-            Password = "MerchantPass1",
-            StoreName = "Test Mağazası",
-            Slug = "test-magazasi",
-            Latitude = 41.0082,
-            Longitude = 28.9784,
-            HandlingHours = 24,
-        };
+        new(
+            "merchant@example.com",
+            "MerchantPass1",
+            "Test Mağazası",
+            "test-magazasi",
+            41.0082,
+            28.9784,
+            24
+        );
 
     [Fact]
     public void CreateMerchant_WithValidData_PassesValidation()
@@ -49,7 +49,7 @@ public class MerchantValidatorTests
     [Fact]
     public void CreateMerchant_WithEmailOver256Chars_FailsValidation()
     {
-        var longEmail = new string('a', 250) + "@b.com";
+        var longEmail = new string('a', 251) + "@b.com"; // 257 chars — exceeds 256 limit
         var request = ValidCreateMerchant() with { Email = longEmail };
         var result = _createValidator.Validate(request);
         result.IsValid.Should().BeFalse();
@@ -200,10 +200,15 @@ public class MerchantValidatorTests
 
     private static readonly UpdateMerchantProfileRequestValidator _updateValidator = new();
 
+    // UpdateMerchantProfileRequest(StoreName, Description, Latitude, Longitude, HandlingHours,
+    //                               PhoneNumber, LogoUrl, BannerUrl)
+    private static UpdateMerchantProfileRequest EmptyUpdate() =>
+        new(null, null, null, null, null, null, null, null);
+
     [Fact]
     public void UpdateMerchant_WithAllNullFields_PassesValidation()
     {
-        var request = new UpdateMerchantProfileRequest();
+        var request = EmptyUpdate();
         var result = _updateValidator.Validate(request);
         result.IsValid.Should().BeTrue(because: "Partial update — tüm alanlar opsiyonel");
     }
@@ -211,11 +216,7 @@ public class MerchantValidatorTests
     [Fact]
     public void UpdateMerchant_WithValidPartialData_PassesValidation()
     {
-        var request = new UpdateMerchantProfileRequest
-        {
-            StoreName = "Yeni Mağaza Adı",
-            HandlingHours = 48,
-        };
+        var request = EmptyUpdate() with { StoreName = "Yeni Mağaza Adı", HandlingHours = 48 };
         var result = _updateValidator.Validate(request);
         result.IsValid.Should().BeTrue();
     }
@@ -223,7 +224,7 @@ public class MerchantValidatorTests
     [Fact]
     public void UpdateMerchant_WithInvalidHandlingHours_FailsValidation()
     {
-        var request = new UpdateMerchantProfileRequest { HandlingHours = 0 };
+        var request = EmptyUpdate() with { HandlingHours = 0 };
         var result = _updateValidator.Validate(request);
         result.IsValid.Should().BeFalse();
     }
@@ -231,7 +232,7 @@ public class MerchantValidatorTests
     [Fact]
     public void UpdateMerchant_WithHandlingHours169_FailsValidation()
     {
-        var request = new UpdateMerchantProfileRequest { HandlingHours = 169 };
+        var request = EmptyUpdate() with { HandlingHours = 169 };
         var result = _updateValidator.Validate(request);
         result.IsValid.Should().BeFalse();
     }
@@ -239,7 +240,7 @@ public class MerchantValidatorTests
     [Fact]
     public void UpdateMerchant_WithInvalidLatitude_FailsValidation()
     {
-        var request = new UpdateMerchantProfileRequest { Latitude = 95.0 };
+        var request = EmptyUpdate() with { Latitude = 95.0 };
         var result = _updateValidator.Validate(request);
         result.IsValid.Should().BeFalse();
     }
