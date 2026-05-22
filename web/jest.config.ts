@@ -19,5 +19,6 @@ const config: Config = {
     },
   },
 };
+//aynnen
 
 export default createJestConfig(config);
