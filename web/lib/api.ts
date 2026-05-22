@@ -127,7 +127,7 @@ api.interceptors.response.use(
           refreshToken: string;
         }>(`${API_URL}/api/auth/refresh`, { refreshToken });
 
-        setTokens(data.accessToken, data.refreshToken);
+        await setTokens(data.accessToken, data.refreshToken);
         processQueue(null, data.accessToken);
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return api(originalRequest);

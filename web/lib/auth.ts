@@ -1,32 +1,35 @@
 // lib/auth.ts — Token storage helpers
 //
-// SECURITY MODEL
-// ──────────────
-// Access and refresh tokens are stored as httpOnly cookies set by
-// /api/auth/set-tokens (a Next.js Route Handler).
-// httpOnly cookies cannot be read by JavaScript, so XSS attacks cannot
-// exfiltrate the tokens via document.cookie.
+// STORAGE STRATEGY
+// ────────────────
+// Tokens live in TWO places simultaneously:
 //
-// The Axios interceptor reads tokens from the cookie via the server-side
-// cookie jar (in Route Handlers / Middleware) or, client-side, relies on
-// the browser automatically attaching cookies to same-origin requests.
-// For cross-origin requests (NEXT_PUBLIC_API_URL → .NET backend), the
-// Authorization header is still needed; we derive it from the non-sensitive
-// identity claim embedded in the JWT, not by re-reading the raw token.
+//   1. Module-level variables (_accessToken / _refreshToken)
+//      → Instant reads, no cookie parsing. Used by the Axios interceptor
+//        during the same session. Cleared on page refresh.
 //
-// If you need the raw token client-side (e.g. Axios Authorization header),
-// read it from a non-httpOnly "access_token_presence" flag cookie that
-// only carries the expiry, not the actual token value.
+//   2. Regular (non-httpOnly) cookies
+//      → Survive page refresh. Fallback when the in-memory vars are null
+//        (e.g. after SSR navigation or hard reload).
+//
+// httpOnly cookies are incompatible with this architecture: the access token
+// must be readable by JavaScript to be placed in the Authorization header
+// for cross-origin requests to the .NET backend.
 
 const ACCESS_TOKEN_KEY  = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 
-// ── Server-side cookie helpers (called from Route Handlers / Middleware) ──────
+// ── In-memory store (primary, cleared on page refresh) ───────────────────────
 
-function setCookie(name: string, value: string, days = 7) {
+let _accessToken:  string | null = null;
+let _refreshToken: string | null = null;
+
+// ── Cookie helpers (secondary, survives refresh) ──────────────────────────────
+
+function setCookie(name: string, value: string, days: number) {
   if (typeof window === "undefined") return;
   const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax${
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax${
     location.protocol === "https:" ? "; Secure" : ""
   }`;
 }
@@ -36,7 +39,8 @@ function getCookie(name: string): string | null {
   const match = document.cookie
     .split("; ")
     .find((row) => row.startsWith(`${name}=`));
-  return match ? match.substring(match.indexOf("=") + 1) : null;
+  if (!match) return null;
+  return decodeURIComponent(match.substring(name.length + 1));
 }
 
 function deleteCookie(name: string) {
@@ -46,54 +50,36 @@ function deleteCookie(name: string) {
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
+/** Returns the access token — memory first, then cookie fallback. */
 export function getAccessToken(): string | null {
-  return getCookie(ACCESS_TOKEN_KEY);
+  return _accessToken ?? getCookie(ACCESS_TOKEN_KEY);
 }
 
+/** Returns the refresh token — memory first, then cookie fallback. */
 export function getRefreshToken(): string | null {
-  return getCookie(REFRESH_TOKEN_KEY);
+  return _refreshToken ?? getCookie(REFRESH_TOKEN_KEY);
 }
 
 /**
- * Stores tokens as httpOnly cookies via a server-side Route Handler.
- * Falls back to client-readable cookies in development for easier debugging.
- *
- * IMPORTANT: await this call before navigating away so the cookie is set
- * before the next request is made.
+ * Stores tokens in memory (immediate) AND in cookies (page-refresh survival).
+ * Kept async so existing callers (use-auth.ts) do not need to change.
  */
 export async function setTokens(
   accessToken: string,
   refreshToken: string,
 ): Promise<void> {
-  try {
-    const res = await fetch("/api/auth/set-tokens", {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ accessToken, refreshToken }),
-    });
-
-    if (!res.ok) {
-      throw new Error(`set-tokens returned ${res.status}`);
-    }
-  } catch (err) {
-    console.error("[auth] Failed to set httpOnly tokens:", err);
-    // Graceful fallback: store in regular cookies so the app stays functional.
-    // This path should never be hit in production.
-    setCookie(ACCESS_TOKEN_KEY,  accessToken,  1);
-    setCookie(REFRESH_TOKEN_KEY, refreshToken, 7);
-  }
+  _accessToken  = accessToken;
+  _refreshToken = refreshToken;
+  setCookie(ACCESS_TOKEN_KEY,  accessToken,  1); // 1 day
+  setCookie(REFRESH_TOKEN_KEY, refreshToken, 7); // 7 days
 }
 
 /**
- * Removes auth tokens — calls the Route Handler to clear httpOnly cookies.
+ * Clears tokens from both memory and cookies.
  */
 export async function clearTokens(): Promise<void> {
-  try {
-    await fetch("/api/auth/set-tokens", { method: "DELETE" });
-  } catch {
-    // Fallback: clear client-readable cookies if the server route fails
-  }
-  // Always also clear any residual client-readable cookies
+  _accessToken  = null;
+  _refreshToken = null;
   deleteCookie(ACCESS_TOKEN_KEY);
   deleteCookie(REFRESH_TOKEN_KEY);
 }
@@ -103,7 +89,6 @@ export async function clearTokens(): Promise<void> {
 export function isTokenExpired(token: string): boolean {
   try {
     const payload = JSON.parse(
-      // Works in both browser (atob) and Node.js (Buffer)
       typeof window !== "undefined"
         ? atob(token.split(".")[1])
         : Buffer.from(token.split(".")[1], "base64url").toString(),

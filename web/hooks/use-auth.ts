@@ -168,7 +168,7 @@ export const useAuth = create<AuthState>()(
         } catch {
           // silently ignore
         } finally {
-          await clearTokens(); // async — clears httpOnly cookies via Route Handler
+          await clearTokens(); // deletes access_token + refresh_token cookies
           set({ user: null });
           // NOTE: Wishlist and cart remain in local storage after logout.
           // If you need to handle the case where a different user logs in on the
