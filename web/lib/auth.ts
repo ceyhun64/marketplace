@@ -2,66 +2,58 @@
 //
 // STORAGE STRATEGY
 // ────────────────
-// Tokens live in TWO places simultaneously:
+// Tokens are kept in TWO stores simultaneously:
 //
 //   1. Module-level variables (_accessToken / _refreshToken)
-//      → Instant reads, no cookie parsing. Used by the Axios interceptor
-//        during the same session. Cleared on page refresh.
+//      Instant reads with zero parsing overhead. Cleared on page refresh.
 //
-//   2. Regular (non-httpOnly) cookies
-//      → Survive page refresh. Fallback when the in-memory vars are null
-//        (e.g. after SSR navigation or hard reload).
+//   2. localStorage (keys: "access_token" / "refresh_token")
+//      Survives page refresh (F5). Read on first access when the
+//      in-memory variable is null. Works reliably in the browser across
+//      all modern environments — no SameSite / Secure / domain constraints.
 //
-// httpOnly cookies are incompatible with this architecture: the access token
-// must be readable by JavaScript to be placed in the Authorization header
-// for cross-origin requests to the .NET backend.
+// WHY NOT cookies?
+//   Our backend is on a different origin (Render) from the frontend (Vercel).
+//   We rely on the Authorization: Bearer header, not automatic cookie sending.
+//   Regular (non-httpOnly) cookies have the same XSS exposure as localStorage,
+//   but are harder to read reliably after F5 in cross-origin deployments
+//   (SameSite policies, Secure flag timing, path mismatches).
+//   localStorage is simpler, predictable, and sufficient for this architecture.
 
 const ACCESS_TOKEN_KEY  = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 
-// ── In-memory store (primary, cleared on page refresh) ───────────────────────
+// ── In-memory cache (primary — zero-latency reads within the same session) ───
 
 let _accessToken:  string | null = null;
 let _refreshToken: string | null = null;
 
-// ── Cookie helpers (secondary, survives refresh) ──────────────────────────────
-
-function setCookie(name: string, value: string, days: number) {
-  if (typeof window === "undefined") return;
-  const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax${
-    location.protocol === "https:" ? "; Secure" : ""
-  }`;
-}
-
-function getCookie(name: string): string | null {
-  if (typeof window === "undefined") return null;
-  const match = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith(`${name}=`));
-  if (!match) return null;
-  return decodeURIComponent(match.substring(name.length + 1));
-}
-
-function deleteCookie(name: string) {
-  if (typeof window === "undefined") return;
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
-}
-
 // ── Public API ────────────────────────────────────────────────────────────────
 
-/** Returns the access token — memory first, then cookie fallback. */
+/**
+ * Returns the access token — memory first, then localStorage fallback.
+ * The localStorage path is taken once per page load (F5), after which the
+ * in-memory variable is warm for the rest of the session.
+ */
 export function getAccessToken(): string | null {
-  return _accessToken ?? getCookie(ACCESS_TOKEN_KEY);
+  if (_accessToken) return _accessToken;
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem(ACCESS_TOKEN_KEY);
+  if (stored) _accessToken = stored; // warm the cache for subsequent calls
+  return stored;
 }
 
-/** Returns the refresh token — memory first, then cookie fallback. */
+/** Returns the refresh token — memory first, then localStorage fallback. */
 export function getRefreshToken(): string | null {
-  return _refreshToken ?? getCookie(REFRESH_TOKEN_KEY);
+  if (_refreshToken) return _refreshToken;
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem(REFRESH_TOKEN_KEY);
+  if (stored) _refreshToken = stored;
+  return stored;
 }
 
 /**
- * Stores tokens in memory (immediate) AND in cookies (page-refresh survival).
+ * Stores tokens in memory (immediate) AND in localStorage (page-refresh survival).
  * Kept async so existing callers (use-auth.ts) do not need to change.
  */
 export async function setTokens(
@@ -70,18 +62,20 @@ export async function setTokens(
 ): Promise<void> {
   _accessToken  = accessToken;
   _refreshToken = refreshToken;
-  setCookie(ACCESS_TOKEN_KEY,  accessToken,  1); // 1 day
-  setCookie(REFRESH_TOKEN_KEY, refreshToken, 7); // 7 days
+  if (typeof window !== "undefined") {
+    localStorage.setItem(ACCESS_TOKEN_KEY,  accessToken);
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  }
 }
 
-/**
- * Clears tokens from both memory and cookies.
- */
+/** Clears tokens from both memory and localStorage. */
 export async function clearTokens(): Promise<void> {
   _accessToken  = null;
   _refreshToken = null;
-  deleteCookie(ACCESS_TOKEN_KEY);
-  deleteCookie(REFRESH_TOKEN_KEY);
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+  }
 }
 
 // ── JWT utilities ─────────────────────────────────────────────────────────────

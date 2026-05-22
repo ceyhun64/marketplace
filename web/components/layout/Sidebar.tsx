@@ -73,14 +73,12 @@ export function Sidebar({ links, role, mobileOpen, onMobileOpenChange }: Sidebar
   const router = useRouter();
   const { user, logout } = useAuth();
 
-  // Hydration guard — only show user data after client mount
+  // Hydration guard — prevents server/client mismatch for user-specific UI.
+  // rehydrate() is already called synchronously in QueryProvider before any
+  // queries run, so auth state is available by the time this renders.
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    const init = async () => {
-      await useAuth.persist.rehydrate();
-      setMounted(true);
-    };
-    init();
+    setMounted(true);
   }, []);
 
   const handleLogout = async () => {
