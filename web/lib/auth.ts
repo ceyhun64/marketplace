@@ -72,16 +72,30 @@ export async function setTokens(
   if (typeof window !== "undefined") {
     localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    // Sync to httpOnly cookies so the Next.js middleware (proxy.ts) can read them.
+    // Must be awaited so the cookie is set before router.push() fires the next request.
+    try {
+      await fetch("/api/auth/set-tokens", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accessToken, refreshToken }),
+      });
+    } catch {
+      // Non-fatal: API calls still work via the in-memory token; user may hit
+      // the middleware redirect loop on the next hard navigation, but soft
+      // client-side navigation will continue to work.
+    }
   }
 }
 
-/** Clears tokens from both memory and localStorage. */
+/** Clears tokens from memory, localStorage, and the httpOnly middleware cookie. */
 export async function clearTokens(): Promise<void> {
   _accessToken = null;
   _refreshToken = null;
   if (typeof window !== "undefined") {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
+    fetch("/api/auth/set-tokens", { method: "DELETE" }).catch(() => {});
   }
 }
 

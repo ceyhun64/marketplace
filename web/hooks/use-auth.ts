@@ -26,7 +26,7 @@ interface AuthState {
   user: AuthUser | null;
   isLoading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthUser>;
   register: (data: {
     email: string;
     password: string;
@@ -85,24 +85,20 @@ export const useAuth = create<AuthState>()(
             role: string;
             merchantId?: string;
           };
-          set({
-            user: {
-              id: u.id,
-              email: u.email,
-              name: `${u.firstName} ${u.lastName}`.trim(),
-              role: u.role as AuthUser["role"],
-              merchantId: u.merchantId,
-            },
-            isLoading: false,
-          });
+          const authUser: AuthUser = {
+            id: u.id,
+            email: u.email,
+            name: `${u.firstName} ${u.lastName}`.trim(),
+            role: u.role as AuthUser["role"],
+            merchantId: u.merchantId,
+          };
+          set({ user: authUser, isLoading: false });
 
           // ✅ Login successful → sync guest wishlist to server
           // Silently ignore errors (runs in the background)
           syncGuestWishlistToServer().catch(() => {});
 
-          // Note: If a server-side saved cart is added in the future:
-          // const { data: serverCart } = await api.get("/api/cart");
-          // useCart.getState().mergeWith(serverCart.items);
+          return authUser;
         } catch (err: unknown) {
           const msg =
             (err as { response?: { data?: { message?: string } } })?.response

@@ -280,12 +280,14 @@ try
         {
             // ── High-sensitivity: authentication + account creation ─────────────
             // Brute-force / credential-stuffing protection.
-            new() { Endpoint = "POST:/api/auth/login",            Period = "1m",  Limit = 5   },
-            new() { Endpoint = "POST:/api/auth/login",            Period = "15m", Limit = 15  },
-            new() { Endpoint = "POST:/api/auth/register",         Period = "1h",  Limit = 5   },
-            new() { Endpoint = "POST:/api/auth/forgot-password",  Period = "1h",  Limit = 5   },
-            new() { Endpoint = "POST:/api/auth/reset-password",   Period = "1h",  Limit = 5   },
-            new() { Endpoint = "POST:/api/auth/refresh",          Period = "1m",  Limit = 10  },
+            // Development limits are intentionally relaxed to avoid hitting the
+            // ceiling during rapid test/login cycles. Production keeps strict limits.
+            new() { Endpoint = "POST:/api/auth/login",            Period = "1m",  Limit = builder.Environment.IsDevelopment() ? 60 : 5   },
+            new() { Endpoint = "POST:/api/auth/login",            Period = "15m", Limit = builder.Environment.IsDevelopment() ? 200 : 15  },
+            new() { Endpoint = "POST:/api/auth/register",         Period = "1h",  Limit = builder.Environment.IsDevelopment() ? 60 : 5   },
+            new() { Endpoint = "POST:/api/auth/forgot-password",  Period = "1h",  Limit = builder.Environment.IsDevelopment() ? 60 : 5   },
+            new() { Endpoint = "POST:/api/auth/reset-password",   Period = "1h",  Limit = builder.Environment.IsDevelopment() ? 60 : 5   },
+            new() { Endpoint = "POST:/api/auth/refresh",          Period = "1m",  Limit = builder.Environment.IsDevelopment() ? 120 : 10  },
 
             // ── Financial endpoints: stricter limits to prevent fraud loops ─────
             new() { Endpoint = "POST:/api/payments/checkout",     Period = "1m",  Limit = 5   },
@@ -541,8 +543,11 @@ try
 
     app.UseHttpsRedirection();
     app.UseSerilogRequestLogging();
-    app.UseIpRateLimiting();
+    // CORS must come BEFORE rate limiting so that 429 responses still carry
+    // the Access-Control-Allow-Origin header. Without this, the browser sees
+    // a CORS error instead of the actual 429, making debugging very confusing.
     app.UseCors("Frontend");
+    app.UseIpRateLimiting();
     app.UseCustomDomain(); // Milestone 2: custom domain → merchant slug resolution
     app.UseAuthentication();
     app.UseAuthorization();

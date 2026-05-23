@@ -29,16 +29,20 @@ function LoginForm() {
     e.preventDefault();
     clearError();
     try {
-      await login(email, password);
-      const { user } = useAuth.getState();
-      if (!user) return;
+      const user = await login(email, password);
       const redirect = searchParams.get("redirect");
-      if (redirect && user.role === "Customer") { router.push(redirect); return; }
-      const roleRoutes: Record<string, string> = {
+      const roleRoot: Record<string, string> = {
         Admin: "/admin", Merchant: "/merchant", Courier: "/courier", Customer: "/",
       };
-      router.push(roleRoutes[user.role] ?? "/");
-    } catch {}
+      const home = roleRoot[user.role] ?? "/";
+      if (redirect && redirect.startsWith(home)) {
+        router.push(redirect);
+      } else {
+        router.push(home);
+      }
+    } catch {
+      // Error is already set in the Zustand store by login()
+    }
   };
 
   return (

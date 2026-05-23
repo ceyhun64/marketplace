@@ -118,7 +118,7 @@ export function proxy(req: NextRequest) {
   if (!token) {
     const url = req.nextUrl.clone();
     url.pathname = "/auth/login";
-    url.searchParams.set("callbackUrl", pathname);
+    url.searchParams.set("redirect", pathname);
     return NextResponse.redirect(url);
   }
 
