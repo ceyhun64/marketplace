@@ -210,25 +210,3 @@ jobs:
           curl --fail --retry 5 --retry-delay 5 \
             https://${{ secrets.API_DOMAIN }}/health \
             || (echo "❌ Health check başarısız!" && exit 1)
-
-  # ─────────────────────────────────────────
-  # JOB 5: Bildirim (başarısız olursa)
-  # ─────────────────────────────────────────
-  notify-failure:
-    name: Notify on Failure
-    runs-on: ubuntu-latest
-    needs: [build-api, build-web, docker, deploy]
-    if: failure() && github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Send failure notification
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `🚨 Deploy başarısız: ${context.sha.substring(0, 7)}`,
-              body: `**Branch:** ${context.ref}\n**Commit:** ${context.sha}\n**Run:** ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
-              labels: ['bug', 'ci-failure']
-            });
