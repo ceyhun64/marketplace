@@ -27,10 +27,7 @@ import {
   Percent,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 const ICONS: Record<string, React.ElementType> = {
   grid: LayoutGrid,
@@ -68,7 +65,12 @@ interface SidebarProps {
   onMobileOpenChange?: (open: boolean) => void;
 }
 
-export function Sidebar({ links, role, mobileOpen, onMobileOpenChange }: SidebarProps) {
+export function Sidebar({
+  links,
+  role,
+  mobileOpen,
+  onMobileOpenChange,
+}: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -80,6 +82,28 @@ export function Sidebar({ links, role, mobileOpen, onMobileOpenChange }: Sidebar
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Auth guard: once hydrated, redirect to login if unauthenticated or
+  // if the user's role doesn't match the portal they're trying to access.
+  useEffect(() => {
+    if (!mounted) return;
+    if (!user) {
+      router.replace(
+        `/auth/login?redirect=${encodeURIComponent(pathname ?? "/")}`,
+      );
+      return;
+    }
+    if (role && user.role !== role) {
+      // Role mismatch — send to the correct portal or home
+      const roleRoutes: Record<string, string> = {
+        Admin: "/admin",
+        Merchant: "/merchant",
+        Courier: "/courier",
+        Customer: "/",
+      };
+      router.replace(roleRoutes[user.role] ?? "/");
+    }
+  }, [mounted, user, role, router, pathname]);
 
   const handleLogout = async () => {
     await logout();

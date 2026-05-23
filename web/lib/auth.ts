@@ -20,12 +20,12 @@
 //   (SameSite policies, Secure flag timing, path mismatches).
 //   localStorage is simpler, predictable, and sufficient for this architecture.
 
-const ACCESS_TOKEN_KEY  = "access_token";
+const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 
 // ── In-memory cache (primary — zero-latency reads within the same session) ───
 
-let _accessToken:  string | null = null;
+let _accessToken: string | null = null;
 let _refreshToken: string | null = null;
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -54,23 +54,30 @@ export function getRefreshToken(): string | null {
 
 /**
  * Stores tokens in memory (immediate) AND in localStorage (page-refresh survival).
- * Kept async so existing callers (use-auth.ts) do not need to change.
+ * Guards against undefined/empty values — a corrupted token is worse than no token.
  */
 export async function setTokens(
   accessToken: string,
   refreshToken: string,
 ): Promise<void> {
-  _accessToken  = accessToken;
+  // Guard: never persist empty or literal "undefined" strings.
+  // This can happen if a caller receives a raw PascalCase API response
+  // and accidentally passes undefined.
+  if (!accessToken || !refreshToken) {
+    console.warn("[auth] setTokens called with empty token(s) — ignoring.");
+    return;
+  }
+  _accessToken = accessToken;
   _refreshToken = refreshToken;
   if (typeof window !== "undefined") {
-    localStorage.setItem(ACCESS_TOKEN_KEY,  accessToken);
+    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
   }
 }
 
 /** Clears tokens from both memory and localStorage. */
 export async function clearTokens(): Promise<void> {
-  _accessToken  = null;
+  _accessToken = null;
   _refreshToken = null;
   if (typeof window !== "undefined") {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
@@ -94,12 +101,12 @@ export function isTokenExpired(token: string): boolean {
 }
 
 export interface TokenPayload {
-  sub:        string;
-  email:      string;
-  role?:      "Admin" | "Merchant" | "Courier" | "Customer";
+  sub: string;
+  email: string;
+  role?: "Admin" | "Merchant" | "Courier" | "Customer";
   "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"?: string;
   merchantId?: string;
-  exp:        number;
+  exp: number;
 }
 
 export function parseToken(token: string): TokenPayload | null {

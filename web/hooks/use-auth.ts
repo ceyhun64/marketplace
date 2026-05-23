@@ -67,8 +67,8 @@ export const useAuth = create<AuthState>()(
           });
           const { accessToken, refreshToken } = data;
 
-          // await is required — setTokens is now async (sets httpOnly cookies
-          // via a Route Handler to prevent XSS token theft).
+          // setTokens is async; await to ensure tokens are in localStorage
+          // before the /api/auth/me call below fires.
           await setTokens(accessToken, refreshToken);
 
           const role = getRoleFromToken(accessToken);

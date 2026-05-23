@@ -78,7 +78,15 @@ api.interceptors.response.use(
     // and do NOT contain pagination keys like "total/page/limit/items".
     // "pagination" guards against { data: T[], pagination: {...} } shaped responses
     // being incorrectly unwrapped to just the inner array.
-    const PAGINATION_KEYS = ["total", "page", "limit", "items", "pages", "stores", "pagination"];
+    const PAGINATION_KEYS = [
+      "total",
+      "page",
+      "limit",
+      "items",
+      "pages",
+      "stores",
+      "pagination",
+    ];
     if (
       response.data !== null &&
       typeof response.data === "object" &&
@@ -122,14 +130,36 @@ api.interceptors.response.use(
           return Promise.reject(error);
         }
 
-        const { data } = await axios.post<{
-          accessToken: string;
-          refreshToken: string;
-        }>(`${API_URL}/api/auth/refresh`, { refreshToken });
+        // NOTE: Use raw fetch (not the api instance) to avoid triggering this
+        // interceptor recursively. Also avoid raw axios.post() here because it
+        // bypasses the toCamel response transformer — the backend returns
+        // PascalCase { AccessToken, RefreshToken }, so data.accessToken would
+        // be undefined, causing setTokens("undefined", "undefined") to be
+        // written to localStorage and all subsequent requests to send
+        // "Authorization: Bearer undefined".
+        const refreshRes = await fetch(`${API_URL}/api/auth/refresh`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
 
-        await setTokens(data.accessToken, data.refreshToken);
-        processQueue(null, data.accessToken);
-        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+        if (!refreshRes.ok) {
+          throw new Error(`Token refresh failed: ${refreshRes.status}`);
+        }
+
+        const raw = (await refreshRes.json()) as Record<string, string>;
+
+        // Normalise PascalCase → camelCase defensively.
+        const newAccessToken = raw.accessToken ?? raw.AccessToken ?? "";
+        const newRefreshToken = raw.refreshToken ?? raw.RefreshToken ?? "";
+
+        if (!newAccessToken || !newRefreshToken) {
+          throw new Error("Refresh response missing tokens");
+        }
+
+        await setTokens(newAccessToken, newRefreshToken);
+        processQueue(null, newAccessToken);
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
