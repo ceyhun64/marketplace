@@ -51,9 +51,9 @@ const CountrySelect = ({
           )}
         >
           {value && (
-            <span className="flex h-4 w-6 overflow-hidden rounded-sm bg-foreground/20">
+            <span className="flex h-4 w-6 overflow-hidden rounded-sm border border-border/50">
               <img
-                src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${value}.svg`}
+                src={`https://flagcdn.com/w40/${value.toLowerCase()}.png`}
                 alt={value}
                 className="h-full w-full object-cover"
               />
@@ -86,10 +86,11 @@ const CountrySelect = ({
                       }}
                       className="gap-2 cursor-pointer"
                     >
-                      <span className="flex h-4 w-6 overflow-hidden rounded-sm bg-foreground/20">
+                      <span className="flex h-4 w-6 overflow-hidden rounded-sm border border-border/50">
                         <img
-                          src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${option.value}.svg`}
+                          src={`https://flagcdn.com/w40/${option.value!.toLowerCase()}.png`}
                           alt={option.label}
+                          className="h-full w-full object-cover"
                         />
                       </span>
                       <span className="flex-1 text-sm">{option.label}</span>

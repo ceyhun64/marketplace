@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Cpu,
@@ -39,6 +40,8 @@ function getIcon(slug: string): React.ReactNode {
 
 export default function CategoryGrid() {
   const { data, isLoading } = useCategories();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // Yalnızca üst düzey kategorileri göster (parentId olmayan)
   const categories: Category[] = Array.isArray(data)
@@ -85,7 +88,7 @@ export default function CategoryGrid() {
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {isLoading
+          {!mounted || isLoading
             ? Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}

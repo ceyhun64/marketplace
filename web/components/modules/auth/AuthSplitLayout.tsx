@@ -5,10 +5,11 @@ import { ShoppingBag } from "lucide-react";
 
 interface AuthSplitLayoutProps {
   children: React.ReactNode;
-  variant: "login" | "register";
+  variant: "login" | "register" | "merchant";
+  wide?: boolean;
 }
 
-export default function AuthSplitLayout({ children, variant }: AuthSplitLayoutProps) {
+export default function AuthSplitLayout({ children, variant, wide = false }: AuthSplitLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col bg-(--bg-page)">
       {/* Decorative blobs */}
@@ -18,7 +19,7 @@ export default function AuthSplitLayout({ children, variant }: AuthSplitLayoutPr
       </div>
 
       {/* Top bar */}
-      <header className="relative z-10 shrink-0 w-full max-w-120 mx-auto px-6 pt-8 pb-2 flex items-center justify-between">
+      <header className={`relative z-10 shrink-0 w-full ${wide ? "max-w-145" : "max-w-120"} mx-auto px-6 pt-8 pb-2 flex items-center justify-between`}>
         <Link href="/" className="flex items-center gap-2 group" style={{ textDecoration: "none" }}>
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform"
@@ -50,7 +51,7 @@ export default function AuthSplitLayout({ children, variant }: AuthSplitLayoutPr
 
       {/* Form area */}
       <main className="relative z-10 flex-1 flex items-start md:items-center justify-center px-4 py-8 md:py-10">
-        <div className="w-full max-w-120">
+        <div className={wide ? "w-full max-w-145" : "w-full max-w-120"}>
           <div className="bg-white border border-(--border-light) rounded-[40px] px-8 py-9 sm:px-10 sm:py-10 shadow-(--shadow-lg)">
             {children}
           </div>
