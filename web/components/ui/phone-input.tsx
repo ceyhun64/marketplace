@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-// Import getCountryCallingCode directly to avoid runtime errors
+import * as Flags from "country-flag-icons/react/3x2";
 import PhoneInputPrimitive, {
   getCountryCallingCode,
 } from "react-phone-number-input";
@@ -23,6 +23,14 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+function FlagIcon({ code, className }: { code: string; className?: string }) {
+  const Flag = Flags[code as keyof typeof Flags] as
+    | React.ComponentType<React.SVGProps<SVGSVGElement>>
+    | undefined;
+  if (!Flag) return <span className={cn("bg-border rounded-sm", className)} />;
+  return <Flag className={cn("h-full w-full", className)} />;
+}
 
 // ─── 1. Professional Country Selector (using Shadcn UI) ──────────────────────
 const CountrySelect = ({
@@ -51,12 +59,8 @@ const CountrySelect = ({
           )}
         >
           {value && (
-            <span className="flex h-4 w-6 overflow-hidden rounded-sm border border-border/50">
-              <img
-                src={`https://flagcdn.com/w40/${value.toLowerCase()}.png`}
-                alt={value}
-                className="h-full w-full object-cover"
-              />
+            <span className="flex h-4 w-6 overflow-hidden rounded-sm">
+              <FlagIcon code={value} />
             </span>
           )}
           <ChevronDown
@@ -67,7 +71,7 @@ const CountrySelect = ({
           />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-[300px] p-0" align="start">
+      <PopoverContent className="w-75 p-0" align="start">
         <Command>
           <CommandInput placeholder="Search country..." />
           <CommandList>
@@ -86,12 +90,8 @@ const CountrySelect = ({
                       }}
                       className="gap-2 cursor-pointer"
                     >
-                      <span className="flex h-4 w-6 overflow-hidden rounded-sm border border-border/50">
-                        <img
-                          src={`https://flagcdn.com/w40/${option.value!.toLowerCase()}.png`}
-                          alt={option.label}
-                          className="h-full w-full object-cover"
-                        />
+                      <span className="flex h-4 w-6 overflow-hidden rounded-sm shrink-0">
+                        <FlagIcon code={option.value!} />
                       </span>
                       <span className="flex-1 text-sm">{option.label}</span>
                       {option.value && (
