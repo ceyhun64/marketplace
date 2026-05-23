@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -48,87 +49,68 @@ function ResetPasswordForm() {
   const passwordStrength = (pwd: string) => {
     if (pwd.length === 0) return null;
     if (pwd.length < 6)
-      return {
-        level: "weak",
-        label: "Weak",
-        color: "bg-red-400",
-        count: 1,
-      };
+      return { level: "weak",   label: "Weak",   color: "var(--red)",     count: 1 };
     if (pwd.length < 10 || !/[A-Z]/.test(pwd) || !/[0-9]/.test(pwd))
-      return {
-        level: "medium",
-        label: "Medium",
-        color: "bg-yellow-400",
-        count: 2,
-      };
-    return {
-      level: "strong",
-      label: "Strong",
-      color: "bg-green-500",
-      count: 3,
-    };
+      return { level: "medium", label: "Medium", color: "var(--warning)", count: 2 };
+    return   { level: "strong", label: "Strong", color: "var(--success)", count: 3 };
   };
 
   const strength = passwordStrength(form.password);
 
-  /* ── Invalid Token ─────────────────────────────────── */
+  /* ── Invalid Token ─────────────────────────────────────── */
   if (!token) {
     return (
-      <div className="min-h-screen bg-[var(--off-white)] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-(--bg-page) flex items-center justify-center p-6">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-[20%] right-[10%] w-[28%] h-[28%] rounded-full bg-[var(--red)]/5 blur-[100px]" />
+          <div className="absolute top-[20%] right-[10%] w-[28%] h-[28%] rounded-full bg-(--red)/5 blur-[100px]" />
         </div>
 
-        <div className="w-full max-w-[420px] relative text-center">
-          <div className="bg-white/80 backdrop-blur-xl border border-[var(--border-light)] rounded-[40px] p-10 md:p-14 shadow-[var(--shadow-lg)]">
+        <div className="w-full max-w-105 relative text-center">
+          <div className="bg-white border border-(--border-light) rounded-[40px] p-10 md:p-14 shadow-(--shadow-lg)">
             <div className="text-5xl mb-6">🔗</div>
-            <h1 className="font-['Cormorant_Garamond'] text-[2rem] font-normal text-[var(--charcoal)] mb-3 tracking-[-0.01em]">
+            <h1 className="font-heading text-[2rem] font-normal text-(--charcoal) mb-3 tracking-tight">
               Invalid Link
             </h1>
-            <p className="text-[13px] text-[var(--charcoal-soft)] leading-relaxed mb-8">
+            <p className="text-[13px] text-(--charcoal-soft) leading-relaxed mb-8">
               This password reset link is invalid or has expired. Please request
               a new one.
             </p>
-            <Link href="/auth/forgot-password">
-              <button className="w-full h-14 bg-[var(--charcoal)] hover:bg-[var(--red)] text-white rounded-[16px] font-bold text-[13px] uppercase tracking-[2px] transition-all duration-[250ms] shadow-[var(--shadow-md)]">
-                Request New Link
-              </button>
-            </Link>
+            <Button asChild className="w-full h-14 bg-(--charcoal) hover:bg-(--red) text-white rounded-2xl font-bold text-[13px] uppercase tracking-[2px] transition-all shadow-(--shadow-md)">
+              <Link href="/auth/forgot-password">Request New Link</Link>
+            </Button>
           </div>
         </div>
       </div>
     );
   }
 
-  /* ── Success ───────────────────────────────────────── */
+  /* ── Success ───────────────────────────────────────────── */
   if (done) {
     return (
-      <div className="min-h-screen bg-[var(--off-white)] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-(--bg-page) flex items-center justify-center p-6">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-[20%] right-[10%] w-[28%] h-[28%] rounded-full bg-[var(--red)]/5 blur-[100px]" />
-          <div className="absolute bottom-[20%] left-[10%] w-[28%] h-[28%] rounded-full bg-[var(--charcoal-mid)]/5 blur-[100px]" />
+          <div className="absolute top-[20%] right-[10%] w-[28%] h-[28%] rounded-full bg-(--red)/5 blur-[100px]" />
+          <div className="absolute bottom-[20%] left-[10%] w-[28%] h-[28%] rounded-full bg-(--charcoal-mid)/5 blur-[100px]" />
         </div>
 
-        <div className="w-full max-w-[460px] relative text-center">
-          <div className="bg-white/80 backdrop-blur-xl border border-[var(--border-light)] rounded-[40px] p-10 md:p-14 shadow-[var(--shadow-lg)]">
-            <div className="w-16 h-16 rounded-full bg-[var(--red-muted)] border border-[var(--red-subtle)] flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="w-7 h-7 text-[var(--red)]" />
+        <div className="w-full max-w-115 relative text-center">
+          <div className="bg-white border border-(--border-light) rounded-[40px] p-10 md:p-14 shadow-(--shadow-lg)">
+            <div className="w-16 h-16 rounded-full bg-(--red-muted) border border-(--red-subtle) flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 className="w-7 h-7 text-(--red)" />
             </div>
-            <h1 className="font-['Cormorant_Garamond'] text-[2rem] font-normal text-[var(--charcoal)] mb-3 tracking-[-0.01em]">
+            <h1 className="font-heading text-[2rem] font-normal text-(--charcoal) mb-3 tracking-tight">
               Password Updated
             </h1>
-            <p className="text-[13px] text-[var(--charcoal-soft)] leading-relaxed mb-8">
+            <p className="text-[13px] text-(--charcoal-soft) leading-relaxed mb-8">
               Your password has been updated successfully. You'll be redirected
               to the login page shortly.
             </p>
-            <Link href="/auth/login">
-              <button className="w-full h-14 bg-[var(--charcoal)] hover:bg-[var(--red)] text-white rounded-[16px] font-bold text-[13px] uppercase tracking-[2px] transition-all duration-[250ms] shadow-[var(--shadow-md)]">
-                Sign In Now
-              </button>
-            </Link>
+            <Button asChild className="w-full h-14 bg-(--charcoal) hover:bg-(--red) text-white rounded-2xl font-bold text-[13px] uppercase tracking-[2px] transition-all shadow-(--shadow-md)">
+              <Link href="/auth/login">Sign In Now</Link>
+            </Button>
           </div>
 
-          <p className="mt-8 text-center text-[10px] text-[var(--charcoal-soft)] font-['JetBrains_Mono'] uppercase tracking-[3px] opacity-50">
+          <p className="mt-8 text-center font-mono text-[10px] uppercase tracking-[3px] text-(--charcoal-soft) opacity-50">
             Your personal data is protected with 256-bit encryption
           </p>
         </div>
@@ -136,37 +118,36 @@ function ResetPasswordForm() {
     );
   }
 
-  /* ── Main Form ─────────────────────────────────────── */
+  /* ── Main Form ─────────────────────────────────────────── */
   return (
-    <div className="min-h-screen bg-[var(--off-white)] flex items-center justify-center p-6">
-      {/* Background Decoration */}
+    <div className="min-h-screen bg-(--bg-page) flex items-center justify-center p-6">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[20%] right-[10%] w-[28%] h-[28%] rounded-full bg-[var(--red)]/5 blur-[100px]" />
-        <div className="absolute bottom-[20%] left-[10%] w-[28%] h-[28%] rounded-full bg-[var(--charcoal-mid)]/5 blur-[100px]" />
+        <div className="absolute top-[20%] right-[10%] w-[28%] h-[28%] rounded-full bg-(--red)/5 blur-[100px]" />
+        <div className="absolute bottom-[20%] left-[10%] w-[28%] h-[28%] rounded-full bg-(--charcoal-mid)/5 blur-[100px]" />
       </div>
 
-      <div className="w-full max-w-[460px] relative">
+      <div className="w-full max-w-115 relative">
         {/* Back Link */}
         <Link
           href="/auth/login"
-          className="flex items-center gap-1.5 text-[13px] text-[var(--charcoal-soft)] hover:text-[var(--charcoal)] mb-8 font-medium transition-colors duration-[250ms] group"
+          className="flex items-center gap-1.5 text-[13px] text-(--charcoal-soft) hover:text-(--charcoal) mb-8 font-medium transition-colors group"
         >
-          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform duration-[250ms]" />
+          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
           Back to Login
         </Link>
 
         {/* Card */}
-        <div className="bg-white/80 backdrop-blur-xl border border-[var(--border-light)] rounded-[40px] p-8 md:p-12 shadow-[var(--shadow-lg)]">
+        <div className="bg-white border border-(--border-light) rounded-[40px] p-8 md:p-12 shadow-(--shadow-lg)">
           {/* Icon */}
-          <div className="w-12 h-12 rounded-[16px] bg-[var(--red-muted)] border border-[var(--red-subtle)] flex items-center justify-center mb-6">
-            <KeyRound className="w-5 h-5 text-[var(--red)]" />
+          <div className="w-12 h-12 rounded-2xl bg-(--red-muted) border border-(--red-subtle) flex items-center justify-center mb-6">
+            <KeyRound className="w-5 h-5 text-(--red)" />
           </div>
 
           <div className="mb-8">
-            <h1 className="font-['Cormorant_Garamond'] text-[2rem] font-normal text-[var(--charcoal)] mb-2 tracking-[-0.01em]">
+            <h1 className="font-heading text-[2rem] font-normal text-(--charcoal) mb-2 tracking-tight">
               Set New Password
             </h1>
-            <p className="text-[13px] text-[var(--charcoal-soft)] leading-relaxed">
+            <p className="text-[13px] text-(--charcoal-soft) leading-relaxed">
               Choose a strong password — at least 8 characters with an uppercase
               letter and a number.
             </p>
@@ -189,9 +170,7 @@ function ResetPasswordForm() {
           >
             {/* New Password */}
             <div className="space-y-2">
-              <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[var(--charcoal-soft)] ml-1">
-                New Password
-              </Label>
+              <label className="label-mono ml-1">New Password</label>
               <PasswordInput
                 id="password"
                 value={form.password}
@@ -200,7 +179,7 @@ function ResetPasswordForm() {
                 }
                 placeholder="••••••••"
                 required
-                className="h-12 pr-11 rounded-xl border-[var(--border-light)] bg-white/50 focus:bg-white transition-all"
+                className="h-12 rounded-xl border-(--border-light) bg-white focus:border-(--charcoal) focus:ring-0 transition-all"
               />
 
               {/* Strength Indicator */}
@@ -210,15 +189,12 @@ function ResetPasswordForm() {
                     {[1, 2, 3].map((i) => (
                       <div
                         key={i}
-                        className={`h-1 flex-1 rounded-full transition-colors duration-[250ms] ${
-                          i <= strength.count
-                            ? strength.color
-                            : "bg-[var(--border-mid)]"
-                        }`}
+                        className="h-1 flex-1 rounded-full transition-colors duration-200"
+                        style={{ background: i <= strength.count ? strength.color : "var(--border-mid)" }}
                       />
                     ))}
                   </div>
-                  <p className="text-[11px] font-['JetBrains_Mono'] uppercase tracking-[1px] text-[var(--charcoal-soft)]">
+                  <p className="font-mono text-[11px] uppercase tracking-[1px] text-(--charcoal-soft)">
                     {strength.label}
                   </p>
                 </div>
@@ -227,9 +203,7 @@ function ResetPasswordForm() {
 
             {/* Confirm Password */}
             <div className="space-y-2">
-              <Label className="text-[11px] font-bold uppercase tracking-[2px] text-[var(--charcoal-soft)] ml-1">
-                Confirm Password
-              </Label>
+              <label className="label-mono ml-1">Confirm Password</label>
               <PasswordInput
                 id="confirm"
                 value={form.confirm}
@@ -238,20 +212,20 @@ function ResetPasswordForm() {
                 }
                 placeholder="••••••••"
                 required
-                className={`h-12 rounded-xl bg-white/50 focus:bg-white transition-all ${
+                className={`h-12 rounded-xl bg-white focus:ring-0 transition-all ${
                   form.confirm && form.password !== form.confirm
-                    ? "border-[var(--red)] focus-visible:ring-[var(--red)]/20"
-                    : "border-[var(--border-light)]"
+                    ? "border-(--red) focus-visible:ring-(--red)/20"
+                    : "border-(--border-light) focus:border-(--charcoal)"
                 }`}
               />
               {form.confirm && form.password !== form.confirm && (
-                <p className="text-[11px] text-[var(--red)] font-medium px-1">
+                <p className="text-[11px] text-(--red) font-medium px-1">
                   Passwords do not match
                 </p>
               )}
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={
                 mutation.isPending ||
@@ -259,18 +233,18 @@ function ResetPasswordForm() {
                 !form.confirm ||
                 form.password !== form.confirm
               }
-              className="w-full h-14 bg-[var(--charcoal)] hover:bg-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-[16px] font-bold text-[13px] uppercase tracking-[2px] transition-all duration-[250ms] shadow-[var(--shadow-md)] mt-2 flex items-center justify-center gap-2"
+              className="w-full h-14 bg-(--charcoal) hover:bg-(--red) disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold text-[13px] uppercase tracking-[2px] transition-all shadow-(--shadow-md) mt-2 flex items-center justify-center gap-2"
             >
               {mutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 "Update Password"
               )}
-            </button>
+            </Button>
           </form>
         </div>
 
-        <p className="mt-8 text-center text-[10px] text-[var(--charcoal-soft)] font-['JetBrains_Mono'] uppercase tracking-[3px] opacity-50">
+        <p className="mt-8 text-center font-mono text-[10px] uppercase tracking-[3px] text-(--charcoal-soft) opacity-50">
           Your personal data is protected with 256-bit encryption
         </p>
       </div>
@@ -282,8 +256,8 @@ export default function ResetPasswordPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[var(--off-white)] flex items-center justify-center">
-          <div className="animate-pulse text-[var(--charcoal-soft)] font-['JetBrains_Mono'] text-xs uppercase tracking-widest">
+        <div className="min-h-screen bg-(--bg-page) flex items-center justify-center">
+          <div className="animate-pulse text-(--charcoal-soft) font-mono text-xs uppercase tracking-widest">
             Loading...
           </div>
         </div>

@@ -6,17 +6,9 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ArrowRight, Loader2 } from "lucide-react";
 import PasswordInput from "@/components/ui/password-input";
 import AuthSplitLayout from "./AuthSplitLayout";
-
-const inputCls = "h-12 rounded-xl transition-all focus:ring-0 focus:outline-none";
-const inputStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.07)",
-  border:     "1px solid rgba(255,255,255,0.1)",
-  color:      "rgba(255,255,255,0.92)",
-};
 
 function LoginForm() {
   const router       = useRouter();
@@ -50,18 +42,12 @@ function LoginForm() {
       {/* Heading */}
       <div className="mb-9">
         <h1
-          className="leading-tight mb-2"
-          style={{
-            fontFamily:    "var(--font-display)",
-            fontSize:      "clamp(1.875rem, 4vw, 2.375rem)",
-            fontWeight:    400,
-            color:         "rgba(255,255,255,0.92)",
-            letterSpacing: "-0.025em",
-          }}
+          className="font-heading leading-tight mb-2 text-(--charcoal)"
+          style={{ fontSize: "clamp(1.875rem, 4vw, 2.375rem)", fontWeight: 400, letterSpacing: "-0.025em" }}
         >
           Welcome back.
         </h1>
-        <p style={{ color: "rgba(255,255,255,0.38)", fontFamily: "var(--font-body)", fontSize: "0.9375rem" }}>
+        <p className="text-[0.9375rem] text-(--charcoal-soft)">
           Sign in to your BAZR account.
         </p>
       </div>
@@ -69,46 +55,31 @@ function LoginForm() {
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Error banner */}
         {error && (
-          <div
-            className="px-4 py-3.5 rounded-2xl text-[13px] font-medium animate-in fade-in slide-in-from-top-1"
-            style={{ background: "rgba(200,16,46,0.12)", border: "1px solid rgba(200,16,46,0.25)", color: "#ff6b88" }}
-          >
+          <div className="px-4 py-3.5 rounded-2xl text-[13px] font-medium animate-in fade-in slide-in-from-top-1 bg-(--danger-bg) border border-(--danger-border) text-(--danger)">
             {error}
           </div>
         )}
 
         {/* Email */}
         <div className="space-y-2">
-          <Label
-            className="text-[11px] font-bold uppercase tracking-[2px]"
-            style={{ color: "rgba(255,255,255,0.35)" }}
-          >
-            Email Address
-          </Label>
+          <label className="label-mono">Email Address</label>
           <Input
             type="email"
             value={email}
             onChange={(e) => { setEmail(e.target.value); clearError(); }}
             required
             placeholder="you@example.com"
-            className={inputCls}
-            style={inputStyle}
+            className="h-12 rounded-xl bg-white border-(--border-light) focus:border-(--charcoal) focus:ring-0 transition-all"
           />
         </div>
 
         {/* Password */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label
-              className="text-[11px] font-bold uppercase tracking-[2px]"
-              style={{ color: "rgba(255,255,255,0.35)" }}
-            >
-              Password
-            </Label>
+            <label className="label-mono">Password</label>
             <Link
               href="/auth/forgot-password"
-              className="text-[11px] font-bold uppercase tracking-[2px] transition-colors hover:text-white"
-              style={{ color: "rgba(255,255,255,0.35)" }}
+              className="label-mono hover:text-(--charcoal) transition-colors"
             >
               Forgot?
             </Link>
@@ -118,8 +89,7 @@ function LoginForm() {
             onChange={(e) => { setPassword(e.target.value); clearError(); }}
             required
             placeholder="••••••••"
-            className={inputCls}
-            style={inputStyle}
+            className="h-12 rounded-xl bg-white border-(--border-light) focus:border-(--charcoal) focus:ring-0 transition-all"
           />
         </div>
 
@@ -127,11 +97,10 @@ function LoginForm() {
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full h-13 rounded-2xl font-bold text-sm uppercase tracking-[1.5px] transition-all group mt-2"
-          style={{ background: "#ffffff", color: "#111111", boxShadow: "0 2px 20px rgba(255,255,255,0.08)" }}
+          className="w-full h-12 rounded-2xl font-bold text-xs uppercase tracking-[1.5px] transition-all group mt-2 bg-(--charcoal) hover:bg-(--red) text-white"
         >
           {isLoading ? (
-            <Loader2 className="w-5 h-5 animate-spin" style={{ color: "#111111" }} />
+            <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
             <span className="flex items-center gap-2">
               Sign In
@@ -142,24 +111,22 @@ function LoginForm() {
       </form>
 
       {/* Footer links */}
-      <div className="mt-8 pt-7 space-y-2.5" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-        <p className="text-sm" style={{ color: "rgba(255,255,255,0.38)", fontFamily: "var(--font-body)" }}>
+      <div className="mt-8 pt-7 space-y-2.5 border-t border-(--border-light)">
+        <p className="text-sm text-(--charcoal-soft)">
           Don&apos;t have an account?{" "}
           <Link
             href="/auth/register"
-            className="font-bold transition-colors hover:text-white inline-flex items-center gap-1 group"
-            style={{ color: "rgba(255,255,255,0.7)" }}
+            className="font-bold text-(--charcoal) hover:text-(--red) transition-colors inline-flex items-center gap-1 group"
           >
             Create one free
             <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </p>
-        <p className="text-sm" style={{ color: "rgba(255,255,255,0.38)", fontFamily: "var(--font-body)" }}>
+        <p className="text-sm text-(--charcoal-soft)">
           Want to sell?{" "}
           <Link
             href="/auth/apply-merchant"
-            className="font-bold transition-colors hover:text-white inline-flex items-center gap-1 group"
-            style={{ color: "rgba(255,255,255,0.7)" }}
+            className="font-bold text-(--charcoal) hover:text-(--red) transition-colors inline-flex items-center gap-1 group"
           >
             Become a Merchant
             <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -179,8 +146,7 @@ export default function LoginPage() {
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="h-12 rounded-xl animate-pulse"
-                style={{ background: "rgba(255,255,255,0.06)" }}
+                className="h-12 rounded-xl animate-pulse bg-(--border-light)"
               />
             ))}
           </div>

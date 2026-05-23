@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ArrowRight, Loader2, UserPlus, CheckCircle2 } from "lucide-react";
 import PhoneInput from "@/components/ui/phone-input";
 import PasswordInput from "@/components/ui/password-input";
@@ -20,7 +19,7 @@ function passwordStrength(pw: string): { level: 0 | 1 | 2 | 3; label: string; co
   const strong = /[A-Z]/.test(pw) && /[0-9]/.test(pw) && /[^a-zA-Z0-9]/.test(pw);
   if (strong)         return { level: 3, label: "Strong",  color: "var(--success)"    };
   const medium = /[A-Z]/.test(pw) && /[0-9]/.test(pw);
-  if (medium)         return { level: 2, label: "Good",    color: "#f59e0b"            };
+  if (medium)         return { level: 2, label: "Good",    color: "var(--warning)"    };
                       return { level: 1, label: "Weak",    color: "var(--red)"        };
 }
 
@@ -67,18 +66,12 @@ export default function RegisterPage() {
         {/* Heading */}
         <div className="mb-8">
           <h1
-            className="leading-tight mb-2"
-            style={{
-              fontFamily:    "var(--font-display)",
-              fontSize:      "clamp(1.75rem, 3.5vw, 2.25rem)",
-              fontWeight:    400,
-              color:         "var(--charcoal)",
-              letterSpacing: "-0.025em",
-            }}
+            className="font-heading leading-tight mb-2 text-(--charcoal)"
+            style={{ fontSize: "clamp(1.75rem, 3.5vw, 2.25rem)", fontWeight: 400, letterSpacing: "-0.025em" }}
           >
             Create your account.
           </h1>
-          <p style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)", fontSize: "0.9375rem" }}>
+          <p className="text-[0.9375rem] text-(--charcoal-soft)">
             Free forever. No credit card required.
           </p>
         </div>
@@ -86,8 +79,7 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Error banner */}
           {displayError && (
-            <div className="px-4 py-3.5 rounded-2xl text-[13px] font-medium animate-in fade-in slide-in-from-top-1"
-              style={{ background: "rgba(200,16,46,0.06)", border: "1px solid rgba(200,16,46,0.15)", color: "var(--red)" }}>
+            <div className="px-4 py-3.5 rounded-2xl text-[13px] font-medium animate-in fade-in slide-in-from-top-1 bg-(--danger-bg) border border-(--danger-border) text-(--danger)">
               {displayError}
             </div>
           )}
@@ -95,40 +87,36 @@ export default function RegisterPage() {
           {/* Name row */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-[11px] font-bold uppercase tracking-[2px]"
-                style={{ color: "var(--charcoal-soft)" }}>First Name</Label>
+              <label className="label-mono">First Name</label>
               <Input
                 name="firstName" value={form.firstName} onChange={handleChange}
                 required placeholder="John"
-                className="h-11 rounded-xl bg-white border-(--border-mid) focus:border-(--charcoal) focus:ring-0 transition-all"
+                className="h-11 rounded-xl bg-white border-(--border-light) focus:border-(--charcoal) focus:ring-0 transition-all"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-[11px] font-bold uppercase tracking-[2px]"
-                style={{ color: "var(--charcoal-soft)" }}>Last Name</Label>
+              <label className="label-mono">Last Name</label>
               <Input
                 name="lastName" value={form.lastName} onChange={handleChange}
                 required placeholder="Smith"
-                className="h-11 rounded-xl bg-white border-(--border-mid) focus:border-(--charcoal) focus:ring-0 transition-all"
+                className="h-11 rounded-xl bg-white border-(--border-light) focus:border-(--charcoal) focus:ring-0 transition-all"
               />
             </div>
           </div>
 
           {/* Email */}
           <div className="space-y-2">
-            <Label className="text-[11px] font-bold uppercase tracking-[2px]"
-              style={{ color: "var(--charcoal-soft)" }}>Email</Label>
+            <label className="label-mono">Email</label>
             <Input
               name="email" type="email" value={form.email} onChange={handleChange}
               required placeholder="you@example.com"
-              className="h-11 rounded-xl bg-white border-(--border-mid) focus:border-(--charcoal) focus:ring-0 transition-all"
+              className="h-11 rounded-xl bg-white border-(--border-light) focus:border-(--charcoal) focus:ring-0 transition-all"
             />
           </div>
 
           {/* Phone */}
           <div className="space-y-2">
-            <Label className="text-[11px] font-bold uppercase tracking-[2px]"
-              style={{ color: "var(--charcoal-soft)" }}>Phone</Label>
+            <label className="label-mono">Phone</label>
             <PhoneInput
               value={form.phone}
               onChange={(v) => setForm((f) => ({ ...f, phone: v ?? "" }))}
@@ -138,12 +126,11 @@ export default function RegisterPage() {
 
           {/* Password */}
           <div className="space-y-2">
-            <Label className="text-[11px] font-bold uppercase tracking-[2px]"
-              style={{ color: "var(--charcoal-soft)" }}>Password</Label>
+            <label className="label-mono">Password</label>
             <PasswordInput
               name="password" value={form.password} onChange={handleChange}
               required placeholder="Min. 8 characters"
-              className="h-11 rounded-xl bg-white border-(--border-mid) focus:border-(--charcoal) focus:ring-0 transition-all"
+              className="h-11 rounded-xl bg-white border-(--border-light) focus:border-(--charcoal) focus:ring-0 transition-all"
             />
             {/* Strength meter */}
             {form.password.length > 0 && (
@@ -153,12 +140,12 @@ export default function RegisterPage() {
                     <div
                       key={lvl}
                       className="h-1 flex-1 rounded-full transition-all duration-300"
-                      style={{ background: lvl <= strength.level ? strength.color : "rgba(51,51,51,0.1)" }}
+                      style={{ background: lvl <= strength.level ? strength.color : "var(--border-mid)" }}
                     />
                   ))}
                 </div>
                 {strength.label && (
-                  <p className="text-[11px] font-semibold" style={{ color: strength.color, fontFamily: "var(--font-body)" }}>
+                  <p className="text-[11px] font-semibold" style={{ color: strength.color }}>
                     {strength.label} password
                   </p>
                 )}
@@ -168,18 +155,16 @@ export default function RegisterPage() {
 
           {/* Confirm password */}
           <div className="space-y-2">
-            <Label className="text-[11px] font-bold uppercase tracking-[2px]"
-              style={{ color: "var(--charcoal-soft)" }}>Confirm Password</Label>
+            <label className="label-mono">Confirm Password</label>
             <div className="relative">
               <PasswordInput
                 name="confirm" value={form.confirm} onChange={handleChange}
                 required placeholder="Repeat password"
-                className="h-11 rounded-xl bg-white border-(--border-mid) focus:border-(--charcoal) focus:ring-0 transition-all"
+                className="h-11 rounded-xl bg-white border-(--border-light) focus:border-(--charcoal) focus:ring-0 transition-all"
               />
               {passwordsMatch && (
                 <CheckCircle2
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-                  style={{ color: "var(--success)" }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-(--success)"
                 />
               )}
             </div>
@@ -189,8 +174,7 @@ export default function RegisterPage() {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full h-12 rounded-2xl font-bold text-sm uppercase tracking-[1.5px] transition-all group mt-1 shadow-sm"
-            style={{ background: "var(--charcoal)", color: "#fff" }}
+            className="w-full h-12 rounded-2xl font-bold text-xs uppercase tracking-[1.5px] transition-all group mt-1 bg-(--charcoal) hover:bg-(--red) text-white"
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -204,13 +188,11 @@ export default function RegisterPage() {
         </form>
 
         {/* Footer */}
-        <div className="mt-7 pt-6 text-center"
-          style={{ borderTop: "1px solid rgba(51,51,51,0.07)" }}>
-          <p className="text-sm" style={{ color: "var(--charcoal-soft)" }}>
+        <div className="mt-7 pt-6 text-center border-t border-(--border-light)">
+          <p className="text-sm text-(--charcoal-soft)">
             Already a member?{" "}
             <Link href="/auth/login"
-              className="font-bold transition-colors hover:text-(--red) inline-flex items-center gap-1 group"
-              style={{ color: "var(--charcoal)" }}>
+              className="font-bold text-(--charcoal) hover:text-(--red) transition-colors inline-flex items-center gap-1 group">
               Sign in
               <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </Link>
