@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { useMyOrders } from "@/queries/useOrders";
+import { useAuth } from "@/hooks/use-auth";
 import { ORDER_STATUS_LABELS } from "@/types/enums";
 import type { Order } from "@/types/entities";
 
@@ -105,7 +106,10 @@ export function ordersToNotifications(orders: Order[]): Notification[] {
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
 export function useNotifications() {
-  const { data: orders = [], isLoading } = useMyOrders();
+  const { user } = useAuth();
+  // GET /api/orders is CustomerOnly — skip for Merchant, Admin, Courier to avoid 403
+  const isCustomer = user?.role === "Customer";
+  const { data: orders = [], isLoading } = useMyOrders(undefined, { enabled: isCustomer });
 
   const derived = useMemo(() => ordersToNotifications(orders), [orders]);
 

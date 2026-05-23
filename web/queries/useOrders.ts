@@ -55,7 +55,10 @@ interface PaginatedOrdersResponse {
   pagination: { page: number; limit: number; total: number; pages: number };
 }
 
-export function useMyOrders(status?: OrderStatus) {
+export function useMyOrders(
+  status?: OrderStatus,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: orderKeys.myOrders(status),
     queryFn: async () => {
@@ -68,6 +71,8 @@ export function useMyOrders(status?: OrderStatus) {
       }
       return data.data;
     },
+    // Allow callers to disable the query (e.g. when the user is not a Customer)
+    enabled: options?.enabled !== false,
   });
 }
 
