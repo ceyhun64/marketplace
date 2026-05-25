@@ -149,7 +149,7 @@ export default function StoresListPage() {
 
             {/* Become a Seller CTA */}
             <Link
-              href="/merchant/register"
+              href="/auth/apply-merchant"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--red)] hover:bg-[var(--red)]/90 text-white text-[14px] font-bold transition-all shrink-0"
             >
               Open Your Store
@@ -259,7 +259,7 @@ export default function StoresListPage() {
               </p>
             </div>
             <Link
-              href="/merchant/register"
+              href="/auth/apply-merchant"
               className="shrink-0 inline-flex items-center gap-2 px-8 py-4 rounded-full bg-[var(--red)] hover:bg-[var(--red)]/90 text-white font-bold text-[15px] transition-all"
             >
               Become a Seller

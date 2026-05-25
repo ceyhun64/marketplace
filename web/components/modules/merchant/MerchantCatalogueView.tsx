@@ -2,8 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { toast } from "sonner";
-import { Search, Plus, AlertTriangle, Lock, Zap } from "lucide-react";
-import Link from "next/link";
+import { Search, Plus, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,8 +30,6 @@ import {
   useTogglePublish,
   type ProductFilters,
 } from "@/queries/useProducts";
-
-import { useMySubscription } from "@/queries/useSubscription";
 
 import type { Product } from "@/types/entities";
 
@@ -115,12 +112,7 @@ export default function MerchantCatalogueView() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sort, setSort] = useState("createdAt_desc");
   const [publishFilter, setPublishFilter] = useState<PublishFilter>("all");
-
-  // Subscription plan — marketplace publishing restricted on Basic plan
-  const { data: subscription } = useMySubscription();
-  const currentPlan = subscription?.plan ?? "BASIC";
-  const canPublishToMarket =
-    currentPlan === "PRO" || currentPlan === "ENTERPRISE";
+  const [statusFilter, setStatusFilter] = useState<"all" | "pendingApproval" | "outOfStock">("all");
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
@@ -137,8 +129,10 @@ export default function MerchantCatalogueView() {
       limit: PAGE_SIZE,
       search: debouncedSearch || undefined,
       sort,
+      ...(statusFilter === "pendingApproval" ? { isApproved: false } : {}),
+      ...(statusFilter === "outOfStock" ? { outOfStock: true } : {}),
     }),
-    [page, debouncedSearch, sort],
+    [page, debouncedSearch, sort, statusFilter],
   );
 
   const { data, isLoading, isFetching } = useMerchantProducts(filters);
@@ -204,15 +198,6 @@ export default function MerchantCatalogueView() {
     field: "publishToMarket" | "publishToStore",
     value: boolean,
   ) => {
-    if (field === "publishToMarket" && value && !canPublishToMarket) {
-      toast.error("Marketplace publishing requires a Pro or Enterprise plan.", {
-        action: {
-          label: "Upgrade Plan",
-          onClick: () => (window.location.href = "/merchant/subscription"),
-        },
-      });
-      return;
-    }
     try {
       await togglePublish.mutateAsync({ id, [field]: value });
       const channelName =
@@ -236,31 +221,6 @@ export default function MerchantCatalogueView() {
 
   return (
     <div className="space-y-6">
-      {/* Basic Plan Marketplace Warning */}
-      {!canPublishToMarket && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-(--warning-border) bg-(--warning-bg)">
-          <Lock className="w-4 h-4 shrink-0 text-(--warning)" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-(--warning)">
-              Marketplace Publishing — Pro Plan Required
-            </p>
-            <p className="text-xs mt-0.5 text-(--warning)" style={{ opacity: 0.75 }}>
-              On the Basic plan, products are only visible in your e-store.
-              Upgrade to publish to the Marketplace.
-            </p>
-          </div>
-          <Link href="/merchant/subscription">
-            <Button
-              size="sm"
-              className="gap-1.5 bg-(--warning) hover:opacity-90 text-white shrink-0"
-            >
-              <Zap className="w-3 h-3" />
-              Upgrade
-            </Button>
-          </Link>
-        </div>
-      )}
-
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -316,18 +276,18 @@ export default function MerchantCatalogueView() {
           value={stats.pendingApproval}
           color="text-(--warning)"
           bg="bg-(--warning-bg)"
-          active={false}
+          active={statusFilter === "pendingApproval"}
           loading={isLoading}
-          onClick={() => {}}
+          onClick={() => { setStatusFilter(statusFilter === "pendingApproval" ? "all" : "pendingApproval"); setPage(1); }}
         />
         <StatCard
           label="Out of Stock"
           value={stats.outOfStock}
           color="text-(--danger)"
           bg="bg-(--danger-bg)"
-          active={false}
+          active={statusFilter === "outOfStock"}
           loading={isLoading}
-          onClick={() => {}}
+          onClick={() => { setStatusFilter(statusFilter === "outOfStock" ? "all" : "outOfStock"); setPage(1); }}
         />
       </div>
 
@@ -467,7 +427,6 @@ export default function MerchantCatalogueView() {
             setEditProduct(null);
           }}
           onSuccess={handleModalSuccess}
-          canPublishToMarket={canPublishToMarket}
         />
       )}
 

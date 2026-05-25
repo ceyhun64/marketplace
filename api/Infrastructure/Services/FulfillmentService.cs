@@ -79,6 +79,18 @@ public class FulfillmentService : IFulfillmentService
             order.UpdatedAt = DateTime.UtcNow;
         }
 
+        // Mirror status to all VendorOrders for this shipment's order
+        var vendorOrders = await _db.VendorOrders
+            .Where(vo => vo.OrderId == shipment.OrderId)
+            .ToListAsync();
+
+        var mappedOrderStatus = MapToOrderStatus(newStatus);
+        foreach (var vo in vendorOrders)
+        {
+            vo.Status = mappedOrderStatus;
+            vo.UpdatedAt = DateTime.UtcNow;
+        }
+
         await _db.SaveChangesAsync();
 
         _logger.LogInformation(
@@ -91,21 +103,10 @@ public class FulfillmentService : IFulfillmentService
         // On DELIVERED: move VendorOrder funds into escrow (pending settlement)
         if (newStatus == ShipmentStatus.Delivered)
         {
-            var vendorOrders = await _db
-                .VendorOrders.Where(vo => vo.OrderId == shipment.OrderId && vo.SettledAt == null)
-                .ToListAsync();
-
-            foreach (var vo in vendorOrders)
-            {
-                vo.Status = OrderStatus.Delivered;
-                vo.UpdatedAt = DateTime.UtcNow;
-            }
-            await _db.SaveChangesAsync();
-
-            // Fire-and-forget: hold escrow per vendor order
+            // Fire-and-forget: hold escrow per vendor order (VendorOrder.Status already Delivered above)
             _ = Task.Run(async () =>
             {
-                foreach (var vo in vendorOrders)
+                foreach (var vo in vendorOrders.Where(v => v.SettledAt == null))
                 {
                     try
                     {

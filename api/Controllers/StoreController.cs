@@ -194,15 +194,17 @@ public class StoreController : ControllerBase
             .Take(limit)
             .Select(p => new
             {
-                p.Id,
-                p.MerchantId,
-                p.Name,
-                p.Images,
+                Id           = p.Id,
+                ProductId    = p.Id,
+                ProductName  = p.Name,
+                ProductImages = p.Images,
                 p.Price,
                 p.Stock,
+                Rating            = 0.0,
+                CategoryName      = p.Category == null ? (string?)null : p.Category.Name,
+                MerchantId        = p.MerchantId,
                 MerchantStoreName = p.Merchant.StoreName,
-                MerchantSlug = p.Merchant.Slug,
-                Category = p.Category == null ? null : new { p.Category.Name, p.Category.Slug },
+                MerchantSlug      = p.Merchant.Slug,
             })
             .ToListAsync();
 

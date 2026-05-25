@@ -111,21 +111,22 @@ public class FulfillmentController(
         if (!courier.IsActive)
             return BadRequest(new { message = "Courier is not active." });
 
+        // Set courier before calling the service so the assignment is saved together with
+        // the status transition in a single SaveChangesAsync inside TransitionStatusAsync.
         shipment.CourierId = courier.Id;
-        shipment.Status = ShipmentStatus.CourierAssigned;
-        shipment.UpdatedAt = DateTime.UtcNow;
 
-        db.ShipmentStatusHistories.Add(
-            new ShipmentStatusHistory
-            {
-                ShipmentId = shipment.Id,
-                Status = ShipmentStatus.CourierAssigned,
-                Note = $"Courier assigned: {courier.User.FirstName} {courier.User.LastName}",
-                ChangedAt = DateTime.UtcNow,
-            }
-        );
+        try
+        {
+            await fulfillmentService.TransitionStatusAsync(
+                shipment,
+                ShipmentStatus.CourierAssigned,
+                $"Courier manually assigned: {courier.User.FirstName} {courier.User.LastName}");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
 
-        await db.SaveChangesAsync();
         return Ok(new { message = "Courier assigned successfully." });
     }
 

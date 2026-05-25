@@ -63,15 +63,6 @@ public class CreateProductCommandHandler
                 throw new InvalidOperationException("Merchant profili bulunamadı.");
             merchantId = merchant.Id;
 
-            // ── Plan gate: marketplace publishing ────────────────────────────
-            if (
-                request.PublishToMarket
-                && !await _subscriptionGuard.CanPublishToMarketAsync(merchantId)
-            )
-                throw new InvalidOperationException(
-                    "Marketplace'e ürün yayınlamak için Pro veya Enterprise aboneliği gereklidir."
-                );
-
             // ── Plan gate: product count limit ────────────────────────────────
             var limit = await _subscriptionGuard.GetProductLimitAsync(merchantId);
             var current = await _db.Products.CountAsync(
@@ -98,8 +89,8 @@ public class CreateProductCommandHandler
             Stock = request.Stock,
             PublishToMarket = request.PublishToMarket,
             PublishToStore = request.PublishToStore,
-            IsApproved = isAdmin,
-            ModerationStatus = isAdmin ? ModerationStatus.Approved : ModerationStatus.PendingReview,
+            IsApproved = true,
+            ModerationStatus = ModerationStatus.Approved,
             IsDeleted = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,

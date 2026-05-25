@@ -25,6 +25,7 @@ public class PaymentService : IPaymentService
     private readonly INotificationService _notification;
     private readonly ICurrentUserService _currentUser;
     private readonly IDistributedCache _cache;
+    private readonly IWalletService _wallet;
 
     public PaymentService(
         AppDbContext db,
@@ -33,7 +34,8 @@ public class PaymentService : IPaymentService
         IInvoiceGeneratorService invoiceGenerator,
         INotificationService notification,
         ICurrentUserService currentUser,
-        IDistributedCache cache
+        IDistributedCache cache,
+        IWalletService wallet
     )
     {
         _db = db;
@@ -43,6 +45,7 @@ public class PaymentService : IPaymentService
         _notification = notification;
         _currentUser = currentUser;
         _cache = cache;
+        _wallet = wallet;
     }
 
     // ── 1. Create Payment Intent ──────────────────────────────────────────────
@@ -269,7 +272,8 @@ public class PaymentService : IPaymentService
                 break;
 
             case "charge.refunded":
-                _logger.LogInformation("💸 Refund confirmed by Stripe: EventId={EventId}", stripeEvent.Id);
+                if (stripeEvent.Data.Object is Charge refundedCharge)
+                    await HandleChargeRefundedAsync(refundedCharge);
                 break;
 
             default:
@@ -329,11 +333,42 @@ public class PaymentService : IPaymentService
                 request.Amount
             );
 
-            // Update order status
+            // Cancel order and all its VendorOrders
             order.Status = OrderStatus.Cancelled;
             order.CancellationReason = request.Reason ?? "Refund requested.";
             order.UpdatedAt = DateTime.UtcNow;
+
+            var vendorOrders = await _db.VendorOrders
+                .Where(vo => vo.OrderId == orderId)
+                .ToListAsync();
+            foreach (var vo in vendorOrders)
+            {
+                vo.Status = OrderStatus.Cancelled;
+                vo.UpdatedAt = DateTime.UtcNow;
+            }
+
             await _db.SaveChangesAsync();
+
+            // Wallet debit is handled by the charge.refunded Stripe webhook (authoritative path).
+            // For environments without webhooks configured, also debit inline as a fallback.
+            if (string.IsNullOrEmpty(_config["STRIPE_WEBHOOK_SECRET"]))
+            {
+                var totalNet = vendorOrders.Sum(vo => vo.MerchantNetAmount);
+                foreach (var vo in vendorOrders)
+                {
+                    try
+                    {
+                        var share = totalNet > 0
+                            ? (request.Amount > 0 ? request.Amount * (vo.MerchantNetAmount / totalNet) : vo.MerchantNetAmount)
+                            : vo.MerchantNetAmount;
+                        await _wallet.DebitRefundAsync(vo.MerchantId, share, orderId, refund.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Inline wallet debit failed: MerchantId={Id}", vo.MerchantId);
+                    }
+                }
+            }
 
             return ServiceResult<bool>.Ok(true);
         }
@@ -446,6 +481,57 @@ public class PaymentService : IPaymentService
         }
 
         await FinalizeOrderPaymentAsync(orderId, intent.Id);
+    }
+
+    private async Task HandleChargeRefundedAsync(Charge charge)
+    {
+        if (string.IsNullOrEmpty(charge.PaymentIntentId))
+        {
+            _logger.LogWarning("charge.refunded has no PaymentIntentId: ChargeId={Id}", charge.Id);
+            return;
+        }
+
+        var order = await _db.Orders
+            .FirstOrDefaultAsync(o => o.PaymentId == charge.PaymentIntentId);
+
+        if (order is null)
+        {
+            _logger.LogWarning("charge.refunded: order not found for PaymentIntentId={Id}", charge.PaymentIntentId);
+            return;
+        }
+
+        var refundAmount = charge.AmountRefunded / 100m;
+
+        var vendorOrders = await _db.VendorOrders
+            .Where(vo => vo.OrderId == order.Id)
+            .ToListAsync();
+
+        var totalNet = vendorOrders.Sum(vo => vo.MerchantNetAmount);
+
+        foreach (var vo in vendorOrders)
+        {
+            try
+            {
+                // Pro-rate the refund amount across merchants by their share of the net payout
+                var share = totalNet > 0
+                    ? refundAmount * (vo.MerchantNetAmount / totalNet)
+                    : vo.MerchantNetAmount;
+
+                if (share <= 0) continue;
+
+                await _wallet.DebitRefundAsync(vo.MerchantId, share, order.Id, charge.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Wallet refund debit failed: MerchantId={MerchantId} OrderId={OrderId}",
+                    vo.MerchantId, order.Id);
+            }
+        }
+
+        _logger.LogInformation(
+            "💸 charge.refunded processed: OrderId={OrderId} RefundAmount={Amount} Merchants={Count}",
+            order.Id, refundAmount, vendorOrders.Count);
     }
 
     private async Task HandlePaymentFailedAsync(PaymentIntent intent)

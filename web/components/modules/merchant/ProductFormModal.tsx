@@ -14,7 +14,6 @@ interface Props {
   product?: Product | null;
   onClose: () => void;
   onSuccess: () => void;
-  canPublishToMarket?: boolean;
 }
 
 interface FormState {
@@ -45,7 +44,6 @@ export default function ProductFormModal({
   product,
   onClose,
   onSuccess,
-  canPublishToMarket = true,
 }: Props) {
   const isEdit = !!product;
   const { data: categories = [] } = useCategories();
@@ -323,18 +321,10 @@ export default function ProductFormModal({
                 />
                 <ToggleRow
                   label="Publish to Marketplace"
-                  description={
-                    canPublishToMarket
-                      ? "Visible in general listing (approval may be required)"
-                      : "Pro or Enterprise plan required"
-                  }
-                  checked={form.publishToMarket && canPublishToMarket}
-                  onChange={(v) => {
-                    if (!canPublishToMarket) return;
-                    set("publishToMarket", v);
-                  }}
+                  description="Visible in the general marketplace listing"
+                  checked={form.publishToMarket}
+                  onChange={(v) => set("publishToMarket", v)}
                   color="bg-(--info)"
-                  disabled={!canPublishToMarket}
                 />
               </div>
 

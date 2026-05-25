@@ -95,7 +95,11 @@ export async function clearTokens(): Promise<void> {
   if (typeof window !== "undefined") {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
-    fetch("/api/auth/set-tokens", { method: "DELETE" }).catch(() => {});
+    // Await so the httpOnly cookie is cleared before the caller navigates away.
+    // The middleware reads this cookie on every server request, so navigation
+    // to a protected route immediately after logout would bypass the auth guard
+    // if we don't wait for the cookie to be gone.
+    await fetch("/api/auth/set-tokens", { method: "DELETE" }).catch(() => {});
   }
 }
 

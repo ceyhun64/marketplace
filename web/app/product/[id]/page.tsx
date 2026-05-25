@@ -24,9 +24,12 @@ interface ProductData {
 // ── Dynamic metadata for SEO + Open Graph ─────────────────────────────────────
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const product = await fetchISR<ProductData>(`/api/products/${id}`, { revalidate: 30 });
+  const raw = await fetchISR<{ data: ProductData } | ProductData>(`/api/products/${id}`, { revalidate: 30 });
+  const product = raw && "data" in raw && (raw as { data: ProductData }).data?.id
+    ? (raw as { data: ProductData }).data
+    : (raw as ProductData | null);
 
-  if (!product) return { title: "Product Not Found" };
+  if (!product?.id) return { title: "Product Not Found" };
 
   const title       = `${product.name} — BAZR Marketplace`;
   const description = product.description?.slice(0, 160) ?? title;
@@ -54,8 +57,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // ── Page component ─────────────────────────────────────────────────────────────
 export default async function ProductRoute({ params }: Props) {
   const { id }    = await params;
-  const product   = await fetchISR<ProductData>(`/api/products/${id}`);
-  if (!product) notFound();
+  // Backend wraps the response in { data: ProductData }
+  const raw = await fetchISR<{ data: ProductData } | ProductData>(`/api/products/${id}`);
+  const product   = raw && "data" in raw && (raw as { data: ProductData }).data?.id
+    ? (raw as { data: ProductData }).data
+    : (raw as ProductData | null);
+  if (!product?.id) notFound();
 
   const siteUrl  = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bazr.com";
   const pageUrl  = `${siteUrl}/product/${id}`;

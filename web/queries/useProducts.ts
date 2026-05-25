@@ -33,6 +33,8 @@ export interface ProductFilters {
   minPrice?: number;
   maxPrice?: number;
   sort?: string;
+  isApproved?: boolean;
+  outOfStock?: boolean;
 }
 
 export interface CreateProductDto {
@@ -207,9 +209,12 @@ export function useMerchantProducts(filters?: ProductFilters) {
     queryKey: productKeys.merchantProducts(filters),
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (filters?.page)   params.set("page", String(filters.page));
-      if (filters?.limit)  params.set("limit", String(filters.limit));
-      if (filters?.search) params.set("search", filters.search);
+      if (filters?.page)                   params.set("page", String(filters.page));
+      if (filters?.limit)                  params.set("limit", String(filters.limit));
+      if (filters?.search)                 params.set("search", filters.search);
+      if (filters?.sort)                   params.set("sort", filters.sort);
+      if (filters?.isApproved !== undefined) params.set("isApproved", String(filters.isApproved));
+      if (filters?.outOfStock !== undefined) params.set("outOfStock", String(filters.outOfStock));
       const { data } = await api.get<RawProductsBackend>(`/api/merchants/catalogue?${params}`);
       return normalizeProductsResponse(data, filters);
     },

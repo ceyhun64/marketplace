@@ -821,17 +821,6 @@ public class ProductsController : ControllerBase
             if (merchant == null || product.MerchantId != merchant.Id)
                 return Forbid();
 
-            // Plan gate: PublishToMarket requires Pro or Enterprise subscription.
-            if (dto.PublishToMarket == true)
-            {
-                var plan = merchant.Subscription?.Plan ?? api.Domain.Enums.PlanType.Basic;
-                if (plan == api.Domain.Enums.PlanType.Basic)
-                    return BadRequest(
-                        new ApiResponse<string>(
-                            "Publishing to the marketplace requires a Pro or Enterprise plan."
-                        )
-                    );
-            }
         }
 
         if (dto.Name != null)

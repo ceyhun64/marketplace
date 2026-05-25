@@ -65,14 +65,18 @@ export default async function StorePage({
 }: StorePageProps) {
   const params = await paramsPromise;
 
-  const [store, offers] = await Promise.all([
+  const [store, offersResponse] = await Promise.all([
     serverFetch.store(params.slug) as Promise<StoreProfile | null>,
-    serverFetch.storeProducts(params.slug) as Promise<StoreOffer[] | null>,
+    serverFetch.storeProducts(params.slug) as Promise<{ items: StoreOffer[] } | StoreOffer[] | null>,
   ]);
 
   if (!store) return notFound();
 
-  const safeOffers: StoreOffer[] = Array.isArray(offers) ? offers : [];
+  // Backend returns { total, page, limit, items } — extract the items array
+  const rawOffers = offersResponse && typeof offersResponse === "object" && !Array.isArray(offersResponse)
+    ? (offersResponse as { items: StoreOffer[] }).items
+    : offersResponse as StoreOffer[] | null;
+  const safeOffers: StoreOffer[] = Array.isArray(rawOffers) ? rawOffers : [];
 
   return (
     <>

@@ -99,8 +99,32 @@ public class CourierDispatchJob
         if (vendorOrder != null && vendorOrder.DispatchAttempts >= MaxDispatchAttempts)
         {
             _logger.LogWarning(
-                "ShipmentId={Id} exceeded MaxDispatchAttempts={Max} — manual intervention required.",
+                "ShipmentId={Id} exceeded MaxDispatchAttempts={Max} — flagging as Failed.",
                 shipment.Id, MaxDispatchAttempts);
+
+            shipment.Status = ShipmentStatus.Failed;
+            shipment.UpdatedAt = DateTime.UtcNow;
+
+            _db.ShipmentStatusHistories.Add(new ShipmentStatusHistory
+            {
+                Id         = Guid.NewGuid(),
+                ShipmentId = shipment.Id,
+                Status     = ShipmentStatus.Failed,
+                Note       = $"Auto-failed: no available courier within {MaxRadiusKm} km after {MaxDispatchAttempts} attempts.",
+                ChangedAt  = DateTime.UtcNow,
+            });
+
+            vendorOrder.Status    = OrderStatus.Failed;
+            vendorOrder.UpdatedAt = DateTime.UtcNow;
+
+            var failedOrder = await _db.Orders.FindAsync(shipment.OrderId);
+            if (failedOrder != null)
+            {
+                failedOrder.Status    = OrderStatus.Failed;
+                failedOrder.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await _db.SaveChangesAsync();
             return;
         }
 
@@ -170,13 +194,13 @@ public class CourierDispatchJob
             "Courier auto-dispatched: ShipmentId={ShipmentId} CourierId={CourierId} Distance={Distance:F1}km",
             shipment.Id, chosen.Id, ranked.First().DistanceKm);
 
-        // Notify courier (fire-and-forget)
+        // Notify courier + customer (fire-and-forget)
         _ = Task.Run(async () =>
         {
-            try { await _notification.SendLabelReadySmsAsync(shipment.Id); }
+            try { await _notification.SendCourierAssignedNotificationAsync(shipment); }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Dispatch SMS failed: CourierId={Id}", chosen.Id);
+                _logger.LogError(ex, "Dispatch notification failed: CourierId={Id}", chosen.Id);
             }
         });
     }

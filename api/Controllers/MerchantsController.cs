@@ -141,7 +141,11 @@ public class MerchantsController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int limit = 20,
         [FromQuery] bool? publishedToMarket = null,
-        [FromQuery] bool? publishedToStore = null
+        [FromQuery] bool? publishedToStore = null,
+        [FromQuery] bool? isApproved = null,
+        [FromQuery] bool? outOfStock = null,
+        [FromQuery] string? search = null,
+        [FromQuery] string? sort = null
     )
     {
         var merchant = await GetCurrentMerchantAsync();
@@ -164,10 +168,24 @@ public class MerchantsController : ControllerBase
             query = query.Where(p => p.PublishToMarket == publishedToMarket.Value);
         if (publishedToStore.HasValue)
             query = query.Where(p => p.PublishToStore == publishedToStore.Value);
+        if (isApproved.HasValue)
+            query = query.Where(p => p.IsApproved == isApproved.Value);
+        if (outOfStock == true)
+            query = query.Where(p => p.Stock == 0);
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(p => p.Name.Contains(search) || p.Description.Contains(search));
 
         var total = await query.CountAsync();
-        var items = await query
-            .OrderByDescending(p => p.CreatedAt)
+        IOrderedQueryable<Product> orderedQuery = sort switch
+        {
+            "price_asc"     => query.OrderBy(p => p.Price),
+            "price_desc"    => query.OrderByDescending(p => p.Price),
+            "stock_asc"     => query.OrderBy(p => p.Stock),
+            "name_asc"      => query.OrderBy(p => p.Name),
+            "createdAt_asc" => query.OrderBy(p => p.CreatedAt),
+            _               => query.OrderByDescending(p => p.CreatedAt),
+        };
+        var items = await orderedQuery
             .Skip((page - 1) * limit)
             .Take(limit)
             .Select(p => new
@@ -258,21 +276,6 @@ public class MerchantsController : ControllerBase
                 );
         }
 
-        // ── Marketplace yayını için Pro gerekiyor ─────────────────────────────
-        if (dto.PublishToMarket == true)
-        {
-            var hasProOrAbove = isActiveSub && plan != PlanType.Basic;
-
-            if (!hasProOrAbove)
-                return BadRequest(
-                    new
-                    {
-                        message = "Marketplace'e yayınlamak için Pro veya Enterprise plan gereklidir.",
-                        requiredPlan = "Pro",
-                    }
-                );
-        }
-
         var product = new Product
         {
             Id = Guid.NewGuid(),
@@ -286,13 +289,53 @@ public class MerchantsController : ControllerBase
             Stock = dto.Stock,
             PublishToMarket = dto.PublishToMarket ?? false,
             PublishToStore = dto.PublishToStore ?? true,
-            IsApproved = false,
+            IsApproved = true,
+            ModerationStatus = ModerationStatus.Approved,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
 
         _db.Products.Add(product);
         await _db.SaveChangesAsync();
+
+        // Cache invalidation — fire-and-forget
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var redis = HttpContext.RequestServices.GetService<StackExchange.Redis.IConnectionMultiplexer>();
+                if (redis != null)
+                {
+                    var rdb = redis.GetDatabase();
+                    await Task.WhenAll(
+                        rdb.KeyDeleteAsync($"products:merchant:{merchant.Id}"),
+                        rdb.KeyDeleteAsync("products:featured"),
+                        rdb.KeyDeleteAsync("products:listing"));
+                }
+
+                var webhookUrl = _config["FRONTEND_URL"];
+                var secret     = _config["REVALIDATION_SECRET"];
+                if (!string.IsNullOrEmpty(webhookUrl) && !string.IsNullOrEmpty(secret))
+                {
+                    using var http = new System.Net.Http.HttpClient();
+                    await http.PostAsync(
+                        $"{webhookUrl}/api/revalidate",
+                        new System.Net.Http.StringContent(
+                            System.Text.Json.JsonSerializer.Serialize(new
+                            {
+                                secret,
+                                tags = new[] { "products", $"merchant-products-{merchant.Id}" },
+                            }),
+                            System.Text.Encoding.UTF8,
+                            "application/json"));
+                }
+            }
+            catch (Exception ex)
+            {
+                var logger = HttpContext.RequestServices.GetService<ILogger<MerchantsController>>();
+                logger?.LogWarning(ex, "Cache invalidation failed after CreateProduct MerchantId={Id}", merchant.Id);
+            }
+        });
 
         return CreatedAtAction(
             nameof(GetCatalogue),
@@ -303,6 +346,9 @@ public class MerchantsController : ControllerBase
                 product.Name,
                 product.Price,
                 product.Stock,
+                product.IsApproved,
+                product.PublishToMarket,
+                product.PublishToStore,
             }
         );
     }
@@ -330,6 +376,46 @@ public class MerchantsController : ControllerBase
         product.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
+
+        // Cache invalidation — fire-and-forget
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var redis = HttpContext.RequestServices.GetService<StackExchange.Redis.IConnectionMultiplexer>();
+                if (redis != null)
+                {
+                    var rdb = redis.GetDatabase();
+                    await Task.WhenAll(
+                        rdb.KeyDeleteAsync($"product:{product.Id}"),
+                        rdb.KeyDeleteAsync($"products:merchant:{product.MerchantId}"),
+                        rdb.KeyDeleteAsync("products:listing"));
+                }
+
+                var webhookUrl = _config["FRONTEND_URL"];
+                var secret     = _config["REVALIDATION_SECRET"];
+                if (!string.IsNullOrEmpty(webhookUrl) && !string.IsNullOrEmpty(secret))
+                {
+                    using var http = new System.Net.Http.HttpClient();
+                    await http.PostAsync(
+                        $"{webhookUrl}/api/revalidate",
+                        new System.Net.Http.StringContent(
+                            System.Text.Json.JsonSerializer.Serialize(new
+                            {
+                                secret,
+                                tags = new[] { $"product-{product.Id}", "products" },
+                            }),
+                            System.Text.Encoding.UTF8,
+                            "application/json"));
+                }
+            }
+            catch (Exception ex)
+            {
+                var logger = HttpContext.RequestServices.GetService<ILogger<MerchantsController>>();
+                logger?.LogWarning(ex, "Cache invalidation failed after UpdateProduct Id={Id}", product.Id);
+            }
+        });
+
         return Ok(
             new
             {
@@ -357,26 +443,6 @@ public class MerchantsController : ControllerBase
 
         if (product == null)
             return NotFound(new { message = "Ürün bulunamadı." });
-
-        // Marketplace toggle için abonelik kontrolü (Basic plan yayınlayamaz)
-        if (dto.PublishToMarket == true && !product.PublishToMarket)
-        {
-            var hasPro =
-                merchant.Subscription != null
-                && merchant.Subscription.IsActive
-                && merchant.Subscription.ExpiresAt > DateTime.UtcNow
-                && merchant.Subscription.Plan != PlanType.Basic;
-
-            if (!hasPro)
-                return BadRequest(
-                    new
-                    {
-                        message = "Marketplace'e yayınlamak için Pro veya Enterprise plan gereklidir.",
-                        requiredPlan = "Pro",
-                        currentPlan = merchant.Subscription?.Plan.ToString() ?? "Basic",
-                    }
-                );
-        }
 
         if (dto.PublishToMarket.HasValue)
             product.PublishToMarket = dto.PublishToMarket.Value;
