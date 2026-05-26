@@ -281,8 +281,11 @@ export function useUpdateOrderStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
       api.patch(`/api/orders/${id}/status`, { status }),
-    onSuccess: () => {
+    onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: orderKeys.adminAll() });
+      queryClient.invalidateQueries({ queryKey: orderKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: orderKeys.tracking(id) });
+      queryClient.invalidateQueries({ queryKey: orderKeys.myOrders() });
     },
   });
 }

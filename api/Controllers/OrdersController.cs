@@ -62,7 +62,7 @@ public class OrdersController(
             .Include(o => o.Invoice)
             .Where(o => o.CustomerId == currentUser.UserId);
 
-        if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, out var ps))
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, ignoreCase: true, out var ps))
             query = query.Where(o => o.Status == ps);
 
         var total = await query.CountAsync();
@@ -139,7 +139,7 @@ public class OrdersController(
                 new
                 {
                     orderId = id,
-                    orderStatus = order.Status.ToString(),
+                    orderStatus = order.Status.ToApiString(),
                     shipment = (object?)null,
                 }
             );
@@ -263,7 +263,7 @@ public class OrdersController(
     {
         var query = db.Orders.AsQueryable();
 
-        if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, out var ps))
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, ignoreCase: true, out var ps))
             query = query.Where(o => o.Status == ps);
 
         if (merchantId.HasValue)
@@ -404,7 +404,7 @@ public class OrdersController(
             .Where(vo => vo.MerchantId == merchantId.Value)
             .AsQueryable();
 
-        if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, out var ps))
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, ignoreCase: true, out var ps))
             query = query.Where(vo => vo.Status == ps);
 
         var total = await query.CountAsync();
@@ -421,7 +421,7 @@ public class OrdersController(
                 {
                     vo.Id,
                     vo.OrderId,
-                    vo.Status,
+                    Status = vo.Status.ToApiString(),
                     vo.SubTotal,
                     vo.PlatformFee,
                     vo.MerchantNetAmount,
@@ -449,7 +449,7 @@ public class OrdersController(
                         : new
                         {
                             vo.Order.Shipment.TrackingNumber,
-                            Status = vo.Order.Shipment.Status.ToString(),
+                            Status = vo.Order.Shipment.Status.ToApiString(),
                         },
                     Items = vo.Items.Select(i => new
                     {
@@ -547,7 +547,7 @@ public class OrdersController(
             .Where(o => o.Items.Any(i => i.MerchantId == merchantId.Value))
             .AsQueryable();
 
-        if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, out var ps))
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, ignoreCase: true, out var ps))
             query = query.Where(o => o.Status == ps);
 
         var total = await query.CountAsync();
@@ -572,7 +572,7 @@ public class OrdersController(
         );
     }
 
-    /// <summary>PATCH /api/orders/{id}/pack — Merchant: order packed (transition to LabelGenerated)</summary>
+    /// <summary>PATCH /api/orders/{id}/pack — Merchant: pack their sub-order (VendorOrder-aware)</summary>
     [HttpPatch("{id:guid}/pack")]
     [Authorize(Policy = "MerchantOnly")]
     public async Task<IActionResult> PackOrder(Guid id)
@@ -583,31 +583,45 @@ public class OrdersController(
         if (merchant == null)
             return Forbid();
 
-        var order = await db
-            .Orders.Include(o => o.Items)
-                .ThenInclude(i => i.Product)
-            .Include(o => o.Customer)
-            .Include(o => o.Shipment)
-            .FirstOrDefaultAsync(o => o.Id == id && o.Items.Any(i => i.MerchantId == merchant.Id));
+        // Operate at VendorOrder level so multi-merchant carts are handled correctly.
+        // Each merchant packs only their own sub-order; the parent Order transitions to
+        // LabelGenerated only when ALL sibling VendorOrders are packed.
+        var vendorOrder = await db.VendorOrders
+            .Include(vo => vo.Order)
+            .FirstOrDefaultAsync(vo => vo.OrderId == id && vo.MerchantId == merchant.Id);
 
-        if (order == null)
+        if (vendorOrder == null)
             return NotFound(new { message = "Order not found or access denied." });
 
-        if (order.Status != OrderStatus.PaymentConfirmed && order.Status != OrderStatus.Pending)
+        if (vendorOrder.Status != OrderStatus.PaymentConfirmed && vendorOrder.Status != OrderStatus.Pending)
             return BadRequest(
-                new { message = $"This order cannot be packed. Current status: {order.Status}" }
+                new { message = $"This order cannot be packed. Current status: {vendorOrder.Status.ToApiString()}" }
             );
 
-        order.Status = OrderStatus.LabelGenerated;
-        order.UpdatedAt = DateTime.UtcNow;
+        vendorOrder.Status    = OrderStatus.LabelGenerated;
+        vendorOrder.UpdatedAt = DateTime.UtcNow;
+
+        // Mirror to parent Order only when every sibling VendorOrder is also LabelGenerated
+        var siblingStatuses = await db.VendorOrders
+            .Where(vo => vo.OrderId == id && vo.Id != vendorOrder.Id)
+            .Select(vo => vo.Status)
+            .ToListAsync();
+
+        if (siblingStatuses.All(s => s == OrderStatus.LabelGenerated))
+        {
+            vendorOrder.Order.Status    = OrderStatus.LabelGenerated;
+            vendorOrder.Order.UpdatedAt = DateTime.UtcNow;
+        }
+
         await db.SaveChangesAsync();
 
         return Ok(
             new
             {
-                message = "Order packed. Shipping label can now be generated.",
-                status = order.Status.ToApiString(),
-                orderId = order.Id,
+                message = "Order packed. Courier dispatch will be triggered automatically.",
+                status = vendorOrder.Status.ToApiString(),
+                orderId = id,
+                vendorOrderId = vendorOrder.Id,
             }
         );
     }
@@ -620,7 +634,7 @@ public class OrdersController(
         if (order == null)
             return NotFound();
 
-        if (!Enum.TryParse<OrderStatus>(dto.Status, out var newStatus))
+        if (!Enum.TryParse<OrderStatus>(dto.Status, ignoreCase: true, out var newStatus))
             return BadRequest(new { message = "Invalid order status." });
 
         order.Status = newStatus;

@@ -265,7 +265,7 @@ public class FulfillmentController(
         if (merchant == null)
             return NotFound(new { message = "Merchant not found." });
 
-        var rate = Enum.TryParse<ShippingRate>(shippingRate, out var pr)
+        var rate = Enum.TryParse<ShippingRate>(shippingRate, ignoreCase: true, out var pr)
             ? pr
             : ShippingRate.Regular;
 

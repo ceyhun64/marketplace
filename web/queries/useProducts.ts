@@ -230,6 +230,7 @@ export function useCreateProduct() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
       queryClient.invalidateQueries({ queryKey: productKeys.merchantProducts() });
+      queryClient.invalidateQueries({ queryKey: productKeys.featured() });
     },
   });
 }
@@ -242,6 +243,8 @@ export function useUpdateProduct() {
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: productKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: productKeys.merchantProducts() });
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: productKeys.featured() });
     },
   });
 }
@@ -273,6 +276,7 @@ export function useDeleteProduct() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
       queryClient.invalidateQueries({ queryKey: productKeys.merchantProducts() });
+      queryClient.invalidateQueries({ queryKey: productKeys.featured() });
     },
   });
 }
@@ -330,6 +334,8 @@ export function useTogglePublish() {
       // Sync with server truth after the mutation resolves (success or error)
       queryClient.invalidateQueries({ queryKey: productKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: productKeys.merchantProducts() });
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: productKeys.featured() });
     },
   });
 }

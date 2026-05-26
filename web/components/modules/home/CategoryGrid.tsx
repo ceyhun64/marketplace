@@ -41,13 +41,37 @@ function getIcon(slug: string): React.ReactNode {
 export default function CategoryGrid() {
   const { data, isLoading } = useCategories();
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
 
-  // Yalnızca üst düzey kategorileri göster (parentId olmayan)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Üst düzey kategorileri filtrele
   const categories: Category[] = Array.isArray(data)
     ? data.filter((c: Category) => !c.parentId)
     : [];
 
+  // 1. ADIM: Bileşen istemciye yüklenene kadar sunucunun ürettiği saf Skeleton yapısını dön
+  if (!mounted) {
+    return (
+      <section className="py-20 lg:py-28">
+        <div className="max-w-325 mx-auto px-6 lg:px-8">
+          {/* Skeleton Header alanı (Yükseklik kaybını ve kaymaları önlemek için boş div) */}
+          <div className="h-28 mb-14" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className="rounded-2xl bg-gray-100 animate-pulse h-44"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // 2. ADIM: İstemci tamamen yüklendiğinde (mounted === true) artık asıl arayüzü güvenle render et
   return (
     <section className="py-20 lg:py-28">
       <div className="max-w-325 mx-auto px-6 lg:px-8">
@@ -88,7 +112,7 @@ export default function CategoryGrid() {
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {!mounted || isLoading
+          {isLoading
             ? Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}

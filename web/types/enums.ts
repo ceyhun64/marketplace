@@ -18,7 +18,10 @@ export const USER_ROLES: Record<UserRole, string> = {
 export type OrderStatus =
   | "PENDING"
   | "PAYMENT_CONFIRMED"
+  | "PROCESSING"
+  | "PACKED"
   | "LABEL_GENERATED"
+  | "SHIPPED"
   | "COURIER_ASSIGNED"
   | "PICKED_UP"
   | "IN_TRANSIT"
@@ -30,7 +33,10 @@ export type OrderStatus =
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   PENDING: "Pending",
   PAYMENT_CONFIRMED: "Payment Confirmed",
+  PROCESSING: "Processing",
+  PACKED: "Packed",
   LABEL_GENERATED: "Label Generated",
+  SHIPPED: "Shipped",
   COURIER_ASSIGNED: "Courier Assigned",
   PICKED_UP: "Picked Up",
   IN_TRANSIT: "In Transit",
@@ -43,7 +49,10 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   PENDING: "bg-(--warning-bg) text-(--warning) border border-(--warning-border)",
   PAYMENT_CONFIRMED: "bg-(--info-bg) text-(--info) border border-(--info-border)",
+  PROCESSING: "bg-(--info-bg) text-(--info) border border-(--info-border)",
+  PACKED: "bg-(--info-bg) text-(--info) border border-(--info-border)",
   LABEL_GENERATED: "bg-(--info-bg) text-(--info) border border-(--info-border)",
+  SHIPPED: "bg-(--info-bg) text-(--info) border border-(--info-border)",
   COURIER_ASSIGNED: "bg-(--warning-bg) text-(--warning) border border-(--warning-border)",
   PICKED_UP: "bg-(--info-bg) text-(--info) border border-(--info-border)",
   IN_TRANSIT: "bg-(--info-bg) text-(--info) border border-(--info-border)",
@@ -55,6 +64,9 @@ export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
 
 /** Can the order no longer be cancelled? */
 export const NON_CANCELLABLE_STATUSES: OrderStatus[] = [
+  "PROCESSING",
+  "PACKED",
+  "SHIPPED",
   "PICKED_UP",
   "IN_TRANSIT",
   "OUT_FOR_DELIVERY",
@@ -155,7 +167,7 @@ export const PLAN_LIMITS: Record<
 > = {
   BASIC: {
     maxProducts: 50,
-    canPublishToMarket: false,
+    canPublishToMarket: true,
     canUseCustomDomain: false,
     canUseSubdomain: false,
   },
