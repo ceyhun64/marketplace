@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Sparkles, ArrowRight, Clock, SlidersHorizontal, ChevronDown, Bell, BellOff } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -90,9 +90,10 @@ export default function NewArrivalsPage() {
     });
   };
 
-  const filtered = (products ?? [])
+  const filtered = useMemo(() => (products ?? [])
     .filter((p) => {
       if (!p.createdAt) return true;
+      // eslint-disable-next-line react-hooks/purity
       const days = (Date.now() - new Date(p.createdAt).getTime()) / (1000 * 60 * 60 * 24);
       if (filter === "today") return days < 1;
       if (filter === "week") return days < 7;
@@ -104,7 +105,7 @@ export default function NewArrivalsPage() {
       if (sort === "name") return a.name.localeCompare(b.name);
       // newest: by createdAt desc
       return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
-    });
+    }), [products, filter, sort]);
 
   const activeSortLabel = SORT_OPTIONS.find((o) => o.key === sort)?.label ?? "Sort";
 

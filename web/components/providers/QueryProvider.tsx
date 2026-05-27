@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 
 // ── Typed helper for Axios-shaped errors ─────────────────────────────────────
@@ -26,13 +26,14 @@ function shouldRetry(failureCount: number, error: unknown): boolean {
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   // Rehydrate the Zustand auth store synchronously before any query runs.
-  // useRef ensures this executes exactly once during the first render, not in
+  // The useState initializer runs exactly once during the first render, not in
   // a useEffect (which fires AFTER queries already started fetching).
-  const rehydrated = useRef(false);
-  if (!rehydrated.current && typeof window !== "undefined") {
-    useAuth.persist.rehydrate();
-    rehydrated.current = true;
-  }
+  useState(() => {
+    if (typeof window !== "undefined") {
+      useAuth.persist.rehydrate();
+    }
+    return null;
+  });
 
   const [queryClient] = useState(
     () =>

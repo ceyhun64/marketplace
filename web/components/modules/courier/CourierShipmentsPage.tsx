@@ -128,6 +128,7 @@ function StatusPill({ status }: { status: ShipmentStatus }) {
 
 function ETAText({ dateStr }: { dateStr: string }) {
   const eta = new Date(dateStr);
+  // eslint-disable-next-line react-hooks/purity
   const diffMs = eta.getTime() - Date.now();
   const diffHours = Math.round(diffMs / (1000 * 60 * 60));
   const isOverdue = diffMs < 0;

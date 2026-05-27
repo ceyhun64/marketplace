@@ -19,10 +19,8 @@ export function CustomImageZoom({ src, alt }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const zoomLayerRef = useRef<HTMLDivElement>(null);
 
-  // Render nothing if src is empty
-  if (!src) return null;
-
   useEffect(() => {
+    if (!src) return;
     setMounted(true);
     const checkTouch = () => {
       setIsTouchDevice(
@@ -30,7 +28,7 @@ export function CustomImageZoom({ src, alt }: Props) {
       );
     };
     checkTouch();
-  }, []);
+  }, [src]);
 
   const handleClose = useCallback(() => {
     setIsModalOpen(false);
@@ -38,6 +36,7 @@ export function CustomImageZoom({ src, alt }: Props) {
 
   // Scroll lock + navbar z-index override when modal opens
   useEffect(() => {
+    if (!src) return;
     if (isModalOpen) {
       document.body.style.overflow = "hidden";
 
@@ -62,13 +61,13 @@ export function CustomImageZoom({ src, alt }: Props) {
 
   // ESC key
   useEffect(() => {
-    if (!isModalOpen) return;
+    if (!src || !isModalOpen) return;
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") handleClose();
     };
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [isModalOpen, handleClose]);
+  }, [src, isModalOpen, handleClose]);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -89,6 +88,9 @@ export function CustomImageZoom({ src, alt }: Props) {
     },
     [isTouchDevice],
   );
+
+  // Early return after all hooks — hooks must not be conditionally called
+  if (!src) return null;
 
   const modal =
     isModalOpen && mounted

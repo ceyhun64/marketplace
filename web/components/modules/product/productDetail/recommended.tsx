@@ -26,7 +26,7 @@ const CarouselSkeleton = () => (
   </div>
 );
 
-export default function ÖnerilenÜrünlerCarousel() {
+export default function RecommendedProductsCarousel() {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
 

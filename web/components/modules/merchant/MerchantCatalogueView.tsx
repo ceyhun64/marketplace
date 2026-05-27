@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { Search, Plus, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -114,10 +114,11 @@ export default function MerchantCatalogueView() {
   const [publishFilter, setPublishFilter] = useState<PublishFilter>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "pendingApproval" | "outOfStock">("all");
 
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
-    clearTimeout((handleSearchChange as any)._timer);
-    (handleSearchChange as any)._timer = setTimeout(() => {
+    clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
       setDebouncedSearch(value);
       setPage(1);
     }, 400);

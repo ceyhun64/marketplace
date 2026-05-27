@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import api from "@/lib/api";
 import { useMyCourierProfile } from "@/queries/useCouriers";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -136,7 +137,7 @@ export default function CourierEarningsPage() {
     })
     .reduce((sum, r) => sum + r.deliveryFee + (r.tip ?? 0), 0);
 
-  const summaryCards = [
+  const summaryCards = useMemo(() => [
     {
       label: "Toplam Kazanç",
       value: isLoading ? null : formatCurrency(earnings?.totalEarnings ?? 0),
@@ -191,6 +192,7 @@ export default function CourierEarningsPage() {
             earnings?.thisWeekDeliveries ??
               records.filter((r) => {
                 const d = new Date(r.deliveredAt);
+                // eslint-disable-next-line react-hooks/purity
                 return (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24) <= 7;
               }).length,
           ),
@@ -199,7 +201,7 @@ export default function CourierEarningsPage() {
       text: "text-(--info)",
       bg: "bg-(--info-bg)",
     },
-  ];
+  ], [isLoading, earnings, profile, records]);
 
   return (
     <div className="space-y-8">

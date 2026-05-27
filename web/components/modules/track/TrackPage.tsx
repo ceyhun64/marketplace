@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Search, Package, Truck, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -107,13 +108,13 @@ export default function TrackPage() {
         style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-body)" }}
       >
         Tracking numbers can be found in your order confirmation email or{" "}
-        <a
+        <Link
           href="/orders"
-          className="underline underline-offset-2 hover:text-[var(--charcoal)]"
+          className="underline underline-offset-2 hover:text-(--charcoal)"
           style={{ color: "var(--charcoal-soft)" }}
         >
           My Orders
-        </a>
+        </Link>
         .
       </p>
     </main>

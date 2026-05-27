@@ -78,10 +78,21 @@ function BrandCardSkeleton() {
   );
 }
 
+// Stable mock values computed once per brand ID, outside the render cycle
+const _brandMockCache = new Map<string, { rating: number; productCount: number }>();
+function getBrandMock(id: string) {
+  if (!_brandMockCache.has(id)) {
+    _brandMockCache.set(id, {
+      rating: 4.2 + Math.random() * 0.7,
+      productCount: 10 + Math.floor(Math.random() * 290),
+    });
+  }
+  return _brandMockCache.get(id)!;
+}
+
 // Brand card
 function BrandCard({ brand }: { brand: MerchantProfile }) {
-  const rating = 4.2 + Math.random() * 0.7; // mock
-  const productCount = 10 + Math.floor(Math.random() * 290);
+  const { rating, productCount } = getBrandMock(brand.slug ?? brand.id ?? "");
 
   return (
     <Link

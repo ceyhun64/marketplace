@@ -150,6 +150,7 @@ export default function SocialProof() {
     setProgress(100);
 
     // Animate progress bar
+    // eslint-disable-next-line react-hooks/purity
     const start = Date.now();
     const duration = 5500;
     progressRef.current = setInterval(() => {

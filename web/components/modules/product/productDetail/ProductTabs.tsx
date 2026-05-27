@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import api from "@/lib/api";
 import {
@@ -110,11 +110,7 @@ export default function ProductTabs({
     { label: "12 Installments", count: 12, rate: 17.0 },
   ];
 
-  useEffect(() => {
-    if (productId) fetchComments();
-  }, [productId]);
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     setIsLoading(true);
     try {
       const { data } = await api.get(`/api/review/${productId}`);
@@ -129,7 +125,11 @@ export default function ProductTabs({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [productId]);
+
+  useEffect(() => {
+    if (productId) fetchComments();
+  }, [productId, fetchComments]);
 
   const handleSubmitReview = async () => {
     if (rating === 0) {
