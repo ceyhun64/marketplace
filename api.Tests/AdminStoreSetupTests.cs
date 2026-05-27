@@ -5,6 +5,7 @@ using api.Infrastructure.Services;
 using api.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -34,12 +35,14 @@ public class AdminStoreSetupTests : IDisposable
         var currentUser = new Mock<ICurrentUserService>();
         var notification = new Mock<INotificationService>();
         var config = new Mock<IConfiguration>();
+        var cache = new Mock<IDistributedCache>();
         var logger = new Mock<ILogger<AdminController>>();
         _controller = new AdminController(
             _db,
             currentUser.Object,
             notification.Object,
             config.Object,
+            cache.Object,
             logger.Object
         );
     }

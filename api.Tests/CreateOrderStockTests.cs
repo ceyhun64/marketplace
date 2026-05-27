@@ -45,6 +45,9 @@ public class CreateOrderStockTests : IDisposable
         _fulfillment
             .Setup(x => x.CreateShipmentForOrderAsync(It.IsAny<Order>()))
             .ReturnsAsync(new Shipment());
+        _fulfillment
+            .Setup(x => x.CreateShipmentForVendorOrderAsync(It.IsAny<VendorOrder>(), It.IsAny<Order>()))
+            .ReturnsAsync(new Shipment());
 
         _wallet = new Mock<IWalletService>();
         _wallet
@@ -161,9 +164,9 @@ public class CreateOrderStockTests : IDisposable
         // Act
         await Handle(command);
 
-        // Assert — fulfillment servisi çağrılmış olmalı
+        // Assert — fulfillment servisi çağrılmış olmalı (VendorOrder başına bir kez)
         _fulfillment.Verify(
-            x => x.CreateShipmentForOrderAsync(It.IsAny<Order>()),
+            x => x.CreateShipmentForVendorOrderAsync(It.IsAny<VendorOrder>(), It.IsAny<Order>()),
             Times.Once,
             "Her başarılı sipariş için shipment oluşturulmalı"
         );
@@ -270,7 +273,7 @@ public class CreateOrderStockTests : IDisposable
 
         // Assert — fulfillment çağrılmamalı
         _fulfillment.Verify(
-            x => x.CreateShipmentForOrderAsync(It.IsAny<Order>()),
+            x => x.CreateShipmentForVendorOrderAsync(It.IsAny<VendorOrder>(), It.IsAny<Order>()),
             Times.Never,
             "Yetersiz stokta shipment oluşturulmamalı"
         );
