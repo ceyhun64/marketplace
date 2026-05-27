@@ -14,8 +14,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useInitiateCheckout, useConfirmPayment } from "@/queries/usePayment";
 import { useCart } from "@/hooks/use-cart";
-import type { ShippingRate, OrderSource } from "@/types/enums";
-import type { ShippingAddress } from "@/types/entities";
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -72,9 +70,10 @@ function StripeCheckoutForm({
         clearCart();
         onSuccess?.(result.orderId);
         router.push(`/orders/${result.orderId}`);
-      } catch {
+      } catch (err: any) {
         setErrorMessage(
-          "Order confirmation failed. Your card has not been charged. Please contact our support team.",
+          err?.response?.data?.message ??
+            "Order confirmation failed. Your card has not been charged. Please contact our support team.",
         );
       }
     }
@@ -115,6 +114,7 @@ function StripeCheckoutForm({
         size="lg"
         className="w-full"
         disabled={!stripe || !elements || isSubmitting}
+        aria-busy={isSubmitting}
       >
         {isSubmitting ? (
           <>
@@ -159,11 +159,17 @@ export function PaymentForm({
 
       const result = await initiateCheckout({ orderId });
 
-      // Stripe publishable key ile yükle
       setStripePromise(loadStripe(result.publishableKey));
       setClientSecret(result.clientSecret);
-    } catch (err) {
-      setError("Payment could not be initialised. Please try again.");
+    } catch (err: any) {
+      if (err?.response?.status === 401) {
+        setError("Your session has expired. Please log in again.");
+      } else {
+        setError(
+          err?.response?.data?.message ??
+            "Payment could not be initialised. Please try again.",
+        );
+      }
     } finally {
       setLoading(false);
     }

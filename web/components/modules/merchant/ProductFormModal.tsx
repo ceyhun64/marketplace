@@ -79,12 +79,14 @@ export default function ProductFormModal({
     setForm((f) => ({ ...f, [key]: val }));
 
   const handleSubmit = async () => {
-    if (!form.name.trim()) return setError("Product name is required.");
-    if (!form.categoryId) return setError("Please select a category.");
-    if (!form.price || isNaN(Number(form.price)) || Number(form.price) <= 0)
-      return setError("Enter a valid price.");
-    if (!form.stock || isNaN(Number(form.stock)) || Number(form.stock) < 0)
-      return setError("Enter a valid stock quantity.");
+    if (!form.name.trim()) { setError("Product name is required."); setActiveTab("details"); return; }
+    if (!form.categoryId) { setError("Please select a category."); setActiveTab("details"); return; }
+    if (!form.price || isNaN(Number(form.price)) || Number(form.price) <= 0) {
+      setError("Enter a valid price."); setActiveTab("details"); return;
+    }
+    if (!form.stock || isNaN(Number(form.stock)) || Number(form.stock) < 0) {
+      setError("Enter a valid stock quantity."); setActiveTab("details"); return;
+    }
 
     setError(null);
 
@@ -179,6 +181,7 @@ export default function ProductFormModal({
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-(--text-tertiary) hover:text-(--text-secondary) hover:bg-(--off-white-2) transition-colors"
           >
@@ -350,6 +353,7 @@ export default function ProductFormModal({
             type="button"
             onClick={handleSubmit}
             disabled={submitting}
+            aria-busy={submitting}
             className="flex-1 bg-(--charcoal) text-white rounded-xl py-2.5 text-sm font-medium hover:bg-(--charcoal-2) disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             {submitting ? (

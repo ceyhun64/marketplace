@@ -76,6 +76,7 @@ export default function CartDrawer() {
               )}
             </SheetTitle>
             <button
+              type="button"
               onClick={closeCart}
               className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-(--off-white-2) transition-colors text-(--text-tertiary)"
             >
@@ -262,6 +263,7 @@ function CartItemRow({
           {/* Quantity stepper */}
           <div className="flex items-center gap-1 rounded-lg overflow-hidden border border-(--border-light)">
             <button
+              type="button"
               onClick={onDecrease}
               className="w-7 h-7 flex items-center justify-center hover:bg-(--off-white-2) transition-colors text-(--text-secondary)"
               aria-label="Decrease quantity"
@@ -272,9 +274,15 @@ function CartItemRow({
               {item.quantity}
             </span>
             <button
+              type="button"
               onClick={onIncrease}
-              className="w-7 h-7 flex items-center justify-center hover:bg-(--off-white-2) transition-colors text-(--text-secondary)"
+              className="w-7 h-7 flex items-center justify-center transition-colors text-(--text-secondary)"
+              style={{
+                opacity: item.stock != null && item.quantity >= item.stock ? 0.35 : 1,
+                cursor: item.stock != null && item.quantity >= item.stock ? "not-allowed" : undefined,
+              }}
               aria-label="Increase quantity"
+              aria-disabled={item.stock != null && item.quantity >= item.stock}
               disabled={item.stock != null && item.quantity >= item.stock}
             >
               <Plus className="w-3 h-3" />
@@ -290,6 +298,7 @@ function CartItemRow({
 
       {/* Remove */}
       <button
+        type="button"
         onClick={onRemove}
         className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 text-(--text-tertiary) transition-all"
         aria-label="Remove item"

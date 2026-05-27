@@ -8,7 +8,6 @@ import { ShippingRateSelect } from "@/components/modules/shipping/ShippingRateSe
 import CartSummary from "./CartSummary";
 import { PaymentForm } from "./PaymentForm";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   ArrowLeft,
   ArrowRight,
@@ -335,6 +334,7 @@ function AddressStep({
       </div>
 
       <button
+        type="button"
         onClick={handleNext}
         className="w-full h-12 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold text-white transition-all"
         style={{
@@ -422,6 +422,7 @@ function ShippingStep({
 
       <div className="flex gap-3">
         <button
+          type="button"
           onClick={onBack}
           disabled={isLoading}
           className="flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
@@ -446,6 +447,7 @@ function ShippingStep({
           Back
         </button>
         <button
+          type="button"
           onClick={onNext}
           disabled={!canProceed}
           className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
@@ -557,6 +559,7 @@ export default function CheckoutPage() {
       >
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <button
+            type="button"
             onClick={() => router.push("/cart")}
             className="flex items-center gap-2 text-sm transition-colors"
             style={{
@@ -663,6 +666,7 @@ export default function CheckoutPage() {
                       </p>
                     </div>
                     <button
+                      type="button"
                       onClick={goBack}
                       className="flex items-center gap-1 text-sm transition-colors"
                       style={{

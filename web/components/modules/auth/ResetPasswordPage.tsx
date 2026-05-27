@@ -6,8 +6,6 @@ import { useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { KeyRound, ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import PasswordInput from "@/components/ui/password-input";
@@ -48,7 +46,7 @@ function ResetPasswordForm() {
 
   const passwordStrength = (pwd: string) => {
     if (pwd.length === 0) return null;
-    if (pwd.length < 6)
+    if (pwd.length < 8)
       return { level: "weak",   label: "Weak",   color: "var(--red)",     count: 1 };
     if (pwd.length < 10 || !/[A-Z]/.test(pwd) || !/[0-9]/.test(pwd))
       return { level: "medium", label: "Medium", color: "var(--warning)", count: 2 };
@@ -160,8 +158,8 @@ function ResetPasswordForm() {
                 toast.error("Passwords do not match");
                 return;
               }
-              if (form.password.length < 6) {
-                toast.error("Password must be at least 6 characters");
+              if (form.password.length < 8) {
+                toast.error("Password must be at least 8 characters");
                 return;
               }
               mutation.mutate({ token, newPassword: form.password });

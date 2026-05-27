@@ -708,6 +708,7 @@ function FilterSection({
       }}
     >
       <button
+        type="button"
         onClick={() => setOpen(!open)}
         style={{
           width: "100%",
@@ -885,6 +886,9 @@ export default function SearchPage() {
   useEffect(() => {
     fetchResults();
   }, [fetchResults]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
 
   // Debounced search input
   const handleInputChange = (value: string) => {
@@ -1146,6 +1150,7 @@ export default function SearchPage() {
           />
         </div>
         <button
+          type="button"
           onClick={() =>
             navigate({
               minPrice: minPriceInput,

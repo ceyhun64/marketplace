@@ -1351,6 +1351,7 @@ export default function ProductDetailPage() {
   const [selectedSizeId, setSelectedSizeId] = useState<number | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   // Track recently viewed
   useEffect(() => {
@@ -1393,6 +1394,7 @@ export default function ProductDetailPage() {
       toast.error("Product information not found.");
       return;
     }
+    setIsAddingToCart(true);
 
     // Variant system: require selection if JSONB variants exist
     if (apiVariants.length > 0 && !selectedVariant) {
@@ -1456,6 +1458,7 @@ export default function ProductDetailPage() {
       description: !user ? "Cart saved to your account on sign in." : undefined,
       duration: !user ? 4000 : 2000,
     });
+    setTimeout(() => setIsAddingToCart(false), 500);
   }, [
     product,
     selectedVariant,
@@ -1801,11 +1804,14 @@ export default function ProductDetailPage() {
             {/* Product actions (quantity, add to cart, wishlist, share) */}
             <ProductActions
               quantity={quantity}
+              maxStock={effectiveStock.quantity}
               onQuantityChange={setQuantity}
               onAddToCart={handleAddToCart}
               onToggleFavorite={handleToggleFavorite}
               onShare={handleShare}
               isFavorited={favorited}
+              isFavoriteLoading={favoriteLoading}
+              isAddingToCart={isAddingToCart}
               inStock={effectiveStock.inStock}
               sizeStockAvailable={!selectedStock || selectedStock.stock > 0}
             />
