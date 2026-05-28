@@ -264,8 +264,9 @@
     background: var(--bg-page);
     color: var(--text-primary);
     font-size: var(--text-base);
-    line-height: 1.7;
+    line-height: 1.65;
     font-family: var(--font-body);
+    text-rendering: optimizeLegibility;
   }
   h1,
   h2,
@@ -644,6 +645,12 @@
 }
 
 /* ─── ANIMATIONS ──────────────────────────────────────────────────── */
+/* ── Text selection — brand highlight ──────────────────────────────── */
+::selection {
+  background: rgba(200, 16, 46, 0.12);
+  color: var(--charcoal);
+}
+
 @keyframes float {
   0%,
   100% {
@@ -651,6 +658,15 @@
   }
   50% {
     transform: translateY(-8px);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
   }
 }
 

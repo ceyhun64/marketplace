@@ -1436,6 +1436,7 @@ export default function ProductDetailPage() {
       addItem({
         offerId,
         productId: product.id,
+        variantId: selectedVariant?.id,
         productName: product.title,
         productImage: selectedVariant?.imageUrl ?? product.mainImage,
         price: basePrice,

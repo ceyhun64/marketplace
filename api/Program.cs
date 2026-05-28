@@ -28,9 +28,41 @@ Log.Logger = new LoggerConfiguration()
         "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateBootstrapLogger();
 
-// ── Helper: postgresql:// URL → Npgsql connection string ─────────────────────
+// ── Helper: postgresql:// URL or keyword=value string → Npgsql connection string ─
 static string ToNpgsql(string url, bool isDevelopment)
 {
+    // ── Connection pool tuning ────────────────────────────────────────────────
+    const int maxPool          = 100;
+    const int minPool          = 5;
+    const int connLifetime     = 300;
+    const int connIdleLifetime = 60;
+    const int commandTimeout   = 30;
+
+    // If the value is already a Npgsql keyword=value connection string
+    // (docker-compose / CI typically supplies "Host=...;Port=...;..."),
+    // skip URI parsing and only append the missing pool/timeout settings.
+    // We deliberately do NOT override the SSL mode so that callers that target
+    // a local Docker Postgres (no TLS) are not broken by a forced "Require".
+    if (!url.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase) &&
+        !url.StartsWith("postgres://",   StringComparison.OrdinalIgnoreCase))
+    {
+        var sb = new System.Text.StringBuilder(url.TrimEnd(';'));
+        if (!url.Contains("Maximum Pool Size",       StringComparison.OrdinalIgnoreCase))
+            sb.Append($";Maximum Pool Size={maxPool}");
+        if (!url.Contains("Minimum Pool Size",       StringComparison.OrdinalIgnoreCase))
+            sb.Append($";Minimum Pool Size={minPool}");
+        if (!url.Contains("Connection Lifetime",     StringComparison.OrdinalIgnoreCase))
+            sb.Append($";Connection Lifetime={connLifetime}");
+        if (!url.Contains("Connection Idle Lifetime",StringComparison.OrdinalIgnoreCase))
+            sb.Append($";Connection Idle Lifetime={connIdleLifetime}");
+        if (!url.Contains("Command Timeout",         StringComparison.OrdinalIgnoreCase))
+            sb.Append($";Command Timeout={commandTimeout}");
+        if (!url.Contains("Pooling",                 StringComparison.OrdinalIgnoreCase))
+            sb.Append(";Pooling=true");
+        return sb.ToString();
+    }
+
+    // URL format: postgresql://user:pass@host:port/db
     var uri      = new Uri(url);
     var userInfo = uri.UserInfo.Split(':');
     var host     = uri.Host;
@@ -41,22 +73,6 @@ static string ToNpgsql(string url, bool isDevelopment)
     var sslMode  = isDevelopment ? "Disable" : "Require";
     var trustCert = isDevelopment ? "" : ";Trust Server Certificate=true";
 
-    // ── Connection pool tuning ────────────────────────────────────────────────
-    // These values assume a single API pod against a managed PostgreSQL instance
-    // (e.g. RDS db.t3.medium or Azure Database for PostgreSQL Flexible Server GP-2).
-    //
-    // Rule of thumb: MaxPoolSize ≤ (DB max_connections / number_of_pods) × 0.8
-    // Typical managed DB: 500 max_connections, 2 pods → 500 / 2 × 0.8 = 200.
-    // Err on the conservative side; a single pod consuming 100 connections is fine.
-    //
-    // Connection Idle Lifetime: recycle idle connections to avoid stale TCP sessions
-    // after a DB failover (cloud DBs frequently change IPs on failover).
-    const int maxPool            = 100;
-    const int minPool            = 5;   // keep warm to avoid cold-start latency
-    const int connLifetime       = 300; // seconds — force TCP recycle every 5 minutes
-    const int connIdleLifetime   = 60;  // seconds — evict connections idle > 1 minute
-    const int commandTimeout     = 30;  // seconds — kill runaway queries
-
     return $"Host={host};Port={port};Database={db};Username={user};Password={pass};" +
            $"SSL Mode={sslMode}{trustCert};" +
            $"Maximum Pool Size={maxPool};Minimum Pool Size={minPool};" +
@@ -64,12 +80,20 @@ static string ToNpgsql(string url, bool isDevelopment)
            $"Command Timeout={commandTimeout};Pooling=true";
 }
 
-// ── Helper: redis:// URL → StackExchange.Redis connection string ──────────────
+// ── Helper: redis:// URL or StackExchange connection string → SE.Redis config ──
 static string ToRedis(string url)
 {
-    var uri = new Uri(url);
-    var host = uri.Host;
-    var port = uri.Port > 0 ? uri.Port : 6379;
+    // If the value is already a StackExchange.Redis connection string
+    // (e.g. "redis:6379,password=xxx" from docker-compose), return as-is.
+    // StackExchange.Redis accepts "host:port" and "host:port,password=xxx" natively.
+    if (!url.StartsWith("redis://",  StringComparison.OrdinalIgnoreCase) &&
+        !url.StartsWith("rediss://", StringComparison.OrdinalIgnoreCase))
+        return url;
+
+    // URL format: redis://[:password@]host[:port]
+    var uri      = new Uri(url);
+    var host     = uri.Host;
+    var port     = uri.Port > 0 ? uri.Port : 6379;
     var password = uri.UserInfo.Contains(':') ? uri.UserInfo.Split(':')[1] : uri.UserInfo;
 
     return string.IsNullOrEmpty(password) ? $"{host}:{port}" : $"{host}:{port},password={password}";
@@ -112,6 +136,14 @@ try
         Require(config, "JWT_SECRET");
         Require(config, "FRONTEND_URL");
         Require(config, "STRIPE_SECRET_KEY");
+
+        // STRIPE_WEBHOOK_SECRET is required in Production only.
+        // Staging/dev environments may run without it — webhook events are
+        // then dropped and the manual /api/payments/confirm path is used.
+        // A missing webhook secret in Production is fatal: payment.succeeded
+        // events would be silently discarded and orders would never be confirmed.
+        if (builder.Environment.IsProduction())
+            Require(config, "STRIPE_WEBHOOK_SECRET");
     }
 
     // ── Stripe — global API key, set once at startup ─────────────────────────
@@ -305,6 +337,11 @@ try
             new() { Endpoint = "*",                               Period = "1m",  Limit = 120 },
         };
     });
+    // Rate limit stores are in-memory (per-pod). A multi-pod deployment means each
+    // pod keeps its own counter — an IP can send N×limit requests if routed across
+    // N pods. Redis-backed counters (DistributedCacheIpPolicyStore) would fix this,
+    // but require a Polly circuit-breaker wrapper so Redis downtime does not cause
+    // all requests to return 500 (fail-closed). That work is tracked separately.
     builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
     builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
     builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();

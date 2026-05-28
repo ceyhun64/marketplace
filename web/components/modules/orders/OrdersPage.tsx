@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import { formatPrice } from "@/lib/format";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants & pure helpers
@@ -244,7 +246,7 @@ function OrderCard({ order }: { order: Order }) {
                 fontSize: "1.125rem",
               }}
             >
-              ${order.totalAmount.toLocaleString("tr-TR")}
+              {formatPrice(order.totalAmount)}
             </p>
             <span
               className="text-[10px]"
@@ -365,8 +367,7 @@ function OrderCard({ order }: { order: Order }) {
                           fontFamily: "var(--font-mono)",
                         }}
                       >
-                        ×{item.quantity} · $
-                        {item.unitPrice.toLocaleString("tr-TR")} each
+                        ×{item.quantity} · {formatPrice(item.unitPrice)} each
                       </p>
                     </div>
 
@@ -378,8 +379,7 @@ function OrderCard({ order }: { order: Order }) {
                         fontFamily: "var(--font-display)",
                       }}
                     >
-                      $
-                      {(item.unitPrice * item.quantity).toLocaleString("tr-TR")}
+                      {formatPrice(item.unitPrice * item.quantity)}
                     </p>
                   </div>
                 );
@@ -408,7 +408,7 @@ function OrderCard({ order }: { order: Order }) {
                 fontSize: "1.1rem",
               }}
             >
-              ${order.totalAmount.toLocaleString("tr-TR")}
+              {formatPrice(order.totalAmount)}
             </span>
           </div>
 
@@ -449,14 +449,14 @@ function OrderCard({ order }: { order: Order }) {
            * Action buttons
            * Mobile:  stacked full-width (flex-col)
            * Tablet+: side by side (sm:flex-row)
-           * All buttons: min-h-[44px] to meet the 44px touch-target rule
+           * All buttons: min-h-11 to meet the 44px touch-target rule
            */}
           <div className="flex flex-col sm:flex-row gap-2 pt-1">
             {/* Track order — primary, only when tracking exists */}
             {hasTracking && (
               <Link
                 href={`/orders/${order.id}/tracking`}
-                className="flex-1 flex items-center justify-center gap-2 min-h-[44px] px-4 text-sm font-semibold text-white rounded-xl transition-opacity hover:opacity-85"
+                className="flex-1 flex items-center justify-center gap-2 min-h-11 px-4 text-sm font-semibold text-white rounded-xl transition-opacity hover:opacity-85"
                 style={{
                   background: "var(--charcoal)",
                   fontFamily: "var(--font-body)",
@@ -472,7 +472,7 @@ function OrderCard({ order }: { order: Order }) {
             {isDelivered && (
               <Link
                 href={`/?reorder=${order.id}`}
-                className="flex-1 flex items-center justify-center gap-2 min-h-[44px] px-4 text-sm font-semibold rounded-xl transition-colors hover:bg-(--off-white)"
+                className="flex-1 flex items-center justify-center gap-2 min-h-11 px-4 text-sm font-semibold rounded-xl transition-colors hover:bg-(--off-white)"
                 style={{
                   border: "1.5px solid rgba(51,51,51,0.15)",
                   color: "var(--charcoal)",
@@ -484,26 +484,33 @@ function OrderCard({ order }: { order: Order }) {
               </Link>
             )}
 
-            {/* Review — only for delivered, no existing review */}
+            {/* Review — only for delivered orders */}
             {isDelivered && (
-              <Link
-                href={`/orders/${order.id}/review`}
-                className="flex-1 flex items-center justify-center gap-2 min-h-[44px] px-4 text-sm font-semibold rounded-xl transition-colors hover:bg-(--off-white)"
+              <button
+                type="button"
+                onClick={() =>
+                  toast.info("Product reviews are coming soon!", {
+                    description: "You'll be able to rate your purchase here.",
+                  })
+                }
+                className="flex-1 flex items-center justify-center gap-2 min-h-11 px-4 text-sm font-semibold rounded-xl transition-colors hover:bg-(--off-white)"
                 style={{
                   border: "1.5px solid rgba(51,51,51,0.15)",
                   color: "var(--charcoal)",
                   fontFamily: "var(--font-body)",
+                  background: "transparent",
+                  cursor: "pointer",
                 }}
               >
                 <Star size={13} />
                 Review
-              </Link>
+              </button>
             )}
 
             {/* Details — always present */}
             <Link
               href={`/orders/${order.id}`}
-              className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-4 text-sm font-semibold rounded-xl transition-colors hover:bg-(--off-white)"
+              className="flex-1 flex items-center justify-center gap-1.5 min-h-11 px-4 text-sm font-semibold rounded-xl transition-colors hover:bg-(--off-white)"
               style={{
                 border: "1.5px solid rgba(51,51,51,0.15)",
                 color: "var(--charcoal)",
@@ -671,7 +678,7 @@ export default function OrdersPage() {
             {filter === "all" && (
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 px-5 min-h-[44px] text-sm font-semibold text-white rounded-xl transition-opacity hover:opacity-85"
+                className="inline-flex items-center gap-2 px-5 min-h-11 text-sm font-semibold text-white rounded-xl transition-opacity hover:opacity-85"
                 style={{
                   background: "var(--charcoal)",
                   fontFamily: "var(--font-body)",

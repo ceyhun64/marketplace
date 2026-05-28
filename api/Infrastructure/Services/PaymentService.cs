@@ -26,6 +26,7 @@ public class PaymentService : IPaymentService
     private readonly ICurrentUserService _currentUser;
     private readonly IDistributedCache _cache;
     private readonly IWalletService _wallet;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public PaymentService(
         AppDbContext db,
@@ -35,7 +36,8 @@ public class PaymentService : IPaymentService
         INotificationService notification,
         ICurrentUserService currentUser,
         IDistributedCache cache,
-        IWalletService wallet
+        IWalletService wallet,
+        IServiceScopeFactory scopeFactory
     )
     {
         _db = db;
@@ -46,6 +48,7 @@ public class PaymentService : IPaymentService
         _currentUser = currentUser;
         _cache = cache;
         _wallet = wallet;
+        _scopeFactory = scopeFactory;
     }
 
     // ── 1. Create Payment Intent ──────────────────────────────────────────────
@@ -223,7 +226,13 @@ public class PaymentService : IPaymentService
         var webhookSecret = _config["STRIPE_WEBHOOK_SECRET"];
         if (string.IsNullOrEmpty(webhookSecret))
         {
-            _logger.LogWarning("⚠️ STRIPE_WEBHOOK_SECRET not configured — webhook not processed.");
+            _logger.LogError(
+                "STRIPE_WEBHOOK_SECRET is not configured. " +
+                "Stripe webhook event {EventType} will not be processed. " +
+                "All payment confirmations via webhook are silently dropped.",
+                "(unknown — body not parsed)");
+            // Return without processing; Stripe will retry.
+            // In production this env var is required (Program.cs startup guard).
             return;
         }
 
@@ -672,31 +681,44 @@ public class PaymentService : IPaymentService
         {
             // If Hangfire itself fails (e.g. DB connection lost), fall back to a
             // best-effort inline attempt so the customer at least gets a notification.
+            // IMPORTANT: _db (scoped) must NOT be used here — the HTTP request scope
+            // will be disposed before Task.Run body executes, causing ObjectDisposedException.
+            // We create a fresh DI scope so every service has a live DbContext.
             _logger.LogError(ex, "⚠️ Failed to enqueue post-payment job for OrderId={Id} — attempting inline fallback", orderId);
+
+            var capturedScopeFactory  = _scopeFactory;
+            var capturedLogger        = _logger;
+            var capturedOrderId       = orderId;
+            var capturedTrackingNumber = trackingNumber;
 
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    var orderForInvoice = await _db.Orders
+                    await using var scope = capturedScopeFactory.CreateAsyncScope();
+                    var db              = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    var invoiceGen      = scope.ServiceProvider.GetRequiredService<IInvoiceGeneratorService>();
+                    var notification    = scope.ServiceProvider.GetRequiredService<INotificationService>();
+
+                    var orderForInvoice = await db.Orders
                         .Include(o => o.Items)
                         .Include(o => o.Customer)
-                        .FirstOrDefaultAsync(o => o.Id == orderId);
+                        .FirstOrDefaultAsync(o => o.Id == capturedOrderId);
 
                     if (orderForInvoice != null)
                     {
-                        var invoice = await _invoiceGenerator.GenerateAndSaveAsync(orderForInvoice);
+                        var invoice = await invoiceGen.GenerateAndSaveAsync(orderForInvoice);
                         if (!string.IsNullOrEmpty(invoice.PdfUrl))
-                            await _notification.SendInvoiceEmailAsync(orderId, invoice.PdfUrl);
+                            await notification.SendInvoiceEmailAsync(capturedOrderId, invoice.PdfUrl);
                     }
 
-                    await _notification.SendOrderStatusNotificationAsync(
-                        orderId,
-                        $"Your order #{orderId.ToString()[..8].ToUpper()} has been confirmed! Tracking: {trackingNumber}");
+                    await notification.SendOrderStatusNotificationAsync(
+                        capturedOrderId,
+                        $"Your order #{capturedOrderId.ToString()[..8].ToUpper()} has been confirmed! Tracking: {capturedTrackingNumber}");
                 }
                 catch (Exception fallbackEx)
                 {
-                    _logger.LogError(fallbackEx, "⚠️ Inline fallback also failed for OrderId={Id}", orderId);
+                    capturedLogger.LogError(fallbackEx, "⚠️ Inline fallback also failed for OrderId={Id}", capturedOrderId);
                 }
             });
         }

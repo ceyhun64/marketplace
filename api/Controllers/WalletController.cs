@@ -104,44 +104,73 @@ public class WalletController : ControllerBase
         if (string.IsNullOrWhiteSpace(dto.BankAccountName))
             return BadRequest(new { message = "Bank account name is required." });
 
-        var wallet = await _wallet.GetOrCreateWalletAsync(merchantId.Value);
-
-        if (wallet.AvailableBalance < dto.Amount)
-            return BadRequest(
-                new
-                {
-                    message = $"Insufficient available balance. Available: {wallet.AvailableBalance:F2}",
-                }
-            );
-
-        // Create a pending WithdrawalRequest — funds are NOT debited until admin approves
-        var withdrawalRequest = new api.Domain.Entities.WithdrawalRequest
+        // Use a Serializable transaction so that two concurrent withdrawal requests
+        // for the same merchant cannot both pass the balance check and both be saved.
+        // Serializable isolation ensures the pending-total read and the INSERT are atomic:
+        // if another concurrent transaction has already inserted a pending request that
+        // would exceed the balance, one of the two transactions will be rolled back with
+        // a serialization failure, which we propagate as a 409 Conflict.
+        await using var tx = await _db.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.Serializable);
+        try
         {
-            Id = Guid.NewGuid(),
-            MerchantId = merchantId.Value,
-            WalletId = wallet.Id,
-            Amount = dto.Amount,
-            BankIban = dto.BankIban.Trim().ToUpper(),
-            BankAccountName = dto.BankAccountName.Trim(),
-            BankName = dto.BankName,
-            Note = dto.Note,
-            Status = api.Domain.Entities.WithdrawalStatus.Pending,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
+            var wallet = await _wallet.GetOrCreateWalletAsync(merchantId.Value);
 
-        _db.WithdrawalRequests.Add(withdrawalRequest);
-        await _db.SaveChangesAsync();
+            // Total of all pending (unprocessed) withdrawal requests already filed.
+            // This prevents the merchant from over-committing their available balance
+            // across multiple concurrent requests.
+            var pendingTotal = await _db.WithdrawalRequests
+                .Where(w => w.MerchantId == merchantId.Value
+                         && w.Status == api.Domain.Entities.WithdrawalStatus.Pending)
+                .SumAsync(w => (decimal?)w.Amount) ?? 0m;
 
-        return Ok(
-            new
+            var effectiveAvailable = wallet.AvailableBalance - pendingTotal;
+            if (effectiveAvailable < dto.Amount)
+                return BadRequest(new
+                {
+                    message = $"Insufficient available balance. " +
+                              $"Available: {wallet.AvailableBalance:F2}, " +
+                              $"Already pending: {pendingTotal:F2}",
+                });
+
+            // Create a pending WithdrawalRequest — funds are NOT debited until admin approves
+            var withdrawalRequest = new api.Domain.Entities.WithdrawalRequest
+            {
+                Id = Guid.NewGuid(),
+                MerchantId = merchantId.Value,
+                WalletId = wallet.Id,
+                Amount = dto.Amount,
+                BankIban = dto.BankIban.Trim().ToUpper(),
+                BankAccountName = dto.BankAccountName.Trim(),
+                BankName = dto.BankName,
+                Note = dto.Note,
+                Status = api.Domain.Entities.WithdrawalStatus.Pending,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+
+            _db.WithdrawalRequests.Add(withdrawalRequest);
+            await _db.SaveChangesAsync();
+            await tx.CommitAsync();
+
+            return Ok(new
             {
                 message = "Withdrawal request submitted. Pending admin approval.",
                 requestId = withdrawalRequest.Id,
                 amount = withdrawalRequest.Amount,
                 status = withdrawalRequest.Status.ToString(),
-            }
-        );
+            });
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
     }
 
     /// <summary>GET /api/wallet/withdrawals — Merchant's own withdrawal request history</summary>

@@ -68,12 +68,14 @@ function StripeCheckoutForm({
         });
 
         clearCart();
-        onSuccess?.(result.orderId);
-        router.push(`/orders/${result.orderId}`);
+        onSuccess?.(result.orderId ?? orderId);
+        // router.push after clearCart — no need to reset isSubmitting since we navigate away
+        router.push(`/orders/${result.orderId ?? orderId}`);
+        return;
       } catch (err: any) {
         setErrorMessage(
           err?.response?.data?.message ??
-            "Order confirmation failed. Your card has not been charged. Please contact our support team.",
+            "Order confirmation failed. Your payment was processed. Please contact our support team with your order reference.",
         );
       }
     }
@@ -144,6 +146,7 @@ export function PaymentForm({
   onSuccess,
   className,
 }: PaymentFormProps) {
+  const router = useRouter();
   const [stripePromise, setStripePromise] =
     useState<Promise<Stripe | null> | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -163,7 +166,11 @@ export function PaymentForm({
       setClientSecret(result.clientSecret);
     } catch (err: any) {
       if (err?.response?.status === 401) {
-        setError("Your session has expired. Please log in again.");
+        // Session expired — redirect to login with return path after short delay
+        setError("Your session has expired. Redirecting to login…");
+        setTimeout(() => {
+          router.push(`/auth/login?redirect=${encodeURIComponent("/checkout")}`);
+        }, 1500);
       } else {
         setError(
           err?.response?.data?.message ??

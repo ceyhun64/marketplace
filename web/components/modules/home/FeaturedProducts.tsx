@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useProducts } from "@/queries/useProducts";
 import { ProductCard } from "@/components/modules/store/ProductCard";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Product } from "@/types/entities";
 
 const TABS = [
@@ -98,10 +99,7 @@ export default function FeaturedProducts() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-6">
           {isLoading
             ? Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-2xl bg-gray-100 animate-pulse aspect-[3/4]"
-                />
+                <Skeleton key={i} className="rounded-2xl aspect-3/4" />
               ))
             : products.length > 0
               ? products.map((product) => (
@@ -111,13 +109,17 @@ export default function FeaturedProducts() {
                     context="marketplace"
                   />
                 ))
-              : Array.from({ length: 8 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="rounded-2xl bg-gray-100 animate-pulse aspect-[3/4]"
-                  />
-                ))}
+              : null}
         </div>
+
+        {/* Empty state — only shown when not loading and no products returned */}
+        {!isLoading && products.length === 0 && (
+          <div className="col-span-full py-12 text-center">
+            <p className="font-mono text-[12px] uppercase tracking-widest text-(--charcoal-soft)">
+              No featured products at the moment. Check back soon.
+            </p>
+          </div>
+        )}
 
         {/* View All CTA */}
         <div className="mt-16 text-center">

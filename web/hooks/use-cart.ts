@@ -8,12 +8,15 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { SHIPPING_COSTS } from "@/lib/constants";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface CartItem {
   offerId: string;
   productId: string;
+  /** Populated when the item is a specific product variant (size/color/etc.). */
+  variantId?: string;
   productName: string;
   productImage?: string;
   price: number;
@@ -51,13 +54,6 @@ interface CartState {
    */
   mergeWith: (serverItems: CartItem[]) => void;
 }
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const SHIPPING_COSTS: Record<ShippingRate, number> = {
-  EXPRESS: 59.9,
-  REGULAR: 29.9,
-};
 
 // ── Store ─────────────────────────────────────────────────────────────────────
 

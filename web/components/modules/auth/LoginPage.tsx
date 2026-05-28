@@ -55,7 +55,7 @@ function LoginForm() {
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Error banner */}
         {error && (
-          <div className="px-4 py-3.5 rounded-2xl text-[13px] font-medium animate-in fade-in slide-in-from-top-1 bg-(--danger-bg) border border-(--danger-border) text-(--danger)">
+          <div className="px-4 py-3.5 rounded-xl text-[13px] font-medium animate-in fade-in slide-in-from-top-1 bg-(--danger-bg) border border-(--danger-border) text-(--danger)">
             {error}
           </div>
         )}
@@ -69,7 +69,7 @@ function LoginForm() {
             onChange={(e) => { setEmail(e.target.value); clearError(); }}
             required
             placeholder="you@example.com"
-            className="h-12 rounded-xl bg-white border-(--border-light) focus:border-(--charcoal) focus:ring-0 transition-all"
+            className="h-12 rounded-xl"
           />
         </div>
 
@@ -89,7 +89,7 @@ function LoginForm() {
             onChange={(e) => { setPassword(e.target.value); clearError(); }}
             required
             placeholder="••••••••"
-            className="h-12 rounded-xl bg-white border-(--border-light) focus:border-(--charcoal) focus:ring-0 transition-all"
+            className="h-12 rounded-xl"
           />
         </div>
 

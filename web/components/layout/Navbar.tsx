@@ -219,8 +219,8 @@ function NotificationDropdown() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="relative p-2.5 rounded-lg transition-all"
-          style={{ color: "var(--charcoal-soft)", background: "transparent" }}
+          className="relative p-2.5 rounded-lg transition-all hover:bg-(--off-white-2)"
+          style={{ color: "var(--charcoal-soft)" }}
           aria-label="Notifications"
         >
           <Bell className="w-4.25 h-4.25" strokeWidth={2} />
@@ -297,7 +297,10 @@ function NotificationDropdown() {
         <div className="max-h-[360px] overflow-y-auto">
           {isLoading && (
             <div className="py-8 flex flex-col items-center gap-2">
-              <div className="w-6 h-6 rounded-full border-2 border-gray-200 border-t-red-500 animate-spin" />
+              <div
+                className="w-5 h-5 rounded-full border-2 animate-spin"
+                style={{ borderColor: "var(--border-mid)", borderTopColor: "var(--red)" }}
+              />
               <p className="text-xs" style={{ color: "var(--charcoal-mist)" }}>
                 Loading…
               </p>
@@ -655,7 +658,7 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={() => setSearchOpen(true)}
-                    className="p-2.5 rounded-lg transition-all"
+                    className="p-2.5 rounded-lg transition-all hover:bg-(--off-white-2)"
                     style={{ color: "var(--charcoal-soft)" }}
                     aria-label="Search"
                   >
@@ -667,7 +670,7 @@ export default function Navbar() {
               {/* Wishlist — hidden on xs, visible sm+ */}
               <Link
                 href="/wishlist"
-                className="hidden sm:flex p-2.5 rounded-lg transition-all"
+                className="hidden sm:flex p-2.5 rounded-lg transition-all hover:bg-(--off-white-2)"
                 style={{
                   color: "var(--charcoal-soft)",
                   textDecoration: "none",
@@ -717,11 +720,8 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={openCart}
-                className="relative p-2.5 rounded-lg transition-all"
-                style={{
-                  color: "var(--charcoal-soft)",
-                  background: "transparent",
-                }}
+                className="relative p-2.5 rounded-lg transition-all hover:bg-(--off-white-2)"
+                style={{ color: "var(--charcoal-soft)" }}
                 aria-label="Open cart"
               >
                 <ShoppingBag className="w-4.25 h-4.25" strokeWidth={2} />

@@ -490,10 +490,8 @@ export default function CheckoutPage() {
 
   const [step, setStep] = useState<Step>("address");
   const [address, setAddress] = useState<Partial<ShippingAddress>>({
-    fullName: user
-      ? `${(user as any).firstName ?? ""} ${(user as any).lastName ?? ""}`.trim()
-      : "",
-    phone: (user as any)?.phone ?? "",
+    fullName: user?.name ?? "",
+    phone: "",
   });
   const [shippingRate, setShippingRate] = useState<ShippingRate | null>(
     "REGULAR",
@@ -521,14 +519,22 @@ export default function CheckoutPage() {
 
   const handleGoToPayment = async () => {
     if (!shippingRate || !address) return;
+
+    // If an order was already created (e.g. user went back from payment step),
+    // reuse it instead of creating a duplicate pending order.
+    if (orderId) {
+      goNext();
+      return;
+    }
+
     setCreatingOrder(true);
     setOrderError(null);
     try {
       const { data } = await api.post<{ orderId: string }>("/api/orders", {
         items: items.map((i) => ({
-          offerId: i.offerId, // ← offerId gönder (tek merchant: offerId = productId)
           productId: i.productId,
           quantity: i.quantity,
+          ...(i.variantId ? { variantId: i.variantId } : {}),
         })),
         shippingAddress: address,
         shippingRate,
@@ -546,7 +552,20 @@ export default function CheckoutPage() {
     }
   };
 
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--off-white)" }}>
+        <div className="text-center space-y-3">
+          <div className="w-12 h-12 rounded-full bg-white border border-(--border-light) flex items-center justify-center mx-auto">
+            <Package className="w-5 h-5 text-(--charcoal-soft)" />
+          </div>
+          <p className="font-mono text-[12px] uppercase tracking-widest text-(--charcoal-soft)">
+            Redirecting to cart…
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ background: "var(--off-white)" }}>

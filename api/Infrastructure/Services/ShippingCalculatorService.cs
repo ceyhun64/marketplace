@@ -105,6 +105,10 @@ public class ShippingCalculatorService : IShippingCalculatorService
         return rate == ShippingRate.Express ? last.ExpressCost : last.StandardCost;
     }
 
+    /// <inheritdoc/>
+    public decimal CalculateOrderShipping(decimal orderSubTotal, ShippingRate rate)
+        => orderSubTotal >= _freeThreshold ? 0m : CalculateShippingCost(rate);
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /// <summary>

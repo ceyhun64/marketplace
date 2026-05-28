@@ -11,7 +11,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-6 overflow-hidden rounded-[var(--radius-lg)] bg-white text-sm text-[var(--charcoal)] shadow-[var(--shadow-sm)] ring-1 ring-[var(--border-subtle)] transition-shadow duration-[var(--dur-base)] hover:shadow-[var(--shadow-md)] data-[size=sm]:gap-4 data-[size=sm]:py-4 py-6",
+        "group/card flex flex-col gap-6 overflow-hidden rounded-lg bg-white text-sm text-(--charcoal) shadow-(--shadow-sm) ring-1 ring-(--border-subtle) transition-all duration-(--dur-base) hover:shadow-(--shadow-md) hover:-translate-y-px data-[size=sm]:gap-4 data-[size=sm]:py-4 py-6",
         className,
       )}
       {...props}
@@ -37,7 +37,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-title"
       className={cn(
-        "font-heading text-base font-medium tracking-tight text-[var(--charcoal)]",
+        "font-heading text-base font-medium tracking-tight text-(--charcoal)",
         className,
       )}
       {...props}
@@ -50,7 +50,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-description"
       className={cn(
-        "text-sm text-[var(--charcoal-soft)] leading-relaxed",
+        "text-sm text-(--charcoal-soft) leading-relaxed",
         className,
       )}
       {...props}

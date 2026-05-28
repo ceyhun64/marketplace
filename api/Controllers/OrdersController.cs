@@ -120,11 +120,7 @@ public class OrdersController(
     {
         var order = await db
             .Orders.AsNoTracking()
-            .Include(o => o.Shipment)
-                .ThenInclude(s => s!.StatusHistory)
-            .Include(o => o.Shipment)
-                .ThenInclude(s => s!.Courier)
-                    .ThenInclude(c => c!.User)
+            .Select(o => new { o.Id, o.CustomerId, o.Status })
             .FirstOrDefaultAsync(o => o.Id == id);
 
         if (order == null)
@@ -133,33 +129,40 @@ public class OrdersController(
         if (currentUser.Role == "Customer" && order.CustomerId != currentUser.UserId)
             return Forbid();
 
-        var shipment = order.Shipment;
-        if (shipment == null)
-            return Ok(
-                new
-                {
-                    orderId = id,
-                    orderStatus = order.Status.ToApiString(),
-                    shipment = (object?)null,
-                }
-            );
+        // Query ALL shipments for this order directly — the 1:1 Order.Shipment navigation
+        // only returns one row, breaking multi-merchant orders that have one Shipment per
+        // VendorOrder. Querying Shipments by OrderId retrieves every shipment correctly.
+        var shipments = await db.Shipments.AsNoTracking()
+            .Include(s => s.StatusHistory)
+            .Include(s => s.Courier)
+                .ThenInclude(c => c!.User)
+            .Where(s => s.OrderId == id)
+            .OrderBy(s => s.CreatedAt)
+            .ToListAsync();
 
-        return Ok(
-            new OrderTrackingDto
+        if (shipments.Count == 0)
+            return Ok(new
             {
-                OrderId = id,
-                OrderStatus = order.Status.ToApiString(),
-                TrackingNumber = shipment.TrackingNumber,
-                ShipmentStatus = shipment.Status.ToApiString(),
-                EstimatedDelivery = shipment.EstimatedDelivery,
-                LabelUrl = shipment.LabelUrl,
-                CourierName =
-                    shipment.Courier?.User != null
-                        ? $"{shipment.Courier.User.FirstName} {shipment.Courier.User.LastName}".Trim()
-                        : null,
-                CourierPhone = shipment.Courier?.User?.Phone,
-                History = shipment
-                    .StatusHistory.OrderByDescending(h => h.ChangedAt)
+                orderId = id,
+                orderStatus = order.Status.ToApiString(),
+                shipment = (object?)null,
+                shipments = Array.Empty<object>(),
+            });
+
+        static ShipmentTrackingItemDto MapShipment(api.Domain.Entities.Shipment s) =>
+            new()
+            {
+                ShipmentId = s.Id,
+                TrackingNumber = s.TrackingNumber,
+                ShipmentStatus = s.Status.ToApiString(),
+                EstimatedDelivery = s.EstimatedDelivery,
+                LabelUrl = s.LabelUrl,
+                CourierName = s.Courier?.User != null
+                    ? $"{s.Courier.User.FirstName} {s.Courier.User.LastName}".Trim()
+                    : null,
+                CourierPhone = s.Courier?.User?.Phone,
+                History = s.StatusHistory
+                    .OrderByDescending(h => h.ChangedAt)
                     .Select(h => new ShipmentStatusHistoryDto
                     {
                         Id = h.Id,
@@ -171,8 +174,39 @@ public class OrdersController(
                         ChangedAt = h.ChangedAt,
                     })
                     .ToList(),
-            }
-        );
+            };
+
+        // Primary (first) shipment populates the legacy single-shipment fields for
+        // backward compatibility with existing frontend tracking components.
+        var primary = shipments[0];
+
+        return Ok(new OrderTrackingDto
+        {
+            OrderId = id,
+            OrderStatus = order.Status.ToApiString(),
+            TrackingNumber = primary.TrackingNumber,
+            ShipmentStatus = primary.Status.ToApiString(),
+            EstimatedDelivery = primary.EstimatedDelivery,
+            LabelUrl = primary.LabelUrl,
+            CourierName = primary.Courier?.User != null
+                ? $"{primary.Courier.User.FirstName} {primary.Courier.User.LastName}".Trim()
+                : null,
+            CourierPhone = primary.Courier?.User?.Phone,
+            History = primary.StatusHistory
+                .OrderByDescending(h => h.ChangedAt)
+                .Select(h => new ShipmentStatusHistoryDto
+                {
+                    Id = h.Id,
+                    ShipmentId = h.ShipmentId,
+                    Status = h.Status.ToApiString(),
+                    Note = h.Note,
+                    Location = h.Location,
+                    CreatedAt = h.ChangedAt,
+                    ChangedAt = h.ChangedAt,
+                })
+                .ToList(),
+            Shipments = shipments.Select(MapShipment).ToList(),
+        });
     }
 
     [HttpPost("{id:guid}/cancel")]
@@ -395,7 +429,8 @@ public class OrdersController(
             return Forbid();
 
         var query = db
-            .VendorOrders.Include(vo => vo.Order)
+            .VendorOrders.AsNoTracking()
+            .Include(vo => vo.Order)
                 .ThenInclude(o => o.Customer)
             .Include(vo => vo.Items)
                 .ThenInclude(i => i.Product)
@@ -539,7 +574,8 @@ public class OrdersController(
             return Forbid();
 
         var query = db
-            .Orders.Include(o => o.Items)
+            .Orders.AsNoTracking()
+            .Include(o => o.Items)
                 .ThenInclude(i => i.Product)
             .Include(o => o.Customer)
             .Include(o => o.Shipment)

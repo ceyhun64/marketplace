@@ -1,4 +1,13 @@
-﻿using System;
+﻿// DEPRECATED — This migration lives in a non-standard directory and is NOT part of
+// the active EF Core migration chain (api/Migrations/). It was created during an
+// earlier development phase when the output directory was api/Infrastructure/Persistence/Migrations/.
+//
+// DO NOT DELETE — it may exist in production __EFMigrationsHistory tables.
+// DO NOT APPLY  — the changes it describes are already covered by api/Migrations/.
+// If you need to add migrations, use: dotnet ef migrations add <Name> --project api
+// which defaults to api/Migrations/.
+
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 using NpgsqlTypes;

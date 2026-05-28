@@ -171,10 +171,7 @@ export function ProductCard({
 
         {/* Price + add-to-cart */}
         <div className="mt-auto flex items-center justify-between gap-2">
-          <span
-            className="text-base font-bold text-(--charcoal) num"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
+          <span className="text-base font-bold text-(--charcoal) num">
             {formatPrice(product.price)}
           </span>
 

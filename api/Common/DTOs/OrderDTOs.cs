@@ -69,8 +69,8 @@ public class CreateOrderDto
 {
     public List<CreateOrderItemDto> Items { get; set; } = new();
     public ShippingAddressDto ShippingAddress { get; set; } = new();
-    public string ShippingRate { get; set; } = "Regular";
-    public string Source { get; set; } = "Marketplace";
+    public string ShippingRate { get; set; } = "REGULAR";
+    public string Source { get; set; } = "MARKETPLACE";
 }
 
 public class UpdateOrderStatusDto
@@ -109,12 +109,26 @@ public class OrderTrackingDto
 {
     public Guid OrderId { get; set; }
     public string OrderStatus { get; set; } = string.Empty;
+    // ── Legacy single-shipment fields (backward compat — reflects first shipment) ──
     public string? TrackingNumber { get; set; }
     public string? ShipmentStatus { get; set; }
     public DateTime? EstimatedDelivery { get; set; }
     public string? LabelUrl { get; set; }
     public string? CourierName { get; set; }
     public string? CourierPhone { get; set; }
-    // "history" matches web TrackingDetail.history
+    public List<ShipmentStatusHistoryDto> History { get; set; } = new();
+    // ── Multi-merchant: all shipments for this order ───────────────────────────
+    public List<ShipmentTrackingItemDto> Shipments { get; set; } = new();
+}
+
+public class ShipmentTrackingItemDto
+{
+    public Guid ShipmentId { get; set; }
+    public string? TrackingNumber { get; set; }
+    public string? ShipmentStatus { get; set; }
+    public DateTime? EstimatedDelivery { get; set; }
+    public string? LabelUrl { get; set; }
+    public string? CourierName { get; set; }
+    public string? CourierPhone { get; set; }
     public List<ShipmentStatusHistoryDto> History { get; set; } = new();
 }

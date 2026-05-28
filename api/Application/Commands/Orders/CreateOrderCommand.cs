@@ -24,13 +24,15 @@ public class CreateOrderCommandHandler
     private readonly IFulfillmentService _fulfillmentService;
     private readonly IWalletService _walletService;
     private readonly ICommissionService _commissionService;
+    private readonly IShippingCalculatorService _shippingCalculator;
 
     public CreateOrderCommandHandler(
         AppDbContext context,
         ICurrentUserService currentUser,
         IFulfillmentService fulfillmentService,
         IWalletService walletService,
-        ICommissionService commissionService
+        ICommissionService commissionService,
+        IShippingCalculatorService shippingCalculator
     )
     {
         _context = context;
@@ -38,6 +40,7 @@ public class CreateOrderCommandHandler
         _fulfillmentService = fulfillmentService;
         _walletService = walletService;
         _commissionService = commissionService;
+        _shippingCalculator = shippingCalculator;
     }
 
     public async Task<ServiceResult<OrderDto>> Handle(
@@ -172,6 +175,10 @@ public class CreateOrderCommandHandler
                 );
             }
 
+            // Shipping cost — applied after the product subtotal is finalised so
+            // the free-shipping threshold check uses the correct cart value.
+            var shippingCost = _shippingCalculator.CalculateOrderShipping(total, shippingRate);
+
             order = new Order
             {
                 Id = Guid.NewGuid(),
@@ -179,7 +186,8 @@ public class CreateOrderCommandHandler
                 Source = source,
                 Status = OrderStatus.Pending,
                 ShippingRate = shippingRate,
-                TotalAmount = total,
+                ShippingAmount = shippingCost,
+                TotalAmount = total + shippingCost,
                 RecipientName = dto.ShippingAddress.FullName,
                 RecipientPhone = dto.ShippingAddress.Phone,
                 AddressLine = dto.ShippingAddress.AddressLine,

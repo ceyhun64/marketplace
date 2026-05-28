@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using api.Common.DTOs.Auth;
 using api.Domain.Entities;
 using api.Domain.Enums;
@@ -20,6 +21,9 @@ public class AuthController : ControllerBase
     private readonly INotificationService _notification;
     private readonly IConfiguration _config;
     private readonly ILogger<AuthController> _logger;
+
+    private static string GenerateSecureToken()
+        => Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
 
     public AuthController(
         AppDbContext db,
@@ -57,7 +61,7 @@ public class AuthController : ControllerBase
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
             Role = UserRole.Customer,
             IsVerified = false,
-            VerificationToken = Guid.NewGuid().ToString("N"),
+            VerificationToken = GenerateSecureToken(),
         };
 
         _db.Users.Add(user);
@@ -251,7 +255,7 @@ public class AuthController : ControllerBase
         // Güvenlik: kullanıcı yoksa da aynı yanıtı dön (enumeration saldırısı önlemi)
         if (user is not null)
         {
-            user.PasswordResetToken = Guid.NewGuid().ToString("N");
+            user.PasswordResetToken = GenerateSecureToken();
             user.PasswordResetExpiry = DateTime.UtcNow.AddHours(2);
             user.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
@@ -381,7 +385,7 @@ public class AuthController : ControllerBase
             Role = UserRole.Merchant,
             AccountStatus = AccountStatus.PendingApproval, // ← onay bekliyor
             IsVerified = false,
-            VerificationToken = Guid.NewGuid().ToString("N"),
+            VerificationToken = GenerateSecureToken(),
         };
 
         var merchant = new MerchantProfile

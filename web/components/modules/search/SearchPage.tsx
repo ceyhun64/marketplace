@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { toast } from "sonner";
+import { formatPrice } from "@/lib/format";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -356,7 +357,7 @@ function SearchProductCard({
                   letterSpacing: "-0.03em",
                 }}
               >
-                ${product.price.toLocaleString("tr-TR")}
+                {formatPrice(product.price)}
               </div>
             </div>
             <button
@@ -528,7 +529,7 @@ function SearchProductCard({
                 letterSpacing: "-0.02em",
               }}
             >
-              ${product.price.toLocaleString("tr-TR")}
+              {formatPrice(product.price)}
             </span>
             <button
               onClick={(e) => {
@@ -924,7 +925,7 @@ export default function SearchPage() {
     (category ? 1 : 0) + (minPrice || maxPrice ? 1 : 0) + activeTagList.length;
 
   const currentSortLabel =
-    SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "En Alakalı";
+    SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Most Relevant";
 
   // ── Sidebar content ──────────────────────────────────────────────────────────
   const Sidebar = (
@@ -1386,7 +1387,7 @@ export default function SearchPage() {
               <>
                 <span style={{ color: "rgba(255,255,255,0.7)" }}>
                   <strong style={{ color: "#fff" }}>
-                    {results.total.toLocaleString("tr-TR")}
+                    {results.total.toLocaleString("en-US")}
                   </strong>{" "}
                   results
                 </span>
@@ -1835,7 +1836,7 @@ export default function SearchPage() {
                   cursor: "pointer",
                 }}
               >
-                Tekrar Dene
+                Retry
               </button>
             </div>
           )}

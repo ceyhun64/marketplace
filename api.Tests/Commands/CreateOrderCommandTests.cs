@@ -24,6 +24,7 @@ public class CreateOrderCommandTests : IDisposable
     private readonly Mock<IFulfillmentService> _fulfillment;
     private readonly Mock<IWalletService> _wallet;
     private readonly Mock<ICommissionService> _commission;
+    private readonly Mock<IShippingCalculatorService> _shipping;
     private readonly Guid _customerId = Guid.NewGuid();
 
     public CreateOrderCommandTests()
@@ -50,6 +51,12 @@ public class CreateOrderCommandTests : IDisposable
                 It.IsAny<Guid?>(),
                 It.IsAny<PlanType?>()))
             .ReturnsAsync(10m); // varsayılan: %10 komisyon
+
+        // Shipping: return 0 in tests so existing assertions on TotalAmount stay valid.
+        _shipping = new Mock<IShippingCalculatorService>();
+        _shipping
+            .Setup(s => s.CalculateOrderShipping(It.IsAny<decimal>(), It.IsAny<ShippingRate>()))
+            .Returns(0m);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -297,7 +304,7 @@ public class CreateOrderCommandTests : IDisposable
     // ─────────────────────────────────────────────────────────────────────────
 
     private CreateOrderCommandHandler BuildHandler() =>
-        new(_db, _currentUser.Object, _fulfillment.Object, _wallet.Object, _commission.Object);
+        new(_db, _currentUser.Object, _fulfillment.Object, _wallet.Object, _commission.Object, _shipping.Object);
 
     private Task<ServiceResult<OrderDto>> Handle(CreateOrderCommand command) =>
         BuildHandler().Handle(command, CancellationToken.None);

@@ -98,26 +98,29 @@ function ShippingOptionCard({
           {isLoading ? (
             <span className="flex items-center gap-1.5">
               <Loader2 className="h-3 w-3 animate-spin" />
-              ETA hesaplanıyor…
+              Calculating ETA…
             </span>
           ) : etaWindow ? (
             <span>
-              Tahmini teslimat:{" "}
+              Est. delivery:{" "}
               <span className={selected ? "text-primary font-medium" : ""}>
                 {etaWindow}
               </span>
             </span>
           ) : hasCoords ? (
-            <span className="text-amber-500">ETA hesaplanamadı</span>
+            <span className="text-amber-500">ETA unavailable</span>
           ) : (
-            <span>Teslimat tarihini görmek için adres girin.</span>
+            <span>Enter your address to see delivery dates.</span>
           )}
         </div>
 
         {option.eta && (
           <div className="mt-1 text-xs text-muted-foreground">
-            {option.eta.distanceKm.toFixed(0)} km · Kargo: $
-            {option.eta.shippingCost.toFixed(2)}
+            {option.eta.distanceKm.toFixed(0)} km ·{" "}
+            {option.eta.shippingCost.toLocaleString("en-US", {
+              style: "currency",
+              currency: "USD",
+            })}
           </div>
         )}
       </div>
@@ -143,7 +146,7 @@ export function ShippingRateSelect({
 
   return (
     <div className={cn("space-y-3", className)}>
-      <p className="text-sm font-medium">Kargo Seçeneği</p>
+      <p className="text-sm font-medium">Shipping Option</p>
       {options.map((option) => (
         <ShippingOptionCard
           key={option.rate}

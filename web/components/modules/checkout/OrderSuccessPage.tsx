@@ -176,43 +176,72 @@ function ActionCard({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
+// ── Timeline helpers ──────────────────────────────────────────────────────────
+
+// Order status progression — used to derive done/active state for each step.
+const STATUS_PROGRESSION = [
+  "PENDING",
+  "PAYMENT_CONFIRMED",
+  "LABEL_GENERATED",
+  "COURIER_ASSIGNED",
+  "PICKED_UP",
+  "IN_TRANSIT",
+  "OUT_FOR_DELIVERY",
+  "DELIVERED",
+] as const;
+
+function parseShippingAddress(addr: unknown): string {
+  if (!addr) return "Your delivery address";
+  if (typeof addr === "string") {
+    try {
+      const parsed = JSON.parse(addr) as { city?: string; addressLine?: string };
+      return [parsed.city, parsed.addressLine].filter(Boolean).join(", ");
+    } catch {
+      return addr;
+    }
+  }
+  const a = addr as { city?: string; addressLine?: string };
+  return [a.city, a.addressLine].filter(Boolean).join(", ") || "Your delivery address";
+}
+
 export default function OrderSuccessPage() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId") ?? "";
   const { data: order, isLoading, isError } = useOrder(orderId);
+
+  // Derive timeline step state from actual order status (not hardcoded).
+  const statusIdx = STATUS_PROGRESSION.indexOf(
+    (order?.status ?? "PENDING") as typeof STATUS_PROGRESSION[number],
+  );
 
   const timelineSteps: TimelineStep[] = [
     {
       icon:   <CheckCircle2 className="w-4 h-4" />,
       label:  "Order Confirmed",
       desc:   "Your order has been received and is being processed.",
-      done:   true,
-      active: false,
+      done:   statusIdx > 0,
+      active: statusIdx === 0,
     },
     {
       icon:   <Package className="w-4 h-4" />,
       label:  "Packing",
       desc:   "The merchant is preparing your items for dispatch.",
-      done:   false,
-      active: true,
+      done:   statusIdx > 2,
+      active: statusIdx === 1 || statusIdx === 2,
     },
     {
       icon:   <Truck className="w-4 h-4" />,
       label:  "In Transit",
       desc:   "Your parcel is on its way to you.",
-      done:   false,
-      active: false,
+      done:   statusIdx > 5,
+      active: statusIdx >= 3 && statusIdx <= 5,
     },
     {
       icon:   <Home className="w-4 h-4" />,
       label:  "Delivered",
-      desc:   order?.shippingAddress
-        ? typeof order.shippingAddress === "string"
-          ? order.shippingAddress
-          : `${order.shippingAddress.city}, ${order.shippingAddress.addressLine}`
-        : "Your delivery address",
-      done:   false,
-      active: false,
+      desc:   parseShippingAddress(order?.shippingAddress),
+      done:   statusIdx === 7,
+      active: statusIdx === 6,
     },
   ];
 

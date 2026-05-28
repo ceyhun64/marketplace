@@ -42,9 +42,17 @@ public class AdminController : ControllerBase
         _logger = logger;
     }
 
+    private const string DashboardCacheKey = "admin:dashboard:v1";
+    private static readonly TimeSpan DashboardCacheTtl = TimeSpan.FromSeconds(30);
+
     [HttpGet("dashboard")]
     public async Task<IActionResult> GetDashboard()
     {
+        // Serve from cache when available — dashboard data does not need to be real-time.
+        var cached = await _cache.GetStringAsync(DashboardCacheKey);
+        if (cached is not null)
+            return Content(cached, "application/json");
+
         var now = DateTime.UtcNow;
         var startOfMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var startOfDay = now.Date.ToUniversalTime();
@@ -60,7 +68,16 @@ public class AdminController : ControllerBase
         var totalMerchants = await _db.MerchantProfiles.CountAsync();
         var activeMerchants = await _db.MerchantProfiles.CountAsync(m => m.IsActive);
         var totalUsers = await _db.Users.CountAsync();
-        var pendingProducts = await _db.Products.CountAsync(p => !p.IsApproved && !p.IsDeleted);
+
+        // IgnoreQueryFilters: the global product filter excludes inactive-merchant products,
+        // which would cause pending-product counts to be inaccurate in admin context.
+        var pendingProducts = await _db.Products
+            .IgnoreQueryFilters()
+            .CountAsync(p => !p.IsApproved && !p.IsDeleted);
+        var totalProducts = await _db.Products
+            .IgnoreQueryFilters()
+            .CountAsync(p => !p.IsDeleted);
+
         var pendingMerchants = await _db.Users.CountAsync(u =>
             u.Role == UserRole.Merchant
             && u.AccountStatus == AccountStatus.PendingApproval
@@ -69,8 +86,6 @@ public class AdminController : ControllerBase
         var activeShipments = await _db.Shipments.CountAsync(s =>
             s.Status != ShipmentStatus.Delivered && s.Status != ShipmentStatus.Failed
         );
-
-        var totalProducts = await _db.Products.CountAsync(p => !p.IsDeleted);
         var pendingOrders = await _db.Orders.CountAsync(o =>
             o.Status == OrderStatus.Pending || o.Status == OrderStatus.PaymentConfirmed
         );
@@ -83,31 +98,42 @@ public class AdminController : ControllerBase
                 ? 0.0
                 : Math.Round((double)deliveredShipments / totalShipments * 100, 2);
 
-        return Ok(
-            new
+        var payload = new
+        {
+            orders = new
             {
-                orders = new
-                {
-                    totalOrders,
-                    pendingOrders,
-                    ordersToday,
-                    ordersThisMonth,
-                },
-                revenue = new { revenueThisMonth, totalRevenue = revenueThisMonth },
-                merchants = new { totalMerchants, activeMerchants },
-                totalUsers,
-                totalProducts,
-                pendingProducts,
-                pendingMerchants,
-                activeShipments,
-                fulfillmentSuccessRate,
-                // Flat aliases for backward compatibility
                 totalOrders,
-                totalMerchants,
-                activeMerchants,
-                totalRevenue = revenueThisMonth,
-            }
-        );
+                pendingOrders,
+                ordersToday,
+                ordersThisMonth,
+            },
+            revenue = new { revenueThisMonth, totalRevenue = revenueThisMonth },
+            merchants = new { totalMerchants, activeMerchants },
+            totalUsers,
+            totalProducts,
+            pendingProducts,
+            pendingMerchants,
+            activeShipments,
+            fulfillmentSuccessRate,
+            totalOrders,
+            totalMerchants,
+            activeMerchants,
+            totalRevenue = revenueThisMonth,
+        };
+
+        var json = System.Text.Json.JsonSerializer.Serialize(payload,
+            new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
+            });
+
+        await _cache.SetStringAsync(DashboardCacheKey, json,
+            new Microsoft.Extensions.Caching.Distributed.DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = DashboardCacheTtl,
+            });
+
+        return Content(json, "application/json");
     }
 
     // ── MERCHANT APPLICATIONS (Option B) ────────────────────────────────────
@@ -205,6 +231,7 @@ public class AdminController : ControllerBase
             }
         });
 
+        await _cache.RemoveAsync(DashboardCacheKey);
         return Ok(new { message = "Merchant application approved.", userId });
     }
 
@@ -267,6 +294,7 @@ public class AdminController : ControllerBase
             }
         });
 
+        await _cache.RemoveAsync(DashboardCacheKey);
         return Ok(new { message = "Application rejected.", userId });
     }
 
@@ -566,6 +594,7 @@ public class AdminController : ControllerBase
         product.IsApproved = true;
         product.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+        await _cache.RemoveAsync(DashboardCacheKey);
         return Ok(new { message = "Product approved.", product.Id });
     }
 
@@ -580,6 +609,7 @@ public class AdminController : ControllerBase
         product.IsApproved = false;
         product.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+        await _cache.RemoveAsync(DashboardCacheKey);
         return Ok(new { message = "Product rejected.", product.Id });
     }
 

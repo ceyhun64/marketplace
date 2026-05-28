@@ -1,7 +1,9 @@
 using api.Common.DTOs;
+using api.Infrastructure.Persistence;
 using api.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace api.Controllers;
 
@@ -11,11 +13,19 @@ public class PaymentsController : ControllerBase
 {
     private readonly IPaymentService _paymentService;
     private readonly ILogger<PaymentsController> _logger;
+    private readonly AppDbContext _db;
+    private readonly ICurrentUserService _currentUser;
 
-    public PaymentsController(IPaymentService paymentService, ILogger<PaymentsController> logger)
+    public PaymentsController(
+        IPaymentService paymentService,
+        ILogger<PaymentsController> logger,
+        AppDbContext db,
+        ICurrentUserService currentUser)
     {
         _paymentService = paymentService;
         _logger = logger;
+        _db = db;
+        _currentUser = currentUser;
     }
 
     // ── POST /api/payments/checkout — Customer ────────────────────────────────
@@ -102,6 +112,29 @@ public class PaymentsController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetPaymentStatus(Guid id)
     {
+        // Ownership check: Customers can only query their own orders.
+        // Merchants can query orders that contain their items.
+        // Admins bypass the check entirely.
+        var role = _currentUser.Role;
+        if (role == "Customer")
+        {
+            var belongs = await _db.Orders.AnyAsync(
+                o => o.Id == id && o.CustomerId == _currentUser.UserId);
+            if (!belongs)
+                return NotFound(new ApiResponse<string>("Payment not found."));
+        }
+        else if (role == "Merchant")
+        {
+            var merchantId = _currentUser.MerchantId;
+            if (merchantId == null)
+                return Forbid();
+
+            var belongs = await _db.Orders.AnyAsync(
+                o => o.Id == id && o.Items.Any(i => i.MerchantId == merchantId.Value));
+            if (!belongs)
+                return NotFound(new ApiResponse<string>("Payment not found."));
+        }
+
         var status = await _paymentService.GetPaymentStatusAsync(id);
         if (status == null)
             return NotFound(new ApiResponse<string>("Payment not found."));

@@ -32,6 +32,7 @@ public class CreateOrderStockTests : IDisposable
     private readonly Mock<IFulfillmentService> _fulfillment;
     private readonly Mock<IWalletService> _wallet;
     private readonly Mock<ICommissionService> _commission;
+    private readonly Mock<IShippingCalculatorService> _shipping;
     private readonly Guid _customerId = Guid.NewGuid();
 
     public CreateOrderStockTests()
@@ -58,6 +59,11 @@ public class CreateOrderStockTests : IDisposable
         _commission
             .Setup(c => c.ResolveRateAsync(It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<PlanType?>()))
             .ReturnsAsync(10m);
+
+        _shipping = new Mock<IShippingCalculatorService>();
+        _shipping
+            .Setup(s => s.CalculateOrderShipping(It.IsAny<decimal>(), It.IsAny<ShippingRate>()))
+            .Returns(0m);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -338,7 +344,7 @@ public class CreateOrderStockTests : IDisposable
     // ─────────────────────────────────────────────────────────────────────────
 
     private CreateOrderCommandHandler BuildHandler() =>
-        new(_db, _currentUser.Object, _fulfillment.Object, _wallet.Object, _commission.Object);
+        new(_db, _currentUser.Object, _fulfillment.Object, _wallet.Object, _commission.Object, _shipping.Object);
 
     private Task<ServiceResult<OrderDto>> Handle(CreateOrderCommand command) =>
         BuildHandler().Handle(command, CancellationToken.None);

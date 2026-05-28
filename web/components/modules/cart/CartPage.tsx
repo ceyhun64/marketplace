@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { useCart, useCartSummary } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
+import { SHIPPING_COSTS } from "@/lib/constants";
+import { formatPrice } from "@/lib/format";
 
 const inputStyle: React.CSSProperties = {
   flex: 1,
@@ -447,7 +449,7 @@ export default function CartPage() {
                           fontSize: "1.1rem",
                         }}
                       >
-                        ${rate === "EXPRESS" ? "59.90" : "29.90"}
+                        {formatPrice(SHIPPING_COSTS[rate])}
                       </span>
                     </div>
                   </button>
@@ -475,27 +477,18 @@ export default function CartPage() {
                 <div
                   className="flex items-center justify-between px-4 py-3 rounded-xl"
                   style={{
-                    background: "rgba(45,122,79,0.06)",
-                    border: "1px solid rgba(45,122,79,0.2)",
+                    background: "rgba(51,51,51,0.03)",
+                    border: "1px solid rgba(51,51,51,0.1)",
                   }}
                 >
                   <div className="flex items-center gap-2">
-                    <ShieldCheck
-                      className="w-4 h-4"
-                      style={{ color: "#2d7a4f" }}
-                    />
-                    <span
-                      className="font-mono text-[12px] font-bold"
-                      style={{ color: "#2d7a4f" }}
-                    >
-                      {coupon} applied
+                    <Tag className="w-4 h-4" style={{ color: "var(--charcoal-soft)" }} />
+                    <span className="font-mono text-[12px]" style={{ color: "var(--charcoal-soft)" }}>
+                      {coupon} — coupon discounts coming soon
                     </span>
                   </div>
                   <button
-                    onClick={() => {
-                      setCouponApplied(false);
-                      setCoupon("");
-                    }}
+                    onClick={() => { setCouponApplied(false); setCoupon(""); }}
                     className="font-mono text-[11px] transition-colors bg-transparent border-none cursor-pointer text-(--charcoal-soft) hover:text-(--red)"
                   >
                     Remove
@@ -546,51 +539,21 @@ export default function CartPage() {
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between text-[0.875rem]">
-                  <span
-                    style={{
-                      color: "var(--charcoal-soft)",
-                      fontFamily: "var(--font-body)",
-                    }}
-                  >
-                    Subtotal ({summary.itemCount} items)
+                  <span style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}>
+                    Subtotal ({summary.itemCount} item{summary.itemCount !== 1 ? "s" : ""})
                   </span>
                   <span className="font-semibold text-[var(--charcoal)]">
-                    ${summary.subtotal.toFixed(2)}
+                    {formatPrice(summary.subtotal)}
                   </span>
                 </div>
                 <div className="flex justify-between text-[0.875rem]">
-                  <span
-                    style={{
-                      color: "var(--charcoal-soft)",
-                      fontFamily: "var(--font-body)",
-                    }}
-                  >
-                    Shipping (
-                    {summary.shippingRate === "EXPRESS" ? "Express" : "Regular"}
-                    )
+                  <span style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}>
+                    Shipping ({summary.shippingRate === "EXPRESS" ? "Express" : "Regular"})
                   </span>
                   <span className="font-semibold text-[var(--charcoal)]">
-                    ${summary.shipping.toFixed(2)}
+                    {formatPrice(summary.shipping)}
                   </span>
                 </div>
-                {couponApplied && (
-                  <div className="flex justify-between text-[0.875rem]">
-                    <span
-                      style={{
-                        color: "#2d7a4f",
-                        fontFamily: "var(--font-body)",
-                      }}
-                    >
-                      Discount ({coupon})
-                    </span>
-                    <span
-                      className="font-semibold"
-                      style={{ color: "#2d7a4f" }}
-                    >
-                      –$0.00
-                    </span>
-                  </div>
-                )}
                 <div
                   className="flex justify-between pt-4"
                   style={{ borderTop: "1px solid rgba(51,51,51,0.08)" }}
@@ -608,7 +571,7 @@ export default function CartPage() {
                       fontSize: "1.6rem",
                     }}
                   >
-                    ${summary.total.toFixed(2)}
+                    {formatPrice(summary.total)}
                   </span>
                 </div>
                 <p
