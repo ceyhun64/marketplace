@@ -47,16 +47,10 @@ export default function TrustBadges() {
     <section className="bg-(--charcoal) overflow-hidden">
       <div className="max-w-325 mx-auto px-4 sm:px-8 py-10">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-          {BADGES.map((badge, i) => (
+          {BADGES.map((badge) => (
             <div
               key={badge.title}
-              className="flex items-center gap-3.5 px-4 py-4 sm:px-6"
-              style={{
-                borderRight:
-                  i < BADGES.length - 1
-                    ? "1px solid rgba(255,255,255,0.08)"
-                    : "none",
-              }}
+              className="flex items-center gap-3.5 px-4 py-4 sm:px-6 border-r border-r-[rgba(255,255,255,0.08)] last:border-r-0"
             >
               <div
                 style={{

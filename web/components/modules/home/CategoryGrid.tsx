@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Cpu,
   Shirt,
@@ -20,7 +21,6 @@ import {
 import { useCategories } from "@/queries/useCategories";
 import type { Category } from "@/types/entities";
 
-// Slug'a göre ikon eşlemesi — API'den gelen kategorilerle uyumlu
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   elektronik: <Cpu className="w-5 h-5" />,
   giyim: <Shirt className="w-5 h-5" />,
@@ -46,63 +46,37 @@ export default function CategoryGrid() {
     setMounted(true);
   }, []);
 
-  // Üst düzey kategorileri filtrele
   const categories: Category[] = Array.isArray(data)
     ? data.filter((c: Category) => !c.parentId)
     : [];
 
-  // 1. ADIM: Bileşen istemciye yüklenene kadar sunucunun ürettiği saf Skeleton yapısını dön
-  if (!mounted) {
-    return (
-      <section className="py-20 lg:py-28">
-        <div className="max-w-325 mx-auto px-6 lg:px-8">
-          {/* Skeleton Header alanı (Yükseklik kaybını ve kaymaları önlemek için boş div) */}
-          <div className="h-28 mb-14" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="rounded-2xl bg-gray-100 animate-pulse h-44"
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // 2. ADIM: İstemci tamamen yüklendiğinde (mounted === true) artık asıl arayüzü güvenle render et
   return (
     <section className="py-20 lg:py-28">
       <div className="max-w-325 mx-auto px-6 lg:px-8">
-        {/* Header */}
+        {/* Header — always rendered (static content, no data dependency) */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <span
-                className="inline-block w-6 h-px bg-red-600"
+                className="inline-block w-6 h-px"
                 style={{ background: "var(--red)" }}
               />
               <span
-                className="font-mono text-[11px] tracking-[0.18em] uppercase"
-                style={{ color: "var(--charcoal-soft)" }}
+                className="font-mono text-[11px] tracking-[0.18em] uppercase text-(--charcoal-soft)"
               >
                 Categories
               </span>
             </div>
             <h2
-              className="font-heading text-[2.2rem] lg:text-[2.75rem] font-normal leading-[1.1] tracking-[-0.01em]"
-              style={{
-                fontFamily: "var(--font-display)",
-                color: "var(--charcoal)",
-              }}
+              className="font-heading text-[2.2rem] lg:text-[2.75rem] font-normal leading-[1.1] tracking-[-0.01em] text-(--charcoal)"
+              style={{ fontFamily: "var(--font-display)" }}
             >
               Explore our <em style={{ color: "var(--red)" }}>ecosystem.</em>
             </h2>
           </div>
           <Link
             href="/categories"
-            className="flex items-center gap-2 text-sm font-semibold text-[var(--charcoal)] hover:text-[var(--red)] transition-colors group"
+            className="flex items-center gap-2 text-sm font-semibold text-(--charcoal) hover:text-(--red) transition-colors group"
             style={{ fontFamily: "var(--font-body)" }}
           >
             Browse all categories
@@ -110,14 +84,12 @@ export default function CategoryGrid() {
           </Link>
         </div>
 
-        {/* Grid */}
+        {/* Grid — skeleton until mounted to prevent mismatch when React Query
+            cache already has data on client while server rendered skeleton */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {isLoading
+          {!mounted || isLoading
             ? Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-2xl bg-gray-100 animate-pulse h-44"
-                />
+                <Skeleton key={i} className="rounded-2xl h-44" />
               ))
             : categories.map((cat, index) => (
                 <CategoryCard
@@ -145,13 +117,12 @@ function CategoryCard({
   return (
     <Link
       href={`/category/${category.slug}`}
-      className="group relative bg-white border border-[rgba(51,51,51,0.08)] rounded-2xl p-8 block overflow-hidden
-        transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[rgba(200,16,46,0.2)]"
+      className="group relative bg-white border border-[rgba(51,51,51,0.08)] rounded-2xl p-8 block overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[rgba(200,16,46,0.2)]"
       style={{ boxShadow: "0 1px 3px rgba(51,51,51,0.06)" }}
     >
       {/* Red top accent bar */}
       <div
-        className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
+        className="absolute top-0 left-0 right-0 h-0.75 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
         style={{ background: "var(--red)" }}
       />
 
@@ -162,18 +133,18 @@ function CategoryCard({
         >
           {icon}
         </div>
-        <ArrowUpRight className="w-4 h-4 text-[var(--red)] opacity-40 group-hover:opacity-100 transition-opacity" />
+        <ArrowUpRight className="w-4 h-4 text-(--red) opacity-40 group-hover:opacity-100 transition-opacity" />
       </div>
 
       <div>
         <h3
-          className="font-bold text-[var(--charcoal)] text-[1.0625rem] mb-1 leading-tight tracking-[-0.01em]"
+          className="font-bold text-(--charcoal) text-[1.0625rem] mb-1 leading-tight tracking-[-0.01em]"
           style={{ fontFamily: "var(--font-body)" }}
         >
           {category.name}
         </h3>
         {category.productCount != null && (
-          <p className="font-mono text-[11px] text-[var(--charcoal-soft)] uppercase tracking-[0.08em]">
+          <p className="font-mono text-[11px] text-(--charcoal-soft) uppercase tracking-[0.08em]">
             {category.productCount.toLocaleString("en-US")} items
           </p>
         )}

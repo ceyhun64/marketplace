@@ -681,7 +681,7 @@ export default function Navbar() {
               </Link>
 
               {/* Notifications — logged-in only */}
-              {user && <NotificationDropdown />}
+              {mounted && user && <NotificationDropdown />}
 
               {/* Cmd+K search pill — desktop only */}
               <button
@@ -761,7 +761,7 @@ export default function Navbar() {
               className="hidden lg:block pl-2 ml-1"
               style={{ borderLeft: "1px solid var(--border-light)" }}
             >
-              {user ? (
+              {mounted && user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
@@ -1048,7 +1048,7 @@ export default function Navbar() {
             <SheetDivider />
 
             {/* Auth section */}
-            {user ? (
+            {mounted && user ? (
               <>
                 {/* User identity row */}
                 <div className="flex items-center gap-3 px-3 py-3">
