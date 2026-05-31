@@ -1,375 +1,420 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, Star, Eye, Package, X } from "lucide-react";
+import { ShoppingBag, Star, Eye, Zap, X } from "lucide-react";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+type EventType = "purchase" | "review" | "viewing" | "stock";
 
 interface SocialEvent {
   id: string;
-  type: "purchase" | "review" | "viewing" | "stock";
-  icon: React.ReactNode;
-  message: string;
-  location: string;
+  type: EventType;
+  headline: string;
+  subline: string;
   time: string;
 }
 
-// Panel routes where the social proof popup should NOT appear
+// ── Constants ─────────────────────────────────────────────────────────────────
+
 const HIDDEN_PATHS = [
-  "/admin",
-  "/merchant",
-  "/courier",
-  "/checkout",
-  "/auth/reset-password",
-  "/auth/forgot-password",
-  "/unauthorized",
+  "/admin", "/merchant", "/courier", "/checkout",
+  "/auth/reset-password", "/auth/forgot-password", "/unauthorized",
 ];
 
-const LOCATIONS = [
-  "New York",
-  "London",
-  "Los Angeles",
-  "Chicago",
-  "Houston",
-  "Phoenix",
-  "Philadelphia",
-  "San Antonio",
-  "San Diego",
-  "Dallas",
-  "San Jose",
-  "Austin",
-  "Jacksonville",
-  "San Francisco",
-  "Seattle",
+const NAMES = [
+  "Alex", "Jordan", "Sam", "Taylor", "Casey",
+  "Morgan", "Riley", "Quinn", "Avery", "Blake", "Drew", "Emery",
 ];
-
+const LOCS = [
+  "New York", "London", "Los Angeles", "Chicago", "Toronto",
+  "Sydney", "Berlin", "Paris", "Seattle", "Miami", "Austin",
+];
 const PRODUCTS = [
-  "iPhone 15 Pro",
-  "Samsung 4K TV",
-  "Nike Air Max",
-  "Dyson V15",
-  "AirPods Pro",
-  "Xiaomi Robot Vacuum",
-  "Levi's 501 Jeans",
-  "Sony WH-1000XM5",
-  "MacBook Air M3",
-  "Instax Mini 12",
-  "JBL Charge 5",
-  "Philips Air Fryer",
-  "New Balance 990",
+  "iPhone 15 Pro", "Samsung 4K TV", "Nike Air Max 90", "Dyson V15",
+  "AirPods Pro 2", "Sony WH-1000XM5", "MacBook Air M3", "JBL Charge 5",
+  "Xiaomi Robot Vacuum", "New Balance 990v6", "Levi's 501 Jeans", "Philips Air Fryer",
 ];
 
-function randomFrom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function minutesAgo() {
-  const mins = Math.floor(Math.random() * 12) + 1;
-  return `${mins}m ago`;
-}
-
-function generateEvent(): SocialEvent {
-  const r = Math.random();
-  const product = randomFrom(PRODUCTS);
-  const loc = randomFrom(LOCATIONS);
-
-  if (r < 0.4) {
-    return {
-      id: Math.random().toString(36).slice(2),
-      type: "purchase",
-      icon: <ShoppingBag size={13} />,
-      message: `Purchased ${product}`,
-      location: loc,
-      time: minutesAgo(),
-    };
-  } else if (r < 0.62) {
-    return {
-      id: Math.random().toString(36).slice(2),
-      type: "review",
-      icon: <Star size={13} />,
-      message: `Left a 5★ review for ${product}`,
-      location: loc,
-      time: minutesAgo(),
-    };
-  } else if (r < 0.82) {
-    const count = Math.floor(Math.random() * 28) + 6;
-    return {
-      id: Math.random().toString(36).slice(2),
-      type: "viewing",
-      icon: <Eye size={13} />,
-      message: `${count} people are viewing this right now`,
-      location: loc,
-      time: "live",
-    };
-  } else {
-    const left = Math.floor(Math.random() * 4) + 1;
-    return {
-      id: Math.random().toString(36).slice(2),
-      type: "stock",
-      icon: <Package size={13} />,
-      message: `Only ${left} left in stock — ${product}`,
-      location: loc,
-      time: minutesAgo(),
-    };
-  }
-}
-
-const COLOR_MAP: Record<
-  SocialEvent["type"],
-  { bg: string; icon: string; bar: string }
-> = {
-  purchase: { bg: "rgba(13,122,78,0.1)", icon: "#0d7a4e", bar: "#0d7a4e" },
-  review: { bg: "rgba(245,158,11,0.1)", icon: "#d97706", bar: "#d97706" },
-  viewing: { bg: "rgba(59,130,246,0.1)", icon: "#3b82f6", bar: "#3b82f6" },
-  stock: { bg: "rgba(200,16,46,0.1)", icon: "var(--red)", bar: "var(--red)" },
+const THEME: Record<EventType, { color: string; bg: string; border: string }> = {
+  purchase: { color: "#0d7a4e", bg: "rgba(13,122,78,0.08)",   border: "rgba(13,122,78,0.18)"  },
+  review:   { color: "#b45309", bg: "rgba(180,83,9,0.08)",    border: "rgba(180,83,9,0.18)"   },
+  viewing:  { color: "#1d4ed8", bg: "rgba(29,78,216,0.08)",   border: "rgba(29,78,216,0.18)"  },
+  stock:    { color: "#be123c", bg: "rgba(190,18,60,0.08)",   border: "rgba(190,18,60,0.18)"  },
 };
 
-export default function SocialProof() {
-  const pathname = usePathname() || "";
-  const [events, setEvents] = useState<SocialEvent[]>([]);
-  const [visible, setVisible] = useState<string | null>(null);
-  const [dismissed, setDismissed] = useState(false);
-  const [progress, setProgress] = useState(100);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const progressRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const queueRef = useRef<SocialEvent[]>([]);
+const ICONS: Record<EventType, React.ReactNode> = {
+  purchase: <ShoppingBag size={13} strokeWidth={2} />,
+  review:   <Star size={13} fill="currentColor" />,
+  viewing:  <Eye size={13} strokeWidth={2} />,
+  stock:    <Zap size={13} fill="currentColor" />,
+};
 
-  // Hide on panel routes
+// Timing constants (ms)
+const SHOW_MS  = 5500;
+const PAUSE_MS = 2500;
+const ENTER_MS = 380;
+const EXIT_MS  = 260;
+const INIT_MS  = 5000;
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)];
+const minsAgo = () => `${Math.floor(Math.random() * 11) + 1}m ago`;
+
+function makeEvent(): SocialEvent {
+  const r    = Math.random();
+  const prod = pick(PRODUCTS);
+  const loc  = pick(LOCS);
+  const name = pick(NAMES);
+  const id   = Math.random().toString(36).slice(2);
+
+  if (r < 0.40) return { id, type: "purchase", headline: `${name} just purchased`,  subline: `${prod} · ${loc}`, time: minsAgo() };
+  if (r < 0.62) return { id, type: "review",   headline: `${name} left a 5★ review`, subline: `${prod} · ${loc}`, time: minsAgo() };
+  if (r < 0.82) {
+    const n = Math.floor(Math.random() * 24) + 8;
+    return { id, type: "viewing", headline: `${n} people viewing now`, subline: prod, time: "live" };
+  }
+  const left = Math.floor(Math.random() * 4) + 1;
+  return { id, type: "stock", headline: `Only ${left} left in stock`, subline: `${prod} · ${loc}`, time: minsAgo() };
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+export default function SocialProof() {
+  const pathname = usePathname() ?? "";
   const isHidden = HIDDEN_PATHS.some((p) => pathname.startsWith(p));
 
-  const clearTimers = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    if (progressRef.current) clearInterval(progressRef.current);
+  // React state — only what drives re-renders
+  const [event,     setEvent]     = useState<SocialEvent | null>(null);
+  const [shown,     setShown]     = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  // Refs — mutated without re-renders
+  const queue      = useRef<SocialEvent[]>([]);
+  const barRef     = useRef<HTMLDivElement | null>(null);
+  const rafId      = useRef<number | null>(null);
+  const tShow      = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tPause     = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tExit      = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tInit      = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const iRefill    = useRef<ReturnType<typeof setInterval> | null>(null);
+  const msElapsed  = useRef(0);    // ms elapsed before last pause
+  const tStart     = useRef(0);    // performance.now() when RAF last started
+  const isHovering = useRef(false);
+  const nextFnRef  = useRef<() => void>(() => {});
+
+  // ── Timer helpers ──────────────────────────────────────────────────────────
+
+  const stopRAF = () => {
+    if (rafId.current !== null) {
+      cancelAnimationFrame(rafId.current);
+      rafId.current = null;
+    }
   };
 
-  const showNext = () => {
-    if (queueRef.current.length === 0 || dismissed) return;
-    const [next, ...rest] = queueRef.current;
-    queueRef.current = rest;
-    setVisible(next.id);
-    setEvents((prev) => [next, ...prev].slice(0, 5));
-    setProgress(100);
+  // Animate the progress bar via rAF — direct DOM writes, zero re-renders
+  const startRAF = useCallback((fromMs: number) => {
+    stopRAF();
+    msElapsed.current = fromMs;
+    tStart.current    = performance.now();
 
-    // Animate progress bar
-    // eslint-disable-next-line react-hooks/purity
-    const start = Date.now();
-    const duration = 5500;
-    progressRef.current = setInterval(() => {
-      const elapsed = Date.now() - start;
-      const pct = Math.max(0, 100 - (elapsed / duration) * 100);
-      setProgress(pct);
-      if (pct <= 0) {
-        if (progressRef.current) clearInterval(progressRef.current);
-      }
-    }, 50);
+    const tick = (now: number) => {
+      const total = msElapsed.current + (now - tStart.current);
+      const pct   = Math.min(1, total / SHOW_MS); // 0 → 1
+      if (barRef.current) barRef.current.style.width = `${(1 - pct) * 100}%`;
+      if (pct < 1) rafId.current = requestAnimationFrame(tick);
+    };
+    rafId.current = requestAnimationFrame(tick);
+  }, []);
 
-    timeoutRef.current = setTimeout(() => {
-      setVisible(null);
-      setTimeout(showNext, 2200);
-    }, duration);
-  };
+  // ── Core state machine ─────────────────────────────────────────────────────
+
+  const beginExit = useCallback(() => {
+    stopRAF();
+    if (tShow.current) { clearTimeout(tShow.current); tShow.current = null; }
+    setShown(false);                              // triggers CSS exit transition
+    tExit.current = setTimeout(() => {
+      setEvent(null);
+      if (barRef.current) barRef.current.style.width = "100%";
+      tPause.current = setTimeout(() => nextFnRef.current(), PAUSE_MS);
+    }, EXIT_MS);
+  }, []);
+
+  const showEvent = useCallback((ev: SocialEvent) => {
+    setEvent(ev);
+    // Double rAF ensures element is in DOM (event !== null) before
+    // `shown = true` triggers the CSS enter transition
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        setShown(true);
+        startRAF(0);
+        tShow.current = setTimeout(beginExit, SHOW_MS);
+      }),
+    );
+  }, [startRAF, beginExit]);
+
+  const showNext = useCallback(() => {
+    if (dismissed || isHidden) return;
+    // Refill inline if queue dried up
+    if (queue.current.length === 0) {
+      for (let i = 0; i < 6; i++) queue.current.push(makeEvent());
+    }
+    const [next, ...rest] = queue.current;
+    queue.current = rest;
+    showEvent(next);
+  }, [dismissed, isHidden, showEvent]);
+
+  // Keep ref in sync so setTimeout callbacks always call the latest closure
+  nextFnRef.current = showNext;
+
+  // ── Hover pause / resume ───────────────────────────────────────────────────
+
+  const handleMouseEnter = useCallback(() => {
+    if (isHovering.current || !shown) return;
+    isHovering.current = true;
+    stopRAF();
+    msElapsed.current += performance.now() - tStart.current;
+    if (tShow.current) { clearTimeout(tShow.current); tShow.current = null; }
+  }, [shown]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (!isHovering.current) return;
+    isHovering.current = false;
+    const remaining = SHOW_MS - msElapsed.current;
+    if (remaining <= 0) { beginExit(); return; }
+    startRAF(msElapsed.current);
+    tShow.current = setTimeout(beginExit, remaining);
+  }, [beginExit, startRAF]);
+
+  // ── Dismiss ────────────────────────────────────────────────────────────────
+
+  const dismiss = useCallback(() => {
+    stopRAF();
+    [tShow, tPause, tExit, tInit].forEach((r) => {
+      if (r.current) { clearTimeout(r.current); r.current = null; }
+    });
+    if (iRefill.current) { clearInterval(iRefill.current); iRefill.current = null; }
+    setShown(false);
+    tExit.current = setTimeout(() => {
+      setEvent(null);
+      setDismissed(true);
+    }, EXIT_MS);
+  }, []);
+
+  // ── Bootstrap ──────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (isHidden || dismissed) return;
 
-    const init = setTimeout(() => {
-      for (let i = 0; i < 12; i++) queueRef.current.push(generateEvent());
-      showNext();
-    }, 5000);
+    tInit.current = setTimeout(() => {
+      for (let i = 0; i < 12; i++) queue.current.push(makeEvent());
+      nextFnRef.current();
+    }, INIT_MS);
 
-    const refill = setInterval(() => {
-      queueRef.current.push(generateEvent());
-    }, 9000);
+    iRefill.current = setInterval(() => {
+      if (queue.current.length < 8) queue.current.push(makeEvent());
+    }, 9_000);
 
     return () => {
-      clearTimeout(init);
-      clearInterval(refill);
-      clearTimers();
+      stopRAF();
+      if (tInit.current)   clearTimeout(tInit.current);
+      if (tShow.current)   clearTimeout(tShow.current);
+      if (tPause.current)  clearTimeout(tPause.current);
+      if (tExit.current)   clearTimeout(tExit.current);
+      if (iRefill.current) clearInterval(iRefill.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHidden, dismissed]);
 
-  if (isHidden || dismissed) return null;
+  // ── Render ─────────────────────────────────────────────────────────────────
 
-  const currentEvent = events.find((e) => e.id === visible);
-  if (!currentEvent) return null;
+  if (isHidden || dismissed || !event) return null;
 
-  const colors = COLOR_MAP[currentEvent.type];
+  const theme  = THEME[event.type];
+  const isLive = event.time === "live";
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: "5.5rem",
-        left: "1.5rem",
-        zIndex: 9000,
-        maxWidth: 300,
-        pointerEvents: "auto",
-        animation: visible
-          ? "spSlideIn 0.45s cubic-bezier(0.34,1.56,0.64,1) both"
-          : "spSlideOut 0.3s ease both",
-      }}
-    >
+    <>
       <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         style={{
-          background: "#fff",
-          borderRadius: 16,
-          boxShadow:
-            "0 4px 24px rgba(0,0,0,0.10), 0 0 0 1px rgba(30,30,30,0.06)",
-          overflow: "hidden",
-          position: "relative",
+          position: "fixed",
+          bottom: "5.5rem",
+          left: "1.5rem",
+          zIndex: 9000,
+          width: 296,
+          pointerEvents: "auto",
+          // CSS transition drives enter/exit — no keyframe strings needed
+          transform: shown ? "translateY(0) scale(1)" : "translateY(16px) scale(0.96)",
+          opacity:   shown ? 1 : 0,
+          transition: `transform ${shown ? ENTER_MS : EXIT_MS}ms cubic-bezier(0.34,1.56,0.64,1), opacity ${shown ? ENTER_MS : EXIT_MS}ms ease`,
+          willChange: "transform, opacity",
         }}
       >
-        {/* Progress bar */}
         <div
           style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: `${progress}%`,
-            height: 2,
-            background: colors.bar,
-            transition: "width 0.05s linear",
-            borderRadius: "0 2px 0 0",
-          }}
-        />
-
-        <div
-          style={{
-            padding: "0.875rem 0.875rem 0.875rem 1rem",
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "0.625rem",
+            background: "#fff",
+            borderRadius: 16,
+            boxShadow: "0 4px 28px rgba(0,0,0,0.09), 0 0 0 1px rgba(0,0,0,0.055)",
+            overflow: "hidden",
           }}
         >
-          {/* Icon */}
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 9,
-              background: colors.bg,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: colors.icon,
-              flexShrink: 0,
-              marginTop: 1,
-            }}
-          >
-            {currentEvent.icon}
+          {/* Depleting progress track */}
+          <div style={{ height: 2.5, background: "rgba(0,0,0,0.06)", overflow: "hidden" }}>
+            <div
+              ref={barRef}
+              style={{
+                height: "100%",
+                width: "100%",          // managed by rAF, not React state
+                background: theme.color,
+              }}
+            />
           </div>
 
-          {/* Content */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              padding: "13px 11px 14px 14px",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10,
+            }}
+          >
+            {/* Icon badge */}
             <div
               style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "0.8125rem",
-                fontWeight: 600,
-                color: "var(--charcoal)",
-                lineHeight: 1.35,
-                marginBottom: "0.25rem",
-              }}
-            >
-              {currentEvent.message}
-            </div>
-            <div
-              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                background: theme.bg,
+                border: `1px solid ${theme.border}`,
                 display: "flex",
                 alignItems: "center",
-                gap: "0.375rem",
+                justifyContent: "center",
+                color: theme.color,
+                flexShrink: 0,
+                marginTop: 1,
+                position: "relative",
               }}
             >
-              {/* Location dot */}
-              <span
+              {ICONS[event.type]}
+              {/* Pulsing live dot */}
+              {isLive && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: -3,
+                    right: -3,
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: theme.color,
+                    border: "1.5px solid #fff",
+                    animation: "sp-pulse 1.8s ease-in-out infinite",
+                  }}
+                />
+              )}
+            </div>
+
+            {/* Text content */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p
                 style={{
-                  display: "inline-block",
-                  width: 5,
-                  height: 5,
-                  borderRadius: "50%",
-                  background: colors.bar,
-                  flexShrink: 0,
+                  fontFamily: "var(--font-body, system-ui)",
+                  fontSize: "0.8125rem",
+                  fontWeight: 600,
+                  color: "#111",
+                  lineHeight: 1.35,
+                  margin: "0 0 2px",
                 }}
-              />
-              <span
+              >
+                {event.headline}
+              </p>
+              <p
                 style={{
-                  fontFamily: "var(--font-body)",
+                  fontFamily: "var(--font-body, system-ui)",
                   fontSize: "0.6875rem",
-                  color: "var(--charcoal-soft)",
+                  color: "rgba(0,0,0,0.42)",
+                  lineHeight: 1.4,
+                  margin: 0,
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                 }}
               >
-                {currentEvent.location}
-              </span>
-              <span style={{ color: "rgba(51,51,51,0.2)", fontSize: "0.5rem" }}>
-                •
-              </span>
-              <span
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "0.5625rem",
-                  letterSpacing: "0.04em",
-                  color: "rgba(51,51,51,0.4)",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {currentEvent.time}
-              </span>
+                {event.subline}
+              </p>
+              <div style={{ marginTop: 5 }}>
+                {isLive ? (
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono, monospace)",
+                      fontSize: "0.5625rem",
+                      fontWeight: 700,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      color: theme.color,
+                    }}
+                  >
+                    ● Live
+                  </span>
+                ) : (
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono, monospace)",
+                      fontSize: "0.5625rem",
+                      letterSpacing: "0.04em",
+                      color: "rgba(0,0,0,0.3)",
+                    }}
+                  >
+                    {event.time}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Dismiss button */}
-          <button
-            onClick={() => {
-              clearTimers();
-              setVisible(null);
-              setDismissed(true);
-            }}
-            aria-label="Dismiss"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 20,
-              height: 20,
-              borderRadius: 6,
-              border: "none",
-              background: "transparent",
-              color: "rgba(51,51,51,0.3)",
-              cursor: "pointer",
-              flexShrink: 0,
-              padding: 0,
-              transition: "color 0.15s, background 0.15s",
-              marginTop: 1,
-            }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.color = "var(--charcoal)";
-              el.style.background = "rgba(51,51,51,0.06)";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.color = "rgba(51,51,51,0.3)";
-              el.style.background = "transparent";
-            }}
-          >
-            <X size={11} strokeWidth={2.5} />
-          </button>
+            {/* Dismiss button */}
+            <button
+              onClick={dismiss}
+              aria-label="Dismiss notification"
+              className="sp-dismiss"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 22,
+                height: 22,
+                borderRadius: 6,
+                border: "none",
+                background: "transparent",
+                color: "rgba(0,0,0,0.28)",
+                cursor: "pointer",
+                flexShrink: 0,
+                padding: 0,
+                marginTop: -1,
+                transition: "color 0.15s, background 0.15s",
+              }}
+            >
+              <X size={11} strokeWidth={2.5} />
+            </button>
+          </div>
         </div>
       </div>
 
       <style>{`
-        @keyframes spSlideIn {
-          from { opacity: 0; transform: translateY(12px) scale(0.96); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
+        .sp-dismiss:hover {
+          color: rgba(0,0,0,0.65) !important;
+          background: rgba(0,0,0,0.07) !important;
         }
-        @keyframes spSlideOut {
-          from { opacity: 1; transform: translateY(0); }
-          to   { opacity: 0; transform: translateY(8px); }
+        @keyframes sp-pulse {
+          0%, 100% { transform: scale(1);   opacity: 1;   }
+          50%       { transform: scale(1.6); opacity: 0.5; }
         }
       `}</style>
-    </div>
+    </>
   );
 }
