@@ -416,7 +416,45 @@ public class PaymentService : IPaymentService
         }
     }
 
-    // ── 6. Subscription payment ───────────────────────────────────────────────
+    // ── 6. Cancel open PaymentIntent on order cancellation ───────────────────
+
+    public async Task TryCancelPaymentIntentAsync(Guid orderId)
+    {
+        var order = await _db.Orders.FindAsync(orderId);
+        if (order is null || string.IsNullOrEmpty(order.PaymentToken))
+            return;
+
+        try
+        {
+            var service = new PaymentIntentService();
+            var intent = await service.GetAsync(order.PaymentToken);
+
+            // Only cancel intents that are still in a cancellable state.
+            // succeeded / canceled intents cannot be cancelled and must be refunded separately.
+            var cancellable = new[] { "requires_payment_method", "requires_confirmation", "requires_action", "processing" };
+            if (!cancellable.Contains(intent.Status))
+            {
+                _logger.LogDebug(
+                    "PaymentIntent not cancelled (status={Status}): IntentId={IntentId} OrderId={OrderId}",
+                    intent.Status, order.PaymentToken, orderId);
+                return;
+            }
+
+            await service.CancelAsync(order.PaymentToken);
+            _logger.LogInformation(
+                "✅ PaymentIntent cancelled on order cancellation: IntentId={IntentId} OrderId={OrderId}",
+                order.PaymentToken, orderId);
+        }
+        catch (StripeException ex)
+        {
+            // Non-fatal: order is already cancelled in DB. Log and move on.
+            _logger.LogWarning(ex,
+                "⚠️ PaymentIntent cancel failed (non-critical): IntentId={IntentId} OrderId={OrderId}",
+                order.PaymentToken, orderId);
+        }
+    }
+
+    // ── 7. Subscription payment ───────────────────────────────────────────────
 
     public async Task<ServiceResult<string>> ProcessSubscriptionPaymentAsync(
         string paymentMethodId,

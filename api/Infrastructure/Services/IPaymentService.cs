@@ -27,6 +27,13 @@ public interface IPaymentService
     /// <summary>Sipariş ID'sine göre ödeme durumunu döner.</summary>
     Task<PaymentStatusDto?> GetPaymentStatusAsync(Guid orderId);
 
+    /// <summary>
+    /// Ödeme henüz tamamlanmamış bir sipariş iptal edildiğinde, Stripe'ta açık kalan
+    /// PaymentIntent'i temizler. Dashboard kirliliğini önler ve Stripe kaynaklarını serbest bırakır.
+    /// PaymentIntent zaten succeeded/cancelled durumundaysa sessizce geçer.
+    /// </summary>
+    Task TryCancelPaymentIntentAsync(Guid orderId);
+
     /// <summary>Abonelik ödemesi (Stripe PaymentIntent).</summary>
     Task<ServiceResult<string>> ProcessSubscriptionPaymentAsync(
         string paymentMethodId,

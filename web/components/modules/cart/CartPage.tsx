@@ -347,14 +347,14 @@ export default function CartPage() {
                     <div className="text-right">
                       <div
                         className="text-[1.25rem] font-bold text-[var(--charcoal)]"
-                        style={{ fontFamily: "var(--font-display)" }}
+                        style={{ fontFamily: "var(--font-display)", fontVariantNumeric: "tabular-nums" }}
                       >
                         ${(item.price * item.quantity).toFixed(2)}
                       </div>
                       {item.quantity > 1 && (
                         <div
                           className="font-mono text-[11px]"
-                          style={{ color: "var(--charcoal-soft)" }}
+                          style={{ color: "var(--charcoal-soft)", fontVariantNumeric: "tabular-nums" }}
                         >
                           ${item.price.toFixed(2)} each
                         </div>
@@ -542,7 +542,7 @@ export default function CartPage() {
                   <span style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}>
                     Subtotal ({summary.itemCount} item{summary.itemCount !== 1 ? "s" : ""})
                   </span>
-                  <span className="font-semibold text-[var(--charcoal)]">
+                  <span className="font-semibold text-[var(--charcoal)]" style={{ fontVariantNumeric: "tabular-nums" }}>
                     {formatPrice(summary.subtotal)}
                   </span>
                 </div>
@@ -550,7 +550,7 @@ export default function CartPage() {
                   <span style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}>
                     Shipping ({summary.shippingRate === "EXPRESS" ? "Express" : "Regular"})
                   </span>
-                  <span className="font-semibold text-[var(--charcoal)]">
+                  <span className="font-semibold text-[var(--charcoal)]" style={{ fontVariantNumeric: "tabular-nums" }}>
                     {formatPrice(summary.shipping)}
                   </span>
                 </div>
@@ -569,6 +569,7 @@ export default function CartPage() {
                     style={{
                       fontFamily: "var(--font-display)",
                       fontSize: "1.6rem",
+                      fontVariantNumeric: "tabular-nums",
                     }}
                   >
                     {formatPrice(summary.total)}

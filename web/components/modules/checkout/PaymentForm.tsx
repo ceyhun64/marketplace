@@ -9,7 +9,7 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
-import { Loader2, ShieldCheck, CreditCard } from "lucide-react";
+import { Loader2, ShieldCheck, CreditCard, Lock, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useInitiateCheckout, useConfirmPayment } from "@/queries/usePayment";
@@ -92,50 +92,103 @@ function StripeCheckoutForm({
      * These attributes ensure PII (card number, billing address) is NEVER captured
      * by any third-party session-recording tool, regardless of future integrations.
      */
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-4"
-      data-dd-privacy="mask"
-      data-hj-suppress=""
-      data-recording="off"
-    >
-      <PaymentElement
-        options={{
-          layout: "tabs",
-        }}
-      />
-
-      {errorMessage && (
-        <p className="text-sm text-destructive text-center" role="alert">
-          {errorMessage}
-        </p>
-      )}
-
-      <Button
-        type="submit"
-        size="lg"
-        className="w-full"
-        disabled={!stripe || !elements || isSubmitting}
-        aria-busy={isSubmitting}
+    <>
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4"
+        data-dd-privacy="mask"
+        data-hj-suppress=""
+        data-recording="off"
       >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Processing...
-          </>
-        ) : (
-          <>
-            <CreditCard className="mr-2 h-4 w-4" />
-            Pay Securely
-          </>
-        )}
-      </Button>
+        <PaymentElement
+          options={{
+            layout: "tabs",
+          }}
+        />
 
-      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-        <ShieldCheck className="h-3.5 w-3.5" />
-        <span>Secured by Stripe — 256-bit SSL encryption</span>
-      </div>
-    </form>
+        {errorMessage && (
+          <div
+            className="flex items-start gap-2.5 px-4 py-3 rounded-xl text-sm"
+            style={{
+              background: "rgba(187,16,35,0.06)",
+              border: "1px solid rgba(187,16,35,0.2)",
+              color: "var(--red)",
+              fontFamily: "var(--font-body)",
+            }}
+            role="alert"
+          >
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          disabled={!stripe || !elements || isSubmitting}
+          aria-busy={isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <CreditCard className="mr-2 h-4 w-4" />
+              Pay Securely
+            </>
+          )}
+        </Button>
+
+        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          <span>Secured by Stripe — 256-bit SSL encryption</span>
+        </div>
+      </form>
+
+      {/* ── Full-screen processing overlay ─────────────────────────────────── */}
+      {isSubmitting && (
+        <div
+          className="fixed inset-0 z-100 flex items-center justify-center animate-in fade-in duration-300"
+          style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(20px)" }}
+        >
+          <div className="text-center space-y-6 max-w-xs px-6">
+            <div className="relative w-20 h-20 mx-auto">
+              <div
+                className="absolute inset-0 rounded-full border-t-2 animate-spin"
+                style={{ borderColor: "var(--charcoal)" }}
+              />
+              <div
+                className="absolute inset-4 rounded-full flex items-center justify-center"
+                style={{ background: "var(--off-white)" }}
+              >
+                <Lock className="w-5 h-5" style={{ color: "var(--charcoal-soft)" }} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h3
+                className="font-bold text-[1rem]"
+                style={{ fontFamily: "var(--font-body)", color: "var(--charcoal)" }}
+              >
+                Processing Payment
+              </h3>
+              <p
+                className="font-mono text-[11px] leading-relaxed"
+                style={{ color: "var(--charcoal-soft)" }}
+              >
+                Connecting securely with your bank.
+                <br />
+                <strong style={{ color: "var(--charcoal)" }}>
+                  Please do not close this page.
+                </strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -188,8 +241,11 @@ export function PaymentForm({
 
   if (loading) {
     return (
-      <div className={cn("flex items-center justify-center py-8", className)}>
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className={cn("flex flex-col items-center justify-center py-8 gap-3", className)}>
+        <Loader2 className="h-6 w-6 animate-spin" style={{ color: "var(--charcoal-soft)" }} />
+        <p className="font-mono text-[11px]" style={{ color: "var(--charcoal-soft)" }}>
+          Initialising secure payment…
+        </p>
       </div>
     );
   }
@@ -197,7 +253,21 @@ export function PaymentForm({
   if (error || !clientSecret || !stripePromise) {
     return (
       <div className={cn("space-y-3", className)}>
-        <p className="text-sm text-destructive text-center">{error}</p>
+        {error && (
+          <div
+            className="flex items-start gap-2.5 px-4 py-3 rounded-xl text-sm"
+            style={{
+              background: "rgba(187,16,35,0.06)",
+              border: "1px solid rgba(187,16,35,0.2)",
+              color: "var(--red)",
+              fontFamily: "var(--font-body)",
+            }}
+            role="alert"
+          >
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{error}</span>
+          </div>
+        )}
         <Button
           variant="outline"
           size="sm"

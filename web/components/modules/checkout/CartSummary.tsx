@@ -129,7 +129,7 @@ export default function CartSummary({ readonly }: Props) {
 
                 <span
                   className="font-bold text-[13px] text-(--charcoal)"
-                  style={{ fontFamily: "var(--font-display)" }}
+                  style={{ fontFamily: "var(--font-display)", fontVariantNumeric: "tabular-nums" }}
                 >
                   {formatPrice(item.price * item.quantity)}
                 </span>
@@ -159,7 +159,7 @@ export default function CartSummary({ readonly }: Props) {
           <span style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}>
             Subtotal
           </span>
-          <span className="font-semibold text-(--charcoal)">
+          <span className="font-semibold text-(--charcoal)" style={{ fontVariantNumeric: "tabular-nums" }}>
             {formatPrice(summary.subtotal)}
           </span>
         </div>
@@ -169,7 +169,7 @@ export default function CartSummary({ readonly }: Props) {
           <span style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}>
             VAT (20% incl.)
           </span>
-          <span className="font-semibold text-(--charcoal-soft) text-[12px]">
+          <span className="font-semibold text-(--charcoal-soft) text-[12px]" style={{ fontVariantNumeric: "tabular-nums" }}>
             {formatPrice(vatAmount)}
           </span>
         </div>
@@ -178,7 +178,7 @@ export default function CartSummary({ readonly }: Props) {
           <span style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}>
             Shipping ({SHIPPING_RATE_LABELS[summary.shippingRate]})
           </span>
-          <span className="font-semibold text-(--charcoal)">
+          <span className="font-semibold text-(--charcoal)" style={{ fontVariantNumeric: "tabular-nums" }}>
             {summary.shipping === 0 ? (
               <span style={{ color: "#2d7a4f" }}>Free</span>
             ) : (
@@ -203,6 +203,7 @@ export default function CartSummary({ readonly }: Props) {
               fontFamily: "var(--font-display)",
               fontSize: "1.25rem",
               color: "var(--red)",
+              fontVariantNumeric: "tabular-nums",
             }}
           >
             {formatPrice(summary.total)}

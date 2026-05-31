@@ -18,7 +18,8 @@ namespace api.Controllers;
 public class OrdersController(
     AppDbContext db,
     ICurrentUserService currentUser,
-    IMediator mediator
+    IMediator mediator,
+    IPaymentService paymentService
 ) : ControllerBase
 {
     // ─── CUSTOMER ──────────────────────────────────────────────
@@ -281,6 +282,12 @@ public class OrdersController(
         }
 
         await db.SaveChangesAsync();
+
+        // Best-effort: cancel any open Stripe PaymentIntent so it doesn't linger
+        // in the dashboard. Fires after the DB commit so cancellation failures
+        // never block the order cancellation response.
+        _ = paymentService.TryCancelPaymentIntentAsync(id);
+
         return Ok(new { message = "Order cancelled." });
     }
 

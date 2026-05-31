@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
 import { ShippingRateSelect } from "@/components/modules/shipping/ShippingRateSelect";
 import CartSummary from "./CartSummary";
 import { PaymentForm } from "./PaymentForm";
-import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   ArrowRight,
@@ -23,6 +22,7 @@ import api from "@/lib/api";
 import { CITY_COORDINATES } from "@/lib/constants";
 import type { ShippingRate } from "@/types/enums";
 import type { ShippingAddress } from "@/types/entities";
+import { useCheckout } from "@/hooks/use-checkout";
 
 function resolveCityCoords(
   city?: string,
@@ -97,18 +97,26 @@ function StepIndicator({ current }: { current: Step }) {
           <div key={step} className="flex items-center flex-1">
             <div className="flex items-center gap-3 flex-1">
               {/* Circle */}
-              <div
-                className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all duration-300"
-                style={{
-                  background: done
-                    ? "var(--red)"
-                    : active
-                      ? "var(--charcoal)"
-                      : "rgba(51,51,51,0.08)",
-                  color: done || active ? "#fff" : "var(--charcoal-soft)",
-                }}
-              >
-                {done ? <CheckCircle2 className="w-4 h-4" /> : config.icon}
+              <div className="relative shrink-0">
+                {active && (
+                  <span
+                    className="absolute inset-0 rounded-full animate-ping"
+                    style={{ background: "rgba(51,51,51,0.08)", animationDuration: "2s" }}
+                  />
+                )}
+                <div
+                  className="relative w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300"
+                  style={{
+                    background: done
+                      ? "var(--red)"
+                      : active
+                        ? "var(--charcoal)"
+                        : "rgba(51,51,51,0.08)",
+                    color: done || active ? "#fff" : "var(--charcoal-soft)",
+                  }}
+                >
+                  {done ? <CheckCircle2 className="w-4 h-4" /> : config.icon}
+                </div>
               </div>
               {/* Labels */}
               <div className="hidden sm:block min-w-0">
@@ -488,24 +496,45 @@ export default function CheckoutPage() {
   const { user } = useAuth();
   const { items } = useCart();
 
+  // ── Local UI state ─────────────────────────────────────────────────────────
   const [step, setStep] = useState<Step>("address");
+  // address is kept local (Partial) while the form is being filled;
+  // the validated ShippingAddress is synced to the store on step advance.
   const [address, setAddress] = useState<Partial<ShippingAddress>>({
     fullName: user?.name ?? "",
     phone: "",
   });
-  const [shippingRate, setShippingRate] = useState<ShippingRate | null>(
-    "REGULAR",
-  );
+  const [shippingRate, setShippingRate] = useState<ShippingRate | null>("REGULAR");
 
-  const [orderId, setOrderId] = useState<string | null>(null);
-  const [creatingOrder, setCreatingOrder] = useState(false);
-  const [orderError, setOrderError] = useState<string | null>(null);
+  // ── Persistent checkout state (Zustand) ────────────────────────────────────
+  const {
+    orderId,
+    setOrderResult,
+    isSubmitting: creatingOrder,
+    setSubmitting: setCreatingOrder,
+    error: orderError,
+    setError: setOrderError,
+    setShippingAddress,
+    reset: resetCheckout,
+  } = useCheckout();
+
+  // Stable idempotency key: one UUID per checkout session so that retrying
+  // "Continue to Payment" never creates a duplicate pending order.
+  // The backend IdempotencyMiddleware caches the first 2xx response against this key.
+  const idempotencyKey = useRef(crypto.randomUUID());
 
   const merchantId = items[0]?.merchantId;
 
   useEffect(() => {
     if (items.length === 0) router.replace("/cart");
   }, [items.length, router]);
+
+  // Reset store state when the user leaves checkout without completing payment.
+  // This prevents stale errors/orderId from showing on the next checkout visit.
+  useEffect(() => {
+    return () => { resetCheckout(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const goNext = () => {
     const currentIdx = STEPS.indexOf(step);
@@ -530,17 +559,25 @@ export default function CheckoutPage() {
     setCreatingOrder(true);
     setOrderError(null);
     try {
-      const { data } = await api.post<{ orderId: string }>("/api/orders", {
-        items: items.map((i) => ({
-          productId: i.productId,
-          quantity: i.quantity,
-          ...(i.variantId ? { variantId: i.variantId } : {}),
-        })),
-        shippingAddress: address,
-        shippingRate,
-        source: "MARKETPLACE",
-      });
-      setOrderId(data.orderId);
+      const { data } = await api.post<{ orderId: string }>(
+        "/api/orders",
+        {
+          items: items.map((i) => ({
+            productId: i.productId,
+            quantity: i.quantity,
+            ...(i.variantId ? { variantId: i.variantId } : {}),
+          })),
+          shippingAddress: address,
+          shippingRate,
+          source: "MARKETPLACE",
+        },
+        { headers: { "X-Idempotency-Key": idempotencyKey.current } },
+      );
+      // Sync validated address and orderId to persistent store
+      if (address.fullName && address.addressLine && address.city && address.postalCode && address.phone) {
+        setShippingAddress(address as ShippingAddress);
+      }
+      setOrderResult(data.orderId, "");
       goNext();
     } catch (err: any) {
       setOrderError(
@@ -718,12 +755,13 @@ export default function CheckoutPage() {
           </div>
 
           {/* Order summary sidebar */}
-          <div className="space-y-4">
+          <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
             <CartSummary readonly={step !== "address"} />
 
             {/* Trust badges */}
             <div
-              className="bg-white rounded-2xl p-5 space-y-3"
+              className="bg-white rounded-2xl p-5 space-y-3 opacity-50 grayscale
+                          hover:opacity-100 hover:grayscale-0 transition-all duration-500"
               style={{
                 border: "1px solid rgba(51,51,51,0.08)",
               }}
