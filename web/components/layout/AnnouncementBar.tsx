@@ -89,24 +89,27 @@ export default function AnnouncementBar() {
     <div
       style={{
         background: ann.backgroundColor || "var(--charcoal)",
-        padding: "0.625rem 1rem",
+        /* Right-side padding reserves space for the absolute dismiss button (44px) */
+        padding: "0 3rem 0 0.5rem",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: "0.75rem",
+        minHeight: 44,
+        gap: "0.25rem",
         position: "relative",
         zIndex: 40,
       }}
     >
-      {/* Prev */}
+      {/* Prev — 44×44 touch target */}
       {items.length > 1 && (
         <button
           onClick={() => setCurrent((p) => (p - 1 + items.length) % items.length)}
           aria-label="Previous announcement"
           style={{
             background: "none", border: "none", cursor: "pointer",
-            color: "rgba(255,255,255,0.4)", display: "flex",
-            padding: 4, borderRadius: 4, flexShrink: 0,
+            color: "rgba(255,255,255,0.4)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            minWidth: 44, minHeight: 44, borderRadius: 4, flexShrink: 0,
           }}
         >
           <ChevronLeft size={14} />
@@ -118,11 +121,12 @@ export default function AnnouncementBar() {
         key={ann.id}
         style={{
           fontFamily: "var(--font-body)",
-          fontSize: "0.8125rem",
+          fontSize: "clamp(0.75rem, 2vw, 0.8125rem)",
           color: ann.textColor || "rgba(255,255,255,0.85)",
           margin: 0,
           textAlign: "center",
           animation: "fadeInAnn 0.3s ease both",
+          lineHeight: 1.5,
         }}
       >
         {ann.text}
@@ -141,15 +145,16 @@ export default function AnnouncementBar() {
         )}
       </p>
 
-      {/* Next */}
+      {/* Next — 44×44 touch target */}
       {items.length > 1 && (
         <button
           onClick={() => setCurrent((p) => (p + 1) % items.length)}
           aria-label="Next announcement"
           style={{
             background: "none", border: "none", cursor: "pointer",
-            color: "rgba(255,255,255,0.4)", display: "flex",
-            padding: 4, borderRadius: 4, flexShrink: 0,
+            color: "rgba(255,255,255,0.4)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            minWidth: 44, minHeight: 44, borderRadius: 4, flexShrink: 0,
           }}
         >
           <ChevronRight size={14} />
@@ -158,7 +163,7 @@ export default function AnnouncementBar() {
 
       {/* Dots */}
       {items.length > 1 && (
-        <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+        <div className="hidden sm:flex" style={{ gap: 4, flexShrink: 0 }}>
           {items.map((_, i) => (
             <button
               key={i}
@@ -179,13 +184,13 @@ export default function AnnouncementBar() {
         </div>
       )}
 
-      {/* Dismiss */}
+      {/* Dismiss — 44×44 touch target, absolutely positioned */}
       <button
         onClick={dismiss}
         aria-label="Dismiss announcement"
         style={{
           position: "absolute",
-          right: "0.75rem",
+          right: 0,
           top: "50%",
           transform: "translateY(-50%)",
           background: "none",
@@ -193,7 +198,10 @@ export default function AnnouncementBar() {
           cursor: "pointer",
           color: "rgba(255,255,255,0.4)",
           display: "flex",
-          padding: 4,
+          alignItems: "center",
+          justifyContent: "center",
+          minWidth: 44,
+          minHeight: 44,
           borderRadius: 4,
         }}
       >

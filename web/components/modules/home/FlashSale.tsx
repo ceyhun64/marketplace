@@ -40,44 +40,55 @@ function useCountdown(): Countdown {
   return time ?? { hours: 0, minutes: 0, seconds: 0, done: false };
 }
 
-function Digit({ value, label }: { value: number; label: string }) {
+function Digit({
+  value,
+  label,
+  small = false,
+}: {
+  value: number;
+  label: string;
+  small?: boolean;
+}) {
   const v = String(value).padStart(2, "0");
   return (
-    <div style={{ textAlign: "center", minWidth: 52 }}>
+    <div style={{ textAlign: "center" }}>
       <div
         style={{
           background: "rgba(255,255,255,0.15)",
           backdropFilter: "blur(8px)",
           border: "1px solid rgba(255,255,255,0.2)",
-          borderRadius: 10,
-          padding: "6px 10px",
+          borderRadius: small ? 6 : 10,
+          padding: small ? "4px 7px" : "6px 10px",
           fontFamily: "var(--font-display)",
-          fontSize: "1.75rem",
+          fontSize: small ? "1rem" : "1.75rem",
           fontWeight: 500,
           color: "#fff",
           lineHeight: 1,
           letterSpacing: "-0.02em",
-          minWidth: 52,
+          minWidth: small ? 30 : 52,
           textAlign: "center",
         }}
       >
         {v}
       </div>
-      <div
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontSize: "0.55rem",
-          letterSpacing: "0.14em",
-          textTransform: "uppercase",
-          color: "rgba(255,255,255,0.65)",
-          marginTop: 4,
-        }}
-      >
-        {label}
-      </div>
+      {!small && (
+        <div
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.55rem",
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.65)",
+            marginTop: 4,
+          }}
+        >
+          {label}
+        </div>
+      )}
     </div>
   );
 }
+
 
 const DEALS = [
   {
@@ -129,24 +140,26 @@ export default function FlashSale() {
         }}
       />
 
-      <div
-        className="max-w-325 mx-auto px-4 sm:px-8 py-5 sm:py-6 flex flex-wrap items-center justify-between gap-4 sm:gap-6 relative z-10"
-      >
-        {/* Left: Label + rotating deal */}
-        <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
+      {/* Daima yatay (flex-row). Mobilde kompakt, masaüstünde tam boyut. */}
+      <div className="max-w-325 mx-auto px-3 sm:px-8 py-2.5 sm:py-5 lg:py-6 flex items-center justify-between gap-2 sm:gap-6 relative z-10">
+
+        {/* SOL — Flash Sale badge + dönen deal metni */}
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          {/* Badge: mobilde sadece ikon, sm'den itibaren yazı da görünür */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "0.5rem",
+              gap: "0.375rem",
               background: "var(--red)",
-              borderRadius: 10,
-              padding: "8px 14px",
+              borderRadius: 8,
+              padding: "6px 10px",
               flexShrink: 0,
             }}
           >
-            <Zap size={15} color="#fff" fill="#fff" />
+            <Zap size={13} color="#fff" fill="#fff" />
             <span
+              className="hidden sm:inline"
               style={{
                 fontFamily: "var(--font-mono)",
                 fontSize: "0.6875rem",
@@ -160,20 +173,16 @@ export default function FlashSale() {
             </span>
           </div>
 
-          <div style={{ overflow: "hidden", position: "relative", height: 24 }}>
+          {/* Deal metni — animasyonlu, taşmaz */}
+          <div className="relative overflow-hidden" style={{ height: 20, minWidth: 0, flex: "1 1 0" }}>
             {DEALS.map((d, i) => (
               <div
                 key={d.label}
+                className="absolute inset-y-0 left-0 flex items-center gap-1.5"
                 style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
                   transition: "opacity 0.4s ease, transform 0.4s ease",
                   opacity: i === active ? 1 : 0,
-                  transform: i === active ? "translateY(0)" : "translateY(8px)",
+                  transform: i === active ? "translateY(0)" : "translateY(6px)",
                   pointerEvents: i === active ? "auto" : "none",
                   whiteSpace: "nowrap",
                 }}
@@ -181,7 +190,7 @@ export default function FlashSale() {
                 <span
                   style={{
                     fontFamily: "var(--font-body)",
-                    fontSize: "0.9375rem",
+                    fontSize: "clamp(0.6875rem, 1.8vw, 0.9375rem)",
                     fontWeight: 700,
                     color: "#fff",
                   }}
@@ -189,10 +198,11 @@ export default function FlashSale() {
                   {d.label}
                 </span>
                 <span
+                  className="hidden sm:inline"
                   style={{
                     fontFamily: "var(--font-mono)",
-                    fontSize: "0.75rem",
-                    color: "rgba(255,255,255,0.65)",
+                    fontSize: "0.6875rem",
+                    color: "rgba(255,255,255,0.6)",
                     letterSpacing: "0.04em",
                   }}
                 >
@@ -203,72 +213,61 @@ export default function FlashSale() {
           </div>
         </div>
 
-        {/* Center: Countdown */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <Clock size={14} color="rgba(255,255,255,0.5)" />
+        {/* ORTA — Geri sayım */}
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <Clock size={12} color="rgba(255,255,255,0.45)" className="hidden sm:block" />
           <span
+            className="hidden sm:inline"
             style={{
               fontFamily: "var(--font-mono)",
-              fontSize: "0.625rem",
+              fontSize: "0.575rem",
               letterSpacing: "0.14em",
               textTransform: "uppercase",
-              color: "rgba(255,255,255,0.5)",
-              marginRight: 4,
+              color: "rgba(255,255,255,0.45)",
             }}
           >
             Ends in
           </span>
-          <div
-            style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem" }}
-          >
+
+          {/* Mobil: kompakt (small=true), masaüstü: büyük (small=false) */}
+          <div className="flex sm:hidden items-center gap-1" style={{ lineHeight: 1 }}>
+            <Digit value={hours} label="hrs" small />
+            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.875rem", fontFamily: "var(--font-display)" }}>:</span>
+            <Digit value={minutes} label="min" small />
+            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.875rem", fontFamily: "var(--font-display)" }}>:</span>
+            <Digit value={seconds} label="sec" small />
+          </div>
+          <div className="hidden sm:flex items-start gap-1.5">
             <Digit value={hours} label="hrs" />
-            <span
-              style={{
-                color: "rgba(255,255,255,0.4)",
-                fontSize: "1.4rem",
-                fontFamily: "var(--font-display)",
-                lineHeight: "2.1rem",
-              }}
-            >
-              :
-            </span>
+            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "1.4rem", fontFamily: "var(--font-display)", lineHeight: "2.1rem" }}>:</span>
             <Digit value={minutes} label="min" />
-            <span
-              style={{
-                color: "rgba(255,255,255,0.4)",
-                fontSize: "1.4rem",
-                fontFamily: "var(--font-display)",
-                lineHeight: "2.1rem",
-              }}
-            >
-              :
-            </span>
+            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "1.4rem", fontFamily: "var(--font-display)", lineHeight: "2.1rem" }}>:</span>
             <Digit value={seconds} label="sec" />
           </div>
         </div>
 
-        {/* Right: CTA */}
+        {/* SAĞ — CTA: mobilde sadece ok ikonu, sm'den itibaren yazı da görünür */}
         <Link
           href="/deals"
+          className="hover:bg-white/20 shrink-0"
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: "0.5rem",
+            gap: "0.375rem",
             background: "rgba(255,255,255,0.1)",
             border: "1px solid rgba(255,255,255,0.2)",
-            borderRadius: 10,
-            padding: "0.625rem 1.25rem",
+            borderRadius: 8,
+            padding: "0 10px",
+            height: 36,
             fontFamily: "var(--font-body)",
             fontSize: "0.8125rem",
             fontWeight: 600,
             color: "#fff",
             textDecoration: "none",
             transition: "background 0.2s ease",
-            flexShrink: 0,
           }}
-          className="hover:bg-white/20"
         >
-          Shop all deals
+          <span className="hidden sm:inline">Shop deals</span>
           <ArrowRight size={14} />
         </Link>
       </div>

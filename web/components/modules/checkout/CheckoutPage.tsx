@@ -644,9 +644,9 @@ export default function CheckoutPage() {
               Checkout
             </h1>
           </div>
-          {/* Security badge */}
+          {/* Security badge — hidden on xs to avoid overflow */}
           <div
-            className="font-mono text-[10px] flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+            className="hidden sm:flex font-mono text-[10px] items-center gap-1.5 px-3 py-1.5 rounded-full"
             style={{
               background: "rgba(45,122,79,0.08)",
               color: "#2d7a4f",

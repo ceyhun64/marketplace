@@ -57,7 +57,6 @@ export default function HeroSection() {
     <section
       style={{
         position: "relative",
-        minHeight: "88vh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

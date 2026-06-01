@@ -260,23 +260,23 @@ function CartItemRow({
         )}
 
         <div className="flex items-center justify-between pt-1">
-          {/* Quantity stepper */}
+          {/* Quantity stepper — min 44px touch target per button on mobile */}
           <div className="flex items-center gap-1 rounded-lg overflow-hidden border border-(--border-light)">
             <button
               type="button"
               onClick={onDecrease}
-              className="w-7 h-7 flex items-center justify-center hover:bg-(--off-white-2) transition-colors text-(--text-secondary)"
+              className="w-9 h-9 sm:w-7 sm:h-7 flex items-center justify-center hover:bg-(--off-white-2) transition-colors text-(--text-secondary)"
               aria-label="Decrease quantity"
             >
               <Minus className="w-3 h-3" />
             </button>
-            <span className="w-7 text-center text-sm font-bold text-(--text-primary) tabular-nums">
+            <span className="w-8 sm:w-7 text-center text-sm font-bold text-(--text-primary) tabular-nums">
               {item.quantity}
             </span>
             <button
               type="button"
               onClick={onIncrease}
-              className="w-7 h-7 flex items-center justify-center transition-colors text-(--text-secondary)"
+              className="w-9 h-9 sm:w-7 sm:h-7 flex items-center justify-center transition-colors text-(--text-secondary)"
               style={{
                 opacity: item.stock != null && item.quantity >= item.stock ? 0.35 : 1,
                 cursor: item.stock != null && item.quantity >= item.stock ? "not-allowed" : undefined,

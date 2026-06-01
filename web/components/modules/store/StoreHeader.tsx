@@ -47,20 +47,20 @@ export function StoreHeader({ store }: StoreHeaderProps) {
           style={{ height: "3px", background: "#c8102e" }}
         />
 
-        {/* Back button */}
-        <div className="absolute top-4 left-4">
-          <Link href="/">
-            <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-medium transition-colors duration-150"
-              style={{
-                background: "rgba(255,255,255,0.1)",
-                backdropFilter: "blur(8px)",
-                border: "1px solid rgba(255,255,255,0.2)",
-              }}
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back to Marketplace
-            </button>
+        {/* Back button — min-h-11 for 44px touch target */}
+        <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 px-3 min-h-11 rounded-lg text-white text-xs font-medium transition-colors duration-150"
+            style={{
+              background: "rgba(255,255,255,0.1)",
+              backdropFilter: "blur(8px)",
+              border: "1px solid rgba(255,255,255,0.2)",
+            }}
+          >
+            <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
+            <span className="hidden sm:inline">Back to Marketplace</span>
+            <span className="sm:hidden">Back</span>
           </Link>
         </div>
       </div>

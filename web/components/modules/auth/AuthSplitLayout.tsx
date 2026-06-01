@@ -52,7 +52,7 @@ export default function AuthSplitLayout({ children, variant, wide = false }: Aut
       {/* Form area */}
       <main className="relative z-10 flex-1 flex items-start md:items-center justify-center px-4 py-8 md:py-10">
         <div className={wide ? "w-full max-w-145" : "w-full max-w-120"}>
-          <div className="bg-white border border-(--border-light) rounded-[40px] px-8 py-9 sm:px-10 sm:py-10 shadow-(--shadow-lg)">
+          <div className="bg-white border border-(--border-light) rounded-[28px] sm:rounded-[40px] px-5 py-7 sm:px-8 sm:py-9 md:px-10 md:py-10 shadow-(--shadow-lg)">
             {children}
           </div>
         </div>

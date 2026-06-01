@@ -42,15 +42,34 @@ const BADGES = [
   },
 ];
 
+// border-r/border-b classes per index for the 3 responsive grid states:
+// default (2-col): right-border on indices 0,2,4; bottom-border on 0-3
+// sm (3-col):      right-border on indices 0,1,3,4; bottom-border on 0-2
+// lg (6-col):      right-border on indices 0-4; no bottom-border
+const BADGE_BORDERS = [
+  // 0: left-col always; row1 always
+  "border-r border-r-white/8 border-b border-b-white/5 lg:border-b-0",
+  // 1: right-col on 2-col, middle on 3-col, pos2 on 6-col; row1 always
+  "sm:border-r sm:border-r-white/8 border-b border-b-white/5 lg:border-b-0",
+  // 2: left-col on 2-col, right-col on 3-col, pos3 on 6-col; row2 on 2-col, row1 on 3-col
+  "border-r border-r-white/8 sm:border-r-0 lg:border-r lg:border-r-white/8 border-b border-b-white/5 lg:border-b-0",
+  // 3: right-col on 2-col, left-col on 3-col, pos4 on 6-col; row2 on 2-col only
+  "sm:border-r sm:border-r-white/8 border-b border-b-white/5 sm:border-b-0",
+  // 4: left-col on 2-col, middle on 3-col, pos5 on 6-col; row3 on 2-col (no border-b)
+  "border-r border-r-white/8",
+  // 5: right-most always; no borders
+  "",
+];
+
 export default function TrustBadges() {
   return (
     <section className="bg-(--charcoal) overflow-hidden">
       <div className="max-w-325 mx-auto px-4 sm:px-8 py-10">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-          {BADGES.map((badge) => (
+          {BADGES.map((badge, index) => (
             <div
               key={badge.title}
-              className="flex items-center gap-3.5 px-4 py-4 sm:px-6 border-r border-r-[rgba(255,255,255,0.08)] last:border-r-0"
+              className={`flex items-center gap-3.5 px-4 py-4 sm:px-6 ${BADGE_BORDERS[index] ?? ""}`}
             >
               <div
                 style={{
