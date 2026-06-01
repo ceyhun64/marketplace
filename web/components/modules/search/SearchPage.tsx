@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useTransition } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useTransition,
+} from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -9,21 +15,25 @@ import {
   X,
   ChevronDown,
   ChevronRight,
-  Star,
   ShoppingCart,
   Sparkles,
-  ArrowUpDown,
   LayoutGrid,
   List,
   Tag,
   Store,
-  Filter,
   TrendingUp,
   Clock,
   AlertCircle,
   Loader2,
+  Package,
+  RefreshCw,
+  Wifi,
+  Heart,
+  Star,
+  ArrowUpDown,
 } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
+import { useHybridWishlist } from "@/hooks/use-hybrid-wishlist";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/format";
 
@@ -34,6 +44,7 @@ interface Product {
   name: string;
   description: string;
   price: number;
+  oldPrice?: number;
   stock: number;
   images: string[];
   categoryId: string;
@@ -47,14 +58,8 @@ interface Product {
   publishToMarket: boolean;
   publishToStore: boolean;
   createdAt: string;
-  updatedAt?: string;
-  // Elasticsearch-specific
   score?: number;
-  highlights?: {
-    name?: string[];
-    description?: string[];
-    tags?: string[];
-  };
+  highlights?: { name?: string[]; description?: string[]; tags?: string[] };
 }
 
 interface Category {
@@ -62,8 +67,7 @@ interface Category {
   name: string;
   slug: string;
   parentId?: string;
-  iconUrl?: string;
-  subCategories?: Category[];
+  productCount?: number;
 }
 
 interface SearchFacets {
@@ -83,88 +87,71 @@ interface SearchResult {
   suggestion?: string;
 }
 
-type SortOption =
-  | "relevance"
-  | "price_asc"
-  | "price_desc"
-  | "newest"
-  | "popular";
+type SortOption = "relevance" | "price_asc" | "price_desc" | "newest" | "popular";
 type ViewMode = "grid" | "list";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "relevance", label: "Most Relevant" },
-  { value: "newest", label: "Newest" },
-  { value: "popular", label: "Most Popular" },
-  { value: "price_asc", label: "Price: Low to High" },
-  { value: "price_desc", label: "Price: High to Low" },
+const SORT_OPTIONS: { value: SortOption; label: string; icon: React.ReactNode }[] = [
+  { value: "relevance",  label: "Most Relevant",    icon: <Sparkles className="w-3.5 h-3.5" /> },
+  { value: "newest",     label: "Newest First",     icon: <Clock className="w-3.5 h-3.5" /> },
+  { value: "popular",    label: "Most Popular",     icon: <TrendingUp className="w-3.5 h-3.5" /> },
+  { value: "price_asc",  label: "Price: Low → High",icon: <ArrowUpDown className="w-3.5 h-3.5" /> },
+  { value: "price_desc", label: "Price: High → Low",icon: <ArrowUpDown className="w-3.5 h-3.5" /> },
 ];
 
 const PRICE_PRESETS = [
-  { label: "$0 – $100", min: 0, max: 100 },
-  { label: "$100 – $500", min: 100, max: 500 },
-  { label: "$500 – $1000", min: 500, max: 1000 },
-  { label: "$1000 – $5000", min: 1000, max: 5000 },
-  { label: "$5000+", min: 5000, max: 999999 },
+  { label: "Under $100",         min: 0,    max: 100   },
+  { label: "$100 – $500",        min: 100,  max: 500   },
+  { label: "$500 – $1,000",      min: 500,  max: 1000  },
+  { label: "$1,000 – $5,000",    min: 1000, max: 5000  },
+  { label: "$5,000+",            min: 5000, max: 999999},
 ];
 
 // ─── Highlight Helper ─────────────────────────────────────────────────────────
 
-function HighlightedText({
-  text,
-  highlights,
-}: {
-  text: string;
-  highlights?: string[];
-}) {
-  if (!highlights?.length) return <span>{text}</span>;
-  const highlighted = highlights[0];
-  // Parse <em> tags from Elasticsearch highlight
-  const parts = highlighted.split(/(<em>.*?<\/em>)/g);
+function Highlighted({ text, parts }: { text: string; parts?: string[] }) {
+  if (!parts?.length) return <>{text}</>;
+  const raw = parts[0];
+  const segments = raw.split(/(<em>.*?<\/em>)/g);
   return (
-    <span>
-      {parts.map((part, i) => {
-        if (part.startsWith("<em>") && part.endsWith("</em>")) {
-          return (
-            <mark
-              key={i}
-              style={{
-                background: "var(--red-muted)",
-                color: "var(--red)",
-                fontWeight: 600,
-                borderRadius: 2,
-                padding: "0 2px",
-              }}
-            >
-              {part.slice(4, -5)}
-            </mark>
-          );
-        }
-        return <span key={i}>{part}</span>;
-      })}
-    </span>
+    <>
+      {segments.map((s, i) =>
+        s.startsWith("<em>") ? (
+          <mark
+            key={i}
+            className="rounded-sm px-0.5"
+            style={{ background: "var(--red-muted)", color: "var(--red)", fontWeight: 600 }}
+          >
+            {s.slice(4, -5)}
+          </mark>
+        ) : (
+          <span key={i}>{s}</span>
+        ),
+      )}
+    </>
   );
 }
 
 // ─── Product Card ─────────────────────────────────────────────────────────────
 
-function SearchProductCard({
-  product,
-  viewMode,
-}: {
-  product: Product;
-  viewMode: ViewMode;
-}) {
+function ProductCard({ product, view }: { product: Product; view: ViewMode }) {
   const href = `/product/${product.id}`;
-  const coverImage = product.images?.[0] ?? null;
-  const isOutOfStock = product.stock === 0;
-  const cart = useCart();
+  const cover = product.images?.[0] ?? null;
+  const outOfStock = product.stock === 0;
+  const discountPct =
+    product.oldPrice && product.oldPrice > product.price
+      ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+      : 0;
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const cart = useCart();
+  const { isInWishlist, toggle: toggleWishlist } = useHybridWishlist();
+  const inWishlist = isInWishlist(product.id);
+
+  const handleCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isOutOfStock) return;
+    if (outOfStock) return;
     cart.addItem({
       offerId: product.id,
       productId: product.id,
@@ -176,400 +163,239 @@ function SearchProductCard({
       merchantSlug: product.merchantSlug,
       stock: product.stock,
     });
-    toast.success("Added to cart", {
-      description: product.name,
-      duration: 2000,
+    toast.success("Added to cart", { description: product.name, duration: 2000 });
+  };
+
+  const handleWishlist = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await toggleWishlist(product.id, {
+      productName: product.name,
+      productImage: product.images?.[0],
+      price: product.price,
     });
   };
 
-  if (viewMode === "list") {
+  if (view === "list") {
     return (
       <Link href={href} className="group block">
-        <div
-          style={{
-            display: "flex",
-            gap: 16,
-            background: "var(--bg-surface)",
-            border: "1px solid var(--border-light)",
-            borderRadius: 10,
-            padding: 16,
-            transition: "all 0.2s",
-          }}
-          className="hover:border-(--red) hover:shadow-md"
-        >
+        <div className="flex gap-4 bg-white rounded-2xl p-4 border border-(--border-light) transition-all hover:border-(--red)/30 hover:shadow-md">
           {/* Image */}
           <div
-            style={{
-              width: 120,
-              height: 120,
-              flexShrink: 0,
-              borderRadius: 8,
-              overflow: "hidden",
-              background: "var(--off-white-2)",
-              position: "relative",
-            }}
+            className="relative w-28 h-28 shrink-0 rounded-xl overflow-hidden"
+            style={{ background: "var(--off-white-2)" }}
           >
-            {coverImage ? (
+            {cover ? (
               <img
-                src={coverImage}
+                src={cover}
                 alt={product.name}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                className="w-full h-full object-cover"
+                style={{ filter: outOfStock ? "grayscale(50%) opacity(0.7)" : "none" }}
               />
             ) : (
-              <div
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <ShoppingCart
-                  size={28}
-                  style={{ color: "var(--charcoal-mist)" }}
-                />
+              <div className="w-full h-full flex items-center justify-center">
+                <Package className="w-8 h-8" style={{ color: "var(--charcoal-mist)" }} />
               </div>
             )}
-            {isOutOfStock && (
+            {outOfStock && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[2px]">
+                <span
+                  className="text-[9px] font-black tracking-widest border rounded px-1.5 py-0.5"
+                  style={{ color: "var(--charcoal-soft)", borderColor: "var(--charcoal-soft)" }}
+                >
+                  OUT OF STOCK
+                </span>
+              </div>
+            )}
+            {discountPct > 0 && (
               <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: "rgba(250,250,250,0.75)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: "var(--charcoal-soft)",
-                  letterSpacing: "0.05em",
-                }}
+                className="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded"
+                style={{ background: "var(--red)", color: "#fff" }}
               >
-                OUT OF STOCK
+                -{discountPct}%
               </div>
             )}
           </div>
 
           {/* Info */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: 11,
-                color: "var(--red)",
-                fontWeight: 600,
-                marginBottom: 4,
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-              }}
-            >
-              <Tag size={10} />
-              {product.categoryName}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Tag className="w-3 h-3 shrink-0" style={{ color: "var(--red)" }} />
+              <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--red)" }}>
+                {product.categoryName}
+              </span>
             </div>
-            <h3
-              style={{
-                fontSize: 15,
-                fontWeight: 600,
-                color: "var(--charcoal)",
-                marginBottom: 6,
-                lineHeight: 1.3,
-              }}
-            >
-              <HighlightedText
-                text={product.name}
-                highlights={product.highlights?.name}
-              />
+            <h3 className="font-semibold leading-snug mb-1.5 line-clamp-2" style={{ fontSize: 14, color: "var(--charcoal)" }}>
+              <Highlighted text={product.name} parts={product.highlights?.name} />
             </h3>
-            <p
-              style={{
-                fontSize: 13,
-                color: "var(--charcoal-soft)",
-                lineHeight: 1.5,
-                marginBottom: 8,
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-              }}
-            >
-              <HighlightedText
-                text={product.description}
-                highlights={product.highlights?.description}
-              />
+            <p className="text-[12px] leading-relaxed line-clamp-2 mb-2" style={{ color: "var(--charcoal-soft)" }}>
+              <Highlighted text={product.description} parts={product.highlights?.description} />
             </p>
-            {product.tags?.length > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  gap: 4,
-                  flexWrap: "wrap",
-                  marginBottom: 8,
-                }}
-              >
-                {product.tags.slice(0, 4).map((tag) => (
-                  <span
-                    key={tag}
-                    style={{
-                      fontSize: 10,
-                      padding: "2px 8px",
-                      background: "var(--off-white-2)",
-                      borderRadius: 20,
-                      color: "var(--charcoal-soft)",
-                      border: "1px solid var(--border-subtle)",
-                    }}
-                  >
-                    {tag}
-                  </span>
-                ))}
+            {product.merchantStoreName && (
+              <div className="flex items-center gap-1" style={{ fontSize: 11, color: "var(--charcoal-mist)" }}>
+                <Store className="w-3 h-3 shrink-0" />
+                {product.merchantStoreName}
               </div>
             )}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                fontSize: 11,
-                color: "var(--charcoal-mist)",
-              }}
-            >
-              <Store size={11} />
-              <span>{product.merchantStoreName}</span>
-            </div>
           </div>
 
-          {/* Price & CTA */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              minWidth: 120,
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  fontSize: 22,
-                  fontWeight: 800,
-                  color: "var(--charcoal)",
-                  letterSpacing: "-0.03em",
-                }}
-              >
+          {/* Price + CTA */}
+          <div className="flex flex-col items-end justify-between shrink-0 min-w-25">
+            <div className="text-right">
+              {product.oldPrice && product.oldPrice > product.price && (
+                <div className="text-[11px] line-through mb-0.5" style={{ color: "var(--charcoal-mist)" }}>
+                  {formatPrice(product.oldPrice)}
+                </div>
+              )}
+              <div className="font-bold tabular-nums" style={{ fontSize: 18, color: "var(--charcoal)" }}>
                 {formatPrice(product.price)}
               </div>
             </div>
-            <button
-              onClick={handleAddToCart}
-              style={{
-                background: "var(--red)",
-                color: "#fff",
-                border: "none",
-                borderRadius: 8,
-                padding: "8px 16px",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: isOutOfStock ? "not-allowed" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                opacity: isOutOfStock ? 0.5 : 1,
-              }}
-              disabled={isOutOfStock}
-            >
-              <ShoppingCart size={14} />
-              Add to Cart
-            </button>
+            <div className="flex items-center gap-1.5 mt-3">
+              <button
+                onClick={handleWishlist}
+                className="w-9 h-9 rounded-xl border flex items-center justify-center transition-all hover:bg-red-50 hover:border-(--red)"
+                style={{
+                  borderColor: inWishlist ? "var(--red)" : "var(--border-light)",
+                  background: inWishlist ? "var(--red-muted)" : "transparent",
+                }}
+                aria-label="Wishlist"
+              >
+                <Heart
+                  className="w-3.5 h-3.5"
+                  fill={inWishlist ? "var(--red)" : "none"}
+                  style={{ color: inWishlist ? "var(--red)" : "var(--charcoal-soft)" }}
+                />
+              </button>
+              <button
+                onClick={handleCart}
+                disabled={outOfStock}
+                className="flex items-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-semibold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ background: outOfStock ? "var(--charcoal-mist)" : "var(--red)", fontFamily: "var(--font-body)" }}
+              >
+                <ShoppingCart className="w-3.5 h-3.5" />
+                Add
+              </button>
+            </div>
           </div>
         </div>
       </Link>
     );
   }
 
+  // Grid view
   return (
     <Link href={href} className="group block">
-      <div
-        style={{
-          background: "var(--bg-surface)",
-          border: "1px solid var(--border-light)",
-          borderRadius: 10,
-          overflow: "hidden",
-          transition: "all 0.25s",
-          position: "relative",
-        }}
-        className="hover:-translate-y-1 hover:shadow-lg hover:border-(--red)"
-      >
-        {/* Red hover top bar */}
+      <div className="bg-white rounded-2xl overflow-hidden border border-(--border-light) transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-(--red)/30 relative flex flex-col h-full">
+        {/* Accent top bar */}
         <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 3,
-            background: "var(--red)",
-            transform: "scaleX(0)",
-            transformOrigin: "left",
-            transition: "transform 0.3s",
-            zIndex: 10,
-          }}
-          className="group-hover:scale-x-100"
+          className="absolute top-0 inset-x-0 h-0.5 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 z-10"
+          style={{ background: "var(--red)" }}
         />
 
         {/* Image */}
-        <div
-          style={{
-            aspectRatio: "1/1",
-            background: "var(--off-white-2)",
-            overflow: "hidden",
-            position: "relative",
-          }}
-        >
-          {coverImage ? (
+        <div className="relative aspect-square overflow-hidden" style={{ background: "var(--off-white-2)" }}>
+          {cover ? (
             <img
-              src={coverImage}
+              src={cover}
               alt={product.name}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                transition: "transform 0.3s",
-                filter: isOutOfStock ? "grayscale(60%) opacity(0.7)" : "none",
-              }}
-              className="group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              style={{ filter: outOfStock ? "grayscale(50%) opacity(0.7)" : "none" }}
             />
           ) : (
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <ShoppingCart size={36} style={{ color: "rgba(30,30,30,0.1)" }} />
+            <div className="w-full h-full flex items-center justify-center">
+              <Package className="w-10 h-10" style={{ color: "rgba(30,30,30,0.1)" }} />
             </div>
           )}
-          {isOutOfStock && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "rgba(250,250,250,0.7)",
-                backdropFilter: "blur(2px)",
-              }}
-            >
+
+          {outOfStock && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/65 backdrop-blur-[2px]">
               <span
-                style={{
-                  fontSize: 10,
-                  fontWeight: 800,
-                  letterSpacing: "0.1em",
-                  color: "var(--charcoal-soft)",
-                  border: "1.5px solid currentColor",
-                  padding: "4px 10px",
-                  borderRadius: 4,
-                }}
+                className="text-[9px] font-black tracking-widest border rounded px-2 py-1"
+                style={{ color: "var(--charcoal-soft)", borderColor: "var(--border-mid)" }}
               >
                 OUT OF STOCK
               </span>
             </div>
           )}
+
+          {/* Discount badge */}
+          {discountPct > 0 && (
+            <div
+              className="absolute top-2 left-2 text-[10px] font-bold px-1.5 py-0.5 rounded-md z-10"
+              style={{ background: "var(--red)", color: "#fff" }}
+            >
+              -{discountPct}%
+            </div>
+          )}
+
+          {/* Wishlist button — shows on hover */}
+          <button
+            onClick={handleWishlist}
+            className="absolute top-2 right-2 w-8 h-8 rounded-xl flex items-center justify-center transition-all z-10 opacity-0 group-hover:opacity-100"
+            style={{
+              background: inWishlist ? "var(--red)" : "rgba(255,255,255,0.92)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+            }}
+            aria-label="Wishlist"
+          >
+            <Heart
+              className="w-3.5 h-3.5"
+              fill={inWishlist ? "#fff" : "none"}
+              style={{ color: inWishlist ? "#fff" : "var(--charcoal-soft)" }}
+            />
+          </button>
         </div>
 
         {/* Body */}
-        <div style={{ padding: "12px 14px 14px" }}>
-          <div
-            style={{
-              fontSize: 10,
-              color: "var(--red)",
-              fontWeight: 600,
-              marginBottom: 4,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-            }}
-          >
+        <div className="flex flex-col flex-1 p-3.5 gap-1.5">
+          {/* Category */}
+          <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--red)" }}>
             {product.categoryName}
           </div>
+
+          {/* Title */}
           <h3
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "var(--charcoal)",
-              lineHeight: 1.35,
-              marginBottom: 8,
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            }}
+            className="line-clamp-2 leading-snug font-semibold flex-1"
+            style={{ fontSize: 13, color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
           >
-            <HighlightedText
-              text={product.name}
-              highlights={product.highlights?.name}
-            />
+            <Highlighted text={product.name} parts={product.highlights?.name} />
           </h3>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <span
-              style={{
-                fontSize: 17,
-                fontWeight: 800,
-                color: "var(--charcoal)",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              {formatPrice(product.price)}
-            </span>
-            <button
-              onClick={(e) => {
-                handleAddToCart(e);
-              }}
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 8,
-                border: "1.5px solid var(--border-mid)",
-                background: "transparent",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: isOutOfStock ? "not-allowed" : "pointer",
-                transition: "all 0.2s",
-                color: "var(--charcoal-soft)",
-              }}
-              className="hover:bg-(--red) hover:border-(--red) hover:text-white"
-              disabled={isOutOfStock}
-            >
-              <ShoppingCart size={14} />
-            </button>
-          </div>
-
+          {/* Store */}
           {product.merchantStoreName && (
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 10,
-                color: "var(--charcoal-mist)",
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-              }}
-            >
-              <Store size={10} />
-              {product.merchantStoreName}
+            <div className="flex items-center gap-1" style={{ fontSize: 10, color: "var(--charcoal-mist)" }}>
+              <Store className="w-2.5 h-2.5 shrink-0" />
+              <span className="truncate">{product.merchantStoreName}</span>
             </div>
           )}
+
+          {/* Price + Cart */}
+          <div className="flex items-center justify-between mt-auto pt-1">
+            <div>
+              {product.oldPrice && product.oldPrice > product.price && (
+                <div className="text-[10px] line-through" style={{ color: "var(--charcoal-mist)" }}>
+                  {formatPrice(product.oldPrice)}
+                </div>
+              )}
+              <span className="font-bold tabular-nums" style={{ fontSize: 15, color: "var(--charcoal)" }}>
+                {formatPrice(product.price)}
+              </span>
+            </div>
+            <button
+              onClick={handleCart}
+              disabled={outOfStock}
+              className="w-9 h-9 rounded-xl border flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-(--red) hover:border-(--red) hover:text-white"
+              style={{
+                borderColor: "var(--border-mid)",
+                background: "transparent",
+                color: "var(--charcoal-soft)",
+              }}
+              aria-label="Add to cart"
+            >
+              <ShoppingCart className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </Link>
@@ -578,224 +404,163 @@ function SearchProductCard({
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
-function ProductSkeleton({ viewMode }: { viewMode: ViewMode }) {
-  if (viewMode === "list") {
+function CardSkeleton({ view }: { view: ViewMode }) {
+  if (view === "list") {
     return (
-      <div
-        style={{
-          display: "flex",
-          gap: 16,
-          background: "var(--bg-surface)",
-          border: "1px solid var(--border-light)",
-          borderRadius: 10,
-          padding: 16,
-        }}
-      >
-        <div
-          style={{
-            width: 120,
-            height: 120,
-            flexShrink: 0,
-            borderRadius: 8,
-            background: "var(--off-white-2)",
-            animation: "pulse 1.5s infinite",
-          }}
-        />
-        <div style={{ flex: 1 }}>
-          <div
-            style={{
-              height: 12,
-              width: "30%",
-              background: "var(--off-white-2)",
-              borderRadius: 4,
-              marginBottom: 8,
-              animation: "pulse 1.5s infinite",
-            }}
-          />
-          <div
-            style={{
-              height: 16,
-              width: "70%",
-              background: "var(--off-white-2)",
-              borderRadius: 4,
-              marginBottom: 8,
-              animation: "pulse 1.5s infinite",
-            }}
-          />
-          <div
-            style={{
-              height: 12,
-              width: "90%",
-              background: "var(--off-white-2)",
-              borderRadius: 4,
-              animation: "pulse 1.5s infinite",
-            }}
-          />
+      <div className="flex gap-4 bg-white rounded-2xl p-4 border border-(--border-light) animate-pulse">
+        <div className="w-28 h-28 shrink-0 rounded-xl bg-(--off-white-2)" />
+        <div className="flex-1 space-y-2.5">
+          <div className="h-3 w-24 bg-(--off-white-2) rounded-full" />
+          <div className="h-4 w-3/4 bg-(--off-white-2) rounded" />
+          <div className="h-3 w-full bg-(--off-white-2) rounded" />
+          <div className="h-3 w-2/3 bg-(--off-white-2) rounded" />
+        </div>
+        <div className="flex flex-col justify-between items-end shrink-0 w-24">
+          <div className="h-5 w-16 bg-(--off-white-2) rounded" />
+          <div className="h-9 w-20 bg-(--off-white-2) rounded-xl" />
         </div>
       </div>
     );
   }
   return (
-    <div
-      style={{
-        background: "var(--bg-surface)",
-        border: "1px solid var(--border-light)",
-        borderRadius: 10,
-        overflow: "hidden",
-        animation: "pulse 1.5s infinite",
-      }}
-    >
-      <div style={{ aspectRatio: "1/1", background: "var(--off-white-2)" }} />
-      <div style={{ padding: "12px 14px 14px" }}>
-        <div
-          style={{
-            height: 10,
-            width: "40%",
-            background: "var(--off-white-2)",
-            borderRadius: 4,
-            marginBottom: 8,
-          }}
-        />
-        <div
-          style={{
-            height: 14,
-            width: "85%",
-            background: "var(--off-white-2)",
-            borderRadius: 4,
-            marginBottom: 12,
-          }}
-        />
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <div
-            style={{
-              height: 18,
-              width: "35%",
-              background: "var(--off-white-2)",
-              borderRadius: 4,
-            }}
-          />
-          <div
-            style={{
-              width: 34,
-              height: 34,
-              background: "var(--off-white-2)",
-              borderRadius: 8,
-            }}
-          />
+    <div className="bg-white rounded-2xl overflow-hidden border border-(--border-light) animate-pulse">
+      <div className="aspect-square bg-(--off-white-2)" />
+      <div className="p-3.5 space-y-2">
+        <div className="h-2.5 w-16 bg-(--off-white-2) rounded-full" />
+        <div className="h-3.5 w-4/5 bg-(--off-white-2) rounded" />
+        <div className="h-3.5 w-2/3 bg-(--off-white-2) rounded" />
+        <div className="flex justify-between items-center pt-1">
+          <div className="h-4 w-14 bg-(--off-white-2) rounded" />
+          <div className="w-9 h-9 bg-(--off-white-2) rounded-xl" />
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Sidebar Filter ───────────────────────────────────────────────────────────
+// ─── Filter Accordion ─────────────────────────────────────────────────────────
 
-function FilterSection({
+function FilterAccordion({
   title,
   children,
   defaultOpen = true,
+  count,
 }: {
   title: string;
   children: React.ReactNode;
   defaultOpen?: boolean;
+  count?: number;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div
-      style={{
-        borderBottom: "1px solid var(--border-subtle)",
-        paddingBottom: 16,
-        marginBottom: 16,
-      }}
-    >
+    <div className="border-b border-(--border-subtle) pb-4 mb-4 last:border-b-0 last:mb-0 last:pb-0">
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        style={{
-          width: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          border: "none",
-          background: "none",
-          cursor: "pointer",
-          padding: "0 0 12px 0",
-          color: "var(--charcoal)",
-          fontSize: 13,
-          fontWeight: 700,
-          letterSpacing: "-0.01em",
-        }}
+        className="w-full flex items-center justify-between pb-3 group"
       >
-        {title}
+        <div className="flex items-center gap-2">
+          <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: "var(--charcoal)", fontFamily: "var(--font-mono)" }}>
+            {title}
+          </span>
+          {count != null && count > 0 && (
+            <span
+              className="text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center text-white"
+              style={{ background: "var(--red)" }}
+            >
+              {count}
+            </span>
+          )}
+        </div>
         <ChevronDown
-          size={15}
+          className="w-4 h-4 transition-transform duration-200"
           style={{
+            color: "var(--charcoal-mist)",
             transform: open ? "rotate(180deg)" : "rotate(0deg)",
-            transition: "transform 0.2s",
-            color: "var(--charcoal-soft)",
           }}
         />
       </button>
-      {open && children}
+      {open && <div>{children}</div>}
     </div>
   );
 }
 
-// ─── Main SearchPage Component ────────────────────────────────────────────────
+// ─── Filter button ────────────────────────────────────────────────────────────
+
+function FilterBtn({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full text-left flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[13px] transition-all duration-100"
+      style={{
+        background: active ? "var(--red-muted)" : "transparent",
+        color: active ? "var(--red)" : "var(--charcoal-soft)",
+        fontWeight: active ? 600 : 400,
+      }}
+      onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "var(--off-white-2)"; }}
+      onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function SearchPage() {
-  const router = useRouter();
-  const pathname = usePathname();
+  const router       = useRouter();
+  const pathname     = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
   // URL state
-  const q = searchParams.get("q") || "";
-  const category = searchParams.get("category") || "";
-  const minPrice = searchParams.get("minPrice") || "";
-  const maxPrice = searchParams.get("maxPrice") || "";
-  const tags = searchParams.get("tags") || "";
-  const sort = (searchParams.get("sort") || "relevance") as SortOption;
-  const page = parseInt(searchParams.get("page") || "1");
+  const q         = searchParams.get("q") || "";
+  const category  = searchParams.get("category") || "";
+  const minPrice  = searchParams.get("minPrice") || "";
+  const maxPrice  = searchParams.get("maxPrice") || "";
+  const tags      = searchParams.get("tags") || "";
+  const sort      = (searchParams.get("sort") || "relevance") as SortOption;
+  const page      = parseInt(searchParams.get("page") || "1");
 
   // UI state
-  const [inputValue, setInputValue] = useState(q);
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [minPriceInput, setMinPriceInput] = useState(minPrice);
-  const [maxPriceInput, setMaxPriceInput] = useState(maxPrice);
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [inputValue,       setInputValue]       = useState(q);
+  const [viewMode,         setViewMode]         = useState<ViewMode>("grid");
+  const [mobileFiltersOpen,setMobileFiltersOpen] = useState(false);
+  const [minPriceInput,    setMinPriceInput]    = useState(minPrice);
+  const [maxPriceInput,    setMaxPriceInput]    = useState(maxPrice);
+  const [showSortMenu,     setShowSortMenu]     = useState(false);
 
   // Data state
-  const [results, setResults] = useState<SearchResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [results,    setResults]    = useState<SearchResult | null>(null);
+  const [loading,    setLoading]    = useState(false);
+  const [error,      setError]      = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [offline,    setOffline]    = useState(false);
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const sortDropdownRef = useRef<HTMLDivElement>(null);
+  const debounceRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sortMenuRef    = useRef<HTMLDivElement>(null);
+  const inputRef       = useRef<HTMLInputElement>(null);
 
-  // ── URL builder ──────────────────────────────────────────────────────────────
+  // ── URL builder ────────────────────────────────────────────────────────────
   const buildUrl = useCallback(
     (overrides: Record<string, string | number | undefined>) => {
       const params = new URLSearchParams();
-      const current = {
-        q,
-        category,
-        minPrice,
-        maxPrice,
-        tags,
-        sort,
-        page: String(page),
-        ...overrides,
-      };
-      Object.entries(current).forEach(([k, v]) => {
-        if ((v && String(v) !== "" && String(v) !== "1") || k === "q") {
-          if (v) params.set(k, String(v));
-        }
+      const cur = { q, category, minPrice, maxPrice, tags, sort, page: String(page), ...overrides };
+      Object.entries(cur).forEach(([k, v]) => {
+        const s = String(v ?? "");
+        if (!s || s === "0" || (k === "page" && s === "1")) return;
+        params.set(k, s);
       });
-      // Always include q even if empty
-      if (!params.has("q") && current.q) params.set("q", String(current.q));
+      if (cur.q) params.set("q", String(cur.q));
       return `${pathname}?${params.toString()}`;
     },
     [q, category, minPrice, maxPrice, tags, sort, page, pathname],
@@ -803,69 +568,67 @@ export default function SearchPage() {
 
   const navigate = useCallback(
     (overrides: Record<string, string | number | undefined>) => {
-      startTransition(() => {
-        router.push(buildUrl(overrides));
-      });
+      startTransition(() => { router.push(buildUrl(overrides)); });
     },
     [buildUrl, router],
   );
 
-  // ── Fetch search results ─────────────────────────────────────────────────────
+  // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchResults = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setOffline(false);
     try {
-      const params = new URLSearchParams();
-      if (q) params.set("q", q);
-      if (category) params.set("category", category);
-      if (minPrice) params.set("minPrice", minPrice);
-      if (maxPrice) params.set("maxPrice", maxPrice);
-      if (tags) params.set("tags", tags);
-      if (sort && sort !== "relevance") params.set("sort", sort);
-      params.set("page", String(page));
-      params.set("limit", "20");
+      const p = new URLSearchParams();
+      if (q)        p.set("q", q);
+      if (category) p.set("category", category);
+      if (minPrice) p.set("minPrice", minPrice);
+      if (maxPrice) p.set("maxPrice", maxPrice);
+      if (tags)     p.set("tags", tags);
+      if (sort && sort !== "relevance") p.set("sort", sort);
+      p.set("page", String(page));
+      p.set("limit", "20");
 
-      const res = await fetch(`/api/products/search?${params.toString()}`);
-      if (!res.ok) throw new Error("Search failed. Please try again.");
+      const res  = await fetch(`/api/products/search?${p.toString()}`);
+      if (!res.ok) throw new Error(`Search failed (${res.status})`);
       const data = await res.json();
 
-      const rawItems: any[] =
-        data?.items ?? data?.data ?? (Array.isArray(data) ? data : []);
+      const rawItems: any[] = data?.items ?? data?.data ?? (Array.isArray(data) ? data : []);
       const products: Product[] = rawItems.map((p: any) => ({
-        id: p.id ?? p.Id,
-        merchantId: p.merchantId ?? "",
+        id:                p.id ?? "",
+        merchantId:        p.merchantId ?? "",
         merchantStoreName: p.merchantStoreName ?? p.merchant?.storeName ?? "",
-        merchantSlug: p.merchantSlug ?? p.merchant?.slug ?? "",
-        name: p.name ?? p.Name ?? "",
-        description: p.description ?? p.Description ?? "",
-        categoryId: p.categoryId ?? "",
-        categoryName: p.categoryName ?? p.Category ?? p.category?.name ?? "",
-        images: p.images ?? p.Images ?? [],
-        tags: p.tags ?? [],
-        price: p.price ?? p.Price ?? p.minPrice ?? 0,
-        stock: p.stock ?? 0,
-        publishToMarket: p.publishToMarket ?? true,
-        publishToStore: p.publishToStore ?? true,
-        isApproved: p.isApproved ?? true,
-        isDeleted: p.isDeleted ?? false,
-        createdAt: p.createdAt ?? "",
-        updatedAt: p.updatedAt,
-        score: p._score ?? p.score,
-        highlights: p.highlight ?? p.highlights,
+        merchantSlug:      p.merchantSlug ?? p.merchant?.slug ?? "",
+        name:              p.name ?? "",
+        description:       p.description ?? "",
+        categoryId:        p.categoryId ?? "",
+        categoryName:      p.categoryName ?? p.category?.name ?? "",
+        images:            p.images ?? [],
+        tags:              p.tags ?? [],
+        price:             p.price ?? 0,
+        oldPrice:          p.oldPrice ?? undefined,
+        stock:             p.stock ?? 0,
+        publishToMarket:   p.publishToMarket ?? true,
+        publishToStore:    p.publishToStore ?? true,
+        isApproved:        p.isApproved ?? true,
+        isDeleted:         p.isDeleted ?? false,
+        createdAt:         p.createdAt ?? "",
+        score:             p._score ?? p.score,
+        highlights:        p.highlight ?? p.highlights,
       }));
 
       setResults({
-        items: products,
-        total: data?.total ?? data?.Total ?? products.length,
-        page: data?.page ?? page,
-        totalPages:
-          data?.totalPages ?? Math.ceil((data?.total ?? products.length) / 20),
-        facets: data?.facets,
-        queryTime: data?.took ?? data?.queryTime,
+        items:      products,
+        total:      data?.total ?? data?.Total ?? products.length,
+        page:       data?.page ?? page,
+        totalPages: data?.totalPages ?? Math.ceil((data?.total ?? products.length) / 20),
+        facets:     data?.facets,
+        queryTime:  data?.took ?? data?.queryTime,
         suggestion: data?.suggestion,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error fetching results");
+      if (!navigator.onLine) setOffline(true);
+      setError(err instanceof Error ? err.message : "Failed to load results.");
     } finally {
       setLoading(false);
     }
@@ -876,553 +639,297 @@ export default function SearchPage() {
     fetch("/api/categories")
       .then((r) => r.json())
       .then((data) => {
-        const cats: Category[] =
-          data?.items ?? data?.data ?? (Array.isArray(data) ? data : []);
-        setCategories(cats);
+        const cats: Category[] = data?.items ?? data?.data ?? (Array.isArray(data) ? data : []);
+        setCategories(cats.filter((c) => !c.parentId));
       })
       .catch(() => {});
   }, []);
 
-  // Fetch on param change
-  useEffect(() => {
-    fetchResults();
-  }, [fetchResults]);
-
-  // Cleanup debounce timer on unmount
+  useEffect(() => { fetchResults(); }, [fetchResults]);
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
 
-  // Debounced search input
-  const handleInputChange = (value: string) => {
-    setInputValue(value);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      navigate({ q: value, page: undefined });
-    }, 350);
-  };
+  // Sync input with URL
+  useEffect(() => { setInputValue(q); }, [q]);
 
   // Close sort dropdown on outside click
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (
-        sortDropdownRef.current &&
-        !sortDropdownRef.current.contains(e.target as Node)
-      ) {
-        setShowSortDropdown(false);
-      }
+    const h = (e: MouseEvent) => {
+      if (sortMenuRef.current && !sortMenuRef.current.contains(e.target as Node))
+        setShowSortMenu(false);
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  // Sync input with URL q
-  useEffect(() => {
-    setInputValue(q);
-  }, [q]);
+  // Debounced input
+  const handleInput = (val: string) => {
+    setInputValue(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => { navigate({ q: val, page: undefined }); }, 380);
+  };
 
-  const activeTagList = tags ? tags.split(",").filter(Boolean) : [];
+  const handleSearchSubmit = (e?: React.SyntheticEvent) => {
+    e?.preventDefault();
+    navigate({ q: inputValue.trim(), page: undefined });
+  };
 
+  const activeTagList    = tags ? tags.split(",").filter(Boolean) : [];
   const activeFilterCount =
     (category ? 1 : 0) + (minPrice || maxPrice ? 1 : 0) + activeTagList.length;
+  const currentSort = SORT_OPTIONS.find((o) => o.value === sort) ?? SORT_OPTIONS[0];
 
-  const currentSortLabel =
-    SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Most Relevant";
-
-  // ── Sidebar content ──────────────────────────────────────────────────────────
-  const Sidebar = (
-    <aside
-      style={{
-        width: 240,
-        flexShrink: 0,
-      }}
-    >
+  // ── Filter sidebar content ─────────────────────────────────────────────────
+  const SidebarContent = (
+    <div className="space-y-0">
       {/* Categories */}
-      <FilterSection title="Categories">
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          <li>
-            <button
-              onClick={() => navigate({ category: "", page: undefined })}
-              style={{
-                width: "100%",
-                textAlign: "left",
-                border: "none",
-                background: !category ? "var(--red-muted)" : "transparent",
-                color: !category ? "var(--red)" : "var(--charcoal-soft)",
-                fontWeight: !category ? 600 : 400,
-                padding: "6px 10px",
-                borderRadius: 6,
-                fontSize: 13,
-                cursor: "pointer",
-                marginBottom: 2,
-                transition: "all 0.15s",
-              }}
-            >
-              All
-            </button>
-          </li>
-          {categories.slice(0, 12).map((cat) => (
-            <li key={cat.id}>
-              <button
-                onClick={() =>
-                  navigate({ category: cat.slug, page: undefined })
-                }
-                style={{
-                  width: "100%",
-                  textAlign: "left",
-                  border: "none",
-                  background:
-                    category === cat.slug ? "var(--red-muted)" : "transparent",
-                  color:
-                    category === cat.slug
-                      ? "var(--red)"
-                      : "var(--charcoal-soft)",
-                  fontWeight: category === cat.slug ? 600 : 400,
-                  padding: "6px 10px",
-                  borderRadius: 6,
-                  fontSize: 13,
-                  cursor: "pointer",
-                  marginBottom: 2,
-                  transition: "all 0.15s",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <span>{cat.name}</span>
-                {cat.subCategories?.length ? <ChevronRight size={12} /> : null}
-              </button>
-            </li>
-          ))}
-        </ul>
-
-        {/* Facets from Elasticsearch */}
-        {results?.facets?.categories &&
-          results.facets.categories.length > 0 && (
-            <div
-              style={{
-                marginTop: 8,
-                paddingTop: 8,
-                borderTop: "1px solid var(--border-subtle)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 10,
-                  color: "var(--charcoal-mist)",
-                  fontWeight: 600,
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  marginBottom: 6,
-                }}
-              >
-                In Results
-              </div>
-              {results.facets.categories.map((facet) => (
-                <button
-                  key={facet.key}
-                  onClick={() =>
-                    navigate({ category: facet.key, page: undefined })
-                  }
-                  style={{
-                    width: "100%",
-                    textAlign: "left",
-                    border: "none",
-                    background:
-                      category === facet.key
-                        ? "var(--red-muted)"
-                        : "transparent",
-                    color:
-                      category === facet.key
-                        ? "var(--red)"
-                        : "var(--charcoal-soft)",
-                    fontWeight: category === facet.key ? 600 : 400,
-                    padding: "5px 10px",
-                    borderRadius: 6,
-                    fontSize: 12,
-                    cursor: "pointer",
-                    marginBottom: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  <span>{facet.name}</span>
-                  <span
-                    style={{
-                      fontSize: 10,
-                      background: "var(--off-white-2)",
-                      borderRadius: 10,
-                      padding: "1px 6px",
-                      color: "var(--charcoal-mist)",
-                    }}
-                  >
-                    {facet.count}
-                  </span>
-                </button>
-              ))}
+      <FilterAccordion title="Category">
+        <FilterBtn active={!category} onClick={() => navigate({ category: "", page: undefined })}>
+          All Categories
+        </FilterBtn>
+        {categories.slice(0, 14).map((cat) => (
+          <FilterBtn
+            key={cat.id}
+            active={category === cat.slug}
+            onClick={() => navigate({ category: cat.slug, page: undefined })}
+          >
+            <span>{cat.name}</span>
+            {cat.productCount != null && (
+              <span className="text-[11px] tabular-nums" style={{ color: "var(--charcoal-mist)" }}>
+                {cat.productCount}
+              </span>
+            )}
+          </FilterBtn>
+        ))}
+        {/* Elasticsearch facets */}
+        {results?.facets?.categories && results.facets.categories.length > 0 && (
+          <div className="mt-2 pt-2 border-t border-(--border-subtle)">
+            <div className="text-[10px] uppercase tracking-wider mb-1.5 px-2.5" style={{ color: "var(--charcoal-mist)" }}>
+              In results
             </div>
-          )}
-      </FilterSection>
+            {results.facets.categories.map((f) => (
+              <FilterBtn
+                key={f.key}
+                active={category === f.key}
+                onClick={() => navigate({ category: f.key, page: undefined })}
+              >
+                <span>{f.name}</span>
+                <span
+                  className="text-[10px] tabular-nums px-1.5 py-0.5 rounded-full"
+                  style={{ background: "var(--off-white-2)", color: "var(--charcoal-mist)" }}
+                >
+                  {f.count}
+                </span>
+              </FilterBtn>
+            ))}
+          </div>
+        )}
+      </FilterAccordion>
 
-      {/* Price Range */}
-      <FilterSection title="Price Range">
-        <div style={{ marginBottom: 10 }}>
-          {PRICE_PRESETS.map((preset) => (
-            <button
-              key={preset.label}
-              onClick={() =>
-                navigate({
-                  minPrice: String(preset.min),
-                  maxPrice: String(preset.max),
-                  page: undefined,
-                })
-              }
-              style={{
-                width: "100%",
-                textAlign: "left",
-                border: "none",
-                background:
-                  minPrice === String(preset.min) &&
-                  maxPrice === String(preset.max)
-                    ? "var(--red-muted)"
-                    : "transparent",
-                color:
-                  minPrice === String(preset.min) &&
-                  maxPrice === String(preset.max)
-                    ? "var(--red)"
-                    : "var(--charcoal-soft)",
-                fontWeight:
-                  minPrice === String(preset.min) &&
-                  maxPrice === String(preset.max)
-                    ? 600
-                    : 400,
-                padding: "5px 10px",
-                borderRadius: 6,
-                fontSize: 13,
-                cursor: "pointer",
-                marginBottom: 2,
-                transition: "all 0.15s",
-              }}
+      {/* Price */}
+      <FilterAccordion title="Price" count={minPrice || maxPrice ? 1 : 0}>
+        <div className="space-y-1 mb-3">
+          {PRICE_PRESETS.map((p) => (
+            <FilterBtn
+              key={p.label}
+              active={minPrice === String(p.min) && maxPrice === String(p.max)}
+              onClick={() => navigate({ minPrice: String(p.min), maxPrice: String(p.max), page: undefined })}
             >
-              {preset.label}
-            </button>
+              {p.label}
+            </FilterBtn>
           ))}
         </div>
-        <div
-          style={{
-            display: "flex",
-            gap: 8,
-            alignItems: "center",
-            marginTop: 4,
-          }}
-        >
+        <div className="flex gap-2 items-center mb-2">
           <input
             type="number"
             placeholder="Min $"
             value={minPriceInput}
             onChange={(e) => setMinPriceInput(e.target.value)}
-            style={{
-              flex: 1,
-              border: "1.5px solid var(--border-light)",
-              borderRadius: 7,
-              padding: "6px 10px",
-              fontSize: 12,
-              color: "var(--charcoal)",
-              background: "var(--bg-surface)",
-              outline: "none",
-            }}
+            className="flex-1 border rounded-lg px-2.5 py-1.5 text-[12px] outline-none transition-colors focus:border-(--charcoal)"
+            style={{ borderColor: "var(--border-light)", color: "var(--charcoal)", background: "var(--bg-surface)" }}
           />
-          <span style={{ color: "var(--charcoal-mist)", fontSize: 12 }}>—</span>
+          <span className="text-[12px]" style={{ color: "var(--charcoal-mist)" }}>–</span>
           <input
             type="number"
             placeholder="Max $"
             value={maxPriceInput}
             onChange={(e) => setMaxPriceInput(e.target.value)}
-            style={{
-              flex: 1,
-              border: "1.5px solid var(--border-light)",
-              borderRadius: 7,
-              padding: "6px 10px",
-              fontSize: 12,
-              color: "var(--charcoal)",
-              background: "var(--bg-surface)",
-              outline: "none",
-            }}
+            className="flex-1 border rounded-lg px-2.5 py-1.5 text-[12px] outline-none transition-colors focus:border-(--charcoal)"
+            style={{ borderColor: "var(--border-light)", color: "var(--charcoal)", background: "var(--bg-surface)" }}
           />
         </div>
-        <button
-          type="button"
-          onClick={() =>
-            navigate({
-              minPrice: minPriceInput,
-              maxPrice: maxPriceInput,
-              page: undefined,
-            })
-          }
-          style={{
-            width: "100%",
-            marginTop: 8,
-            background: "var(--charcoal)",
-            color: "#fff",
-            border: "none",
-            borderRadius: 7,
-            padding: "7px",
-            fontSize: 12,
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          Apply
-        </button>
-        {(minPrice || maxPrice) && (
+        <div className="flex gap-2">
           <button
-            onClick={() =>
-              navigate({ minPrice: "", maxPrice: "", page: undefined })
-            }
-            style={{
-              width: "100%",
-              marginTop: 4,
-              background: "transparent",
-              color: "var(--charcoal-mist)",
-              border: "1px solid var(--border-light)",
-              borderRadius: 7,
-              padding: "6px",
-              fontSize: 11,
-              cursor: "pointer",
-            }}
+            onClick={() => navigate({ minPrice: minPriceInput, maxPrice: maxPriceInput, page: undefined })}
+            className="flex-1 py-1.5 rounded-lg text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
+            style={{ background: "var(--charcoal)" }}
           >
-            Clear price filter
+            Apply
           </button>
-        )}
-      </FilterSection>
+          {(minPrice || maxPrice) && (
+            <button
+              onClick={() => { setMinPriceInput(""); setMaxPriceInput(""); navigate({ minPrice: "", maxPrice: "", page: undefined }); }}
+              className="px-3 py-1.5 rounded-lg text-[11px] border transition-colors hover:border-(--charcoal)"
+              style={{ borderColor: "var(--border-light)", color: "var(--charcoal-mist)" }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </FilterAccordion>
 
-      {/* Tags / Facets */}
+      {/* Tags */}
       {results?.facets?.tags && results.facets.tags.length > 0 && (
-        <FilterSection title="Tags">
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {results.facets.tags.map((facetTag) => {
-              const isActive = activeTagList.includes(facetTag.key);
+        <FilterAccordion title="Tags" count={activeTagList.length} defaultOpen={false}>
+          <div className="flex flex-wrap gap-1.5">
+            {results.facets.tags.map((t) => {
+              const active = activeTagList.includes(t.key);
               return (
                 <button
-                  key={facetTag.key}
+                  key={t.key}
                   onClick={() => {
-                    const newTags = isActive
-                      ? activeTagList.filter((t) => t !== facetTag.key)
-                      : [...activeTagList, facetTag.key];
-                    navigate({ tags: newTags.join(","), page: undefined });
+                    const next = active
+                      ? activeTagList.filter((x) => x !== t.key)
+                      : [...activeTagList, t.key];
+                    navigate({ tags: next.join(","), page: undefined });
                   }}
+                  className="text-[11px] px-2.5 py-1 rounded-full border transition-all"
                   style={{
-                    border: isActive
-                      ? "1.5px solid var(--red)"
-                      : "1.5px solid var(--border-light)",
-                    background: isActive ? "var(--red-muted)" : "transparent",
-                    color: isActive ? "var(--red)" : "var(--charcoal-soft)",
-                    borderRadius: 20,
-                    padding: "3px 10px",
-                    fontSize: 11,
-                    cursor: "pointer",
-                    fontWeight: isActive ? 600 : 400,
-                    transition: "all 0.15s",
+                    background: active ? "var(--red-muted)" : "transparent",
+                    borderColor: active ? "var(--red)" : "var(--border-light)",
+                    color: active ? "var(--red)" : "var(--charcoal-soft)",
+                    fontWeight: active ? 600 : 400,
                   }}
                 >
-                  {facetTag.key}
-                  <span
-                    style={{
-                      marginLeft: 4,
-                      opacity: 0.6,
-                      fontSize: 10,
-                    }}
-                  >
-                    {facetTag.count}
-                  </span>
+                  {t.key}
+                  <span className="ml-1 opacity-50 text-[10px]">{t.count}</span>
                 </button>
               );
             })}
           </div>
-        </FilterSection>
+        </FilterAccordion>
       )}
-    </aside>
+
+      {/* Merchants */}
+      {results?.facets?.merchants && results.facets.merchants.length > 0 && (
+        <FilterAccordion title="Seller" defaultOpen={false}>
+          {results.facets.merchants.map((m) => (
+            <FilterBtn key={m.key} active={false} onClick={() => {}}>
+              <span>{m.name}</span>
+              <span className="text-[10px] tabular-nums" style={{ color: "var(--charcoal-mist)" }}>{m.count}</span>
+            </FilterBtn>
+          ))}
+        </FilterAccordion>
+      )}
+
+      {/* Reset */}
+      {activeFilterCount > 0 && (
+        <button
+          onClick={() => navigate({ category: "", minPrice: "", maxPrice: "", tags: "", page: undefined })}
+          className="w-full mt-1 py-2 rounded-xl text-[12px] font-semibold border transition-all hover:bg-(--red) hover:text-white hover:border-(--red) flex items-center justify-center gap-2"
+          style={{ borderColor: "var(--border-mid)", color: "var(--charcoal)" }}
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+          Reset all filters
+        </button>
+      )}
+    </div>
   );
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "var(--bg-page)",
-        fontFamily: "var(--font-sans, system-ui)",
-      }}
-    >
-      {/* ── Search Header ─────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          background: "var(--charcoal)",
-          padding: "32px 0 24px",
-          position: "sticky",
-          top: 0,
-          zIndex: 40,
-          boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1200,
-            margin: "0 auto",
-            padding: "0 24px",
-          }}
-        >
+    <div className="min-h-screen" style={{ background: "var(--bg-page)" }}>
+
+      {/* ── Search Header ──────────────────────────────────────────────────────
+       * NOT sticky — the main site Navbar is already sticky (z-50).
+       * Two sibling sticky elements at top:0 would overlap.
+       * The header sits in normal document flow below the Navbar.
+       */}
+      <div style={{ background: "var(--charcoal)", padding: "28px 0 20px" }}>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
           {/* Breadcrumb */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 11,
-              color: "rgba(255,255,255,0.45)",
-              marginBottom: 16,
-            }}
-          >
-            <Link
-              href="/"
-              style={{ color: "inherit", textDecoration: "none" }}
-              className="hover:text-white"
-            >
+          <nav className="flex items-center gap-1.5 mb-5 flex-wrap" aria-label="Breadcrumb">
+            <Link href="/" className="text-[11px] transition-colors hover:text-white" style={{ color: "rgba(255,255,255,0.4)" }}>
               Home
             </Link>
-            <ChevronRight size={12} />
-            <span style={{ color: "rgba(255,255,255,0.7)" }}>Search</span>
+            <ChevronRight className="w-3 h-3" style={{ color: "rgba(255,255,255,0.25)" }} />
+            <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.7)" }}>Search</span>
             {q && (
               <>
-                <ChevronRight size={12} />
-                <span style={{ color: "rgba(255,255,255,0.9)" }}>
+                <ChevronRight className="w-3 h-3" style={{ color: "rgba(255,255,255,0.25)" }} />
+                <span className="text-[11px] font-semibold" style={{ color: "rgba(255,255,255,0.9)" }}>
                   &ldquo;{q}&rdquo;
                 </span>
               </>
             )}
-          </div>
+          </nav>
 
-          {/* Search input */}
-          <div style={{ position: "relative", maxWidth: 680 }}>
-            <div
-              style={{
-                position: "absolute",
-                left: 16,
-                top: "50%",
-                transform: "translateY(-50%)",
-                color:
-                  isPending || loading ? "var(--red)" : "rgba(255,255,255,0.4)",
-                transition: "color 0.2s",
-              }}
-            >
-              {isPending || loading ? (
-                <Loader2
-                  size={18}
-                  style={{ animation: "spin 1s linear infinite" }}
-                />
-              ) : (
-                <Search size={18} />
+          {/* Search form */}
+          <form onSubmit={handleSearchSubmit} className="max-w-2xl">
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                {isPending || loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" style={{ color: "var(--red)" }} />
+                ) : (
+                  <Search className="w-5 h-5" style={{ color: "rgba(255,255,255,0.4)" }} />
+                )}
+              </div>
+              <input
+                ref={inputRef}
+                type="text"
+                value={inputValue}
+                onChange={(e) => handleInput(e.target.value)}
+                placeholder="Search products, categories, brands…"
+                className="w-full pl-12 pr-12 py-3.5 rounded-xl text-[15px] text-white outline-none transition-all"
+                style={{
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1.5px solid rgba(255,255,255,0.1)",
+                  fontFamily: "var(--font-body)",
+                  caretColor: "var(--red)",
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "var(--red)";
+                  e.target.style.background = "rgba(255,255,255,0.12)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "rgba(255,255,255,0.1)";
+                  e.target.style.background = "rgba(255,255,255,0.08)";
+                }}
+              />
+              {inputValue && (
+                <button
+                  type="button"
+                  onClick={() => { setInputValue(""); navigate({ q: "", page: undefined }); inputRef.current?.focus(); }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-white/15"
+                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               )}
             </div>
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => handleInputChange(e.target.value)}
-              placeholder="Search products, categories or brands..."
-              style={{
-                width: "100%",
-                padding: "14px 48px 14px 48px",
-                background: "rgba(255,255,255,0.08)",
-                border: "1.5px solid rgba(255,255,255,0.12)",
-                borderRadius: 12,
-                fontSize: 15,
-                color: "#fff",
-                outline: "none",
-                transition: "all 0.2s",
-                boxSizing: "border-box",
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = "var(--red)";
-                e.target.style.background = "rgba(255,255,255,0.12)";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "rgba(255,255,255,0.12)";
-                e.target.style.background = "rgba(255,255,255,0.08)";
-              }}
-            />
-            {inputValue && (
-              <button
-                onClick={() => {
-                  setInputValue("");
-                  navigate({ q: "", page: undefined });
-                }}
-                style={{
-                  position: "absolute",
-                  right: 16,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "rgba(255,255,255,0.4)",
-                  padding: 4,
-                  display: "flex",
-                }}
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
+          </form>
 
-          {/* Stats row */}
-          <div
-            style={{
-              marginTop: 12,
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-              fontSize: 12,
-              color: "rgba(255,255,255,0.45)",
-            }}
-          >
-            {results && (
+          {/* Stats */}
+          <div className="mt-3 flex items-center gap-4 flex-wrap" style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+            {results && !loading && (
               <>
-                <span style={{ color: "rgba(255,255,255,0.7)" }}>
-                  <strong style={{ color: "#fff" }}>
-                    {results.total.toLocaleString("en-US")}
-                  </strong>{" "}
-                  results
+                <span>
+                  <strong style={{ color: "#fff" }}>{results.total.toLocaleString("en-US")}</strong>{" "}
+                  result{results.total !== 1 ? "s" : ""}
                 </span>
                 {results.queryTime !== undefined && (
-                  <span
-                    style={{ display: "flex", alignItems: "center", gap: 4 }}
-                  >
-                    <Clock size={11} />
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
                     {results.queryTime}ms
                   </span>
                 )}
                 {results.suggestion && (
-                  <span
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                      color: "rgba(255,200,100,0.8)",
-                    }}
-                  >
-                    <Sparkles size={11} />
+                  <span className="flex items-center gap-1" style={{ color: "rgba(255,200,100,0.8)" }}>
+                    <Sparkles className="w-3 h-3" />
                     Did you mean?{" "}
                     <button
-                      onClick={() =>
-                        navigate({ q: results.suggestion, page: undefined })
-                      }
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        color: "#ffc864",
-                        fontWeight: 600,
-                        fontSize: 12,
-                        textDecoration: "underline",
-                      }}
+                      onClick={() => navigate({ q: results.suggestion, page: undefined })}
+                      className="font-bold underline"
+                      style={{ color: "#ffc864" }}
                     >
                       {results.suggestion}
                     </button>
@@ -1436,508 +943,221 @@ export default function SearchPage() {
 
       {/* ── Active Filters Bar ─────────────────────────────────────────────────── */}
       {activeFilterCount > 0 && (
-        <div
-          style={{
-            background: "var(--bg-surface)",
-            borderBottom: "1px solid var(--border-subtle)",
-          }}
-        >
-          <div
-            style={{
-              maxWidth: 1200,
-              margin: "0 auto",
-              padding: "10px 24px",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              flexWrap: "wrap",
-            }}
-          >
-            <span
-              style={{
-                fontSize: 11,
-                color: "var(--charcoal-mist)",
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.06em",
-              }}
-            >
-              Active Filters:
+        <div className="bg-white border-b border-(--border-subtle)">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2.5 flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: "var(--charcoal-mist)" }}>
+              Filters:
             </span>
             {category && (
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  background: "var(--red-muted)",
-                  color: "var(--red)",
-                  border: "1px solid var(--red-subtle)",
-                  borderRadius: 20,
-                  padding: "4px 12px 4px 10px",
-                  fontSize: 12,
-                  fontWeight: 600,
-                }}
-              >
-                <Tag size={11} />
-                {category}
-                <button
-                  onClick={() => navigate({ category: "", page: undefined })}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0,
-                    color: "var(--red)",
-                    display: "flex",
-                  }}
-                >
-                  <X size={12} />
-                </button>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold" style={{ background: "var(--red-muted)", color: "var(--red)", border: "1px solid var(--red-subtle)" }}>
+                <Tag className="w-2.5 h-2.5" />{category}
+                <button onClick={() => navigate({ category: "", page: undefined })} className="hover:opacity-70"><X className="w-3 h-3" /></button>
               </span>
             )}
             {(minPrice || maxPrice) && (
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  background: "var(--red-muted)",
-                  color: "var(--red)",
-                  border: "1px solid var(--red-subtle)",
-                  borderRadius: 20,
-                  padding: "4px 12px 4px 10px",
-                  fontSize: 12,
-                  fontWeight: 600,
-                }}
-              >
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold" style={{ background: "var(--red-muted)", color: "var(--red)", border: "1px solid var(--red-subtle)" }}>
                 ${minPrice || "0"} – ${maxPrice || "∞"}
-                <button
-                  onClick={() =>
-                    navigate({ minPrice: "", maxPrice: "", page: undefined })
-                  }
-                  style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0,
-                    color: "var(--red)",
-                    display: "flex",
-                  }}
-                >
-                  <X size={12} />
-                </button>
+                <button onClick={() => navigate({ minPrice: "", maxPrice: "", page: undefined })} className="hover:opacity-70"><X className="w-3 h-3" /></button>
               </span>
             )}
             {activeTagList.map((tag) => (
-              <span
-                key={tag}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  background: "var(--red-muted)",
-                  color: "var(--red)",
-                  border: "1px solid var(--red-subtle)",
-                  borderRadius: 20,
-                  padding: "4px 12px 4px 10px",
-                  fontSize: 12,
-                  fontWeight: 600,
-                }}
-              >
+              <span key={tag} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold" style={{ background: "var(--red-muted)", color: "var(--red)", border: "1px solid var(--red-subtle)" }}>
                 #{tag}
-                <button
-                  onClick={() => {
-                    const newTags = activeTagList.filter((t) => t !== tag);
-                    navigate({ tags: newTags.join(","), page: undefined });
-                  }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0,
-                    color: "var(--red)",
-                    display: "flex",
-                  }}
-                >
-                  <X size={12} />
-                </button>
+                <button onClick={() => navigate({ tags: activeTagList.filter((t) => t !== tag).join(","), page: undefined })} className="hover:opacity-70"><X className="w-3 h-3" /></button>
               </span>
             ))}
             <button
-              onClick={() =>
-                navigate({
-                  category: "",
-                  minPrice: "",
-                  maxPrice: "",
-                  tags: "",
-                  page: undefined,
-                })
-              }
-              style={{
-                fontSize: 11,
-                color: "var(--charcoal-mist)",
-                background: "none",
-                border: "1px solid var(--border-light)",
-                borderRadius: 20,
-                padding: "4px 10px",
-                cursor: "pointer",
-                fontWeight: 600,
-              }}
+              onClick={() => navigate({ category: "", minPrice: "", maxPrice: "", tags: "", page: undefined })}
+              className="text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-colors hover:border-(--charcoal) hover:text-(--charcoal)"
+              style={{ borderColor: "var(--border-light)", color: "var(--charcoal-mist)" }}
             >
-              Clear All
+              Clear all
             </button>
           </div>
         </div>
       )}
 
-      {/* ── Main Layout ───────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          maxWidth: 1200,
-          margin: "0 auto",
-          padding: "24px 24px 48px",
-          display: "flex",
-          gap: 28,
-          alignItems: "flex-start",
-        }}
-      >
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:block">{Sidebar}</div>
+      {/* ── Main Layout ─────────────────────────────────────────────────────────── */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex gap-7 items-start">
 
-        {/* Results Column */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {/* Toolbar */}
+        {/* Desktop sidebar */}
+        <aside
+          className="hidden lg:block shrink-0 sticky"
+          style={{ width: 220, top: 76 }}
+        >
           <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 16,
-              gap: 12,
-              flexWrap: "wrap",
-            }}
+            className="rounded-2xl p-4"
+            style={{ background: "#fff", border: "1px solid var(--border-light)", boxShadow: "var(--shadow-sm)" }}
           >
-            {/* Mobile filter button */}
-            <button
-              className="lg:hidden"
-              onClick={() => setMobileFiltersOpen(true)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                border: "1.5px solid var(--border-mid)",
-                borderRadius: 8,
-                padding: "8px 14px",
-                background:
-                  activeFilterCount > 0
-                    ? "var(--red-muted)"
-                    : "var(--bg-surface)",
-                color: activeFilterCount > 0 ? "var(--red)" : "var(--charcoal)",
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              <Filter size={14} />
-              Filters
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-3.5 h-3.5" style={{ color: "var(--charcoal)" }} />
+                <span className="text-[12px] font-bold" style={{ color: "var(--charcoal)", fontFamily: "var(--font-mono)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  Filters
+                </span>
+              </div>
               {activeFilterCount > 0 && (
-                <span
-                  style={{
-                    background: "var(--red)",
-                    color: "#fff",
-                    borderRadius: 10,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    padding: "1px 6px",
-                    marginLeft: 2,
-                  }}
-                >
+                <span className="text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center text-white" style={{ background: "var(--red)" }}>
                   {activeFilterCount}
                 </span>
               )}
-            </button>
+            </div>
+            {SidebarContent}
+          </div>
+        </aside>
 
-            {/* Sort dropdown */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div ref={sortDropdownRef} style={{ position: "relative" }}>
-                <button
-                  onClick={() => setShowSortDropdown(!showSortDropdown)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    border: "1.5px solid var(--border-light)",
-                    borderRadius: 8,
-                    padding: "7px 12px",
-                    background: "var(--bg-surface)",
-                    color: "var(--charcoal)",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    cursor: "pointer",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  <ArrowUpDown size={13} />
-                  {currentSortLabel}
-                  <ChevronDown
-                    size={13}
+        {/* Results column */}
+        <div className="flex-1 min-w-0">
+          {/* Toolbar */}
+          <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+            <div className="flex items-center gap-2">
+              {/* Mobile filter button */}
+              <button
+                className="lg:hidden flex items-center gap-2 px-3 h-9 rounded-xl border text-[13px] font-semibold transition-all"
+                onClick={() => setMobileFiltersOpen(true)}
+                style={{
+                  borderColor: activeFilterCount > 0 ? "var(--red)" : "var(--border-mid)",
+                  background: activeFilterCount > 0 ? "var(--red-muted)" : "var(--bg-surface)",
+                  color: activeFilterCount > 0 ? "var(--red)" : "var(--charcoal)",
+                }}
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center text-white" style={{ background: "var(--red)" }}>
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+
+              {/* View toggle */}
+              <div
+                className="flex rounded-xl overflow-hidden"
+                style={{ border: "1.5px solid var(--border-light)", background: "var(--bg-surface)" }}
+              >
+                {(["grid", "list"] as const).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setViewMode(m)}
+                    className="w-9 h-9 flex items-center justify-center transition-all"
                     style={{
-                      transform: showSortDropdown ? "rotate(180deg)" : "none",
-                      transition: "transform 0.15s",
+                      background: viewMode === m ? "var(--charcoal)" : "transparent",
+                      color: viewMode === m ? "#fff" : "var(--charcoal-soft)",
                     }}
-                  />
+                    aria-label={`${m} view`}
+                  >
+                    {m === "grid" ? <LayoutGrid className="w-3.5 h-3.5" /> : <List className="w-3.5 h-3.5" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 ml-auto">
+              {/* Result count */}
+              {results && !loading && (
+                <p className="text-[12px] hidden sm:block" style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-mono)" }}>
+                  <strong style={{ color: "var(--charcoal)" }}>{results.total.toLocaleString("en-US")}</strong> products
+                  {isPending && <Loader2 className="inline w-3 h-3 ml-1.5 animate-spin" />}
+                </p>
+              )}
+
+              {/* Sort dropdown */}
+              <div ref={sortMenuRef} className="relative">
+                <button
+                  onClick={() => setShowSortMenu(!showSortMenu)}
+                  className="flex items-center gap-2 h-9 px-3 rounded-xl border text-[13px] font-medium transition-all hover:border-(--charcoal)"
+                  style={{ borderColor: "var(--border-light)", background: "var(--bg-surface)", color: "var(--charcoal)" }}
+                >
+                  {currentSort.icon}
+                  <span className="hidden sm:inline">{currentSort.label}</span>
+                  <ChevronDown className="w-3.5 h-3.5" style={{ transform: showSortMenu ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
                 </button>
-                {showSortDropdown && (
+                {showSortMenu && (
                   <div
+                    className="absolute right-0 top-[calc(100%+6px)] rounded-xl overflow-hidden z-30"
                     style={{
-                      position: "absolute",
-                      top: "calc(100% + 4px)",
-                      right: 0,
-                      background: "var(--bg-surface)",
+                      background: "#fff",
                       border: "1px solid var(--border-light)",
-                      borderRadius: 10,
-                      boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+                      boxShadow: "var(--shadow-lg)",
                       minWidth: 200,
-                      zIndex: 50,
-                      overflow: "hidden",
                     }}
                   >
                     {SORT_OPTIONS.map((opt) => (
                       <button
                         key={opt.value}
-                        onClick={() => {
-                          navigate({ sort: opt.value, page: undefined });
-                          setShowSortDropdown(false);
-                        }}
+                        onClick={() => { navigate({ sort: opt.value, page: undefined }); setShowSortMenu(false); }}
+                        className="w-full text-left flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] transition-colors hover:bg-(--off-white-2)"
                         style={{
-                          width: "100%",
-                          textAlign: "left",
-                          padding: "9px 14px",
-                          border: "none",
-                          background:
-                            sort === opt.value
-                              ? "var(--red-muted)"
-                              : "transparent",
-                          color:
-                            sort === opt.value
-                              ? "var(--red)"
-                              : "var(--charcoal)",
-                          fontSize: 13,
+                          background: sort === opt.value ? "var(--red-muted)" : "transparent",
+                          color: sort === opt.value ? "var(--red)" : "var(--charcoal)",
                           fontWeight: sort === opt.value ? 600 : 400,
-                          cursor: "pointer",
-                          transition: "background 0.1s",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (sort !== opt.value)
-                            (e.target as HTMLElement).style.background =
-                              "var(--off-white-2)";
-                        }}
-                        onMouseLeave={(e) => {
-                          if (sort !== opt.value)
-                            (e.target as HTMLElement).style.background =
-                              "transparent";
                         }}
                       >
-                        {opt.value === "relevance" && (
-                          <Sparkles
-                            size={12}
-                            style={{ display: "inline", marginRight: 6 }}
-                          />
-                        )}
-                        {opt.value === "newest" && (
-                          <TrendingUp
-                            size={12}
-                            style={{ display: "inline", marginRight: 6 }}
-                          />
-                        )}
+                        <span style={{ color: sort === opt.value ? "var(--red)" : "var(--charcoal-mist)" }}>{opt.icon}</span>
                         {opt.label}
                       </button>
                     ))}
                   </div>
                 )}
               </div>
-
-              {/* View toggle */}
-              <div
-                style={{
-                  display: "flex",
-                  border: "1.5px solid var(--border-light)",
-                  borderRadius: 8,
-                  overflow: "hidden",
-                  background: "var(--bg-surface)",
-                }}
-              >
-                <button
-                  onClick={() => setViewMode("grid")}
-                  style={{
-                    padding: "7px 10px",
-                    border: "none",
-                    background:
-                      viewMode === "grid" ? "var(--charcoal)" : "transparent",
-                    color:
-                      viewMode === "grid" ? "#fff" : "var(--charcoal-soft)",
-                    cursor: "pointer",
-                    display: "flex",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  <LayoutGrid size={15} />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  style={{
-                    padding: "7px 10px",
-                    border: "none",
-                    background:
-                      viewMode === "list" ? "var(--charcoal)" : "transparent",
-                    color:
-                      viewMode === "list" ? "#fff" : "var(--charcoal-soft)",
-                    cursor: "pointer",
-                    display: "flex",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  <List size={15} />
-                </button>
-              </div>
             </div>
           </div>
 
-          {/* Error state */}
+          {/* Error */}
           {error && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                background: "#fff3f3",
-                border: "1px solid rgba(200,16,46,0.2)",
-                borderRadius: 10,
-                padding: "14px 18px",
-                marginBottom: 16,
-                fontSize: 13,
-                color: "var(--red)",
-              }}
-            >
-              <AlertCircle size={16} />
-              {error}
+            <div className="flex items-center gap-3 rounded-2xl px-4 py-3.5 mb-5" style={{ background: "var(--danger-bg)", border: "1px solid var(--danger-border)" }}>
+              {offline ? <Wifi className="w-5 h-5 shrink-0" style={{ color: "var(--danger)" }} /> : <AlertCircle className="w-5 h-5 shrink-0" style={{ color: "var(--danger)" }} />}
+              <span className="text-[13px] flex-1" style={{ color: "var(--danger)" }}>
+                {offline ? "No internet connection. Check your network and try again." : error}
+              </span>
               <button
                 onClick={fetchResults}
-                style={{
-                  marginLeft: "auto",
-                  background: "none",
-                  border: "1px solid var(--red)",
-                  borderRadius: 6,
-                  padding: "4px 10px",
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: "var(--red)",
-                  cursor: "pointer",
-                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold border transition-all hover:bg-(--danger) hover:text-white hover:border-(--danger)"
+                style={{ borderColor: "var(--danger)", color: "var(--danger)" }}
               >
+                <RefreshCw className="w-3.5 h-3.5" />
                 Retry
               </button>
             </div>
           )}
 
-          {/* Loading state */}
+          {/* Loading skeletons */}
           {loading && (
-            <div
-              style={{
-                display: viewMode === "grid" ? "grid" : "flex",
-                flexDirection: viewMode === "list" ? "column" : undefined,
-                gridTemplateColumns:
-                  viewMode === "grid"
-                    ? "repeat(auto-fill, minmax(180px, 1fr))"
-                    : undefined,
-                gap: 12,
-              }}
-            >
-              {Array.from({ length: viewMode === "grid" ? 12 : 5 }).map(
-                (_, i) => (
-                  <ProductSkeleton key={i} viewMode={viewMode} />
-                ),
-              )}
+            <div className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4" : "flex flex-col gap-3"}>
+              {Array.from({ length: viewMode === "grid" ? 12 : 5 }).map((_, i) => (
+                <CardSkeleton key={i} view={viewMode} />
+              ))}
             </div>
           )}
 
           {/* Empty state */}
           {!loading && results && results.items.length === 0 && (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "60px 24px",
-              }}
-            >
-              <div style={{ fontSize: 56, marginBottom: 16 }}>🔍</div>
-              <h2
-                style={{
-                  fontSize: 20,
-                  fontWeight: 700,
-                  color: "var(--charcoal)",
-                  marginBottom: 8,
-                }}
-              >
+            <div className="text-center py-20">
+              <div className="text-5xl mb-5">🔍</div>
+              <h2 className="font-bold text-xl mb-2" style={{ color: "var(--charcoal)", fontFamily: "var(--font-display)" }}>
                 No results found
               </h2>
-              <p
-                style={{
-                  fontSize: 14,
-                  color: "var(--charcoal-soft)",
-                  marginBottom: 24,
-                  maxWidth: 380,
-                  margin: "0 auto 24px",
-                }}
-              >
-                No products found for &ldquo;<strong>{q}</strong>&rdquo;. Try
-                different keywords or adjust your filters.
+              <p className="text-[14px] mb-8 max-w-sm mx-auto" style={{ color: "var(--charcoal-soft)" }}>
+                {q ? (
+                  <>No products for &ldquo;<strong>{q}</strong>&rdquo;. Try different keywords or adjust filters.</>
+                ) : (
+                  "Try adjusting your filters to see more results."
+                )}
               </p>
-              <div
-                style={{
-                  display: "flex",
-                  gap: 10,
-                  justifyContent: "center",
-                  flexWrap: "wrap",
-                }}
-              >
-                <button
-                  onClick={() =>
-                    navigate({
-                      q: "",
-                      category: "",
-                      minPrice: "",
-                      maxPrice: "",
-                      tags: "",
-                      page: undefined,
-                    })
-                  }
-                  style={{
-                    background: "var(--charcoal)",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    padding: "10px 20px",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
-                >
-                  Clear Filters
-                </button>
+              <div className="flex gap-3 justify-center flex-wrap">
+                {activeFilterCount > 0 && (
+                  <button
+                    onClick={() => navigate({ category: "", minPrice: "", maxPrice: "", tags: "", q: "", page: undefined })}
+                    className="px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
+                    style={{ background: "var(--charcoal)" }}
+                  >
+                    Clear Filters
+                  </button>
+                )}
                 <Link
                   href="/"
-                  style={{
-                    background: "transparent",
-                    color: "var(--charcoal)",
-                    border: "1.5px solid var(--border-mid)",
-                    borderRadius: 8,
-                    padding: "10px 20px",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    textDecoration: "none",
-                    display: "inline-block",
-                  }}
+                  className="px-5 py-2.5 rounded-xl text-[13px] font-semibold border transition-colors hover:border-(--charcoal)"
+                  style={{ borderColor: "var(--border-mid)", color: "var(--charcoal)" }}
                 >
                   Back to Home
                 </Link>
@@ -1945,116 +1165,68 @@ export default function SearchPage() {
             </div>
           )}
 
-          {/* Results grid/list */}
+          {/* No query state */}
+          {!loading && !results && !error && !q && (
+            <div className="text-center py-20">
+              <Search className="w-12 h-12 mx-auto mb-4" style={{ color: "rgba(30,30,30,0.12)" }} strokeWidth={1.5} />
+              <h2 className="font-normal text-2xl mb-2" style={{ color: "var(--charcoal)", fontFamily: "var(--font-display)" }}>
+                What are you looking for?
+              </h2>
+              <p className="text-[14px]" style={{ color: "var(--charcoal-soft)" }}>
+                Type something in the search box above to discover products.
+              </p>
+            </div>
+          )}
+
+          {/* Results */}
           {!loading && results && results.items.length > 0 && (
             <>
-              <div
-                style={{
-                  display: viewMode === "grid" ? "grid" : "flex",
-                  flexDirection: viewMode === "list" ? "column" : undefined,
-                  gridTemplateColumns:
-                    viewMode === "grid"
-                      ? "repeat(auto-fill, minmax(180px, 1fr))"
-                      : undefined,
-                  gap: 12,
-                }}
-              >
-                {results.items.map((product) => (
-                  <SearchProductCard
-                    key={product.id}
-                    product={product}
-                    viewMode={viewMode}
-                  />
+              <div className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4" : "flex flex-col gap-3"}>
+                {results.items.map((p) => (
+                  <ProductCard key={p.id} product={p} view={viewMode} />
                 ))}
               </div>
 
               {/* Pagination */}
               {results.totalPages > 1 && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 6,
-                    marginTop: 32,
-                  }}
-                >
+                <div className="flex items-center justify-center gap-2 mt-10 flex-wrap">
                   <button
                     onClick={() => navigate({ page: page - 1 })}
                     disabled={page <= 1}
-                    style={{
-                      padding: "8px 16px",
-                      border: "1.5px solid var(--border-light)",
-                      borderRadius: 8,
-                      background: "var(--bg-surface)",
-                      color:
-                        page <= 1 ? "var(--charcoal-mist)" : "var(--charcoal)",
-                      fontSize: 13,
-                      fontWeight: 500,
-                      cursor: page <= 1 ? "default" : "pointer",
-                      opacity: page <= 1 ? 0.5 : 1,
-                    }}
+                    className="h-10 px-4 rounded-xl text-[13px] font-medium border transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:border-(--charcoal)"
+                    style={{ borderColor: "var(--border-light)", background: "#fff", color: "var(--charcoal)" }}
                   >
-                    ← Previous
+                    ← Prev
                   </button>
 
-                  {Array.from({ length: Math.min(results.totalPages, 7) }).map(
-                    (_, i) => {
-                      let pageNum = i + 1;
-                      if (results.totalPages > 7) {
-                        if (page <= 4) pageNum = i + 1;
-                        else if (page >= results.totalPages - 3)
-                          pageNum = results.totalPages - 6 + i;
-                        else pageNum = page - 3 + i;
-                      }
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => navigate({ page: pageNum })}
-                          style={{
-                            width: 36,
-                            height: 36,
-                            border:
-                              page === pageNum
-                                ? "none"
-                                : "1.5px solid var(--border-light)",
-                            borderRadius: 8,
-                            background:
-                              page === pageNum
-                                ? "var(--red)"
-                                : "var(--bg-surface)",
-                            color:
-                              page === pageNum ? "#fff" : "var(--charcoal)",
-                            fontSize: 13,
-                            fontWeight: page === pageNum ? 700 : 400,
-                            cursor: "pointer",
-                            transition: "all 0.15s",
-                          }}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    },
-                  )}
+                  {Array.from({ length: Math.min(results.totalPages, 7) }, (_, i) => {
+                    let pg = i + 1;
+                    if (results.totalPages > 7) {
+                      if (page <= 4)                       pg = i + 1;
+                      else if (page >= results.totalPages - 3) pg = results.totalPages - 6 + i;
+                      else                                  pg = page - 3 + i;
+                    }
+                    return (
+                      <button
+                        key={pg}
+                        onClick={() => navigate({ page: pg })}
+                        className="w-10 h-10 rounded-xl text-[13px] font-semibold transition-all"
+                        style={{
+                          background: page === pg ? "var(--red)" : "#fff",
+                          color:      page === pg ? "#fff" : "var(--charcoal)",
+                          border:     page === pg ? "none" : "1.5px solid var(--border-light)",
+                        }}
+                      >
+                        {pg}
+                      </button>
+                    );
+                  })}
 
                   <button
                     onClick={() => navigate({ page: page + 1 })}
                     disabled={page >= results.totalPages}
-                    style={{
-                      padding: "8px 16px",
-                      border: "1.5px solid var(--border-light)",
-                      borderRadius: 8,
-                      background: "var(--bg-surface)",
-                      color:
-                        page >= results.totalPages
-                          ? "var(--charcoal-mist)"
-                          : "var(--charcoal)",
-                      fontSize: 13,
-                      fontWeight: 500,
-                      cursor:
-                        page >= results.totalPages ? "default" : "pointer",
-                      opacity: page >= results.totalPages ? 0.5 : 1,
-                    }}
+                    className="h-10 px-4 rounded-xl text-[13px] font-medium border transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:border-(--charcoal)"
+                    style={{ borderColor: "var(--border-light)", background: "#fff", color: "var(--charcoal)" }}
                   >
                     Next →
                   </button>
@@ -2065,81 +1237,66 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {/* ── Mobile Filters Drawer ─────────────────────────────────────────────── */}
+      {/* ── Mobile Filters Drawer ──────────────────────────────────────────────── */}
       {mobileFiltersOpen && (
         <>
+          {/* Backdrop — NO backdrop-filter blur (was causing page-wide blur) */}
           <div
             onClick={() => setMobileFiltersOpen(false)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "rgba(0,0,0,0.5)",
-              zIndex: 60,
-              backdropFilter: "blur(2px)",
-            }}
+            className="fixed inset-0 z-40"
+            style={{ background: "rgba(0,0,0,0.45)" }}
           />
+          {/* Drawer */}
           <div
+            className="fixed right-0 top-0 bottom-0 z-50 overflow-y-auto"
             style={{
-              position: "fixed",
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: 300,
-              background: "var(--bg-surface)",
-              zIndex: 70,
-              overflowY: "auto",
-              padding: 24,
-              boxShadow: "-8px 0 32px rgba(0,0,0,0.15)",
+              width: "min(320px, 90vw)",
+              background: "#fff",
+              boxShadow: "-8px 0 32px rgba(0,0,0,0.12)",
             }}
           >
+            {/* Header */}
             <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: 24,
-              }}
+              className="sticky top-0 flex items-center justify-between px-5 py-4 bg-white z-10"
+              style={{ borderBottom: "1px solid var(--border-light)" }}
             >
-              <h3
-                style={{
-                  fontSize: 16,
-                  fontWeight: 700,
-                  color: "var(--charcoal)",
-                  margin: 0,
-                }}
-              >
-                Filters
-              </h3>
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4" style={{ color: "var(--charcoal)" }} />
+                <span className="font-bold text-[14px]" style={{ color: "var(--charcoal)" }}>Filters</span>
+                {activeFilterCount > 0 && (
+                  <span className="text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center text-white" style={{ background: "var(--red)" }}>
+                    {activeFilterCount}
+                  </span>
+                )}
+              </div>
               <button
                 onClick={() => setMobileFiltersOpen(false)}
-                style={{
-                  background: "none",
-                  border: "1px solid var(--border-light)",
-                  borderRadius: 8,
-                  padding: 6,
-                  cursor: "pointer",
-                  display: "flex",
-                  color: "var(--charcoal-soft)",
-                }}
+                className="w-9 h-9 rounded-xl flex items-center justify-center border transition-colors hover:border-(--charcoal)"
+                style={{ borderColor: "var(--border-light)", color: "var(--charcoal-soft)" }}
               >
-                <X size={16} />
+                <X className="w-4 h-4" />
               </button>
             </div>
-            {Sidebar}
+
+            {/* Filter content */}
+            <div className="p-5">{SidebarContent}</div>
+
+            {/* Footer CTA */}
+            <div
+              className="sticky bottom-0 px-5 py-4 bg-white"
+              style={{ borderTop: "1px solid var(--border-light)" }}
+            >
+              <button
+                onClick={() => setMobileFiltersOpen(false)}
+                className="w-full h-12 rounded-2xl text-[13px] font-bold text-white transition-opacity hover:opacity-90"
+                style={{ background: "var(--charcoal)" }}
+              >
+                Show {results?.total ?? "–"} results
+              </button>
+            </div>
           </div>
         </>
       )}
-
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }
