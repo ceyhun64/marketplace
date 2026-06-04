@@ -7,9 +7,6 @@ out/
 appsettings.Development.json
 appsettings.Production.json
 
-# EF Core migrations tool output
-Migrations/
-
 # Test projects
 **/*.Tests/
 **/*.Test/
