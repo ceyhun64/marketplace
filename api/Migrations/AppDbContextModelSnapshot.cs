@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using NpgsqlTypes;
 using api.Infrastructure.Persistence;
 
 #nullable disable
@@ -63,7 +64,7 @@ namespace api.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("AccountingEntries", (string)null);
+                    b.ToTable("AccountingEntries");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.AnnouncementItem", b =>
@@ -106,7 +107,7 @@ namespace api.Migrations
 
                     b.HasIndex("SortOrder");
 
-                    b.ToTable("Announcements", (string)null);
+                    b.ToTable("Announcements");
 
                     b.HasData(
                         new
@@ -189,7 +190,46 @@ namespace api.Migrations
 
                     b.HasIndex("ParentId");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("api.Domain.Entities.CommissionRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("MerchantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("PlanType")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("RatePercent")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("MerchantId", "CategoryId", "PlanType", "Priority");
+
+                    b.ToTable("CommissionRules");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.Courier", b =>
@@ -231,7 +271,101 @@ namespace api.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Couriers", (string)null);
+                    b.ToTable("Couriers");
+                });
+
+            modelBuilder.Entity("api.Domain.Entities.Dispute", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AdminResolution")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.PrimitiveCollection<List<string>>("EvidenceImages")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<Guid>("InitiatedByCustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MerchantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ResolvedByAdminId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("MerchantId", "Status");
+
+                    b.ToTable("Disputes");
+                });
+
+            modelBuilder.Entity("api.Domain.Entities.DisputeMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.PrimitiveCollection<List<string>>("Attachments")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DisputeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SenderRole")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DisputeId");
+
+                    b.ToTable("DisputeMessages");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.HeroSettings", b =>
@@ -290,7 +424,7 @@ namespace api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("HeroSettings", (string)null);
+                    b.ToTable("HeroSettings");
 
                     b.HasData(
                         new
@@ -387,7 +521,7 @@ namespace api.Migrations
                     b.HasIndex("OrderId")
                         .IsUnique();
 
-                    b.ToTable("Invoices", (string)null);
+                    b.ToTable("Invoices");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.MerchantPlugin", b =>
@@ -432,7 +566,7 @@ namespace api.Migrations
 
                     b.HasIndex("PluginId");
 
-                    b.ToTable("MerchantPlugins", (string)null);
+                    b.ToTable("MerchantPlugins");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.MerchantProfile", b =>
@@ -491,6 +625,18 @@ namespace api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("StripeAccountId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("StripeOnboardedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("StripeOnboardingComplete")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("TermsAcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -505,7 +651,7 @@ namespace api.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("MerchantProfiles", (string)null);
+                    b.ToTable("MerchantProfiles");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.MerchantWallet", b =>
@@ -526,6 +672,12 @@ namespace api.Migrations
                     b.Property<decimal>("PendingBalance")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bytea");
+
                     b.Property<decimal>("TotalWithdrawn")
                         .HasColumnType("decimal(18,2)");
 
@@ -537,7 +689,7 @@ namespace api.Migrations
                     b.HasIndex("MerchantId")
                         .IsUnique();
 
-                    b.ToTable("MerchantWallets", (string)null);
+                    b.ToTable("MerchantWallets");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.Order", b =>
@@ -626,7 +778,7 @@ namespace api.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.OrderItem", b =>
@@ -676,7 +828,7 @@ namespace api.Migrations
 
                     b.HasIndex("VendorOrderId");
 
-                    b.ToTable("OrderItems", (string)null);
+                    b.ToTable("OrderItems");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.Plugin", b =>
@@ -730,7 +882,7 @@ namespace api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Plugins", (string)null);
+                    b.ToTable("Plugins");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.Product", b =>
@@ -762,6 +914,10 @@ namespace api.Migrations
                     b.Property<Guid>("MerchantId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ModerationStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -774,6 +930,17 @@ namespace api.Migrations
 
                     b.Property<bool>("PublishToStore")
                         .HasColumnType("boolean");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bytea");
+
+                    b.Property<NpgsqlTsVector>("SearchVector")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("tsvector")
+                        .HasAnnotation("Npgsql:TsVectorConfig", "english")
+                        .HasAnnotation("Npgsql:TsVectorProperties", new[] { "Name", "Description" });
 
                     b.Property<string>("ShortDescription")
                         .HasColumnType("text");
@@ -792,9 +959,17 @@ namespace api.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("MerchantId");
+                    b.HasIndex("SearchVector");
 
-                    b.ToTable("Products", (string)null);
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchVector"), "GIN");
+
+                    b.HasIndex("IsApproved", "IsDeleted", "CreatedAt");
+
+                    b.HasIndex("MerchantId", "IsDeleted", "PublishToMarket");
+
+                    b.HasIndex("PublishToMarket", "IsApproved", "IsDeleted", "CategoryId", "Price");
+
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.ProductQuestion", b =>
@@ -836,7 +1011,7 @@ namespace api.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductQuestions", (string)null);
+                    b.ToTable("ProductQuestions");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.ProductVariant", b =>
@@ -879,7 +1054,96 @@ namespace api.Migrations
                     b.HasIndex("ProductId", "SKU")
                         .IsUnique();
 
-                    b.ToTable("ProductVariants", (string)null);
+                    b.ToTable("ProductVariants");
+                });
+
+            modelBuilder.Entity("api.Domain.Entities.ReturnRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.PrimitiveCollection<List<string>>("Images")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<Guid>("MerchantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MerchantNote")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("MerchantRespondedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("RefundAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime?>("RefundedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReturnTrackingNumber")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("StripeRefundId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("MerchantId", "Status");
+
+                    b.ToTable("ReturnRequests");
+                });
+
+            modelBuilder.Entity("api.Domain.Entities.ReturnRequestItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OrderItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ReturnRequestId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderItemId");
+
+                    b.HasIndex("ReturnRequestId");
+
+                    b.ToTable("ReturnRequestItems");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.Review", b =>
@@ -913,7 +1177,7 @@ namespace api.Migrations
                     b.HasIndex("CustomerId", "ProductId")
                         .IsUnique();
 
-                    b.ToTable("Reviews", (string)null);
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.Shipment", b =>
@@ -948,6 +1212,9 @@ namespace api.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("VendorOrderId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CourierId");
@@ -958,7 +1225,10 @@ namespace api.Migrations
                     b.HasIndex("TrackingNumber")
                         .IsUnique();
 
-                    b.ToTable("Shipments", (string)null);
+                    b.HasIndex("VendorOrderId")
+                        .IsUnique();
+
+                    b.ToTable("Shipments");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.ShipmentStatusHistory", b =>
@@ -990,7 +1260,7 @@ namespace api.Migrations
 
                     b.HasIndex("ShipmentId");
 
-                    b.ToTable("ShipmentStatusHistories", (string)null);
+                    b.ToTable("ShipmentStatusHistories");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.Subscription", b =>
@@ -1034,7 +1304,7 @@ namespace api.Migrations
                     b.HasIndex("MerchantId")
                         .IsUnique();
 
-                    b.ToTable("Subscriptions", (string)null);
+                    b.ToTable("Subscriptions");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.User", b =>
@@ -1105,7 +1375,7 @@ namespace api.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.VendorOrder", b =>
@@ -1151,7 +1421,7 @@ namespace api.Migrations
 
                     b.HasIndex("MerchantId", "Status");
 
-                    b.ToTable("VendorOrders", (string)null);
+                    b.ToTable("VendorOrders");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.WalletTransaction", b =>
@@ -1206,7 +1476,7 @@ namespace api.Migrations
 
                     b.HasIndex("WalletId");
 
-                    b.ToTable("WalletTransactions", (string)null);
+                    b.ToTable("WalletTransactions");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.WishlistItem", b =>
@@ -1236,7 +1506,67 @@ namespace api.Migrations
                     b.HasIndex("CustomerId", "ProductId")
                         .IsUnique();
 
-                    b.ToTable("WishlistItems", (string)null);
+                    b.ToTable("WishlistItems");
+                });
+
+            modelBuilder.Entity("api.Domain.Entities.WithdrawalRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AdminNote")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("BankAccountName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BankIban")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BankName")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MerchantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ProcessedByAdminId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("StripePayoutId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("WalletId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WalletId");
+
+                    b.HasIndex("MerchantId", "Status");
+
+                    b.ToTable("WithdrawalRequests");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.AccountingEntry", b =>
@@ -1275,6 +1605,21 @@ namespace api.Migrations
                     b.Navigation("Parent");
                 });
 
+            modelBuilder.Entity("api.Domain.Entities.CommissionRule", b =>
+                {
+                    b.HasOne("api.Domain.Entities.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId");
+
+                    b.HasOne("api.Domain.Entities.MerchantProfile", "Merchant")
+                        .WithMany()
+                        .HasForeignKey("MerchantId");
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Merchant");
+                });
+
             modelBuilder.Entity("api.Domain.Entities.Courier", b =>
                 {
                     b.HasOne("api.Domain.Entities.User", "User")
@@ -1284,6 +1629,44 @@ namespace api.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("api.Domain.Entities.Dispute", b =>
+                {
+                    b.HasOne("api.Domain.Entities.User", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("api.Domain.Entities.MerchantProfile", "Merchant")
+                        .WithMany()
+                        .HasForeignKey("MerchantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("api.Domain.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Merchant");
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("api.Domain.Entities.DisputeMessage", b =>
+                {
+                    b.HasOne("api.Domain.Entities.Dispute", "Dispute")
+                        .WithMany("Messages")
+                        .HasForeignKey("DisputeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Dispute");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.Invoice", b =>
@@ -1454,6 +1837,52 @@ namespace api.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("api.Domain.Entities.ReturnRequest", b =>
+                {
+                    b.HasOne("api.Domain.Entities.User", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("api.Domain.Entities.MerchantProfile", "Merchant")
+                        .WithMany()
+                        .HasForeignKey("MerchantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("api.Domain.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Merchant");
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("api.Domain.Entities.ReturnRequestItem", b =>
+                {
+                    b.HasOne("api.Domain.Entities.OrderItem", "OrderItem")
+                        .WithMany()
+                        .HasForeignKey("OrderItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("api.Domain.Entities.ReturnRequest", "ReturnRequest")
+                        .WithMany("Items")
+                        .HasForeignKey("ReturnRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OrderItem");
+
+                    b.Navigation("ReturnRequest");
+                });
+
             modelBuilder.Entity("api.Domain.Entities.Review", b =>
                 {
                     b.HasOne("api.Domain.Entities.User", "Customer")
@@ -1486,9 +1915,15 @@ namespace api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("api.Domain.Entities.VendorOrder", "VendorOrder")
+                        .WithMany()
+                        .HasForeignKey("VendorOrderId");
+
                     b.Navigation("Courier");
 
                     b.Navigation("Order");
+
+                    b.Navigation("VendorOrder");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.ShipmentStatusHistory", b =>
@@ -1574,6 +2009,25 @@ namespace api.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("api.Domain.Entities.WithdrawalRequest", b =>
+                {
+                    b.HasOne("api.Domain.Entities.MerchantProfile", "Merchant")
+                        .WithMany()
+                        .HasForeignKey("MerchantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("api.Domain.Entities.MerchantWallet", "Wallet")
+                        .WithMany()
+                        .HasForeignKey("WalletId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Merchant");
+
+                    b.Navigation("Wallet");
+                });
+
             modelBuilder.Entity("api.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Products");
@@ -1584,6 +2038,11 @@ namespace api.Migrations
             modelBuilder.Entity("api.Domain.Entities.Courier", b =>
                 {
                     b.Navigation("Shipments");
+                });
+
+            modelBuilder.Entity("api.Domain.Entities.Dispute", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.Invoice", b =>
@@ -1626,6 +2085,11 @@ namespace api.Migrations
                     b.Navigation("Variants");
 
                     b.Navigation("WishlistItems");
+                });
+
+            modelBuilder.Entity("api.Domain.Entities.ReturnRequest", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("api.Domain.Entities.Shipment", b =>
