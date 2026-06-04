@@ -492,38 +492,26 @@ try
             }
             else
             {
-                // Production: NEVER auto-migrate at startup.
+                // Production: auto-migrate on startup.
                 //
-                // Reasons:
-                //  1. Rolling deployments — multiple pods starting simultaneously
-                //     will race on the same migration, causing lock conflicts.
-                //  2. Long-running migrations can lock hot tables and cause downtime.
-                //  3. Migrations should be reviewed and applied as a deliberate CI/CD
-                //     step, not silently on every cold start.
-                //
-                // Recommended production strategy:
-                //  - Generate a SQL script: `dotnet ef migrations script --idempotent`
-                //  - Apply the script in your CI/CD pipeline against the live DB
-                //    BEFORE deploying the new application image.
-                //  - Alternatively run a dedicated "migration job" container that
-                //    runs `dotnet ef database update` once before the main fleet starts.
-                //
-                // We still verify connectivity so the app fails fast if the DB
-                // is unreachable rather than crashing on the first request.
+                // MigrateAsync() is idempotent — it only applies migrations that
+                // haven't been applied yet, so re-deploying the same image is safe.
+                // For single-instance deployments (Render free/basic tier) this is
+                // the simplest and most reliable strategy.
                 var pendingMigrations = (await db.Database.GetPendingMigrationsAsync()).ToList();
                 if (pendingMigrations.Count > 0)
                 {
-                    logger.LogError(
-                        "STARTUP BLOCKED — {Count} pending migration(s) detected in production: {Migrations}. " +
-                        "Apply migrations via the CI/CD pipeline before deploying this image.",
+                    logger.LogInformation(
+                        "Applying {Count} pending migration(s): {Migrations}",
                         pendingMigrations.Count,
                         string.Join(", ", pendingMigrations));
-                    throw new InvalidOperationException(
-                        $"Production startup blocked: {pendingMigrations.Count} pending EF migrations. " +
-                        "Run `dotnet ef migrations script --idempotent` and apply via CI/CD.");
+                    await db.Database.MigrateAsync();
+                    logger.LogInformation("Database migration completed.");
                 }
-
-                logger.LogInformation("Database schema is up to date. No pending migrations.");
+                else
+                {
+                    logger.LogInformation("Database schema is up to date. No pending migrations.");
+                }
             }
         }
         catch (InvalidOperationException)
