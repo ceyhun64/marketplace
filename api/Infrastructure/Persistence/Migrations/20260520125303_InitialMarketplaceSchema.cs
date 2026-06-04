@@ -22,9 +22,8 @@ namespace api.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_Products_MerchantId",
-                table: "Products");
+            // IF EXISTS — fresh databases won't have this index from a prior migration
+            migrationBuilder.Sql(@"DROP INDEX IF EXISTS ""IX_Products_MerchantId"";");
 
             migrationBuilder.AddColumn<Guid>(
                 name: "VendorOrderId",
