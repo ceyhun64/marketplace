@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Store } from "lucide-react";
+import { ShoppingCart, Store, GitCompare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatPrice } from "@/lib/format";
 import type { Product } from "@/types/entities";
 import { WishlistButton } from "@/components/modules/store/WishlistButton";
+import { useCompareStore } from "@/hooks/use-compare";
+import { toast } from "sonner";
 
 interface ProductCardProps {
   product: Product;
@@ -131,13 +133,14 @@ export function ProductCard({
           </div>
         )}
 
-        {/* Wishlist — revealed on hover */}
-        <div className="absolute right-2.5 top-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        {/* Action buttons (wishlist + compare) — revealed on hover */}
+        <div className="absolute right-2.5 top-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col gap-1.5">
           <WishlistButton
             productId={product.id}
             productName={product.name}
             variant="icon"
           />
+          <CompareIconButton product={product} />
         </div>
       </Link>
 
@@ -213,3 +216,61 @@ export function ProductCard({
 }
 
 export default ProductCard;
+
+// ── Compare icon button (used inside ProductCard image overlay) ────────────────
+function CompareIconButton({ product }: { product: Product }) {
+  const { toggle, isInCompare } = useCompareStore();
+  const inCompare = isInCompare(product.id);
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const added = toggle({
+      id:           product.id,
+      name:         product.name,
+      images:       product.images ?? [],
+      price:        product.price,
+      rating:       0,
+      reviewCount:  0,
+      stock:        { inStock: product.stock > 0, quantity: product.stock },
+      categoryName: product.categoryName ?? "",
+      merchantName: product.merchantStoreName ?? "",
+      merchantSlug: product.merchantSlug,
+      merchantId:   product.merchantId,
+      tags:         product.tags ?? [],
+      specifications: {},
+      shipping:     { freeShipping: false },
+    });
+
+    if (!added && inCompare) {
+      toast.success(`Removed from compare`);
+    } else if (added) {
+      toast.success("Added to compare", {
+        action: { label: "Compare Now", onClick: () => { window.location.href = "/compare"; } },
+      });
+    } else {
+      toast.error("You can compare up to 3 products.");
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      aria-label={inCompare ? "Remove from compare" : "Add to compare"}
+      title={inCompare ? "Remove from compare" : "Add to compare"}
+      className="relative flex items-center justify-center w-10 h-10 rounded-full shadow-sm transition-all duration-200"
+      style={{
+        background:  inCompare ? "rgba(200,16,46,0.1)" : "rgba(255,255,255,0.9)",
+        border:      inCompare ? "1px solid rgba(200,16,46,0.35)" : "1px solid rgba(30,30,30,0.15)",
+        backdropFilter: "blur(4px)",
+      }}
+    >
+      <GitCompare
+        className="w-4 h-4"
+        style={{ color: inCompare ? "var(--red)" : "var(--charcoal-mist)" }}
+      />
+    </button>
+  );
+}

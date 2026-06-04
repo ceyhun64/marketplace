@@ -55,6 +55,7 @@ import OtherSellers from "@/components/modules/product/productDetail/OtherSeller
 import { useHybridWishlist } from "@/hooks/use-hybrid-wishlist";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
+import { useCompareStore } from "@/hooks/use-compare";
 import api from "@/lib/api";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1046,68 +1047,62 @@ function RatingBar({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CompareButton
+// CompareButton — uses shared useCompareStore (localStorage-persisted)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const COMPARE_KEY = "bazr_compare";
+function CompareButton({ product }: { product: ProductData }) {
+  const { toggle, isInCompare } = useCompareStore();
+  const inCompare = isInCompare(product.id);
 
-function useCompare(productId: string) {
-  const [inCompare, setInCompare] = useState(false);
+  const handleToggle = () => {
+    const added = toggle({
+      id:                 product.id,
+      name:               product.title,
+      images:             product.images,
+      price:              product.price,
+      originalPrice:      product.oldPrice ?? undefined,
+      discountPercentage: product.discountPercentage,
+      rating:             product.rating,
+      reviewCount:        product.reviewCount,
+      stock:              product.stock,
+      categoryName:       product.category.name,
+      merchantName:       product.brand?.name ?? "BAZR",
+      merchantSlug:       product.brand?.slug,
+      merchantId:         product.brand?.id,
+      tags:               product.tags ?? [],
+      specifications: {
+        weight:     product.specifications.weight,
+        dimensions: product.specifications.dimensions,
+        material:   product.specifications.material,
+        warranty:   product.specifications.warranty,
+        origin:     product.specifications.origin,
+      },
+      shipping: {
+        freeShipping:      product.shipping.freeShipping,
+        estimatedDelivery: product.shipping.estimatedDelivery,
+      },
+    });
 
-  useEffect(() => {
-    try {
-      const ids: string[] = JSON.parse(
-        localStorage.getItem(COMPARE_KEY) ?? "[]",
-      );
-      setInCompare(ids.includes(productId));
-    } catch {}
-  }, [productId]);
-
-  const toggle = (title: string) => {
-    try {
-      let ids: string[] = JSON.parse(localStorage.getItem(COMPARE_KEY) ?? "[]");
-      if (ids.includes(productId)) {
-        ids = ids.filter((id) => id !== productId);
-        setInCompare(false);
-        toast.success(`"${title}" removed from compare list`);
-      } else {
-        if (ids.length >= 4) {
-          toast.error("You can compare up to 4 products.");
-          return;
-        }
-        ids = [...ids, productId];
-        setInCompare(true);
-        toast.success(`Added to compare`, {
-          action: {
-            label: "Compare Now",
-            onClick: () => (window.location.href = "/compare"),
-          },
-        });
-      }
-      localStorage.setItem(COMPARE_KEY, JSON.stringify(ids));
-    } catch {}
+    if (!added && inCompare) {
+      toast.success(`"${product.title}" removed from compare list`);
+    } else if (added) {
+      toast.success("Added to compare", {
+        action: {
+          label: "Compare Now",
+          onClick: () => (window.location.href = "/compare"),
+        },
+      });
+    } else {
+      toast.error(`You can compare up to 3 products.`);
+    }
   };
 
-  return { inCompare, toggle };
-}
-
-function CompareButton({
-  productId,
-  productTitle,
-}: {
-  productId: string;
-  productTitle: string;
-}) {
-  const { inCompare, toggle } = useCompare(productId);
   return (
     <button
-      onClick={() => toggle(productTitle)}
+      onClick={handleToggle}
       className="flex items-center gap-1.5 text-[11px] font-semibold transition-colors"
-      style={{
-        color: inCompare ? "var(--info)" : "var(--charcoal-mist)",
-        fontFamily: "var(--font-body)",
-      }}
-      aria-label="Add to compare"
+      style={{ color: inCompare ? "var(--red)" : "var(--charcoal-mist)" }}
+      aria-label={inCompare ? "Remove from compare" : "Add to compare"}
     >
       <GitCompare size={13} />
       {inCompare ? "Remove from Compare" : "Add to Compare"}
@@ -1819,10 +1814,7 @@ export default function ProductDetailPage() {
 
             {/* Compare + secondary actions row */}
             <div className="flex items-center justify-between">
-              <CompareButton
-                productId={product.id}
-                productTitle={product.title}
-              />
+              <CompareButton product={product} />
               {product.meta.purchaseCount > 0 && (
                 <span
                   className="text-[11px]"

@@ -18,20 +18,20 @@ import api from "@/lib/api";
 import type { MerchantProfile } from "@/types/entities";
 
 const CATEGORIES = [
-  "Tümü",
-  "Elektronik",
-  "Moda",
-  "Ev & Yaşam",
-  "Spor",
-  "Güzellik",
-  "Oyuncak",
-  "Kitap",
+  "All",
+  "Electronics",
+  "Fashion",
+  "Home & Living",
+  "Sports",
+  "Beauty",
+  "Toys",
+  "Books",
 ];
 
 const SORT_OPTIONS = [
-  { key: "featured", label: "Öne Çıkanlar" },
+  { key: "featured", label: "Featured" },
   { key: "name", label: "A → Z" },
-  { key: "rating", label: "En Yüksek Puan" },
+  { key: "rating", label: "Top Rated" },
 ] as const;
 
 type SortKey = (typeof SORT_OPTIONS)[number]["key"];
@@ -211,7 +211,7 @@ function BrandCard({ brand }: { brand: MerchantProfile }) {
                   fill: "#eab308",
                 }}
               />
-              {rating.toFixed(1)} · {productCount} ürün
+              {rating.toFixed(1)} · {productCount} products
             </div>
           </div>
         </div>
@@ -247,7 +247,7 @@ function BrandCard({ brand }: { brand: MerchantProfile }) {
             color: "var(--charcoal)",
           }}
         >
-          Mağazayı Gör <ChevronRight style={{ width: 14, height: 14 }} />
+          Visit Store <ChevronRight style={{ width: 14, height: 14 }} />
         </div>
       </div>
     </Link>
@@ -270,7 +270,7 @@ function useBrands() {
 export default function BrandsPage() {
   const { data: brands, isLoading, isError } = useBrands();
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("Tümü");
+  const [activeCategory, setActiveCategory] = useState("All");
   const [sortKey, setSortKey] = useState<SortKey>("featured");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -282,7 +282,7 @@ export default function BrandsPage() {
     }
     if (sortKey === "name") {
       list = [...list].sort((a, b) =>
-        (a.storeName ?? "").localeCompare(b.storeName ?? "", "tr"),
+        (a.storeName ?? "").localeCompare(b.storeName ?? "", "en"),
       );
     }
     return list;
@@ -344,7 +344,7 @@ export default function BrandsPage() {
                 textTransform: "uppercase",
               }}
             >
-              Tüm Markalar
+              All Brands
             </span>
           </div>
           <h1
@@ -357,8 +357,8 @@ export default function BrandsPage() {
               marginBottom: "1rem",
             }}
           >
-            Keşfet,{" "}
-            <span style={{ color: "var(--red-light)" }}>Karşılaştır</span>, Al
+            Discover,{" "}
+            <span style={{ color: "var(--red-light)" }}>Compare</span>, Buy
           </h1>
           <p
             style={{
@@ -369,8 +369,8 @@ export default function BrandsPage() {
               marginBottom: "2rem",
             }}
           >
-            BAZR'daki yüzlerce markayı keşfet. Güvenilir satıcılardan orijinal
-            ürünler, rekabetçi fiyatlar.
+            Browse hundreds of brands on BAZR. Authentic products from
+            verified sellers at competitive prices.
           </p>
 
           {/* Search */}
@@ -387,7 +387,7 @@ export default function BrandsPage() {
               }}
             />
             <Input
-              placeholder="Marka ara..."
+              placeholder="Search brands…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{
@@ -496,7 +496,7 @@ export default function BrandsPage() {
               fontWeight: 600,
             }}
           >
-            Markalar yüklenemedi. Lütfen tekrar deneyin.
+            Failed to load brands. Please try again.
           </div>
         )}
 
@@ -532,7 +532,7 @@ export default function BrandsPage() {
                 color: "var(--charcoal-soft)",
               }}
             >
-              &quot;{search}&quot; ile eşleşen marka bulunamadı.
+              No brands found for &quot;{search}&quot;
             </p>
           </div>
         )}
@@ -550,7 +550,7 @@ export default function BrandsPage() {
               <strong style={{ color: "var(--charcoal)" }}>
                 {filtered.length}
               </strong>{" "}
-              marka listeleniyor
+              {filtered.length === 1 ? "brand" : "brands"}
             </p>
 
             {/* A–Z grouped view */}
@@ -622,22 +622,22 @@ export default function BrandsPage() {
             {[
               {
                 icon: TrendingUp,
-                title: "Trend Markalar",
-                desc: "Her hafta güncellenen trend markalar ve kampanyalar.",
+                title: "Trending Brands",
+                desc: "Trending brands and deals updated every week.",
                 href: "/deals",
                 color: "var(--red)",
               },
               {
                 icon: Sparkles,
-                title: "Yeni Gelenler",
-                desc: "Platformumuza yeni katılan markaları keşfet.",
+                title: "New Arrivals",
+                desc: "Discover brands that recently joined our platform.",
                 href: "/new",
                 color: "#6366f1",
               },
               {
                 icon: Star,
-                title: "En Çok Satanlar",
-                desc: "Müşterilerin en çok tercih ettiği markalar.",
+                title: "Best Sellers",
+                desc: "The most popular brands among our customers.",
                 href: "/bestsellers",
                 color: "#eab308",
               },

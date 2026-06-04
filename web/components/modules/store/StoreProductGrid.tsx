@@ -227,7 +227,6 @@ export function StoreProductGrid({ storeSlug, offers, isLoading }: StoreProductG
             <ProductCard
               key={offer.id}
               offer={offer}
-              storeSlug={storeSlug}
               onAddToCart={() =>
                 addItem({
                   offerId: offer.id,
@@ -252,14 +251,12 @@ export function StoreProductGrid({ storeSlug, offers, isLoading }: StoreProductG
 
 function ProductCard({
   offer,
-  storeSlug,
   onAddToCart,
 }: {
   offer: StoreOffer;
-  storeSlug: string;
   onAddToCart: () => void;
 }) {
-  const productHref = `/store/${storeSlug}/product/${offer.productId}`;
+  const productHref = `/product/${offer.productId}`;
 
   return (
     <div

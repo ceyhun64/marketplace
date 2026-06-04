@@ -2,23 +2,25 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { fetchISR } from "@/lib/fetch";
 import Link from "next/link";
+import { ChevronRight, Home, Layers, Tag } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ProductCard } from "@/components/modules/store/ProductCard";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
+import { CategoryControls } from "@/components/modules/category/CategoryControls";
+import { CategoryProductGrid } from "@/components/modules/category/CategoryProductGrid";
 import type { Product } from "@/types/entities";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{
     page?: string;
-    tags?: string;
-    minPrice?: string;
-    maxPrice?: string;
     sort?: string;
     subcategory?: string;
+    minPrice?: string;
+    maxPrice?: string;
   }>;
 }
 
+// ── Data fetching ─────────────────────────────────────────────────────────────
 async function CategoryProducts({
   slug,
   searchParams,
@@ -26,36 +28,35 @@ async function CategoryProducts({
   slug: string;
   searchParams: Record<string, string | undefined>;
 }) {
-  const params = new URLSearchParams();
-  if (searchParams.page) params.set("page", searchParams.page);
-  if (searchParams.tags) params.set("tags", searchParams.tags);
-  if (searchParams.minPrice) params.set("minPrice", searchParams.minPrice);
-  if (searchParams.maxPrice) params.set("maxPrice", searchParams.maxPrice);
-  if (searchParams.sort) params.set("sort", searchParams.sort);
-  if (searchParams.subcategory)
-    params.set("subcategory", searchParams.subcategory);
+  const qs = new URLSearchParams();
+  if (searchParams.page)       qs.set("page", searchParams.page);
+  if (searchParams.sort)       qs.set("sort", searchParams.sort);
+  if (searchParams.subcategory) qs.set("subcategory", searchParams.subcategory);
+  if (searchParams.minPrice)   qs.set("minPrice", searchParams.minPrice);
+  if (searchParams.maxPrice)   qs.set("maxPrice", searchParams.maxPrice);
 
-  // API /api/categories/{slug} endpoint'i { category, SubCategories, products } formatında döndürür
   const [categoryData, productsData] = await Promise.all([
-    fetchISR<{ category: any; SubCategories: any[]; products: any[] }>(`/api/categories/${slug}`),
+    fetchISR<{ category: any; SubCategories: any[]; products: any[] }>(
+      `/api/categories/${slug}`,
+    ),
     fetchISR<{ data: any[] }>(
-      `/api/products?category=${slug}&${params.toString()}`,
+      `/api/products?category=${slug}&${qs.toString()}`,
     ),
   ]);
 
   if (!categoryData?.category) notFound();
 
   const category = {
-    ...categoryData!.category,
-    subCategories: categoryData!.SubCategories || [],
-    parent: categoryData!.category.parent || null,
+    ...categoryData.category,
+    subCategories: categoryData.SubCategories ?? [],
+    parent: categoryData.category.parent ?? null,
   };
-  // Kategori endpoint'inden gelen ürünleri kullan, ayrıca products endpoint de denenebilir
-  const apiProducts = categoryData!.products || [];
-  const rawProducts = apiProducts.length > 0 ? apiProducts : (productsData?.data || []);
-  const subcategories = category.subCategories || [];
 
-  // API verisini Product tipine normalize et
+  const rawProducts =
+    (categoryData.products?.length ?? 0) > 0
+      ? categoryData.products
+      : (productsData?.data ?? []);
+
   const products: Product[] = rawProducts.map((p: any): Product => ({
     id: p.id ?? p.Id,
     merchantId: p.merchantId ?? "",
@@ -77,176 +78,231 @@ async function CategoryProducts({
     updatedAt: p.updatedAt,
   }));
 
+  const subcategories: { id: string; name: string; slug: string; productCount?: number }[] =
+    category.subCategories ?? [];
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/" className="hover:text-gray-900">
-          Ana Sayfa
-        </Link>
-        <span>/</span>
-        {category.parent && (
-          <>
+    <>
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <div
+        className="relative overflow-hidden py-12 px-4"
+        style={{ background: "var(--charcoal)" }}
+      >
+        {/* Radial glow */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at 70% 50%, rgba(200,16,46,0.12) 0%, transparent 60%)",
+          }}
+        />
+
+        <div className="relative max-w-7xl mx-auto">
+          {/* Breadcrumb */}
+          <nav
+            className="flex items-center gap-1.5 mb-6 text-[12px]"
+            style={{ color: "var(--charcoal-soft)" }}
+          >
             <Link
-              href={`/category/${category.parent.slug}`}
-              className="hover:text-gray-900"
+              href="/"
+              className="flex items-center gap-1 hover:text-white transition-colors"
             >
-              {category.parent.name}
+              <Home className="w-3 h-3" />
+              Home
             </Link>
-            <span>/</span>
-          </>
-        )}
-        <span className="text-gray-900 font-medium">{category.name}</span>
-      </nav>
+            <ChevronRight className="w-3 h-3 opacity-40" />
+            <Link
+              href="/categories"
+              className="hover:text-white transition-colors"
+            >
+              Categories
+            </Link>
+            {category.parent && (
+              <>
+                <ChevronRight className="w-3 h-3 opacity-40" />
+                <Link
+                  href={`/category/${category.parent.slug}`}
+                  className="hover:text-white transition-colors"
+                >
+                  {category.parent.name}
+                </Link>
+              </>
+            )}
+            <ChevronRight className="w-3 h-3 opacity-40" />
+            <span className="text-white font-semibold">{category.name}</span>
+          </nav>
 
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Sidebar */}
-        <aside className="w-full lg:w-56 flex-shrink-0">
-          {subcategories.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-100 p-4 mb-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                Alt Kategoriler
-              </h3>
-              <ul className="space-y-1">
-                <li>
-                  <Link
-                    href={`/category/${slug}`}
-                    className={`block text-sm px-2 py-1.5 rounded-lg ${!searchParams.subcategory ? "bg-gray-100 font-medium text-gray-900" : "text-gray-600 hover:bg-gray-50"}`}
-                  >
-                    All
-                  </Link>
-                </li>
-                {subcategories.map((sub: any) => (
-                  <li key={sub.id}>
-                    <Link
-                      href={`/category/${slug}?subcategory=${sub.slug}`}
-                      className={`block text-sm px-2 py-1.5 rounded-lg ${searchParams.subcategory === sub.slug ? "bg-gray-100 font-medium text-gray-900" : "text-gray-600 hover:bg-gray-50"}`}
-                    >
-                      {sub.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+          {/* Title */}
+          <div className="flex items-start gap-4 mb-4">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+              style={{ background: "rgba(200,16,46,0.18)" }}
+            >
+              {category.iconUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={category.iconUrl}
+                  alt=""
+                  className="w-5 h-5 object-contain"
+                />
+              ) : (
+                <Tag className="w-4 h-4" style={{ color: "var(--red-light)" }} />
+              )}
             </div>
-          )}
-
-          {/* Price Filter */}
-          <div className="bg-white rounded-xl border border-gray-100 p-4">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">
-              Price Range
-            </h3>
-            <form className="space-y-2">
-              <div className="flex gap-2 items-center">
-                <input
-                  type="number"
-                  name="minPrice"
-                  defaultValue={searchParams.minPrice}
-                  placeholder="Min $"
-                  className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm"
-                />
-                <span className="text-gray-400 text-sm">—</span>
-                <input
-                  type="number"
-                  name="maxPrice"
-                  defaultValue={searchParams.maxPrice}
-                  placeholder="Max $"
-                  className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-gray-900 text-white text-sm py-1.5 rounded-lg hover:bg-gray-800"
-              >
-                Filtrele
-              </button>
-            </form>
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1">
-          <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1
+                className="text-[clamp(1.75rem,4vw,2.75rem)] font-semibold text-white leading-tight"
+                style={{ fontFamily: "var(--font-cormorant)" }}
+              >
                 {category.name}
               </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                {products.length} products found
-              </p>
+              {category.description && (
+                <p
+                  className="mt-1 text-sm max-w-lg line-clamp-2"
+                  style={{ color: "rgba(255,255,255,0.5)" }}
+                >
+                  {category.description}
+                </p>
+              )}
             </div>
-            <select
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
-              defaultValue={searchParams.sort || ""}
-            >
-              <option value="">Sort</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-              <option value="rating_desc">Highest Rated</option>
-              <option value="newest">En Yeni</option>
-            </select>
           </div>
 
-          {products.length === 0 ? (
-            <div className="text-center py-20 text-gray-400">
-              <div className="text-4xl mb-3">📦</div>
-              <p className="font-medium">No products found in this category</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  context="marketplace"
-                />
+          {/* Product count */}
+          <div
+            className="flex items-center gap-1.5 mb-6"
+            style={{ color: "rgba(255,255,255,0.45)" }}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span className="text-sm">
+              <span className="font-semibold text-white">
+                {products.length.toLocaleString()}
+              </span>{" "}
+              products
+            </span>
+          </div>
+
+          {/* Subcategory tabs */}
+          {subcategories.length > 0 && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none -mb-1">
+              <Link
+                href={`/category/${slug}`}
+                className="shrink-0 px-3.5 h-8 rounded-lg text-xs font-semibold transition-all duration-150 flex items-center"
+                style={
+                  !searchParams.subcategory
+                    ? { background: "#c8102e", color: "#fff" }
+                    : {
+                        background: "rgba(255,255,255,0.08)",
+                        color: "rgba(255,255,255,0.65)",
+                        border: "1px solid rgba(255,255,255,0.12)",
+                      }
+                }
+              >
+                All
+              </Link>
+              {subcategories.map((sub) => (
+                <Link
+                  key={sub.id}
+                  href={`/category/${slug}?subcategory=${sub.slug}`}
+                  className="shrink-0 px-3.5 h-8 rounded-lg text-xs font-semibold transition-all duration-150 flex items-center gap-1.5"
+                  style={
+                    searchParams.subcategory === sub.slug
+                      ? { background: "#c8102e", color: "#fff" }
+                      : {
+                          background: "rgba(255,255,255,0.08)",
+                          color: "rgba(255,255,255,0.65)",
+                          border: "1px solid rgba(255,255,255,0.12)",
+                        }
+                  }
+                >
+                  {sub.name}
+                  {sub.productCount !== undefined && (
+                    <span
+                      className="text-[10px] opacity-70"
+                    >
+                      {sub.productCount}
+                    </span>
+                  )}
+                </Link>
               ))}
             </div>
           )}
-        </main>
+        </div>
       </div>
-    </div>
+
+      {/* ── Content ──────────────────────────────────────────────────────── */}
+      <div
+        className="max-w-7xl mx-auto px-4 md:px-8 py-8"
+        style={{ background: "var(--off-white)" }}
+      >
+        <CategoryControls
+          productCount={products.length}
+          currentSort={searchParams.sort}
+        />
+
+        <div className="pt-6">
+          <CategoryProductGrid products={products} />
+        </div>
+      </div>
+    </>
   );
 }
 
-export default async function CategoryPage({
-  params,
-  searchParams,
-}: PageProps) {
+// ── Skeleton fallback ─────────────────────────────────────────────────────────
+function CategorySkeleton() {
+  return (
+    <>
+      <div className="py-12 px-4" style={{ background: "var(--charcoal)" }}>
+        <div className="max-w-7xl mx-auto">
+          <Skeleton className="h-4 w-48 mb-6 opacity-20" />
+          <Skeleton className="h-10 w-64 mb-3 opacity-20" />
+          <Skeleton className="h-4 w-32 mb-6 opacity-20" />
+          <div className="flex gap-2">
+            {[64, 80, 72, 56].map((w, i) => (
+              <Skeleton key={i} className={`h-8 w-${w} rounded-lg opacity-20`} />
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-64 rounded-2xl" />
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Page exports ──────────────────────────────────────────────────────────────
+export default async function CategoryPage({ params, searchParams }: PageProps) {
   const resolvedParams = await params;
   const resolvedSearch = await searchParams;
-  const siteUrl        = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bazr.com";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bazr.com";
 
-  // Fetch category for breadcrumb (lightweight — shared ISR cache with CategoryProducts)
-  const data     = await fetchISR<{ category: { name: string; slug: string } }>(`/api/categories/${resolvedParams.slug}`);
+  const data     = await fetchISR<{ category: { name: string; slug: string } }>(
+    `/api/categories/${resolvedParams.slug}`,
+  );
   const category = data?.category;
 
   const breadcrumbs = [
     { name: "Home",       url: siteUrl },
     { name: "Categories", url: `${siteUrl}/categories` },
-    ...(category ? [{ name: category.name, url: `${siteUrl}/category/${category.slug}` }] : []),
+    ...(category
+      ? [{ name: category.name, url: `${siteUrl}/category/${category.slug}` }]
+      : []),
   ];
 
   return (
-    <>
+    <div className="min-h-screen" style={{ background: "var(--off-white)" }}>
       <BreadcrumbJsonLd items={breadcrumbs} />
-      <Suspense
-        fallback={
-          <div className="max-w-7xl mx-auto px-4 py-8">
-            <Skeleton className="h-8 w-48 mb-6" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} className="h-64 rounded-xl" />
-              ))}
-            </div>
-          </div>
-        }
-      >
+      <Suspense fallback={<CategorySkeleton />}>
         <CategoryProducts
           slug={resolvedParams.slug}
           searchParams={resolvedSearch}
         />
       </Suspense>
-    </>
+    </div>
   );
 }
 
@@ -256,6 +312,6 @@ export async function generateMetadata({ params }: PageProps) {
   const category = data?.category;
   return {
     title: category ? `${category.name} — Marketplace` : "Category",
-    description: `Explore ${category?.name || "Category"} products`,
+    description: `Explore ${category?.name ?? "Category"} products on BAZR`,
   };
 }
