@@ -484,34 +484,24 @@ try
 
         try
         {
-            if (app.Environment.IsDevelopment())
+            // If tables exist but __EFMigrationsHistory is missing/incomplete,
+            // mark the baseline migration as applied so MigrateAsync() won't
+            // try to re-create tables that already exist.
+            await EnsureMigrationHistoryConsistentAsync(db, logger);
+
+            var pendingMigrations = (await db.Database.GetPendingMigrationsAsync()).ToList();
+            if (pendingMigrations.Count > 0)
             {
-                // Development: auto-migrate on startup for convenience.
+                logger.LogInformation(
+                    "Applying {Count} pending migration(s): {Migrations}",
+                    pendingMigrations.Count,
+                    string.Join(", ", pendingMigrations));
                 await db.Database.MigrateAsync();
-                logger.LogInformation("Database migration completed (development).");
+                logger.LogInformation("Database migration completed.");
             }
             else
             {
-                // Production: auto-migrate on startup.
-                //
-                // MigrateAsync() is idempotent — it only applies migrations that
-                // haven't been applied yet, so re-deploying the same image is safe.
-                // For single-instance deployments (Render free/basic tier) this is
-                // the simplest and most reliable strategy.
-                var pendingMigrations = (await db.Database.GetPendingMigrationsAsync()).ToList();
-                if (pendingMigrations.Count > 0)
-                {
-                    logger.LogInformation(
-                        "Applying {Count} pending migration(s): {Migrations}",
-                        pendingMigrations.Count,
-                        string.Join(", ", pendingMigrations));
-                    await db.Database.MigrateAsync();
-                    logger.LogInformation("Database migration completed.");
-                }
-                else
-                {
-                    logger.LogInformation("Database schema is up to date. No pending migrations.");
-                }
+                logger.LogInformation("Database schema is up to date. No pending migrations.");
             }
         }
         catch (InvalidOperationException)
@@ -674,4 +664,55 @@ catch (Exception ex) when (ex is not HostAbortedException)
 finally
 {
     Log.CloseAndFlush();
+}
+
+// Checks whether the database already has tables but is missing the migration history entry.
+// This happens when the schema was created outside of EF Core migrations (e.g. a previous
+// EnsureCreated call, or a migration that ran before __EFMigrationsHistory was tracked).
+// Inserts the baseline migration record so MigrateAsync() won't try to re-create existing tables.
+static async Task EnsureMigrationHistoryConsistentAsync(AppDbContext db, Microsoft.Extensions.Logging.ILogger logger)
+{
+    const string baselineMigration = "20260604080556_InitialCreate";
+    const string efVersion = "10.0.0";
+
+    var conn = db.Database.GetDbConnection();
+    await conn.OpenAsync();
+    try
+    {
+        // Check whether the Users table exists (proxy for "schema already created")
+        await using var checkCmd = conn.CreateCommand();
+        checkCmd.CommandText =
+            "SELECT COUNT(*) FROM information_schema.tables " +
+            "WHERE table_schema = 'public' AND table_name = 'Users'";
+        var usersExists = Convert.ToInt64(await checkCmd.ExecuteScalarAsync()) > 0;
+
+        if (!usersExists) return; // Fresh database — let MigrateAsync handle everything
+
+        // Ensure __EFMigrationsHistory table exists
+        await using var createHistCmd = conn.CreateCommand();
+        createHistCmd.CommandText =
+            "CREATE TABLE IF NOT EXISTS \"__EFMigrationsHistory\" " +
+            "(\"MigrationId\" character varying(150) NOT NULL, " +
+            "\"ProductVersion\" character varying(32) NOT NULL, " +
+            "CONSTRAINT \"PK___EFMigrationsHistory\" PRIMARY KEY (\"MigrationId\"))";
+        await createHistCmd.ExecuteNonQueryAsync();
+
+        // Insert baseline record if not already present
+        await using var insertCmd = conn.CreateCommand();
+        insertCmd.CommandText =
+            $"INSERT INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") " +
+            $"SELECT '{baselineMigration}', '{efVersion}' " +
+            $"WHERE NOT EXISTS (" +
+            $"  SELECT 1 FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\" = '{baselineMigration}')";
+        var rows = await insertCmd.ExecuteNonQueryAsync();
+
+        if (rows > 0)
+            logger.LogInformation(
+                "Existing schema detected — marked {Migration} as applied in migration history.",
+                baselineMigration);
+    }
+    finally
+    {
+        await conn.CloseAsync();
+    }
 }

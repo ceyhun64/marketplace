@@ -108,6 +108,7 @@ export function PortalShell({ links, role, children }: PortalShellProps) {
         </span>
       </div>
 
+
       {/*
        * Main content
        *  - pt-14 on mobile compensates for the 56px fixed top bar
