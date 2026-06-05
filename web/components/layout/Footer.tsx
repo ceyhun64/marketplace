@@ -381,8 +381,9 @@ export default function Footer() {
       </div>
 
       {/* ── Alt hukuki bar ────────────────────────────────────────────────── */}
-      <div className="w-full max-w-275 mt-6 px-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="w-full max-w-275 mt-6 px-1 flex flex-col sm:flex-row items-center sm:items-center sm:justify-between gap-4">
         <p
+          className="text-center sm:text-left"
           style={{
             fontFamily: "var(--font-mono)",
             fontSize: "0.6875rem",
@@ -393,7 +394,7 @@ export default function Footer() {
           © {currentYear} BAZR Studio. All rights reserved.
         </p>
 
-        <div className="flex gap-4 sm:gap-6 flex-wrap">
+        <div className="flex gap-4 sm:gap-6 flex-wrap justify-center sm:justify-start">
           {[
             { label: "Privacy", href: "/privacy" },
             { label: "Terms", href: "/terms" },

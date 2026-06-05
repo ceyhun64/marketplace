@@ -225,16 +225,10 @@ export default function NewsletterSection() {
                     Your email address
                   </label>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "0.5rem",
-                      marginBottom: "1rem",
-                    }}
-                  >
+                  <div className="flex flex-col sm:flex-row gap-2 mb-4">
                     <div
+                      className="flex-1"
                       style={{
-                        flex: 1,
                         display: "flex",
                         alignItems: "center",
                         background: "var(--white)",
@@ -271,6 +265,7 @@ export default function NewsletterSection() {
                     <button
                       type="submit"
                       disabled={status === "loading"}
+                      className="w-full sm:w-auto justify-center"
                       style={{
                         background: status === "loading" ? "var(--charcoal-soft)" : "var(--charcoal)",
                         color: "#fff",
