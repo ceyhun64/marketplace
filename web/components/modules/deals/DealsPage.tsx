@@ -20,6 +20,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ProductCard } from "@/components/modules/store/ProductCard";
 import { useCart } from "@/hooks/use-cart";
 import type { Product } from "@/types/entities";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 function useDealsProducts() {
   return useQuery({
@@ -244,28 +251,16 @@ export default function DealsPage() {
           </div>
 
           {/* Right: sort */}
-          <div className="relative">
-            <ChevronDown
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none"
-              style={{ color: "var(--charcoal-mist)" }}
-            />
-            <select
-              value={sort}
-              onChange={(e) => handleSort(e.target.value as SortKey)}
-              className="h-9 pl-3 pr-9 text-sm rounded-lg appearance-none cursor-pointer outline-none"
-              style={{
-                background: "white",
-                border: "1px solid var(--border-light)",
-                color: "var(--charcoal)",
-              }}
-            >
+          <Select value={sort} onValueChange={(v) => handleSort(v as SortKey)}>
+            <SelectTrigger className="h-9 w-auto text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
               {SORT_OPTIONS.map((o) => (
-                <option key={o.key} value={o.key}>
-                  {o.label}
-                </option>
+                <SelectItem key={o.key} value={o.key}>{o.label}</SelectItem>
               ))}
-            </select>
-          </div>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

@@ -18,6 +18,13 @@ import api from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductCard } from "@/components/modules/store/ProductCard";
 import { useCart } from "@/hooks/use-cart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Product } from "@/types/entities";
 
 // ── Deterministic discount % per product ─────────────────────────────────────
@@ -182,12 +189,6 @@ function FlashCard({ product, onAddToCart }: { product: Product; onAddToCart: ()
           </span>
         )}
       </div>
-
-      {/* Thin red sweep on hover */}
-      <div
-        className="absolute inset-x-0 top-0 h-0.75 origin-left scale-x-0 group-hover/fc:scale-x-100 transition-transform duration-300 z-10"
-        style={{ background: "var(--red)" }}
-      />
 
       <ProductCard
         product={product}
@@ -466,25 +467,17 @@ export default function FlashSalePage() {
           </div>
 
           {/* Sort select — desktop */}
-          <div className="relative hidden md:block">
-            <ChevronDown
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none"
-              style={{ color: "var(--charcoal-mist)" }}
-            />
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as SortKey)}
-              className="h-9 pl-3 pr-9 text-sm rounded-lg appearance-none cursor-pointer outline-none"
-              style={{
-                background: "white",
-                border: "1px solid var(--border-light)",
-                color: "var(--charcoal)",
-              }}
-            >
-              {SORT_PILLS.map((o) => (
-                <option key={o.key} value={o.key}>{o.label}</option>
-              ))}
-            </select>
+          <div className="hidden md:block">
+            <Select value={sort} onValueChange={(v) => setSort(v as SortKey)}>
+              <SelectTrigger className="h-9 w-auto text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_PILLS.map((o) => (
+                  <SelectItem key={o.key} value={o.key}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>

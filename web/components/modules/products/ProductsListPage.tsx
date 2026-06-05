@@ -16,6 +16,13 @@ import { Switch }   from "@/components/ui/switch";
 import { Slider }   from "@/components/ui/slider";
 import { Badge }    from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
 import {
@@ -638,24 +645,16 @@ export default function ProductsListPage() {
             )}
 
             {/* Sort select */}
-            <div className="relative">
-              <select
-                value={filters.sort ?? "newest"}
-                onChange={(e) => handleFilter("sort", e.target.value)}
-                className="h-9 pl-3 pr-8 rounded-xl text-[13px] font-semibold appearance-none outline-none cursor-pointer"
-                style={{
-                  border: "1.5px solid rgba(51,51,51,0.12)",
-                  background: "#fff",
-                  color: "var(--charcoal)",
-                  fontFamily: "var(--font-body)",
-                }}
-              >
+            <Select value={filters.sort ?? "newest"} onValueChange={(v) => handleFilter("sort", v)}>
+              <SelectTrigger className="h-9 w-auto text-[13px] font-semibold rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
                 {SORT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                 ))}
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-(--charcoal-mist)" />
-            </div>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

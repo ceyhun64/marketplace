@@ -43,54 +43,57 @@ export function StoreHeader({ store }: StoreHeaderProps) {
 
   return (
     <div className="w-full">
-      {/* ── Banner ─────────────────────────────────────────────────────────── */}
-      <div className="relative h-52 md:h-72 overflow-hidden">
-        {store.bannerUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={store.bannerUrl}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        ) : (
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(135deg, #0f0f0f 0%, #1c1c1c 30%, #2a1a1a 60%, #1e0a0a 100%)",
-            }}
-          >
-            {/* subtle texture */}
-            <div
-              className="absolute inset-0 opacity-20"
-              style={{
-                backgroundImage:
-                  "radial-gradient(circle at 20% 50%, rgba(200,16,46,0.4) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(200,16,46,0.2) 0%, transparent 40%)",
-              }}
+      {/* ── Banner — no overflow-hidden so logo translate-y isn't clipped ──── */}
+      <div className="relative h-52 md:h-72">
+        {/* Image/gradient clipped inside its own wrapper */}
+        <div className="absolute inset-0 overflow-hidden">
+          {store.bannerUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={store.bannerUrl}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
             />
-            {/* large faint initial */}
-            <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none">
-              <span
-                className="font-black"
+          ) : (
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(135deg, #0f0f0f 0%, #1c1c1c 30%, #2a1a1a 60%, #1e0a0a 100%)",
+              }}
+            >
+              {/* subtle texture */}
+              <div
+                className="absolute inset-0 opacity-20"
                 style={{
-                  fontSize: "clamp(120px, 25vw, 260px)",
-                  color: "rgba(255,255,255,0.03)",
-                  letterSpacing: "-0.05em",
+                  backgroundImage:
+                    "radial-gradient(circle at 20% 50%, rgba(200,16,46,0.4) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(200,16,46,0.2) 0%, transparent 40%)",
                 }}
-              >
-                {initials}
-              </span>
+              />
+              {/* large faint initial */}
+              <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none">
+                <span
+                  className="font-black"
+                  style={{
+                    fontSize: "clamp(120px, 25vw, 260px)",
+                    color: "rgba(255,255,255,0.03)",
+                    letterSpacing: "-0.05em",
+                  }}
+                >
+                  {initials}
+                </span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* bottom gradient for readability */}
-        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
+          {/* bottom gradient for readability */}
+          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
+        </div>
 
         {/* red accent line */}
-        <div className="absolute bottom-0 left-0 right-0 h-0.75" style={{ background: "#c8102e" }} />
+        <div className="absolute bottom-0 left-0 right-0 h-0.75 z-1" style={{ background: "#c8102e" }} />
 
-        {/* Logo — overlaps banner */}
+        {/* Logo — outside the overflow-hidden wrapper so translate-y is not clipped */}
         <div className="absolute bottom-0 translate-y-1/2 left-4 md:left-8 z-10">
           <div
             className="h-20 w-20 md:h-24 md:w-24 rounded-2xl overflow-hidden flex items-center justify-center bg-white"

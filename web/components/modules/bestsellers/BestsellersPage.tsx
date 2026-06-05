@@ -93,25 +93,54 @@ export default function BestsellersPage() {
 
   return (
     <main className="min-h-screen">
-      {/* Hero */}
-      <div className="bg-[var(--charcoal)] py-14 px-4 relative overflow-hidden">
-        <div className="absolute -top-10 -right-10 w-48 h-48 border-[20px] border-[var(--red)]/10 rounded-full pointer-events-none" />
-        <div className="absolute -bottom-16 left-32 w-32 h-32 border-[16px] border-white/5 rounded-full pointer-events-none" />
+      {/* Hero — amber/gold "achievement" identity */}
+      <div
+        className="py-14 px-4 relative overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, #1a1200 0%, #231800 50%, #1c1400 100%)",
+        }}
+      >
+        {/* Decorative rings */}
+        <div
+          className="absolute -top-10 -right-10 w-52 h-52 rounded-full pointer-events-none"
+          style={{ border: "24px solid rgba(245,158,11,0.1)" }}
+        />
+        <div
+          className="absolute -bottom-16 left-32 w-36 h-36 rounded-full pointer-events-none"
+          style={{ border: "16px solid rgba(245,158,11,0.06)" }}
+        />
+        {/* Large faint trophy watermark */}
+        <Trophy
+          className="absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none select-none"
+          style={{ width: 120, height: 120, color: "rgba(245,158,11,0.06)" }}
+        />
+        {/* Bottom accent */}
+        <div
+          className="absolute bottom-0 left-0 w-full h-0.5 pointer-events-none"
+          style={{ background: "linear-gradient(90deg, rgba(245,158,11,0.5) 0%, transparent 55%)" }}
+        />
 
         <div className="max-w-325 mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 mb-4">
-            <Trophy className="w-4 h-4 text-[var(--red)]" />
-            <span className="font-mono text-[10px] uppercase tracking-[3px] text-[var(--charcoal-soft)]">
-              Top Rated
+            <Trophy style={{ width: 14, height: 14, color: "rgba(251,191,36,0.9)" }} />
+            <span
+              className="font-mono text-[10px] uppercase tracking-[3px]"
+              style={{ color: "rgba(251,191,36,0.6)" }}
+            >
+              Top Ranked
             </span>
           </div>
           <h1
-            className="text-[var(--off-white)] text-[36px] lg:text-[48px] leading-tight mb-2"
-            style={{ fontFamily: "var(--font-display)" }}
+            className="text-[36px] lg:text-[48px] leading-tight mb-2"
+            style={{
+              fontFamily: "var(--font-display)",
+              color: "rgba(255,255,255,0.95)",
+            }}
           >
-            Best <span className="text-[var(--red)]">Sellers</span>
+            Best{" "}
+            <span style={{ color: "rgba(251,191,36,0.9)" }}>Sellers</span>
           </h1>
-          <p className="text-[var(--charcoal-soft)] text-[15px] mb-8">
+          <p className="text-[15px] mb-8" style={{ color: "rgba(255,255,255,0.4)" }}>
             The products our customers love most — ranked by sales and reviews.
           </p>
 
@@ -122,19 +151,22 @@ export default function BestsellersPage() {
                 <div
                   className="w-9 h-9 rounded-[10px] flex items-center justify-center"
                   style={{
-                    background: "rgba(200,16,46,0.15)",
-                    color: "var(--red)",
+                    background: "rgba(245,158,11,0.15)",
+                    color: "rgba(251,191,36,0.9)",
                   }}
                 >
                   {stat.icon}
                 </div>
                 <div>
-                  <div className="font-mono text-[10px] text-[var(--charcoal-soft)] uppercase tracking-wider">
+                  <div
+                    className="font-mono text-[10px] uppercase tracking-wider"
+                    style={{ color: "rgba(255,255,255,0.3)" }}
+                  >
                     {stat.label}
                   </div>
                   <div
-                    className="text-white font-bold text-sm"
-                    style={{ fontFamily: "var(--font-body)" }}
+                    className="font-bold text-sm"
+                    style={{ color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-body)" }}
                   >
                     {stat.value}
                   </div>
@@ -168,69 +200,25 @@ export default function BestsellersPage() {
               <div className="grid md:grid-cols-3 gap-4">
                 {sortedProducts.slice(0, 3).map((product, i) => {
                   const medals = ["🥇", "🥈", "🥉"];
-                  const borders = [
-                    "border-yellow-400/40",
-                    "border-gray-300/40",
-                    "border-amber-600/40",
+                  const borderColors = [
+                    "rgba(250,204,21,0.4)",
+                    "rgba(209,213,219,0.4)",
+                    "rgba(217,119,6,0.4)",
                   ];
                   return (
                     <div
                       key={product.id}
-                      className={`bg-white rounded-2xl overflow-hidden border-2 ${borders[i]} relative`}
-                      style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}
+                      className="relative"
+                      style={{
+                        borderRadius: "var(--radius-lg)",
+                        border: `2px solid ${borderColors[i]}`,
+                        boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+                      }}
                     >
-                      <div className="absolute top-3 left-3 z-10 text-2xl">
+                      <div className="absolute top-3 left-3 z-20 text-2xl pointer-events-none select-none">
                         {medals[i]}
                       </div>
-                      <div className="aspect-[4/3] bg-gray-50 overflow-hidden">
-                        {product.images?.[0] ? (
-                          <img
-                            src={product.images[0]}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[var(--charcoal-mist)]">
-                            No image
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-5">
-                        <Link
-                          href={`/store/${product.merchantSlug}`}
-                          className="font-mono text-[10px] uppercase tracking-wider text-[var(--red)] hover:underline"
-                        >
-                          {product.merchantStoreName}
-                        </Link>
-                        <h3 className="font-bold text-[var(--charcoal)] mt-1 mb-3 leading-tight">
-                          {product.name}
-                        </h3>
-                        <div className="flex items-center justify-between">
-                          <span
-                            className="text-2xl font-bold text-[var(--charcoal)]"
-                            style={{ fontFamily: "var(--font-display)" }}
-                          >
-                            ${product.price.toFixed(2)}
-                          </span>
-                          <Link
-                            href={`/product/${product.id}`}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all"
-                            style={{ background: "var(--charcoal)" }}
-                            onMouseEnter={(e) =>
-                              ((
-                                e.currentTarget as HTMLElement
-                              ).style.background = "var(--red)")
-                            }
-                            onMouseLeave={(e) =>
-                              ((
-                                e.currentTarget as HTMLElement
-                              ).style.background = "var(--charcoal)")
-                            }
-                          >
-                            View <ArrowRight className="w-3.5 h-3.5" />
-                          </Link>
-                        </div>
-                      </div>
+                      <ProductCard product={product} context="marketplace" />
                     </div>
                   );
                 })}
@@ -257,7 +245,7 @@ export default function BestsellersPage() {
           <div className="relative">
             <button
               onClick={() => setSortOpen((p) => !p)}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-black/10 text-[13px] font-semibold text-[var(--charcoal)] hover:border-[var(--charcoal)] transition-colors bg-white"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-black/10 text-[13px] font-semibold text-(--charcoal) hover:border-(--charcoal) transition-colors bg-white"
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
               {activeSortLabel}
@@ -266,7 +254,7 @@ export default function BestsellersPage() {
               />
             </button>
             {sortOpen && (
-              <div className="absolute right-0 top-full mt-1 bg-white rounded-xl border border-black/10 shadow-lg z-20 min-w-[190px] overflow-hidden">
+              <div className="absolute right-0 top-full mt-1 bg-white rounded-xl border border-black/10 shadow-lg z-20 min-w-47.5 overflow-hidden">
                 {SORT_OPTIONS.map((opt) => (
                   <button
                     key={opt.key}
@@ -274,7 +262,7 @@ export default function BestsellersPage() {
                       setSort(opt.key);
                       setSortOpen(false);
                     }}
-                    className={`w-full text-left px-4 py-2.5 text-[13px] hover:bg-[var(--off-white)] transition-colors ${sort === opt.key ? "font-bold text-[var(--red)]" : "text-[var(--charcoal)]"}`}
+                    className={`w-full text-left px-4 py-2.5 text-[13px] hover:bg-(--off-white) transition-colors ${sort === opt.key ? "font-bold text-(--red)" : "text-(--charcoal)"}`}
                   >
                     {opt.label}
                   </button>
@@ -292,7 +280,7 @@ export default function BestsellersPage() {
               className="w-12 h-12 mx-auto mb-4"
               style={{ color: "rgba(51,51,51,0.15)" }}
             />
-            <p className="text-[var(--charcoal-soft)]">
+            <p className="text-(--charcoal-soft)">
               Could not load products. Please try again.
             </p>
           </div>
@@ -307,10 +295,10 @@ export default function BestsellersPage() {
                 className="w-12 h-12 mx-auto mb-4"
                 style={{ color: "rgba(51,51,51,0.15)" }}
               />
-              <h2 className="text-xl font-bold text-[var(--charcoal)] mb-2">
+              <h2 className="text-xl font-bold text-(--charcoal) mb-2">
                 No bestsellers yet
               </h2>
-              <p className="text-[var(--charcoal-soft)] mb-6">
+              <p className="text-(--charcoal-soft) mb-6">
                 Check back soon — rankings update weekly.
               </p>
               <Link

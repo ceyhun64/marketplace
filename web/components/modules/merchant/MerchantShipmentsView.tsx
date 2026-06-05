@@ -22,6 +22,13 @@ import {
 } from "@/types/enums";
 import type { Shipment, ShipmentStatusEvent } from "@/types/entities";
 import type { ShipmentStatus } from "@/types/enums";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface MerchantShipment {
   id: string;
@@ -396,17 +403,16 @@ export default function MerchantShipmentsView() {
                 className="pl-8 pr-3 py-1.5 text-xs border border-(--border-mid) rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors w-52"
               />
             </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="text-xs border border-(--border-mid) rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-(--bg-surface) cursor-pointer"
-            >
-              {STATUS_FILTER_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "all" | ShipmentStatus)}>
+              <SelectTrigger className="h-7 w-auto text-xs rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_FILTER_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

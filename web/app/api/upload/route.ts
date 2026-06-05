@@ -109,6 +109,7 @@ export async function POST(req: NextRequest) {
     "marketplace/avatars",
     "marketplace/banners",
     "marketplace/stores",
+    "marketplace/logos",
   ]);
 
   if (!ALLOWED_FOLDERS.has(folder)) {

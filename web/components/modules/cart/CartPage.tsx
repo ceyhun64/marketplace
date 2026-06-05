@@ -96,7 +96,7 @@ export default function CartPage() {
           </div>
 
           <h1
-            className="font-normal mb-4 text-[var(--charcoal)]"
+            className="font-normal mb-4 text-(--charcoal)"
             style={{
               fontFamily: "var(--font-display)",
               fontSize: "clamp(2rem, 5vw, 3rem)",
@@ -144,84 +144,119 @@ export default function CartPage() {
   // ── Cart ───────────────────────────────────────────────────────────────────
 
   return (
-    <main
-      className="min-h-screen py-12 px-4"
-      style={{ background: "var(--off-white)" }}
-    >
-      <div className="max-w-325 mx-auto">
-        {/* ── Page Header ─────────────────────────────────────────────────── */}
-        <div className="flex items-start justify-between mb-10">
-          <div>
+    <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
+      {/* Dark header — navy/commerce identity */}
+      <div
+        className="relative overflow-hidden py-10 px-4"
+        style={{
+          background:
+            "linear-gradient(135deg, #080c18 0%, #0c1220 50%, #080b16 100%)",
+        }}
+      >
+        {/* Decorative rings */}
+        <div
+          className="absolute -top-10 -right-10 w-52 h-52 rounded-full pointer-events-none"
+          style={{ border: "24px solid rgba(96,165,250,0.09)" }}
+        />
+        <div
+          className="absolute -bottom-16 left-32 w-36 h-36 rounded-full pointer-events-none"
+          style={{ border: "16px solid rgba(96,165,250,0.06)" }}
+        />
+        {/* Large ShoppingBag watermark */}
+        <ShoppingBag
+          className="absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none select-none"
+          style={{ width: 120, height: 120, color: "rgba(96,165,250,0.05)" }}
+        />
+        {/* Bottom accent */}
+        <div
+          className="absolute bottom-0 left-0 w-full h-0.5 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(96,165,250,0.4) 0%, transparent 55%)",
+          }}
+        />
+
+        <div className="max-w-325 mx-auto relative z-10">
+          <div className="flex items-end justify-between gap-4 flex-wrap">
+            <div>
+              <button
+                onClick={() => router.back()}
+                className="flex items-center gap-1.5 text-sm mb-4 transition-colors"
+                style={{
+                  color: "rgba(255,255,255,0.45)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontFamily: "var(--font-body)",
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = "rgba(255,255,255,0.75)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = "rgba(255,255,255,0.45)")
+                }
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Continue Shopping
+              </button>
+
+              <div className="inline-flex items-center gap-2 mb-3">
+                <ShoppingBag
+                  style={{
+                    width: 14,
+                    height: 14,
+                    color: "rgba(96,165,250,0.9)",
+                  }}
+                />
+                <span
+                  className="font-mono text-[10px] uppercase tracking-[3px]"
+                  style={{ color: "rgba(96,165,250,0.6)" }}
+                >
+                  My Cart
+                </span>
+              </div>
+              <h1
+                className="font-normal leading-tight"
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "clamp(2rem, 4vw, 3rem)",
+                  color: "rgba(255,255,255,0.95)",
+                }}
+              >
+                Shopping <em style={{ color: "rgba(96,165,250,0.9)" }}>Cart</em>
+              </h1>
+              <p
+                className="font-mono text-[12px] mt-2"
+                style={{ color: "rgba(255,255,255,0.35)" }}
+              >
+                {summary.itemCount} item{summary.itemCount !== 1 ? "s" : ""}
+              </p>
+            </div>
+
             <button
-              onClick={() => router.back()}
-              className="flex items-center gap-1.5 text-sm mb-4 transition-colors"
+              onClick={clearCart}
+              className="text-sm font-semibold transition-colors"
               style={{
-                color: "var(--charcoal-soft)",
+                color: "rgba(255,255,255,0.4)",
+                fontFamily: "var(--font-body)",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                fontFamily: "var(--font-body)",
               }}
               onMouseEnter={(e) =>
-                (e.currentTarget.style.color = "var(--charcoal)")
+                (e.currentTarget.style.color = "rgba(239,68,68,0.8)")
               }
               onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "var(--charcoal-soft)")
+                (e.currentTarget.style.color = "rgba(255,255,255,0.4)")
               }
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Continue Shopping
+              Clear All
             </button>
-
-            <div className="flex items-center gap-3 mb-3">
-              <span
-                className="inline-block w-6 h-px"
-                style={{ background: "var(--red)" }}
-              />
-              <span
-                className="font-mono text-[11px] tracking-[0.18em] uppercase"
-                style={{ color: "var(--charcoal-soft)" }}
-              >
-                Shopping
-              </span>
-            </div>
-            <h1
-              className="font-normal text-[var(--charcoal)]"
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(2rem, 4vw, 3rem)",
-                lineHeight: 1.1,
-              }}
-            >
-              Shopping <em style={{ color: "var(--red)" }}>Cart</em>
-            </h1>
-            <p
-              className="font-mono text-[12px] mt-2"
-              style={{ color: "var(--charcoal-soft)" }}
-            >
-              {summary.itemCount} item{summary.itemCount !== 1 ? "s" : ""}
-            </p>
           </div>
-
-          <button
-            onClick={clearCart}
-            className="text-sm font-semibold transition-colors mt-2"
-            style={{
-              color: "var(--charcoal-soft)",
-              fontFamily: "var(--font-body)",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--red)")}
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.color = "var(--charcoal-soft)")
-            }
-          >
-            Clear All
-          </button>
         </div>
+      </div>
 
+      <div className="max-w-325 mx-auto px-4 lg:px-8 py-10">
         <div className="grid lg:grid-cols-[1fr_400px] gap-8">
           {/* ── Cart Items ─────────────────────────────────────────────────── */}
           <div className="space-y-3">
@@ -239,7 +274,7 @@ export default function CartPage() {
               >
                 {/* Product Image */}
                 <div
-                  className="w-full sm:w-25 h-48 sm:h-25 rounded-xl flex-shrink-0 overflow-hidden"
+                  className="w-full sm:w-25 h-48 sm:h-25 rounded-xl shrink-0 overflow-hidden"
                   style={{ background: "var(--off-white)" }}
                 >
                   {item.productImage ? (
@@ -263,7 +298,7 @@ export default function CartPage() {
                   <div className="flex justify-between items-start gap-4">
                     <div className="min-w-0">
                       <h3
-                        className="font-bold text-[15px] leading-tight text-[var(--charcoal)] truncate"
+                        className="font-bold text-[15px] leading-tight text-(--charcoal) truncate"
                         style={{ fontFamily: "var(--font-body)" }}
                       >
                         {item.productName}
@@ -286,7 +321,7 @@ export default function CartPage() {
                     </div>
                     <button
                       onClick={() => handleRemove(item.offerId)}
-                      className="p-2 rounded-full transition-all flex-shrink-0 text-(--charcoal-soft) hover:text-(--red) hover:bg-[rgba(187,16,35,0.08)] min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      className="p-2 rounded-full transition-all shrink-0 text-(--charcoal-soft) hover:text-(--red) hover:bg-[rgba(187,16,35,0.08)] min-h-11 min-w-11 flex items-center justify-center"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -346,15 +381,21 @@ export default function CartPage() {
                     {/* Price */}
                     <div className="text-right">
                       <div
-                        className="text-[1.25rem] font-bold text-[var(--charcoal)]"
-                        style={{ fontFamily: "var(--font-display)", fontVariantNumeric: "tabular-nums" }}
+                        className="text-[1.25rem] font-bold text-(--charcoal)"
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
                       >
                         ${(item.price * item.quantity).toFixed(2)}
                       </div>
                       {item.quantity > 1 && (
                         <div
                           className="font-mono text-[11px]"
-                          style={{ color: "var(--charcoal-soft)", fontVariantNumeric: "tabular-nums" }}
+                          style={{
+                            color: "var(--charcoal-soft)",
+                            fontVariantNumeric: "tabular-nums",
+                          }}
                         >
                           ${item.price.toFixed(2)} each
                         </div>
@@ -377,7 +418,7 @@ export default function CartPage() {
               }}
             >
               <h3
-                className="font-bold text-[var(--charcoal)] mb-4 flex items-center gap-2"
+                className="font-bold text-(--charcoal) mb-4 flex items-center gap-2"
                 style={{ fontFamily: "var(--font-body)" }}
               >
                 <Truck className="w-4 h-4" style={{ color: "var(--red)" }} />
@@ -426,7 +467,7 @@ export default function CartPage() {
                       </div>
                       <div className="text-left">
                         <div
-                          className="text-sm font-bold text-[var(--charcoal)]"
+                          className="text-sm font-bold text-(--charcoal)"
                           style={{ fontFamily: "var(--font-body)" }}
                         >
                           {rate === "EXPRESS" ? "Express" : "Regular"}
@@ -443,7 +484,7 @@ export default function CartPage() {
                     </div>
                     <div className="text-right">
                       <span
-                        className="font-bold text-[var(--charcoal)]"
+                        className="font-bold text-(--charcoal)"
                         style={{
                           fontFamily: "var(--font-display)",
                           fontSize: "1.1rem",
@@ -466,7 +507,7 @@ export default function CartPage() {
               }}
             >
               <h3
-                className="font-bold text-[var(--charcoal)] mb-4 flex items-center gap-2"
+                className="font-bold text-(--charcoal) mb-4 flex items-center gap-2"
                 style={{ fontFamily: "var(--font-body)" }}
               >
                 <Tag className="w-4 h-4" style={{ color: "var(--red)" }} />
@@ -482,13 +523,22 @@ export default function CartPage() {
                   }}
                 >
                   <div className="flex items-center gap-2">
-                    <Tag className="w-4 h-4" style={{ color: "var(--charcoal-soft)" }} />
-                    <span className="font-mono text-[12px]" style={{ color: "var(--charcoal-soft)" }}>
+                    <Tag
+                      className="w-4 h-4"
+                      style={{ color: "var(--charcoal-soft)" }}
+                    />
+                    <span
+                      className="font-mono text-[12px]"
+                      style={{ color: "var(--charcoal-soft)" }}
+                    >
                       {coupon} — coupon discounts coming soon
                     </span>
                   </div>
                   <button
-                    onClick={() => { setCouponApplied(false); setCoupon(""); }}
+                    onClick={() => {
+                      setCouponApplied(false);
+                      setCoupon("");
+                    }}
                     className="font-mono text-[11px] transition-colors bg-transparent border-none cursor-pointer text-(--charcoal-soft) hover:text-(--red)"
                   >
                     Remove
@@ -514,7 +564,7 @@ export default function CartPage() {
                   />
                   <button
                     onClick={handleApplyCoupon}
-                    className="px-5 py-2 rounded-xl text-sm font-semibold transition-all flex-shrink-0 border border-[rgba(51,51,51,0.15)] text-(--charcoal) bg-transparent hover:bg-(--charcoal) hover:text-white hover:border-(--charcoal) min-h-[44px]"
+                    className="px-5 py-2 rounded-xl text-sm font-semibold transition-all shrink-0 border border-[rgba(51,51,51,0.15)] text-(--charcoal) bg-transparent hover:bg-(--charcoal) hover:text-white hover:border-(--charcoal) min-h-11"
                     style={{ fontFamily: "var(--font-body)" }}
                   >
                     Apply
@@ -532,25 +582,44 @@ export default function CartPage() {
               }}
             >
               <h3
-                className="font-bold text-[var(--charcoal)] mb-5"
+                className="font-bold text-(--charcoal) mb-5"
                 style={{ fontFamily: "var(--font-body)" }}
               >
                 Order Summary
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between text-[0.875rem]">
-                  <span style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}>
-                    Subtotal ({summary.itemCount} item{summary.itemCount !== 1 ? "s" : ""})
+                  <span
+                    style={{
+                      color: "var(--charcoal-soft)",
+                      fontFamily: "var(--font-body)",
+                    }}
+                  >
+                    Subtotal ({summary.itemCount} item
+                    {summary.itemCount !== 1 ? "s" : ""})
                   </span>
-                  <span className="font-semibold text-[var(--charcoal)]" style={{ fontVariantNumeric: "tabular-nums" }}>
+                  <span
+                    className="font-semibold text-(--charcoal)"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
                     {formatPrice(summary.subtotal)}
                   </span>
                 </div>
                 <div className="flex justify-between text-[0.875rem]">
-                  <span style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}>
-                    Shipping ({summary.shippingRate === "EXPRESS" ? "Express" : "Regular"})
+                  <span
+                    style={{
+                      color: "var(--charcoal-soft)",
+                      fontFamily: "var(--font-body)",
+                    }}
+                  >
+                    Shipping (
+                    {summary.shippingRate === "EXPRESS" ? "Express" : "Regular"}
+                    )
                   </span>
-                  <span className="font-semibold text-[var(--charcoal)]" style={{ fontVariantNumeric: "tabular-nums" }}>
+                  <span
+                    className="font-semibold text-(--charcoal)"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
                     {formatPrice(summary.shipping)}
                   </span>
                 </div>
@@ -559,13 +628,13 @@ export default function CartPage() {
                   style={{ borderTop: "1px solid rgba(51,51,51,0.08)" }}
                 >
                   <span
-                    className="font-bold text-[var(--charcoal)]"
+                    className="font-bold text-(--charcoal)"
                     style={{ fontFamily: "var(--font-body)" }}
                   >
                     Total
                   </span>
                   <span
-                    className="font-bold text-[var(--charcoal)]"
+                    className="font-bold text-(--charcoal)"
                     style={{
                       fontFamily: "var(--font-display)",
                       fontSize: "1.6rem",

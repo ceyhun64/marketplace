@@ -16,6 +16,13 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import type { MerchantProfile } from "@/types/entities";
 import { useStoreList } from "@/queries/useStore";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type SortKey = "popular" | "newest" | "name";
 
@@ -69,47 +76,50 @@ function StoreCard({ store }: { store: MerchantProfile }) {
 
   return (
     <div className="group bg-white rounded-2xl overflow-visible border border-black/6 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col">
-      {/* Banner */}
-      <Link href={`/store/${store.slug}`} className="relative block h-28 rounded-t-2xl overflow-hidden">
-        {store.bannerUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={store.bannerUrl}
-            alt={store.storeName}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : (
-          <div
-            className="w-full h-full"
-            style={{
-              background:
-                "linear-gradient(135deg, #0f0f0f 0%, #1c1c1c 40%, #2a1a1a 100%)",
-            }}
-          >
+      {/* Banner — no overflow-hidden here so the logo isn't clipped by translate-y */}
+      <Link href={`/store/${store.slug}`} className="relative block h-28 rounded-t-2xl">
+        {/* Image/gradient clipped inside its own wrapper */}
+        <div className="absolute inset-0 rounded-t-2xl overflow-hidden">
+          {store.bannerUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={store.bannerUrl}
+              alt={store.storeName}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
             <div
-              className="w-full h-full flex items-center justify-center select-none"
+              className="w-full h-full"
               style={{
                 background:
-                  "radial-gradient(circle at 70% 50%, rgba(200,16,46,0.2) 0%, transparent 60%)",
+                  "linear-gradient(135deg, #0f0f0f 0%, #1c1c1c 40%, #2a1a1a 100%)",
               }}
             >
-              <span
-                className="font-black opacity-10 select-none"
-                style={{ fontSize: "5rem", color: "white", letterSpacing: "-0.05em" }}
+              <div
+                className="w-full h-full flex items-center justify-center select-none"
+                style={{
+                  background:
+                    "radial-gradient(circle at 70% 50%, rgba(200,16,46,0.2) 0%, transparent 60%)",
+                }}
               >
-                {initials}
-              </span>
+                <span
+                  className="font-black opacity-10 select-none"
+                  style={{ fontSize: "5rem", color: "white", letterSpacing: "-0.05em" }}
+                >
+                  {initials}
+                </span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Red accent line */}
         <div
-          className="absolute bottom-0 left-0 right-0 h-0.75"
+          className="absolute bottom-0 left-0 right-0 h-0.75 z-1"
           style={{ background: "#c8102e" }}
         />
 
-        {/* Logo — absolute, overlapping banner bottom */}
+        {/* Logo — outside the overflow-hidden wrapper so translate-y is not clipped */}
         <div className="absolute bottom-0 left-4 translate-y-1/2 z-10">
           <div
             className="w-14 h-14 rounded-xl bg-white overflow-hidden flex items-center justify-center"
@@ -403,28 +413,16 @@ export default function StoresListPage() {
           </div>
 
           {/* Sort */}
-          <div className="relative">
-            <ChevronDown
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none"
-              style={{ color: "var(--charcoal-mist)" }}
-            />
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as SortKey)}
-              className="h-9 pl-3 pr-9 text-sm rounded-lg appearance-none cursor-pointer outline-none"
-              style={{
-                background: "white",
-                border: "1px solid var(--border-light)",
-                color: "var(--charcoal)",
-              }}
-            >
+          <Select value={sort} onValueChange={(v) => setSort(v as SortKey)}>
+            <SelectTrigger className="h-9 w-auto text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
               {SORT_OPTIONS.map((o) => (
-                <option key={o.key} value={o.key}>
-                  {o.label}
-                </option>
+                <SelectItem key={o.key} value={o.key}>{o.label}</SelectItem>
               ))}
-            </select>
-          </div>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

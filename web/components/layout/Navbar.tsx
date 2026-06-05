@@ -654,17 +654,7 @@ export default function Navbar() {
                   </button>
                 </form>
 
-                {!searchOpen && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchOpen(true)}
-                    className="p-2.5 rounded-lg transition-all hover:bg-(--off-white-2)"
-                    style={{ color: "var(--charcoal-soft)" }}
-                    aria-label="Search"
-                  >
-                    <Search className="w-4.25 h-4.25" strokeWidth={2} />
-                  </button>
-                )}
+              
               </div>
 
               {/* Wishlist — hidden on xs, visible sm+ */}

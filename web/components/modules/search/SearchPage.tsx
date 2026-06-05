@@ -29,13 +29,13 @@ import {
   RefreshCw,
   Wifi,
   Heart,
-  Star,
   ArrowUpDown,
 } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { useHybridWishlist } from "@/hooks/use-hybrid-wishlist";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/format";
+import { ProductCard as SharedProductCard } from "@/components/modules/store/ProductCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -133,9 +133,9 @@ function Highlighted({ text, parts }: { text: string; parts?: string[] }) {
   );
 }
 
-// ─── Product Card ─────────────────────────────────────────────────────────────
+// ─── Search List Card (list-view only; grid view uses shared ProductCard) ────────
 
-function ProductCard({ product, view }: { product: Product; view: ViewMode }) {
+function SearchListCard({ product }: { product: Product }) {
   const href = `/product/${product.id}`;
   const cover = product.images?.[0] ?? null;
   const outOfStock = product.stock === 0;
@@ -153,15 +153,15 @@ function ProductCard({ product, view }: { product: Product; view: ViewMode }) {
     e.stopPropagation();
     if (outOfStock) return;
     cart.addItem({
-      offerId: product.id,
-      productId: product.id,
-      productName: product.name,
-      productImage: product.images?.[0],
-      price: product.price,
-      merchantId: product.merchantId,
+      offerId:           product.id,
+      productId:         product.id,
+      productName:       product.name,
+      productImage:      product.images?.[0],
+      price:             product.price,
+      merchantId:        product.merchantId,
       merchantStoreName: product.merchantStoreName,
-      merchantSlug: product.merchantSlug,
-      stock: product.stock,
+      merchantSlug:      product.merchantSlug,
+      stock:             product.stock,
     });
     toast.success("Added to cart", { description: product.name, duration: 2000 });
   };
@@ -170,230 +170,110 @@ function ProductCard({ product, view }: { product: Product; view: ViewMode }) {
     e.preventDefault();
     e.stopPropagation();
     await toggleWishlist(product.id, {
-      productName: product.name,
+      productName:  product.name,
       productImage: product.images?.[0],
-      price: product.price,
+      price:        product.price,
     });
   };
 
-  if (view === "list") {
-    return (
-      <Link href={href} className="group block">
-        <div className="flex gap-4 bg-white rounded-2xl p-4 border border-(--border-light) transition-all hover:border-(--red)/30 hover:shadow-md">
-          {/* Image */}
-          <div
-            className="relative w-28 h-28 shrink-0 rounded-xl overflow-hidden"
-            style={{ background: "var(--off-white-2)" }}
-          >
-            {cover ? (
-              <img
-                src={cover}
-                alt={product.name}
-                className="w-full h-full object-cover"
-                style={{ filter: outOfStock ? "grayscale(50%) opacity(0.7)" : "none" }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Package className="w-8 h-8" style={{ color: "var(--charcoal-mist)" }} />
-              </div>
-            )}
-            {outOfStock && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[2px]">
-                <span
-                  className="text-[9px] font-black tracking-widest border rounded px-1.5 py-0.5"
-                  style={{ color: "var(--charcoal-soft)", borderColor: "var(--charcoal-soft)" }}
-                >
-                  OUT OF STOCK
-                </span>
-              </div>
-            )}
-            {discountPct > 0 && (
-              <div
-                className="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded"
-                style={{ background: "var(--red)", color: "#fff" }}
-              >
-                -{discountPct}%
-              </div>
-            )}
-          </div>
-
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 mb-1">
-              <Tag className="w-3 h-3 shrink-0" style={{ color: "var(--red)" }} />
-              <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--red)" }}>
-                {product.categoryName}
-              </span>
-            </div>
-            <h3 className="font-semibold leading-snug mb-1.5 line-clamp-2" style={{ fontSize: 14, color: "var(--charcoal)" }}>
-              <Highlighted text={product.name} parts={product.highlights?.name} />
-            </h3>
-            <p className="text-[12px] leading-relaxed line-clamp-2 mb-2" style={{ color: "var(--charcoal-soft)" }}>
-              <Highlighted text={product.description} parts={product.highlights?.description} />
-            </p>
-            {product.merchantStoreName && (
-              <div className="flex items-center gap-1" style={{ fontSize: 11, color: "var(--charcoal-mist)" }}>
-                <Store className="w-3 h-3 shrink-0" />
-                {product.merchantStoreName}
-              </div>
-            )}
-          </div>
-
-          {/* Price + CTA */}
-          <div className="flex flex-col items-end justify-between shrink-0 min-w-25">
-            <div className="text-right">
-              {product.oldPrice && product.oldPrice > product.price && (
-                <div className="text-[11px] line-through mb-0.5" style={{ color: "var(--charcoal-mist)" }}>
-                  {formatPrice(product.oldPrice)}
-                </div>
-              )}
-              <div className="font-bold tabular-nums" style={{ fontSize: 18, color: "var(--charcoal)" }}>
-                {formatPrice(product.price)}
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 mt-3">
-              <button
-                onClick={handleWishlist}
-                className="w-9 h-9 rounded-xl border flex items-center justify-center transition-all hover:bg-red-50 hover:border-(--red)"
-                style={{
-                  borderColor: inWishlist ? "var(--red)" : "var(--border-light)",
-                  background: inWishlist ? "var(--red-muted)" : "transparent",
-                }}
-                aria-label="Wishlist"
-              >
-                <Heart
-                  className="w-3.5 h-3.5"
-                  fill={inWishlist ? "var(--red)" : "none"}
-                  style={{ color: inWishlist ? "var(--red)" : "var(--charcoal-soft)" }}
-                />
-              </button>
-              <button
-                onClick={handleCart}
-                disabled={outOfStock}
-                className="flex items-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-semibold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: outOfStock ? "var(--charcoal-mist)" : "var(--red)", fontFamily: "var(--font-body)" }}
-              >
-                <ShoppingCart className="w-3.5 h-3.5" />
-                Add
-              </button>
-            </div>
-          </div>
-        </div>
-      </Link>
-    );
-  }
-
-  // Grid view
   return (
     <Link href={href} className="group block">
-      <div className="bg-white rounded-2xl overflow-hidden border border-(--border-light) transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-(--red)/30 relative flex flex-col h-full">
-        {/* Accent top bar */}
-        <div
-          className="absolute top-0 inset-x-0 h-0.5 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 z-10"
-          style={{ background: "var(--red)" }}
-        />
-
+      <div className="flex gap-4 bg-white rounded-2xl p-4 border border-(--border-light) transition-all hover:border-(--red)/30 hover:shadow-md">
         {/* Image */}
-        <div className="relative aspect-square overflow-hidden" style={{ background: "var(--off-white-2)" }}>
+        <div
+          className="relative w-28 h-28 shrink-0 rounded-xl overflow-hidden"
+          style={{ background: "var(--off-white-2)" }}
+        >
           {cover ? (
             <img
               src={cover}
               alt={product.name}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="w-full h-full object-cover"
               style={{ filter: outOfStock ? "grayscale(50%) opacity(0.7)" : "none" }}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Package className="w-10 h-10" style={{ color: "rgba(30,30,30,0.1)" }} />
+              <Package className="w-8 h-8" style={{ color: "var(--charcoal-mist)" }} />
             </div>
           )}
-
           {outOfStock && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/65 backdrop-blur-[2px]">
+            <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[2px]">
               <span
-                className="text-[9px] font-black tracking-widest border rounded px-2 py-1"
-                style={{ color: "var(--charcoal-soft)", borderColor: "var(--border-mid)" }}
+                className="text-[9px] font-black tracking-widest border rounded px-1.5 py-0.5"
+                style={{ color: "var(--charcoal-soft)", borderColor: "var(--charcoal-soft)" }}
               >
                 OUT OF STOCK
               </span>
             </div>
           )}
-
-          {/* Discount badge */}
           {discountPct > 0 && (
             <div
-              className="absolute top-2 left-2 text-[10px] font-bold px-1.5 py-0.5 rounded-md z-10"
+              className="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded"
               style={{ background: "var(--red)", color: "#fff" }}
             >
               -{discountPct}%
             </div>
           )}
-
-          {/* Wishlist button — shows on hover */}
-          <button
-            onClick={handleWishlist}
-            className="absolute top-2 right-2 w-8 h-8 rounded-xl flex items-center justify-center transition-all z-10 opacity-0 group-hover:opacity-100"
-            style={{
-              background: inWishlist ? "var(--red)" : "rgba(255,255,255,0.92)",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
-            }}
-            aria-label="Wishlist"
-          >
-            <Heart
-              className="w-3.5 h-3.5"
-              fill={inWishlist ? "#fff" : "none"}
-              style={{ color: inWishlist ? "#fff" : "var(--charcoal-soft)" }}
-            />
-          </button>
         </div>
 
-        {/* Body */}
-        <div className="flex flex-col flex-1 p-3.5 gap-1.5">
-          {/* Category */}
-          <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--red)" }}>
-            {product.categoryName}
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Tag className="w-3 h-3 shrink-0" style={{ color: "var(--red)" }} />
+            <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--red)" }}>
+              {product.categoryName}
+            </span>
           </div>
-
-          {/* Title */}
-          <h3
-            className="line-clamp-2 leading-snug font-semibold flex-1"
-            style={{ fontSize: 13, color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
-          >
+          <h3 className="font-semibold leading-snug mb-1.5 line-clamp-2" style={{ fontSize: 14, color: "var(--charcoal)" }}>
             <Highlighted text={product.name} parts={product.highlights?.name} />
           </h3>
-
-          {/* Store */}
+          <p className="text-[12px] leading-relaxed line-clamp-2 mb-2" style={{ color: "var(--charcoal-soft)" }}>
+            <Highlighted text={product.description} parts={product.highlights?.description} />
+          </p>
           {product.merchantStoreName && (
-            <div className="flex items-center gap-1" style={{ fontSize: 10, color: "var(--charcoal-mist)" }}>
-              <Store className="w-2.5 h-2.5 shrink-0" />
-              <span className="truncate">{product.merchantStoreName}</span>
+            <div className="flex items-center gap-1" style={{ fontSize: 11, color: "var(--charcoal-mist)" }}>
+              <Store className="w-3 h-3 shrink-0" />
+              {product.merchantStoreName}
             </div>
           )}
+        </div>
 
-          {/* Price + Cart */}
-          <div className="flex items-center justify-between mt-auto pt-1">
-            <div>
-              {product.oldPrice && product.oldPrice > product.price && (
-                <div className="text-[10px] line-through" style={{ color: "var(--charcoal-mist)" }}>
-                  {formatPrice(product.oldPrice)}
-                </div>
-              )}
-              <span className="font-bold tabular-nums" style={{ fontSize: 15, color: "var(--charcoal)" }}>
-                {formatPrice(product.price)}
-              </span>
+        {/* Price + CTA */}
+        <div className="flex flex-col items-end justify-between shrink-0 min-w-25">
+          <div className="text-right">
+            {product.oldPrice && product.oldPrice > product.price && (
+              <div className="text-[11px] line-through mb-0.5" style={{ color: "var(--charcoal-mist)" }}>
+                {formatPrice(product.oldPrice)}
+              </div>
+            )}
+            <div className="font-bold tabular-nums" style={{ fontSize: 18, color: "var(--charcoal)" }}>
+              {formatPrice(product.price)}
             </div>
+          </div>
+          <div className="flex items-center gap-1.5 mt-3">
+            <button
+              onClick={handleWishlist}
+              className="w-9 h-9 rounded-xl border flex items-center justify-center transition-all hover:bg-red-50 hover:border-(--red)"
+              style={{
+                borderColor: inWishlist ? "var(--red)" : "var(--border-light)",
+                background:  inWishlist ? "var(--red-muted)" : "transparent",
+              }}
+              aria-label="Wishlist"
+            >
+              <Heart
+                className="w-3.5 h-3.5"
+                fill={inWishlist ? "var(--red)" : "none"}
+                style={{ color: inWishlist ? "var(--red)" : "var(--charcoal-soft)" }}
+              />
+            </button>
             <button
               onClick={handleCart}
               disabled={outOfStock}
-              className="w-9 h-9 rounded-xl border flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-(--red) hover:border-(--red) hover:text-white"
-              style={{
-                borderColor: "var(--border-mid)",
-                background: "transparent",
-                color: "var(--charcoal-soft)",
-              }}
-              aria-label="Add to cart"
+              className="flex items-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-semibold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ background: outOfStock ? "var(--charcoal-mist)" : "var(--red)", fontFamily: "var(--font-body)" }}
             >
               <ShoppingCart className="w-3.5 h-3.5" />
+              Add
             </button>
           </div>
         </div>
@@ -549,6 +429,7 @@ export default function SearchPage() {
   const debounceRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sortMenuRef    = useRef<HTMLDivElement>(null);
   const inputRef       = useRef<HTMLInputElement>(null);
+  const { addItem }    = useCart();
 
   // ── URL builder ────────────────────────────────────────────────────────────
   const buildUrl = useCallback(
@@ -1182,9 +1063,30 @@ export default function SearchPage() {
           {!loading && results && results.items.length > 0 && (
             <>
               <div className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4" : "flex flex-col gap-3"}>
-                {results.items.map((p) => (
-                  <ProductCard key={p.id} product={p} view={viewMode} />
-                ))}
+                {results.items.map((p) =>
+                  viewMode === "list" ? (
+                    <SearchListCard key={p.id} product={p} />
+                  ) : (
+                    <SharedProductCard
+                      key={p.id}
+                      product={p}
+                      context="marketplace"
+                      onAddToCart={(prod) =>
+                        addItem({
+                          offerId:           prod.id,
+                          productId:         prod.id,
+                          productName:       prod.name,
+                          productImage:      prod.images?.[0],
+                          price:             prod.price,
+                          merchantId:        prod.merchantId,
+                          merchantStoreName: prod.merchantStoreName ?? "",
+                          merchantSlug:      prod.merchantSlug ?? "",
+                          stock:             prod.stock,
+                        })
+                      }
+                    />
+                  )
+                )}
               </div>
 
               {/* Pagination */}

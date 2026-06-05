@@ -39,7 +39,7 @@ async function CategoryProducts({
     fetchISR<{ category: any; SubCategories: any[]; products: any[] }>(
       `/api/categories/${slug}`,
     ),
-    fetchISR<{ data: any[] }>(
+    fetchISR<{ items: any[]; data?: any[] }>(
       `/api/products?category=${slug}&${qs.toString()}`,
     ),
   ]);
@@ -55,7 +55,7 @@ async function CategoryProducts({
   const rawProducts =
     (categoryData.products?.length ?? 0) > 0
       ? categoryData.products
-      : (productsData?.data ?? []);
+      : (productsData?.items ?? productsData?.data ?? []);
 
   const products: Product[] = rawProducts.map((p: any): Product => ({
     id: p.id ?? p.Id,

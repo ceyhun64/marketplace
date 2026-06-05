@@ -5,6 +5,13 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import MultiImageUploader from "@/components/ui/multiImageUploader";
 import { Category, CreateProductForm } from "./types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Props {
   onClose: () => void;
@@ -124,20 +131,16 @@ export default function AddProductModal({ onClose, onSuccess }: Props) {
             <label className="block text-sm font-medium text-(--text-secondary) mb-1">
               Kategori <span className="text-red-500">*</span>
             </label>
-            <select
-              value={form.categoryId}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, categoryId: e.target.value }))
-              }
-              className="w-full border border-(--border-mid) rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select category...</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            <Select value={form.categoryId || undefined} onValueChange={(v) => setForm((f) => ({ ...f, categoryId: v }))}>
+              <SelectTrigger className="w-full text-sm">
+                <SelectValue placeholder="Select category..." />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Labeller */}

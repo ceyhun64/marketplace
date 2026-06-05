@@ -1,13 +1,18 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
 import { useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, ShoppingCart, Star, ChevronDown, LayoutGrid, X } from "lucide-react";
-import { WishlistButton } from "@/components/modules/store/WishlistButton";
+import { Search, LayoutGrid, X } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
-import { formatPrice } from "@/lib/format";
+import { ProductCard } from "@/components/modules/store/ProductCard";
+import type { Product } from "@/types/entities";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface StoreOffer {
   id: string;
@@ -36,10 +41,32 @@ const SORT_OPTIONS = [
   { value: "rating",     label: "Highest Rated" },
 ];
 
+function offerToProduct(offer: StoreOffer): Product {
+  return {
+    id:               offer.productId,
+    name:             offer.productName,
+    images:           offer.productImages,
+    price:            offer.price,
+    stock:            offer.stock,
+    categoryName:     offer.categoryName,
+    merchantId:       offer.merchantId ?? "",
+    merchantStoreName: offer.merchantStoreName,
+    merchantSlug:     offer.merchantSlug,
+    description:      "",
+    categoryId:       "",
+    tags:             [],
+    publishToMarket:  false,
+    publishToStore:   true,
+    isApproved:       true,
+    isDeleted:        false,
+    createdAt:        "",
+  };
+}
+
 export function StoreProductGrid({ storeSlug, offers, isLoading }: StoreProductGridProps) {
-  const [search, setSearch]       = useState("");
-  const [sort, setSort]           = useState("default");
-  const [category, setCategory]   = useState("all");
+  const [search, setSearch]     = useState("");
+  const [sort, setSort]         = useState("default");
+  const [category, setCategory] = useState("all");
   const { addItem } = useCart();
 
   const safeOffers = Array.isArray(offers) ? offers : [];
@@ -125,25 +152,17 @@ export function StoreProductGrid({ storeSlug, offers, isLoading }: StoreProductG
         </div>
 
         {/* Sort */}
-        <div className="relative shrink-0">
-          <ChevronDown
-            className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 pointer-events-none"
-            style={{ color: "#b0b0b0" }}
-          />
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="h-10 pl-3 pr-9 text-sm rounded-xl appearance-none cursor-pointer outline-none w-full sm:w-48"
-            style={{
-              background: "#f7f7f7",
-              border: "1.5px solid rgba(30,30,30,0.1)",
-              color: "#1e1e1e",
-            }}
-          >
-            {SORT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
+        <div className="shrink-0">
+          <Select value={sort} onValueChange={setSort}>
+            <SelectTrigger className="h-10 w-full sm:w-48 text-sm rounded-xl">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -223,158 +242,33 @@ export function StoreProductGrid({ storeSlug, offers, isLoading }: StoreProductG
       ) : (
         /* ── Product grid ─────────────────────────────────────────────────── */
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filtered.map((offer) => (
-            <ProductCard
-              key={offer.id}
-              offer={offer}
-              onAddToCart={() =>
-                addItem({
-                  offerId: offer.id,
-                  productId: offer.productId,
-                  productName: offer.productName,
-                  productImage: offer.productImages[0] ?? "",
-                  merchantId: offer.merchantId ?? "",
-                  merchantStoreName: offer.merchantStoreName ?? "",
-                  merchantSlug: offer.merchantSlug ?? storeSlug,
-                  price: offer.price,
-                  stock: offer.stock,
-                  source: "ESTORE",
-                })
-              }
-            />
-          ))}
+          {filtered.map((offer) => {
+            const product = offerToProduct(offer);
+            return (
+              <ProductCard
+                key={offer.id}
+                product={product}
+                context="store"
+                storeSlug={storeSlug}
+                onAddToCart={() =>
+                  addItem({
+                    offerId:           offer.id,
+                    productId:         offer.productId,
+                    productName:       offer.productName,
+                    productImage:      offer.productImages[0] ?? "",
+                    merchantId:        offer.merchantId ?? "",
+                    merchantStoreName: offer.merchantStoreName ?? "",
+                    merchantSlug:      offer.merchantSlug ?? storeSlug,
+                    price:             offer.price,
+                    stock:             offer.stock,
+                    source:            "ESTORE",
+                  })
+                }
+              />
+            );
+          })}
         </div>
       )}
-    </div>
-  );
-}
-
-function ProductCard({
-  offer,
-  onAddToCart,
-}: {
-  offer: StoreOffer;
-  onAddToCart: () => void;
-}) {
-  const productHref = `/product/${offer.productId}`;
-
-  return (
-    <div
-      className="group flex flex-col overflow-hidden rounded-2xl bg-white transition-shadow duration-200 hover:shadow-md"
-      style={{
-        border: "1px solid rgba(30,30,30,0.09)",
-        boxShadow: "0 1px 3px rgba(30,30,30,0.06)",
-      }}
-    >
-      {/* Image */}
-      <Link href={productHref} className="relative block overflow-hidden bg-gray-50" style={{ aspectRatio: "1/1" }}>
-        {offer.productImages[0] ? (
-          <Image
-            src={offer.productImages[0]}
-            alt={offer.productName}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 640px) 50vw, 25vw"
-          />
-        ) : (
-          <div className="h-full w-full flex items-center justify-center text-4xl select-none">
-            📦
-          </div>
-        )}
-
-        {/* Out of stock */}
-        {offer.stock === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <span
-              className="text-xs font-bold px-2.5 py-1 rounded-md tracking-widest uppercase"
-              style={{ background: "#c8102e", color: "#fff" }}
-            >
-              Out of Stock
-            </span>
-          </div>
-        )}
-
-        {/* Badges top-left */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1">
-          {offer.categoryName && offer.stock > 0 && (
-            <span
-              className="text-[10px] font-semibold px-2 py-0.5 rounded-md uppercase tracking-wider"
-              style={{
-                background: "rgba(0,0,0,0.65)",
-                color: "#fff",
-                backdropFilter: "blur(4px)",
-              }}
-            >
-              {offer.categoryName}
-            </span>
-          )}
-          {offer.rating === 0 && offer.stock > 0 && (
-            <span
-              className="text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider"
-              style={{ background: "#c8102e", color: "#fff" }}
-            >
-              New
-            </span>
-          )}
-        </div>
-
-        {/* Wishlist — top-right, visible on hover */}
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-          <WishlistButton
-            productId={offer.productId}
-            productName={offer.productName}
-            productImage={offer.productImages[0]}
-            price={offer.price}
-            variant="icon"
-          />
-        </div>
-      </Link>
-
-      {/* Body */}
-      <div className="flex flex-col flex-1 p-3">
-        <Link href={productHref}>
-          <h3
-            className="text-sm font-semibold line-clamp-2 leading-snug mb-2 hover:underline"
-            style={{ color: "#1e1e1e" }}
-          >
-            {offer.productName}
-          </h3>
-        </Link>
-
-        {offer.rating > 0 && (
-          <div className="flex items-center gap-1 mb-3">
-            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-            <span className="text-xs font-medium" style={{ color: "#525252" }}>
-              {offer.rating.toFixed(1)}
-            </span>
-          </div>
-        )}
-
-        <div className="mt-auto flex items-center justify-between gap-2 pt-2" style={{ borderTop: "1px solid rgba(30,30,30,0.06)" }}>
-          <span className="font-bold text-sm" style={{ color: "#1e1e1e" }}>
-            {formatPrice(offer.price)}
-          </span>
-
-          <button
-            disabled={offer.stock === 0}
-            onClick={onAddToCart}
-            className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-            style={{
-              background: offer.stock > 0 ? "#c8102e" : "rgba(30,30,30,0.06)",
-              color: offer.stock > 0 ? "#fff" : "#9a9a9a",
-            }}
-            onMouseEnter={(e) => {
-              if (offer.stock > 0) (e.currentTarget as HTMLButtonElement).style.background = "#a00d24";
-            }}
-            onMouseLeave={(e) => {
-              if (offer.stock > 0) (e.currentTarget as HTMLButtonElement).style.background = "#c8102e";
-            }}
-          >
-            <ShoppingCart className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Add</span>
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

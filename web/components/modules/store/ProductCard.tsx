@@ -77,15 +77,14 @@ export function ProductCard({
       {/* ── Product image ────────────────────────────────────────────────────── */}
       <Link
         href={href}
-        className="relative block aspect-square overflow-hidden"
-        style={{ background: "var(--off-white)" }}
+        className="relative block aspect-square overflow-hidden bg-white"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={coverImage}
           alt={product.name}
           className={cn(
-            "w-full h-full object-cover transition-transform duration-300 group-hover:scale-105",
+            "w-full h-full object-contain p-2 transition-transform duration-300 group-hover:scale-105",
             isOutOfStock && "opacity-60 grayscale",
           )}
           loading="lazy"

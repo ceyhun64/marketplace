@@ -69,7 +69,7 @@ function isMainHost(host: string): boolean {
   return false;
 }
 
-export function proxy(req: NextRequest) {
+export default function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const rawHost = req.headers.get("host") ?? "";
 
@@ -109,8 +109,10 @@ export function proxy(req: NextRequest) {
   }
 
   // ── Auth Guard ────────────────────────────────────────────────────────────
-  const matchedPrefix = Object.keys(PROTECTED).find((prefix) =>
-    pathname.startsWith(prefix),
+  // Use exact path-segment matching: prefix must be followed by "/" or end of
+  // string so that "/merchant" does not accidentally match "/merchants/...".
+  const matchedPrefix = Object.keys(PROTECTED).find(
+    (prefix) => pathname === prefix || pathname.startsWith(prefix + "/"),
   );
   if (!matchedPrefix) return NextResponse.next();
 
@@ -135,7 +137,7 @@ export function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // _next static dosyaları, resimler ve favicon hariç her şey
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    // Exclude: Next.js internals, favicon, and public static media (merchants, products, images)
+    "/((?!_next/static|_next/image|favicon\\.ico|merchants/|products/|images/).*)",
   ],
 };

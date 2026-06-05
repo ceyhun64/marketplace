@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import {
   ChevronRight,
@@ -154,6 +154,8 @@ function CategoryCard({
 export default function CategoriesPage() {
   const { data: categories, isLoading, isError } = useCategories();
   const [query, setQuery] = useState("");
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const rootCategories = useMemo(() => {
     const roots = (categories ?? []).filter((c) => !c.parentId);
@@ -231,28 +233,29 @@ export default function CategoriesPage() {
           </h1>
 
           {/* Stats */}
-          {!isLoading && !isError && (
-            <div className="flex items-center gap-4 mb-7 flex-wrap">
-              <div className="flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5" style={{ color: "var(--charcoal-soft)" }} />
-                <span className="text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
-                  <span className="font-bold text-white">{rootCategories.length}</span> categories
-                </span>
-              </div>
-              {totalProducts > 0 && (
-                <>
-                  <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>
+          <div className="flex items-center gap-4 mb-7 flex-wrap">
+            {mounted && !isLoading && !isError && (
+              <>
+                <div className="flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5" style={{ color: "var(--charcoal-soft)" }} />
                   <span className="text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
-                    <span className="font-bold text-white">
-                      {totalProducts.toLocaleString()}
-                    </span>{" "}
-                    products
+                    <span className="font-bold text-white">{rootCategories.length}</span> categories
                   </span>
-                </>
-              )}
-            </div>
-          )}
-          {(isLoading || isError) && <div className="mb-7" />}
+                </div>
+                {totalProducts > 0 && (
+                  <>
+                    <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>
+                    <span className="text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
+                      <span className="font-bold text-white">
+                        {totalProducts.toLocaleString()}
+                      </span>{" "}
+                      products
+                    </span>
+                  </>
+                )}
+              </>
+            )}
+          </div>
 
           {/* Search */}
           <div className="relative max-w-md">

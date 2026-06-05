@@ -54,7 +54,8 @@ public class CategoriesController : ControllerBase
         var categoryIds = await GetCategoryIdsRecursiveAsync(category.Id);
 
         var products = await _db
-            .Products.Where(p => !p.IsDeleted && categoryIds.Contains(p.CategoryId) && p.Stock > 0)
+            .Products.Include(p => p.Merchant)
+            .Where(p => !p.IsDeleted && p.IsApproved && categoryIds.Contains(p.CategoryId) && p.Stock > 0)
             .OrderByDescending(p => p.CreatedAt)
             .Skip((page - 1) * limit)
             .Take(limit)
@@ -63,8 +64,10 @@ public class CategoriesController : ControllerBase
                 p.Id,
                 p.Name,
                 p.Images,
-                BestPrice = (decimal?)p.Price,
-                OfferCount = p.Stock > 0 ? 1 : 0,
+                p.Price,
+                p.Stock,
+                MerchantStoreName = p.Merchant.StoreName,
+                MerchantSlug = p.Merchant.Slug,
             })
             .ToListAsync();
 

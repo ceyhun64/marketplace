@@ -9,6 +9,13 @@ import { X, Loader2 } from "lucide-react";
 import ProductVariantEditor, { type VariantRow } from "./ProductVariantEditor";
 import api from "@/lib/api";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Props {
   product?: Product | null;
@@ -260,18 +267,16 @@ export default function ProductFormModal({
 
               {/* Category */}
               <Field label="Category" required>
-                <select
-                  value={form.categoryId}
-                  onChange={(e) => set("categoryId", e.target.value)}
-                  className={inputCls}
-                >
-                  <option value="">Select a category...</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                <Select value={form.categoryId || undefined} onValueChange={(v) => set("categoryId", v)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a category..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </Field>
 
               {/* Price & Stock */}

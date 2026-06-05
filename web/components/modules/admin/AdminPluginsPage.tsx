@@ -21,6 +21,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -231,17 +238,16 @@ export default function AdminPluginsPage() {
                   <Label className="text-xs font-medium text-(--text-secondary)">
                     Minimum Plan
                   </Label>
-                  <select
-                    className="w-full border border-(--border-mid) rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2"
-                    value={form.minimumPlan}
-                    onChange={(e) =>
-                      setForm({ ...form, minimumPlan: e.target.value })
-                    }
-                  >
-                    <option value="Basic">Basic</option>
-                    <option value="Pro">Pro</option>
-                    <option value="Enterprise">Enterprise</option>
-                  </select>
+                  <Select value={form.minimumPlan} onValueChange={(v) => setForm({ ...form, minimumPlan: v })}>
+                    <SelectTrigger className="w-full rounded-xl text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Basic">Basic</SelectItem>
+                      <SelectItem value="Pro">Pro</SelectItem>
+                      <SelectItem value="Enterprise">Enterprise</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-(--text-secondary)">
@@ -266,20 +272,19 @@ export default function AdminPluginsPage() {
                 <Label className="text-xs font-medium text-(--text-secondary)">
                   Category
                 </Label>
-                <select
-                  className="w-full border border-(--border-mid) rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2"
-                  value={form.category}
-                  onChange={(e) =>
-                    setForm({ ...form, category: e.target.value })
-                  }
-                >
-                  <option value="analytics">Analytics</option>
-                  <option value="marketing">Marketing</option>
-                  <option value="fulfillment">Fulfillment</option>
-                  <option value="payment">Payment</option>
-                  <option value="inventory">Inventory</option>
-                  <option value="crm">CRM</option>
-                </select>
+                <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                  <SelectTrigger className="w-full rounded-xl text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="analytics">Analytics</SelectItem>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="fulfillment">Fulfillment</SelectItem>
+                    <SelectItem value="payment">Payment</SelectItem>
+                    <SelectItem value="inventory">Inventory</SelectItem>
+                    <SelectItem value="crm">CRM</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <Button
                 className="w-full rounded-xl bg-(--charcoal) hover:bg-(--charcoal-2)"

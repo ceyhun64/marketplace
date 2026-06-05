@@ -548,25 +548,30 @@ export default function OrdersPage() {
     <div className="min-h-screen" style={{ background: "var(--off-white)" }}>
       {/* ── Page header ─────────────────────────────────────────────────────── */}
       <div
-        className="bg-white"
-        style={{ borderBottom: "1px solid rgba(51,51,51,0.08)" }}
+        className="relative overflow-hidden py-10 px-4"
+        style={{ background: "var(--charcoal)" }}
       >
-        <div className="max-w-3xl mx-auto px-4 py-6 md:py-8">
-          <div className="flex items-center gap-3 mb-2">
+        {/* Decorative package watermark */}
+        <Package
+          className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none select-none"
+          style={{ width: 96, height: 96, color: "rgba(255,255,255,0.04)" }}
+        />
+        <div
+          className="absolute -top-8 -left-8 w-40 h-40 rounded-full pointer-events-none"
+          style={{ border: "20px solid rgba(200,16,46,0.07)" }}
+        />
+        <div className="max-w-3xl mx-auto relative z-10">
+          <div className="flex items-center gap-2 mb-3">
+            <Package style={{ width: 14, height: 14, color: "var(--red)" }} />
             <span
-              className="inline-block w-6 h-px"
-              style={{ background: "var(--red)" }}
-            />
-            <span
-              className="font-mono text-[11px] tracking-[0.18em] uppercase"
+              className="font-mono text-[10px] uppercase tracking-[3px]"
               style={{ color: "var(--charcoal-soft)" }}
             >
               My Account
             </span>
           </div>
-          {/* Responsive title: `text-3xl` mobile → `text-[2.2rem]` md+ */}
           <h1
-            className="font-normal text-(--charcoal) text-[1.9rem] md:text-[2.2rem] leading-tight"
+            className="font-normal leading-tight text-white text-[1.9rem] md:text-[2.4rem]"
             style={{ fontFamily: "var(--font-display)" }}
           >
             My <em style={{ color: "var(--red)" }}>Orders</em>

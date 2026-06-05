@@ -109,22 +109,53 @@ export default function WalletPage() {
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
-      {/* Header */}
+      {/* Header — green/finance identity */}
       <section
         style={{
-          background: "var(--charcoal)",
+          background: "linear-gradient(135deg, #071a10 0%, #0c2217 50%, #081a0f 100%)",
           padding: "4rem 1.5rem 3rem",
           color: "white",
           position: "relative",
           overflow: "hidden",
         }}
       >
+        {/* Green radial glow */}
         <div
           style={{
             position: "absolute",
             inset: 0,
-            background:
-              "radial-gradient(ellipse at 80% 50%, rgba(200,16,46,0.15) 0%, transparent 60%)",
+            background: "radial-gradient(ellipse at 75% 50%, rgba(5,150,105,0.18) 0%, transparent 60%)",
+            pointerEvents: "none",
+          }}
+        />
+        {/* Decorative ring */}
+        <div
+          style={{
+            position: "absolute",
+            top: -32, right: -32,
+            width: 200, height: 200,
+            borderRadius: "50%",
+            border: "24px solid rgba(5,150,105,0.09)",
+            pointerEvents: "none",
+          }}
+        />
+        {/* Large faint wallet watermark */}
+        <Wallet
+          style={{
+            position: "absolute",
+            right: 48, bottom: 8,
+            width: 96, height: 96,
+            color: "rgba(5,150,105,0.07)",
+            pointerEvents: "none",
+          }}
+        />
+        {/* Bottom accent */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0, left: 0,
+            width: "100%", height: 2,
+            background: "linear-gradient(90deg, rgba(5,150,105,0.55) 0%, transparent 60%)",
             pointerEvents: "none",
           }}
         />
@@ -137,16 +168,15 @@ export default function WalletPage() {
               marginBottom: "1rem",
             }}
           >
-            <Wallet
-              style={{ width: 20, height: 20, color: "var(--red-light)" }}
-            />
+            <Wallet style={{ width: 14, height: 14, color: "rgba(52,211,153,0.85)" }} />
             <span
               style={{
-                fontSize: "0.8125rem",
-                fontWeight: 600,
-                letterSpacing: "0.06em",
-                color: "rgba(255,255,255,0.5)",
+                fontSize: "0.6875rem",
+                fontWeight: 700,
+                letterSpacing: "0.2em",
+                color: "rgba(52,211,153,0.6)",
                 textTransform: "uppercase",
+                fontFamily: "var(--font-mono)",
               }}
             >
               BAZR Wallet
@@ -154,18 +184,19 @@ export default function WalletPage() {
           </div>
           <h1
             style={{
-              fontFamily: "var(--font-heading)",
+              fontFamily: "var(--font-display)",
               fontSize: "clamp(2rem, 5vw, 3.5rem)",
               fontWeight: 600,
               lineHeight: 1.1,
               marginBottom: "0.75rem",
+              color: "rgba(255,255,255,0.95)",
             }}
           >
             Your Digital Wallet
           </h1>
           <p
             style={{
-              color: "rgba(255,255,255,0.55)",
+              color: "rgba(255,255,255,0.4)",
               fontSize: "1rem",
               maxWidth: 500,
             }}

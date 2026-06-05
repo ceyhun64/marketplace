@@ -50,20 +50,41 @@ export default function NotificationsPage() {
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
-      {/* Header */}
+      {/* Header — indigo/violet "inbox" identity */}
       <div
         className="relative overflow-hidden py-12 px-4"
-        style={{ background: "var(--charcoal)" }}
+        style={{
+          background: "linear-gradient(135deg, #0f0c1f 0%, #150f2a 50%, #0d0b1c 100%)",
+        }}
       >
-        <div className="max-w-325 mx-auto flex items-end justify-between gap-4 flex-wrap">
+        {/* Decorative rings */}
+        <div
+          className="absolute -top-10 -right-10 w-52 h-52 rounded-full pointer-events-none"
+          style={{ border: "24px solid rgba(139,92,246,0.09)" }}
+        />
+        <div
+          className="absolute -bottom-16 left-32 w-36 h-36 rounded-full pointer-events-none"
+          style={{ border: "16px solid rgba(139,92,246,0.06)" }}
+        />
+        {/* Large Bell watermark */}
+        <Bell
+          className="absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none select-none"
+          style={{ width: 120, height: 120, color: "rgba(139,92,246,0.06)" }}
+        />
+        {/* Bottom accent */}
+        <div
+          className="absolute bottom-0 left-0 w-full h-0.5 pointer-events-none"
+          style={{ background: "linear-gradient(90deg, rgba(139,92,246,0.5) 0%, transparent 55%)" }}
+        />
+        <div className="max-w-325 mx-auto flex items-end justify-between gap-4 flex-wrap relative z-10">
           <div>
             <div className="inline-flex items-center gap-2 mb-3">
-              <Bell className="w-4 h-4" style={{ color: "var(--red)" }} />
+              <Bell className="w-4 h-4" style={{ color: "rgba(167,139,250,0.9)" }} />
               <span
                 className="font-mono text-[10px] uppercase tracking-[3px]"
-                style={{ color: "var(--charcoal-soft)" }}
+                style={{ color: "rgba(167,139,250,0.6)" }}
               >
-                Notifications
+                Inbox
               </span>
             </div>
             <h1
@@ -71,11 +92,11 @@ export default function NotificationsPage() {
               style={{ fontFamily: "var(--font-display)" }}
             >
               Your{" "}
-              <span style={{ color: "var(--red)" }}>Notifications</span>
+              <span style={{ color: "rgba(167,139,250,0.9)" }}>Notifications</span>
               {unreadCount > 0 && (
                 <span
                   className="ml-3 inline-flex items-center justify-center w-8 h-8 rounded-full text-white text-sm font-bold align-middle"
-                  style={{ background: "var(--red)", fontFamily: "var(--font-body)" }}
+                  style={{ background: "rgba(139,92,246,0.9)", fontFamily: "var(--font-body)" }}
                 >
                   {unreadCount}
                 </span>

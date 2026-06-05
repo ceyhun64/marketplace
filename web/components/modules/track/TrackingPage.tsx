@@ -19,17 +19,16 @@ type ShipmentStatus =
   | "DELIVERED"
   | "FAILED";
 
-const STATUS_STEPS: { status: ShipmentStatus; label: string; icon: string }[] =
-  [
-    { status: "PLACED", label: "Order Placed", icon: "📋" },
-    { status: "PAYMENT_CONFIRMED", label: "Payment Confirmed", icon: "✅" },
-    { status: "LABEL_GENERATED", label: "Label Generated", icon: "🏷️" },
-    { status: "COURIER_ASSIGNED", label: "Courier Assigned", icon: "👤" },
-    { status: "PICKED_UP", label: "Package Picked Up", icon: "📦" },
-    { status: "IN_TRANSIT", label: "Yolda", icon: "🚚" },
-    { status: "OUT_FOR_DELIVERY", label: "Dağıtımda", icon: "📍" },
-    { status: "DELIVERED", label: "Teslim Edildi", icon: "🎉" },
-  ];
+const STATUS_STEPS: { status: ShipmentStatus; label: string }[] = [
+  { status: "PLACED",            label: "Order Placed"       },
+  { status: "PAYMENT_CONFIRMED", label: "Payment Confirmed"  },
+  { status: "LABEL_GENERATED",   label: "Label Generated"    },
+  { status: "COURIER_ASSIGNED",  label: "Courier Assigned"   },
+  { status: "PICKED_UP",         label: "Package Picked Up"  },
+  { status: "IN_TRANSIT",        label: "In Transit"         },
+  { status: "OUT_FOR_DELIVERY",  label: "Out for Delivery"   },
+  { status: "DELIVERED",         label: "Delivered"          },
+];
 
 const STATUS_ORDER = STATUS_STEPS.map((s) => s.status);
 
@@ -39,7 +38,7 @@ function getStatusIndex(status: ShipmentStatus) {
 }
 
 function formatDateTime(dt: string) {
-  return new Date(dt).toLocaleString("tr-TR", {
+  return new Date(dt).toLocaleString("en-US", {
     day: "2-digit",
     month: "long",
     year: "numeric",
@@ -49,47 +48,68 @@ function formatDateTime(dt: string) {
 }
 
 async function TrackingContent({ trackingNo }: { trackingNo: string }) {
-  const data = await fetchSSR<{ data: any }>(
-    `/fulfillment/events/${trackingNo}`,
-  );
+  const data = await fetchSSR<{ data: any }>(`/fulfillment/events/${trackingNo}`);
 
   if (!data?.data) return notFound();
 
   const shipment = data.data;
   const currentIndex = getStatusIndex(shipment.status as ShipmentStatus);
-  const isFailed = shipment.status === "FAILED";
+  const isFailed   = shipment.status === "FAILED";
   const isDelivered = shipment.status === "DELIVERED";
 
+  const headerBg = isDelivered
+    ? "var(--success)"
+    : isFailed
+    ? "var(--red)"
+    : "var(--charcoal)";
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: "var(--off-white)" }}>
       {/* Header */}
       <div
-        className={`py-10 px-4 text-center ${isDelivered ? "bg-green-600" : isFailed ? "bg-red-600" : "bg-gray-900"}`}
+        className="py-10 px-4 text-center"
+        style={{ background: headerBg }}
       >
         <Link
           href="/"
-          className="text-white/70 text-sm hover:text-white mb-6 inline-block"
+          className="text-sm mb-6 inline-block transition-opacity hover:opacity-70"
+          style={{ color: "rgba(255,255,255,0.7)" }}
         >
-          ← Ana Sayfaya Dön
+          ← Back to Home
         </Link>
-        <p className="text-sm font-medium text-white/70 uppercase tracking-widest mb-2">
-          Kargo Takip
+        <p
+          className="text-sm font-medium uppercase tracking-widest mb-2"
+          style={{ color: "rgba(255,255,255,0.55)", fontFamily: "var(--font-mono)" }}
+        >
+          Shipment Tracking
         </p>
-        <h1 className="text-3xl font-black text-white font-mono tracking-wider">
+        <h1
+          className="text-3xl font-black text-white tracking-wider"
+          style={{ fontFamily: "var(--font-mono)" }}
+        >
           {trackingNo}
         </h1>
         <div className="mt-4">
           {isDelivered ? (
-            <span className="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-full text-sm font-semibold">
-              🎉 Teslim Edildi
+            <span
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold"
+              style={{ background: "rgba(255,255,255,0.2)", color: "white" }}
+            >
+              ✓ Delivered
             </span>
           ) : isFailed ? (
-            <span className="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-full text-sm font-semibold">
-              ❌ Teslim Başarısız
+            <span
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold"
+              style={{ background: "rgba(255,255,255,0.2)", color: "white" }}
+            >
+              ✕ Delivery Failed
             </span>
           ) : (
-            <span className="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-full text-sm font-semibold">
-              🚚 Yolda
+            <span
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold"
+              style={{ background: "rgba(255,255,255,0.2)", color: "white" }}
+            >
+              In Transit
             </span>
           )}
         </div>
@@ -99,17 +119,31 @@ async function TrackingContent({ trackingNo }: { trackingNo: string }) {
         {/* ETA Card */}
         {(shipment.estimatedDeliveryWindow || shipment.actualDeliveredAt) && (
           <div
-            className={`rounded-2xl p-5 ${isDelivered ? "bg-green-50 border-2 border-green-200" : "bg-blue-50 border-2 border-blue-100"}`}
+            className="rounded-2xl p-5"
+            style={
+              isDelivered
+                ? { background: "var(--success-bg)", border: "2px solid var(--success-border)" }
+                : { background: "var(--info-bg)", border: "2px solid var(--info-border)" }
+            }
           >
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-              {isDelivered ? "Teslim Tarihi" : "Tahmini Teslimat"}
+            <p
+              className="text-xs font-semibold uppercase tracking-wide mb-2"
+              style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-mono)" }}
+            >
+              {isDelivered ? "Delivered On" : "Estimated Delivery"}
             </p>
             {isDelivered && shipment.actualDeliveredAt ? (
-              <p className="text-lg font-bold text-green-700">
+              <p
+                className="text-lg font-bold"
+                style={{ color: "var(--success)" }}
+              >
                 {formatDateTime(shipment.actualDeliveredAt)}
               </p>
             ) : shipment.estimatedDeliveryWindow ? (
-              <p className="text-lg font-bold text-blue-700">
+              <p
+                className="text-lg font-bold"
+                style={{ color: "var(--info)" }}
+              >
                 {formatDateTime(shipment.estimatedDeliveryWindow.start)}
                 {" — "}
                 {formatDateTime(shipment.estimatedDeliveryWindow.end)}
@@ -120,22 +154,35 @@ async function TrackingContent({ trackingNo }: { trackingNo: string }) {
 
         {/* Courier Info */}
         {shipment.courierName && !isDelivered && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
-              Kurye Bilgisi
+          <div
+            className="rounded-2xl p-5"
+            style={{ background: "white", border: "1px solid var(--border-light)" }}
+          >
+            <p
+              className="text-xs font-semibold uppercase tracking-wide mb-3"
+              style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-mono)" }}
+            >
+              Courier Info
             </p>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg">
-                👤
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                style={{ background: "var(--charcoal)" }}
+              >
+                {shipment.courierName.charAt(0).toUpperCase()}
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900">
+                <p
+                  className="text-sm font-semibold"
+                  style={{ color: "var(--charcoal)" }}
+                >
                   {shipment.courierName}
                 </p>
                 {shipment.courierPhone && (
                   <a
                     href={`tel:${shipment.courierPhone}`}
-                    className="text-sm text-blue-600 hover:underline"
+                    className="text-sm hover:underline"
+                    style={{ color: "var(--info)" }}
                   >
                     {shipment.courierPhone}
                   </a>
@@ -146,71 +193,92 @@ async function TrackingContent({ trackingNo }: { trackingNo: string }) {
         )}
 
         {/* Progress Steps */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-5">
-            Kargo Durumu
+        <div
+          className="rounded-2xl p-5"
+          style={{ background: "white", border: "1px solid var(--border-light)" }}
+        >
+          <p
+            className="text-xs font-semibold uppercase tracking-wide mb-5"
+            style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-mono)" }}
+          >
+            Shipment Status
           </p>
           {isFailed ? (
             <div className="text-center py-4">
-              <div className="text-4xl mb-2">❌</div>
-              <p className="font-semibold text-red-600">Teslimat Başarısız</p>
-              <p className="text-sm text-gray-500 mt-1">
-                Teslimat gerçekleştirilemedi. Lütfen satıcıyla iletişime geçin.
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-white text-xl font-bold"
+                style={{ background: "var(--red)" }}
+              >
+                ✕
+              </div>
+              <p className="font-semibold" style={{ color: "var(--red)" }}>
+                Delivery Failed
+              </p>
+              <p className="text-sm mt-1" style={{ color: "var(--charcoal-soft)" }}>
+                Delivery could not be completed. Please contact the seller.
               </p>
             </div>
           ) : (
             <div className="space-y-0">
               {STATUS_STEPS.map((step, i) => {
-                const isDone = i <= currentIndex;
+                const isDone    = i <= currentIndex;
                 const isCurrent = i === currentIndex;
                 return (
                   <div key={step.status} className="flex gap-4">
-                    {/* Icon */}
+                    {/* Icon column */}
                     <div className="flex flex-col items-center">
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center text-base flex-shrink-0 transition-all ${
-                          isCurrent
-                            ? "bg-blue-600 shadow-lg shadow-blue-200 ring-4 ring-blue-100"
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-all"
+                        style={{
+                          background: isCurrent
+                            ? "var(--charcoal)"
                             : isDone
-                              ? "bg-green-500"
-                              : "bg-gray-100"
-                        }`}
+                            ? "var(--success)"
+                            : "var(--off-white-2)",
+                          color: isCurrent || isDone ? "white" : "var(--charcoal-mist)",
+                          boxShadow: isCurrent ? "0 0 0 4px rgba(30,30,30,0.12)" : "none",
+                        }}
                       >
                         {isDone ? (
-                          <span>{isCurrent ? step.icon : "✓"}</span>
+                          <span>{isCurrent ? "●" : "✓"}</span>
                         ) : (
-                          <span className="text-gray-400 text-sm">{i + 1}</span>
+                          <span>{i + 1}</span>
                         )}
                       </div>
                       {i < STATUS_STEPS.length - 1 && (
                         <div
-                          className={`w-0.5 flex-1 my-1 ${
-                            isDone && i < currentIndex
-                              ? "bg-green-400"
-                              : "bg-gray-200"
-                          }`}
-                          style={{ minHeight: "20px" }}
+                          className="w-0.5 flex-1 my-1"
+                          style={{
+                            background:
+                              isDone && i < currentIndex
+                                ? "var(--success)"
+                                : "var(--border-light)",
+                            minHeight: "20px",
+                          }}
                         />
                       )}
                     </div>
 
-                    {/* Label */}
-                    <div
-                      className={`pb-5 ${i === STATUS_STEPS.length - 1 ? "pb-0" : ""}`}
-                    >
+                    {/* Label column */}
+                    <div className={`pb-5 ${i === STATUS_STEPS.length - 1 ? "pb-0" : ""}`}>
                       <p
-                        className={`text-sm font-semibold mt-2 ${
-                          isCurrent
-                            ? "text-blue-600"
+                        className="text-sm font-semibold mt-2"
+                        style={{
+                          color: isCurrent
+                            ? "var(--charcoal)"
                             : isDone
-                              ? "text-green-600"
-                              : "text-gray-400"
-                        }`}
+                            ? "var(--success)"
+                            : "var(--charcoal-mist)",
+                          fontFamily: "var(--font-body)",
+                        }}
                       >
                         {step.label}
                       </p>
                       {isCurrent && shipment.events?.length > 0 && (
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p
+                          className="text-xs mt-0.5"
+                          style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}
+                        >
                           {formatDateTime(
                             shipment.events.find(
                               (e: any) => e.status === step.status,
@@ -228,33 +296,48 @@ async function TrackingContent({ trackingNo }: { trackingNo: string }) {
 
         {/* Event Log */}
         {shipment.events?.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-4">
-              Detaylı Geçmiş
+          <div
+            className="rounded-2xl p-5"
+            style={{ background: "white", border: "1px solid var(--border-light)" }}
+          >
+            <p
+              className="text-xs font-semibold uppercase tracking-wide mb-4"
+              style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-mono)" }}
+            >
+              Event History
             </p>
             <div className="space-y-3">
               {[...(shipment.events as any[])].reverse().map((event: any) => (
                 <div
                   key={event.id}
-                  className="flex gap-3 pb-3 border-b border-gray-50 last:border-0 last:pb-0"
+                  className="flex gap-3 pb-3 last:pb-0"
+                  style={{ borderBottom: "1px solid var(--border-subtle)" }}
                 >
-                  <div className="w-2 h-2 rounded-full bg-gray-300 mt-1.5 flex-shrink-0" />
+                  <div
+                    className="w-2 h-2 rounded-full mt-1.5 shrink-0"
+                    style={{ background: "var(--charcoal-mist)" }}
+                  />
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {STATUS_STEPS.find((s) => s.status === event.status)
-                        ?.label || event.status}
+                    <p
+                      className="text-sm font-medium"
+                      style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}
+                    >
+                      {STATUS_STEPS.find((s) => s.status === event.status)?.label ?? event.status}
                     </p>
                     {event.note && (
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-xs mt-0.5" style={{ color: "var(--charcoal-soft)" }}>
                         {event.note}
                       </p>
                     )}
                     {event.location && (
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        📍 {event.location}
+                      <p className="text-xs mt-0.5" style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}>
+                        {event.location}
                       </p>
                     )}
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p
+                      className="text-xs mt-1"
+                      style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}
+                    >
                       {formatDateTime(event.createdAt)}
                     </p>
                   </div>
@@ -265,8 +348,11 @@ async function TrackingContent({ trackingNo }: { trackingNo: string }) {
         )}
 
         {/* Footer */}
-        <p className="text-center text-xs text-gray-400 pb-6">
-          Bu sayfa QR kodunuzdan erişildi. Sipariş no: {shipment.orderNumber}
+        <p
+          className="text-center text-xs pb-6"
+          style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}
+        >
+          Scanned via QR code · Order #{shipment.orderNumber}
         </p>
       </div>
     </div>
@@ -279,8 +365,8 @@ export default async function TrackingPage({ params }: PageProps) {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gray-50">
-          <div className="bg-gray-900 py-10 text-center">
+        <div className="min-h-screen" style={{ background: "var(--off-white)" }}>
+          <div className="py-10 text-center" style={{ background: "var(--charcoal)" }}>
             <Skeleton className="h-8 w-64 mx-auto bg-white/10" />
           </div>
           <div className="max-w-xl mx-auto px-4 py-8 space-y-4">
@@ -300,6 +386,6 @@ export async function generateMetadata({ params }: PageProps) {
   const { trackingNo } = await params;
   return {
     title: `Tracking: ${trackingNo}`,
-    description: `${trackingNo} numaralı kargoyu takip edin`,
+    description: `Track shipment ${trackingNo} — real-time delivery status.`,
   };
 }

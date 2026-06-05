@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { useMe, useUpdateMe } from "@/queries/useMe";
@@ -250,6 +251,7 @@ const TAB_META: {
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { user, logout } = useAuth();
   const { data: meData, isLoading: meLoading } = useMe();
   const updateMe = useUpdateMe();
@@ -454,35 +456,35 @@ export default function ProfilePage() {
             {/* Quick stats */}
             <div className="flex items-center gap-5 text-center">
               <div>
-                <p className="font-bold text-[1.25rem] text-(--text-primary)">
+                <div className="font-bold text-[1.25rem] text-(--text-primary)">
                   {ordersLoading ? (
                     <Skeleton className="h-6 w-8 inline-block" />
                   ) : (
                     orders.length
                   )}
-                </p>
+                </div>
                 <p className="font-mono text-[10px] uppercase tracking-wide text-(--text-tertiary)">
                   Orders
                 </p>
               </div>
               <Separator orientation="vertical" className="h-8" />
               <div>
-                <p className="font-bold text-[1.25rem] text-(--text-primary)">
+                <div className="font-bold text-[1.25rem] text-(--text-primary)">
                   {wishlistLoading ? (
                     <Skeleton className="h-6 w-8 inline-block" />
                   ) : (
                     wishlistItems.length
                   )}
-                </p>
+                </div>
                 <p className="font-mono text-[10px] uppercase tracking-wide text-(--text-tertiary)">
                   Wishlist
                 </p>
               </div>
               <Separator orientation="vertical" className="h-8" />
               <div>
-                <p className="font-bold text-[1.25rem] text-(--text-primary)">
+                <div className="font-bold text-[1.25rem] text-(--text-primary)">
                   {addresses.length}
-                </p>
+                </div>
                 <p className="font-mono text-[10px] uppercase tracking-wide text-(--text-tertiary)">
                   Addresses
                 </p>
@@ -494,21 +496,21 @@ export default function ProfilePage() {
 
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Tabs */}
-        <div className="flex gap-0 mb-8 border-b border-(--border-light) overflow-x-auto">
+        <div className="flex mb-8 border-b border-(--border-light)">
           {TAB_META.map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               onClick={() => setTab(key)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold relative transition-colors whitespace-nowrap border-b-2 -mb-px ${
+              className={`flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-1 sm:px-4 py-2.5 text-[10px] md:text-sm font-semibold relative transition-colors border-b-2 -mb-px ${
                 tab === key
                   ? "border-(--red) text-(--text-primary)"
                   : "border-transparent text-(--text-tertiary) hover:text-(--text-secondary)"
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
-              {label}
+              <Icon className="w-3.5 h-3.5 shrink-0" />
+              <span className="leading-tight text-center">{label}</span>
               {key === "wishlist" && wishlistItems.length > 0 && (
-                <span className="ml-1 text-[10px] font-bold bg-(--red) text-white px-1.5 py-0.5 rounded-full">
+                <span className="text-[10px] font-bold bg-(--red) text-white px-1.5 py-0.5 rounded-full leading-none">
                   {wishlistItems.length}
                 </span>
               )}
@@ -1034,7 +1036,7 @@ export default function ProfilePage() {
         {/* ── Danger Zone ───────────────────────────────────────────────────── */}
         <div className="mt-10 pt-6 border-t border-(--border-light)">
           <button
-            onClick={() => logout()}
+            onClick={async () => { await logout(); router.push("/"); }}
             className="flex items-center gap-2 text-sm font-semibold text-(--text-tertiary) hover:text-(--danger) transition-colors"
           >
             <LogOut className="w-4 h-4" />
