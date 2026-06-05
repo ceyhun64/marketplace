@@ -40,6 +40,8 @@ public class StoreController : ControllerBase
                 m.Slug,
                 m.LogoUrl,
                 m.BannerUrl,
+                m.Description,
+                m.HandlingHours,
                 m.CreatedAt,
                 ProductCount = m.Products.Count(p =>
                     p.PublishToStore && p.Stock > 0 && !p.IsDeleted

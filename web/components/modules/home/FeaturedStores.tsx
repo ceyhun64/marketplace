@@ -192,7 +192,7 @@ function StoreCard({ store }: { store: MerchantProfile }) {
                 ? "Starter"
                 : (store.subscriptionPlan ?? "Active"),
           },
-          { label: "Handling", value: `${store.handlingHours}h` },
+          { label: "Handling", value: store.handlingHours ? `${store.handlingHours}h` : "—" },
         ].map((stat) => (
           <div
             key={stat.label}
