@@ -5,7 +5,7 @@ import { useMyOrders } from "@/queries/useOrders";
 import { ORDER_STATUS_LABELS } from "@/types/enums";
 import type { OrderStatus } from "@/types/enums";
 import { useState } from "react";
-import type { Order } from "@/types/entities";
+import type { Order, OrderItem } from "@/types/entities";
 import {
   ChevronUp,
   ChevronDown,
@@ -16,11 +16,13 @@ import {
   MapPin,
   Package,
   Star,
+  X,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/format";
+import api from "@/lib/api";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants & pure helpers
@@ -104,6 +106,209 @@ function statusTokens(status: OrderStatus): {
 // ─────────────────────────────────────────────────────────────────────────────
 // OrderCard skeleton
 // ─────────────────────────────────────────────────────────────────────────────
+// Review Modal
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface ReviewTarget {
+  item: OrderItem;
+  orderId: string;
+}
+
+function ReviewModal({
+  target,
+  onClose,
+}: {
+  target: ReviewTarget;
+  onClose: () => void;
+}) {
+  const [rating, setRating] = useState(0);
+  const [hovered, setHovered] = useState(0);
+  const [title, setTitle] = useState("");
+  const [comment, setComment] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    if (rating === 0) { toast.error("Please select a star rating."); return; }
+    setLoading(true);
+    try {
+      await api.post("/api/review", {
+        productId: target.item.productId,
+        rating,
+        title: title.trim() || null,
+        comment: comment.trim() || null,
+      });
+      toast.success("Review submitted! Thank you.");
+      onClose();
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? "Failed to submit review.";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 50,
+        background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "1rem",
+      }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        style={{
+          background: "var(--white)",
+          borderRadius: 20,
+          width: "100%",
+          maxWidth: 480,
+          overflow: "hidden",
+          boxShadow: "0 24px 64px rgba(0,0,0,0.2)",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "1.25rem 1.5rem",
+            borderBottom: "1px solid var(--border-light)",
+          }}
+        >
+          <h2 style={{ fontWeight: 700, fontSize: "1.0625rem", color: "var(--charcoal)" }}>
+            Write a Review
+          </h2>
+          <button
+            onClick={onClose}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--charcoal-soft)" }}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div style={{ padding: "1.5rem" }}>
+          {/* Product info */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.875rem", marginBottom: "1.5rem" }}>
+            {(target.item.productImageUrl || target.item.productImage) && (
+              <img
+                src={target.item.productImageUrl ?? target.item.productImage}
+                alt={target.item.productName}
+                style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 10, border: "1px solid var(--border-light)" }}
+              />
+            )}
+            <div>
+              <div style={{ fontWeight: 600, fontSize: "0.9375rem", color: "var(--charcoal)" }}>
+                {target.item.productName}
+              </div>
+              {target.item.merchantStoreName && (
+                <div style={{ fontSize: "0.8125rem", color: "var(--charcoal-soft)" }}>
+                  {target.item.merchantStoreName}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Star rating */}
+          <div style={{ marginBottom: "1.25rem" }}>
+            <label style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--charcoal-mid)", letterSpacing: "0.04em", display: "block", marginBottom: "0.625rem" }}>
+              RATING *
+            </label>
+            <div style={{ display: "flex", gap: "0.375rem" }}>
+              {[1,2,3,4,5].map((n) => (
+                <button
+                  key={n}
+                  onMouseEnter={() => setHovered(n)}
+                  onMouseLeave={() => setHovered(0)}
+                  onClick={() => setRating(n)}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}
+                >
+                  <Star
+                    size={28}
+                    style={{
+                      color: n <= (hovered || rating) ? "#f59e0b" : "var(--border-mid)",
+                      fill: n <= (hovered || rating) ? "#f59e0b" : "transparent",
+                      transition: "color 0.1s, fill 0.1s",
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Title */}
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--charcoal-mid)", letterSpacing: "0.04em", display: "block", marginBottom: "0.375rem" }}>
+              TITLE
+            </label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Great quality!"
+              maxLength={100}
+              style={{
+                width: "100%", padding: "0.625rem 0.875rem",
+                border: "1.5px solid var(--border-mid)", borderRadius: 10,
+                fontFamily: "var(--font-body)", fontSize: "0.875rem",
+                color: "var(--charcoal)", outline: "none",
+                background: "var(--off-white)", boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {/* Comment */}
+          <div style={{ marginBottom: "1.5rem" }}>
+            <label style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--charcoal-mid)", letterSpacing: "0.04em", display: "block", marginBottom: "0.375rem" }}>
+              COMMENT
+            </label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Share your experience..."
+              rows={4}
+              maxLength={1000}
+              style={{
+                width: "100%", padding: "0.625rem 0.875rem",
+                border: "1.5px solid var(--border-mid)", borderRadius: 10,
+                fontFamily: "var(--font-body)", fontSize: "0.875rem",
+                color: "var(--charcoal)", outline: "none", resize: "vertical",
+                background: "var(--off-white)", boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <button
+              onClick={onClose}
+              style={{
+                flex: 1, padding: "0.75rem", border: "1.5px solid var(--border-mid)",
+                borderRadius: 12, background: "transparent",
+                color: "var(--charcoal-soft)", fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={loading || rating === 0}
+              style={{
+                flex: 1, padding: "0.75rem", border: "none",
+                borderRadius: 12,
+                background: rating > 0 ? "var(--charcoal)" : "var(--off-white-3)",
+                color: rating > 0 ? "white" : "var(--charcoal-mist)",
+                fontWeight: 700, cursor: rating > 0 ? "pointer" : "not-allowed",
+              }}
+            >
+              {loading ? "Submitting..." : "Submit Review"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function OrderCardSkeleton() {
   return (
@@ -130,7 +335,7 @@ function OrderCardSkeleton() {
 // OrderCard
 // ─────────────────────────────────────────────────────────────────────────────
 
-function OrderCard({ order }: { order: Order }) {
+function OrderCard({ order, onReview }: { order: Order; onReview: (item: OrderItem) => void }) {
   const [expanded, setExpanded] = useState(false);
 
   const st = statusTokens(order.status);
@@ -488,11 +693,10 @@ function OrderCard({ order }: { order: Order }) {
             {isDelivered && (
               <button
                 type="button"
-                onClick={() =>
-                  toast.info("Product reviews are coming soon!", {
-                    description: "You'll be able to rate your purchase here.",
-                  })
-                }
+                onClick={() => {
+                  const firstItem = order.items[0];
+                  if (firstItem) onReview(firstItem);
+                }}
                 className="flex-1 flex items-center justify-center gap-2 min-h-11 px-4 text-sm font-semibold rounded-xl transition-colors hover:bg-(--off-white)"
                 style={{
                   border: "1.5px solid rgba(51,51,51,0.15)",
@@ -533,6 +737,7 @@ function OrderCard({ order }: { order: Order }) {
 export default function OrdersPage() {
   const [filter, setFilter] = useState<FilterKey>("all");
   const { data: orders = [], isLoading } = useMyOrders();
+  const [reviewTarget, setReviewTarget] = useState<ReviewTarget | null>(null);
 
   const filtered = orders.filter((o) => statusMatch(o.status, filter));
 
@@ -545,6 +750,7 @@ export default function OrdersPage() {
   ) as Record<FilterKey, number>;
 
   return (
+    <>
     <div className="min-h-screen" style={{ background: "var(--off-white)" }}>
       {/* ── Page header ─────────────────────────────────────────────────────── */}
       <div
@@ -698,11 +904,22 @@ export default function OrdersPage() {
           /* ── Order list ──────────────────────────────────────────────────── */
           <div className="space-y-3">
             {filtered.map((order) => (
-              <OrderCard key={order.id} order={order} />
+              <OrderCard
+                key={order.id}
+                order={order}
+                onReview={(item) => setReviewTarget({ item, orderId: order.id })}
+              />
             ))}
           </div>
         )}
       </div>
     </div>
+    {reviewTarget && (
+      <ReviewModal
+        target={reviewTarget}
+        onClose={() => setReviewTarget(null)}
+      />
+    )}
+    </>
   );
 }

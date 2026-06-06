@@ -36,18 +36,6 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "name",    label: "A – Z" },
 ];
 
-// Deterministic mock stats per store (same approach as BrandsPage)
-const _mockCache = new Map<string, { rating: number; productCount: number }>();
-function getMock(id: string) {
-  if (!_mockCache.has(id)) {
-    _mockCache.set(id, {
-      rating:       4.1 + Math.random() * 0.8,
-      productCount: 8  + Math.floor(Math.random() * 240),
-    });
-  }
-  return _mockCache.get(id)!;
-}
-
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 function StoreCardSkeleton() {
   return (
@@ -114,7 +102,6 @@ function CardFollowButton({ slug, storeName }: { slug: string; storeName: string
 }
 
 function StoreCard({ store }: { store: MerchantProfile }) {
-  const { rating, productCount } = getMock(store.id);
   const memberYear = store.createdAt
     ? new Date(store.createdAt).getFullYear()
     : null;
@@ -124,7 +111,7 @@ function StoreCard({ store }: { store: MerchantProfile }) {
     .map((w) => w[0])
     .join("")
     .toUpperCase();
-  const isVerified = rating >= 4.5;
+  const isVerified = (store.averageRating ?? 0) >= 4.5;
 
   return (
     <div className="group bg-white rounded-2xl overflow-visible border border-black/6 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col">
@@ -238,17 +225,21 @@ function StoreCard({ store }: { store: MerchantProfile }) {
           className="flex items-center gap-3 mb-4 text-xs flex-wrap"
           style={{ color: "var(--charcoal-mist)" }}
         >
-          <span className="flex items-center gap-1">
-            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-            <span className="font-semibold" style={{ color: "var(--charcoal)" }}>
-              {rating.toFixed(1)}
-            </span>
-          </span>
-          <span aria-hidden>·</span>
+          {store.averageRating != null && (
+            <>
+              <span className="flex items-center gap-1">
+                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                <span className="font-semibold" style={{ color: "var(--charcoal)" }}>
+                  {store.averageRating.toFixed(1)}
+                </span>
+              </span>
+              <span aria-hidden>·</span>
+            </>
+          )}
           <span className="flex items-center gap-1">
             <Package className="w-3 h-3" />
             <span className="font-semibold" style={{ color: "var(--charcoal)" }}>
-              {productCount}
+              {store.productCount ?? 0}
             </span>{" "}
             products
           </span>

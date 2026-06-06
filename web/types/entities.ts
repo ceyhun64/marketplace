@@ -49,6 +49,9 @@ export interface MerchantProfile {
   subscriptionId?: string;
   planExpiresAt?: string;
   createdAt: string;
+  productCount?: number;
+  averageRating?: number | null;
+  reviewCount?: number;
 }
 
 // ── Category ─────────────────────────────────────────────────────────────────

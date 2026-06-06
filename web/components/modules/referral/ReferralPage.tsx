@@ -20,6 +20,35 @@ import {
   Home,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
+import api from "@/lib/api";
+
+interface ReferralData {
+  referralCode: string;
+  totalEarned: number;
+  completedReferrals: number;
+  pendingReferrals: number;
+  referrals: {
+    id: string;
+    status: string;
+    earnedAmount: number;
+    createdAt: string;
+    referredName: string;
+  }[];
+}
+
+function useReferralData(enabled: boolean) {
+  return useQuery<ReferralData>({
+    queryKey: ["referral-me"],
+    queryFn: async () => {
+      const { data } = await api.get("/api/referral/me");
+      return data;
+    },
+    enabled,
+    staleTime: 1000 * 60,
+  });
+}
 
 // ── Brand logo SVGs ───────────────────────────────────────────────────────────
 function WhatsAppLogo({ size = 18 }: { size?: number }) {
@@ -90,13 +119,6 @@ const REWARD_TIERS = [
   { count: "30+",  label: "Friends", reward: "$150", desc: "Per referral", color: "var(--red)", bg: "rgba(200,16,46,0.07)", border: "rgba(200,16,46,0.2)" },
 ];
 
-const MOCK_REFERRALS = [
-  { name: "James R.", joined: "10 May 2026", status: "completed", earned: 50 },
-  { name: "Sarah M.", joined: "7 May 2026",  status: "completed", earned: 50 },
-  { name: "David K.", joined: "2 May 2026",  status: "pending",   earned: 0  },
-  { name: "Emily T.", joined: "28 Apr 2026", status: "completed", earned: 50 },
-];
-
 const SHARE_CHANNELS = [
   { label: "WhatsApp",    color: "#25D366", Logo: WhatsAppLogo,  textColor: "#25D366" },
   { label: "Instagram",   color: "#E1306C", Logo: InstagramLogo, textColor: "#E1306C" },
@@ -110,7 +132,9 @@ export default function ReferralPage() {
   const [copied, setCopied]       = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "history">("overview");
 
-  const referralCode = user ? "BAZR-A8F2K" : "BAZR-XXXXX";
+  const { data: referralData, isLoading: referralLoading } = useReferralData(!!user);
+
+  const referralCode = referralData?.referralCode ?? (user ? "..." : "BAZR-XXXXX");
   const referralLink = `https://bazr.com/r/${referralCode}`;
 
   function handleCopy() {
@@ -119,9 +143,10 @@ export default function ReferralPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  const totalEarned    = MOCK_REFERRALS.filter((r) => r.status === "completed").reduce((s, r) => s + r.earned, 0);
-  const completedCount = MOCK_REFERRALS.filter((r) => r.status === "completed").length;
-  const pendingCount   = MOCK_REFERRALS.filter((r) => r.status === "pending").length;
+  const totalEarned    = referralData?.totalEarned ?? 0;
+  const completedCount = referralData?.completedReferrals ?? 0;
+  const pendingCount   = referralData?.pendingReferrals ?? 0;
+  const referrals      = referralData?.referrals ?? [];
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
@@ -251,16 +276,18 @@ export default function ReferralPage() {
           {/* Stats */}
           {user && (
             <div style={{ display: "flex", gap: "2rem", justifyContent: "center", flexWrap: "wrap", marginBottom: "2.5rem" }}>
-              {[
-                { label: "Total Referrals", value: MOCK_REFERRALS.length },
-                { label: "Completed",       value: completedCount },
-                { label: "Total Earned",    value: `$${totalEarned}` },
-              ].map((stat) => (
-                <div key={stat.label} style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "2rem", fontWeight: 800, lineHeight: 1 }}>{stat.value}</div>
-                  <div style={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)", marginTop: "0.25rem" }}>{stat.label}</div>
-                </div>
-              ))}
+              {referralLoading
+                ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 w-24 bg-white/10" />)
+                : [
+                    { label: "Total Referrals", value: completedCount + pendingCount },
+                    { label: "Completed",       value: completedCount },
+                    { label: "Total Earned",    value: `$${totalEarned}` },
+                  ].map((stat) => (
+                    <div key={stat.label} style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: "2rem", fontWeight: 800, lineHeight: 1 }}>{stat.value}</div>
+                      <div style={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)", marginTop: "0.25rem" }}>{stat.label}</div>
+                    </div>
+                  ))}
             </div>
           )}
 
@@ -491,10 +518,10 @@ export default function ReferralPage() {
             {/* Summary cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
               {[
-                { label: "Total Referrals", value: MOCK_REFERRALS.length, icon: Users,  color: "var(--red)"  },
-                { label: "Completed",       value: completedCount,        icon: Check,  color: "#0d7a4e"     },
-                { label: "Pending",         value: pendingCount,          icon: Clock,  color: "#eab308"     },
-                { label: "Total Earned",    value: `$${totalEarned}`,     icon: Wallet, color: "#6366f1"     },
+                { label: "Total Referrals", value: completedCount + pendingCount, icon: Users,  color: "var(--red)"  },
+                { label: "Completed",       value: completedCount,                icon: Check,  color: "#0d7a4e"     },
+                { label: "Pending",         value: pendingCount,                  icon: Clock,  color: "#eab308"     },
+                { label: "Total Earned",    value: `$${totalEarned}`,             icon: Wallet, color: "#6366f1"     },
               ].map((card) => (
                 <div key={card.label} style={{
                   background: "white", border: "1px solid var(--border-light)",
@@ -528,45 +555,61 @@ export default function ReferralPage() {
               }}>
                 Referral History
               </div>
-              {MOCK_REFERRALS.map((ref, i) => (
-                <div key={i} style={{
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  padding: "1rem 1.5rem",
-                  borderBottom: i < MOCK_REFERRALS.length - 1 ? "1px solid var(--border-light)" : "none",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
-                    <div style={{
-                      width: 40, height: 40, background: "var(--off-white-2)",
-                      borderRadius: "50%", display: "flex", alignItems: "center",
-                      justifyContent: "center", fontWeight: 700, fontSize: "0.9375rem", color: "var(--charcoal)",
-                    }}>
-                      {ref.name.charAt(0)}
+              {referralLoading
+                ? Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} style={{ padding: "1rem 1.5rem", borderBottom: "1px solid var(--border-light)", display: "flex", alignItems: "center", gap: "1rem" }}>
+                      <Skeleton className="w-10 h-10 rounded-full" />
+                      <div style={{ flex: 1 }}><Skeleton className="h-4 w-36 mb-1" /><Skeleton className="h-3 w-24" /></div>
+                      <Skeleton className="h-6 w-20" />
                     </div>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: "0.9375rem", color: "var(--charcoal)" }}>{ref.name}</div>
-                      <div style={{ fontSize: "0.8125rem", color: "var(--charcoal-soft)" }}>Joined: {ref.joined}</div>
-                    </div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{
-                      display: "inline-flex", alignItems: "center", gap: "0.375rem",
-                      background: ref.status === "completed" ? "rgba(13,122,78,0.1)" : "rgba(234,179,8,0.1)",
-                      color: ref.status === "completed" ? "#0d7a4e" : "#92730a",
-                      borderRadius: 100, padding: "0.25rem 0.75rem",
-                      fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.25rem",
-                    }}>
-                      {ref.status === "completed"
-                        ? <><Check style={{ width: 12, height: 12 }} /> Completed</>
-                        : <><Clock style={{ width: 12, height: 12 }} /> Pending</>}
-                    </div>
-                    {ref.earned > 0 && (
-                      <div style={{ fontSize: "0.875rem", fontWeight: 700, color: "#0d7a4e" }}>
-                        +${ref.earned}
+                  ))
+                : referrals.length === 0
+                  ? (
+                      <div style={{ padding: "2rem", textAlign: "center", color: "var(--charcoal-soft)" }}>
+                        No referrals yet. Share your link to get started!
                       </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+                    )
+                  : referrals.map((ref, i) => (
+                      <div key={ref.id} style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        padding: "1rem 1.5rem",
+                        borderBottom: i < referrals.length - 1 ? "1px solid var(--border-light)" : "none",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
+                          <div style={{
+                            width: 40, height: 40, background: "var(--off-white-2)",
+                            borderRadius: "50%", display: "flex", alignItems: "center",
+                            justifyContent: "center", fontWeight: 700, fontSize: "0.9375rem", color: "var(--charcoal)",
+                          }}>
+                            {ref.referredName.charAt(0)}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: "0.9375rem", color: "var(--charcoal)" }}>{ref.referredName}</div>
+                            <div style={{ fontSize: "0.8125rem", color: "var(--charcoal-soft)" }}>
+                              Joined: {new Date(ref.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div style={{
+                            display: "inline-flex", alignItems: "center", gap: "0.375rem",
+                            background: ref.status === "completed" ? "rgba(13,122,78,0.1)" : "rgba(234,179,8,0.1)",
+                            color: ref.status === "completed" ? "#0d7a4e" : "#92730a",
+                            borderRadius: 100, padding: "0.25rem 0.75rem",
+                            fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.25rem",
+                          }}>
+                            {ref.status === "completed"
+                              ? <><Check style={{ width: 12, height: 12 }} /> Completed</>
+                              : <><Clock style={{ width: 12, height: 12 }} /> Pending</>}
+                          </div>
+                          {ref.earnedAmount > 0 && (
+                            <div style={{ fontSize: "0.875rem", fontWeight: 700, color: "#0d7a4e" }}>
+                              +${ref.earnedAmount}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
             </div>
           </div>
         )}

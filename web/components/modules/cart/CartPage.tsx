@@ -15,11 +15,14 @@ import {
   Zap,
   Package,
   ShieldCheck,
+  X,
 } from "lucide-react";
 import { useCart, useCartSummary } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { SHIPPING_COSTS } from "@/lib/constants";
 import { formatPrice } from "@/lib/format";
+import { toast } from "sonner";
+import api from "@/lib/api";
 
 const inputStyle: React.CSSProperties = {
   flex: 1,
@@ -43,6 +46,8 @@ export default function CartPage() {
   const { user } = useAuth();
   const [coupon, setCoupon] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponLoading, setCouponLoading] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   const handleCheckout = () => {
@@ -61,8 +66,23 @@ export default function CartPage() {
     }, 250);
   };
 
-  const handleApplyCoupon = () => {
-    if (coupon.trim()) setCouponApplied(true);
+  const handleApplyCoupon = async () => {
+    if (!coupon.trim()) return;
+    setCouponLoading(true);
+    try {
+      const { data } = await api.post("/api/coupon/validate", {
+        code: coupon.trim(),
+        orderTotal: summary.subtotal,
+      });
+      setCouponDiscount(data.calculatedDiscount);
+      setCouponApplied(true);
+      toast.success(`Coupon applied! You save $${data.calculatedDiscount.toFixed(2)}`);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? "Invalid coupon code.";
+      toast.error(msg);
+    } finally {
+      setCouponLoading(false);
+    }
   };
 
   // ── Empty State ────────────────────────────────────────────────────────────
@@ -531,13 +551,14 @@ export default function CartPage() {
                       className="font-mono text-[12px]"
                       style={{ color: "var(--charcoal-soft)" }}
                     >
-                      {coupon} — coupon discounts coming soon
+                      {coupon} — -${couponDiscount.toFixed(2)} off
                     </span>
                   </div>
                   <button
                     onClick={() => {
                       setCouponApplied(false);
                       setCoupon("");
+                      setCouponDiscount(0);
                     }}
                     className="font-mono text-[11px] transition-colors bg-transparent border-none cursor-pointer text-(--charcoal-soft) hover:text-(--red)"
                   >
@@ -564,10 +585,11 @@ export default function CartPage() {
                   />
                   <button
                     onClick={handleApplyCoupon}
-                    className="px-5 py-2 rounded-xl text-sm font-semibold transition-all shrink-0 border border-[rgba(51,51,51,0.15)] text-(--charcoal) bg-transparent hover:bg-(--charcoal) hover:text-white hover:border-(--charcoal) min-h-11"
+                    disabled={couponLoading || !coupon.trim()}
+                    className="px-5 py-2 rounded-xl text-sm font-semibold transition-all shrink-0 border border-[rgba(51,51,51,0.15)] text-(--charcoal) bg-transparent hover:bg-(--charcoal) hover:text-white hover:border-(--charcoal) min-h-11 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ fontFamily: "var(--font-body)" }}
                   >
-                    Apply
+                    {couponLoading ? "..." : "Apply"}
                   </button>
                 </div>
               )}
@@ -623,6 +645,16 @@ export default function CartPage() {
                     {formatPrice(summary.shipping)}
                   </span>
                 </div>
+                {couponApplied && couponDiscount > 0 && (
+                  <div className="flex justify-between text-[0.875rem]">
+                    <span style={{ color: "#0d7a4e", fontFamily: "var(--font-body)" }}>
+                      Coupon ({coupon})
+                    </span>
+                    <span className="font-semibold" style={{ color: "#0d7a4e", fontVariantNumeric: "tabular-nums" }}>
+                      -{formatPrice(couponDiscount)}
+                    </span>
+                  </div>
+                )}
                 <div
                   className="flex justify-between pt-4"
                   style={{ borderTop: "1px solid rgba(51,51,51,0.08)" }}
@@ -641,7 +673,7 @@ export default function CartPage() {
                       fontVariantNumeric: "tabular-nums",
                     }}
                   >
-                    {formatPrice(summary.total)}
+                    {formatPrice(Math.max(0, summary.total - couponDiscount))}
                   </span>
                 </div>
                 <p

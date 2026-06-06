@@ -57,6 +57,9 @@ function processQueue(error: unknown, token: string | null = null) {
 
 api.interceptors.response.use(
   (response) => {
+    // Skip transformation for binary responses (PDF, images, etc.)
+    if (response.data instanceof Blob) return response;
+
     // Backend PascalCase → frontend camelCase
     response.data = toCamel(response.data);
 

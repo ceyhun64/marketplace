@@ -60,6 +60,14 @@ public class StoreController : ControllerBase
                 ProductCount = m.Products.Count(p =>
                     p.PublishToStore && p.Stock > 0 && !p.IsDeleted
                 ),
+                AverageRating = m.Products
+                    .SelectMany(p => p.Reviews)
+                    .Any()
+                    ? Math.Round(
+                        (double)m.Products.SelectMany(p => p.Reviews).Average(r => r.Rating),
+                        1)
+                    : (double?)null,
+                ReviewCount = m.Products.SelectMany(p => p.Reviews).Count(),
             })
             .ToListAsync();
 

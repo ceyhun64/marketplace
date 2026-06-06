@@ -892,15 +892,9 @@ export default function HelpCenterPage() {
         </div>
       )}
 
-      {/* ── Chatbot Widget ───────────────────────────────────────────────────── */}
-      {chatOpen && (
-        <div
-          className="fixed bottom-6 right-6 z-50 w-[340px] rounded-2xl shadow-2xl overflow-hidden flex flex-col"
-          style={{
-            border: "1px solid rgba(51,51,51,0.1)",
-            maxHeight: chatMinimized ? "auto" : "480px",
-          }}
-        >
+      {/* Chatbot widget removed — was fake. Real chat integration TBD. */}
+      {false && (
+        <div>
           {/* Chat header */}
           <div
             className="flex items-center gap-3 px-4 py-3 cursor-pointer select-none"
@@ -1063,17 +1057,6 @@ export default function HelpCenterPage() {
         </div>
       )}
 
-      {/* Floating chat button */}
-      {!chatOpen && (
-        <button
-          onClick={() => setChatOpen(true)}
-          className="fixed bottom-10 right-6 z-40 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-105"
-          style={{ background: "var(--red)" }}
-          title="Open live chat"
-        >
-          <MessageCircle className="w-6 h-6 text-white" />
-        </button>
-      )}
     </main>
   );
 }

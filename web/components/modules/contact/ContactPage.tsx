@@ -16,12 +16,11 @@ import {
   CreditCard,
   Store,
   HelpCircle,
-  MessageCircle,
-  X,
-  Minimize2,
-  Bot,
   Calendar,
+  MessageCircle,
 } from "lucide-react";
+import { toast } from "sonner";
+import api from "@/lib/api";
 
 const CONTACT_ITEMS = [
   {
@@ -77,239 +76,8 @@ const HOURS = [
   { day: "Sunday", time: "Closed", open: false },
 ];
 
-// Mock chatbot conversation
-const CHATBOT_RESPONSES: Record<string, string> = {
-  default:
-    "Thanks for reaching out! I can help with order tracking, returns, account issues, or connect you with a human agent. What do you need help with?",
-  order:
-    "To track your order, go to My Orders and select the order. If it's been more than 10 business days since shipping, contact support and we'll investigate immediately.",
-  return:
-    "Our return window is 14 days from delivery. Visit the Returns page to start a request, or I can open a ticket for you right now.",
-  payment:
-    "Payment issues can include declined cards, incorrect charges, or missing refunds. Could you describe your issue in a bit more detail?",
-  account:
-    "For account issues like forgotten passwords or profile updates, go to the Login page and click 'Forgot Password'. For other issues, a human agent can help right away.",
-};
 
-function LiveChatWidget() {
-  const [open, setOpen] = useState(false);
-  const [minimized, setMinimized] = useState(false);
-  const [messages, setMessages] = useState<
-    { role: "bot" | "user"; text: string }[]
-  >([{ role: "bot", text: CHATBOT_RESPONSES.default }]);
-  const [input, setInput] = useState("");
-  const [typing, setTyping] = useState(false);
-
-  const send = () => {
-    if (!input.trim()) return;
-    const userMsg = input.trim();
-    setMessages((prev) => [...prev, { role: "user", text: userMsg }]);
-    setInput("");
-    setTyping(true);
-    setTimeout(() => {
-      const lower = userMsg.toLowerCase();
-      let reply = CHATBOT_RESPONSES.default;
-      if (lower.includes("order") || lower.includes("track"))
-        reply = CHATBOT_RESPONSES.order;
-      else if (lower.includes("return") || lower.includes("refund"))
-        reply = CHATBOT_RESPONSES.return;
-      else if (
-        lower.includes("payment") ||
-        lower.includes("card") ||
-        lower.includes("billing")
-      )
-        reply = CHATBOT_RESPONSES.payment;
-      else if (
-        lower.includes("account") ||
-        lower.includes("password") ||
-        lower.includes("login")
-      )
-        reply = CHATBOT_RESPONSES.account;
-      setMessages((prev) => [...prev, { role: "bot", text: reply }]);
-      setTyping(false);
-    }, 1200);
-  };
-
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-xl z-50 transition-transform hover:scale-110"
-        style={{ background: "var(--red)" }}
-      >
-        <MessageCircle className="w-6 h-6 text-white" />
-        <span
-          className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
-          style={{ background: "#22c55e" }}
-        >
-          1
-        </span>
-      </button>
-    );
-  }
-
-  return (
-    <div
-      className="fixed bottom-6 right-6 z-50 flex flex-col rounded-2xl overflow-hidden shadow-2xl"
-      style={{
-        width: 340,
-        height: minimized ? 56 : 460,
-        background: "var(--white)",
-        border: "1px solid var(--border-light)",
-        transition: "height 0.25s ease",
-      }}
-    >
-      {/* Chat header */}
-      <div
-        className="flex items-center justify-between px-4 py-3 flex-shrink-0"
-        style={{ background: "var(--charcoal)" }}
-      >
-        <div className="flex items-center gap-2">
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: "var(--red)" }}
-          >
-            <Bot className="w-4 h-4 text-white" />
-          </div>
-          <div>
-            <p
-              className="text-white text-sm font-bold"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              BAZR Support
-            </p>
-            <div className="flex items-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-              <span
-                className="text-[10px]"
-                style={{
-                  color: "rgba(255,255,255,0.55)",
-                  fontFamily: "var(--font-body)",
-                }}
-              >
-                Online
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setMinimized(!minimized)}>
-            <Minimize2
-              className="w-4 h-4"
-              style={{ color: "rgba(255,255,255,0.55)" }}
-            />
-          </button>
-          <button onClick={() => setOpen(false)}>
-            <X
-              className="w-4 h-4"
-              style={{ color: "rgba(255,255,255,0.55)" }}
-            />
-          </button>
-        </div>
-      </div>
-
-      {!minimized && (
-        <>
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                {msg.role === "bot" && (
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center mr-2 flex-shrink-0 mt-0.5"
-                    style={{ background: "var(--red-muted)" }}
-                  >
-                    <Bot className="w-3 h-3" style={{ color: "var(--red)" }} />
-                  </div>
-                )}
-                <div
-                  className="max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-relaxed"
-                  style={{
-                    background:
-                      msg.role === "user" ? "var(--red)" : "var(--off-white)",
-                    color: msg.role === "user" ? "white" : "var(--charcoal)",
-                    fontFamily: "var(--font-body)",
-                    borderRadius:
-                      msg.role === "user"
-                        ? "18px 18px 4px 18px"
-                        : "18px 18px 18px 4px",
-                  }}
-                >
-                  {msg.text}
-                </div>
-              </div>
-            ))}
-            {typing && (
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center"
-                  style={{ background: "var(--red-muted)" }}
-                >
-                  <Bot className="w-3 h-3" style={{ color: "var(--red)" }} />
-                </div>
-                <div
-                  className="flex gap-1 px-3 py-2 rounded-2xl"
-                  style={{ background: "var(--off-white)" }}
-                >
-                  {[0, 1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{
-                        background: "var(--charcoal-mist)",
-                        animation: `bounce 1.2s ${i * 0.2}s infinite`,
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Input */}
-          <div
-            className="flex gap-2 p-3 flex-shrink-0"
-            style={{ borderTop: "1px solid var(--border-subtle)" }}
-          >
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
-              placeholder="Type a message…"
-              className="flex-1 px-3 py-2 rounded-xl text-sm outline-none"
-              style={{
-                background: "var(--off-white)",
-                border: "1px solid var(--border-light)",
-                color: "var(--charcoal)",
-                fontFamily: "var(--font-body)",
-              }}
-            />
-            <button
-              onClick={send}
-              disabled={!input.trim()}
-              className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{
-                background: input.trim() ? "var(--red)" : "var(--off-white-2)",
-                cursor: input.trim() ? "pointer" : "not-allowed",
-              }}
-            >
-              <Send
-                className="w-3.5 h-3.5"
-                style={{
-                  color: input.trim() ? "white" : "var(--charcoal-mist)",
-                }}
-              />
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+// Live chat widget removed — was a fake chatbot; real chat integration is TBD.
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -336,15 +104,28 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    setLoading(false);
-    setSubmitted(true);
+    try {
+      await api.post("/api/contact", {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        subject: form.topic || "General",
+        message: `${form.orderId ? `Order ID: ${form.orderId}\n\n` : ""}${form.message.trim()}`,
+      });
+      setSubmitted(true);
+    } catch {
+      toast.error("Failed to send message. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <>
-      <LiveChatWidget />
       <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
         {/* Hero */}
         <div className="bg-[var(--charcoal)] py-16 px-4 relative overflow-hidden">

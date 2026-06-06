@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   Gift,
   Sparkles,
@@ -397,23 +398,12 @@ export default function GiftCardsPage() {
       setRedeemState("invalid");
       return;
     }
-    setRedeemState("loading");
-    await new Promise((r) => setTimeout(r, 1000));
-    setRedeemState("success");
+    toast.info("Gift card redemption coming soon. This feature will be available shortly.");
   };
 
   const handlePurchase = async () => {
     if (!canPurchase) return;
-    setPurchaseState("loading");
-    await new Promise((r) => setTimeout(r, 1300));
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    const rand = (n: number) =>
-      Array.from(
-        { length: n },
-        () => chars[Math.floor(Math.random() * chars.length)],
-      ).join("");
-    setGeneratedCode(`GC-${rand(4)}-${rand(4)}`);
-    setPurchaseState("success");
+    toast.info("Gift card purchasing coming soon. This feature will be available shortly.");
   };
 
   const copyCode = () => {
