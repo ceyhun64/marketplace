@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Zap, ArrowRight, Clock } from "lucide-react";
+import { useRootCategories } from "@/queries/useCategories";
 
 // Flash sale bitiş zamanı — deployment'ta env var'a taşınabilir
 function getFlashSaleEnd() {
@@ -90,31 +91,28 @@ function Digit({
 }
 
 
-const DEALS = [
-  {
-    label: "Electronics",
-    discount: "Up to 40% off",
-    href: "/deals?cat=elektronik",
-  },
-  { label: "Fashion", discount: "Up to 55% off", href: "/deals?cat=giyim" },
-  {
-    label: "Home & Living",
-    discount: "Up to 30% off",
-    href: "/deals?cat=ev-yasam",
-  },
-];
+const STATIC_DISCOUNTS = ["Up to 40% off", "Up to 55% off", "Up to 30% off", "Up to 35% off", "Up to 45% off"];
 
 export default function FlashSale() {
   const { hours, minutes, seconds, done } = useCountdown();
   const [active, setActive] = useState(0);
+  const { data: rootCategories } = useRootCategories();
+
+  const deals = (rootCategories ?? []).slice(0, 5).map((cat, i) => ({
+    label: cat.name,
+    discount: STATIC_DISCOUNTS[i % STATIC_DISCOUNTS.length],
+    href: `/deals?cat=${cat.slug}`,
+  }));
+
+  const dealCount = deals.length || 1;
 
   useEffect(() => {
     const id = setInterval(
-      () => setActive((p) => (p + 1) % DEALS.length),
+      () => setActive((p) => (p + 1) % dealCount),
       3500,
     );
     return () => clearInterval(id);
-  }, []);
+  }, [dealCount]);
 
   if (done) return null;
 
@@ -175,7 +173,7 @@ export default function FlashSale() {
 
           {/* Deal metni — animasyonlu, taşmaz */}
           <div className="relative overflow-hidden" style={{ height: 20, minWidth: 0, flex: "1 1 0" }}>
-            {DEALS.map((d, i) => (
+            {deals.map((d, i) => (
               <div
                 key={d.label}
                 className="absolute inset-y-0 left-0 flex items-center gap-1.5"

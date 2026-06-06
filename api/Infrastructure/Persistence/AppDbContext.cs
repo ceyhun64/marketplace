@@ -39,6 +39,7 @@ public class AppDbContext : DbContext
     public DbSet<MerchantPlugin> MerchantPlugins => Set<MerchantPlugin>();
     public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
     public DbSet<ProductQuestion> ProductQuestions => Set<ProductQuestion>();
+    public DbSet<StoreFollow> StoreFollows => Set<StoreFollow>();
 
     // ── Site Settings ─────────────────────────────────────────────────────────
     public DbSet<AnnouncementItem> Announcements => Set<AnnouncementItem>();
@@ -53,6 +54,11 @@ public class AppDbContext : DbContext
     public DbSet<ReturnRequestItem> ReturnRequestItems => Set<ReturnRequestItem>();
     public DbSet<Dispute> Disputes => Set<Dispute>();
     public DbSet<DisputeMessage> DisputeMessages => Set<DisputeMessage>();
+
+    // ── Customer Wallet / Referrals / Coupons ────────────────────────────────
+    public DbSet<CustomerTransaction> CustomerTransactions => Set<CustomerTransaction>();
+    public DbSet<Coupon> Coupons => Set<Coupon>();
+    public DbSet<Referral> Referrals => Set<Referral>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -413,6 +419,26 @@ public class AppDbContext : DbContext
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // ── StoreFollow ───────────────────────────────────────────────────────
+        modelBuilder
+            .Entity<StoreFollow>()
+            .HasIndex(f => new { f.CustomerId, f.MerchantId })
+            .IsUnique();
+
+        modelBuilder
+            .Entity<StoreFollow>()
+            .HasOne(f => f.Customer)
+            .WithMany()
+            .HasForeignKey(f => f.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder
+            .Entity<StoreFollow>()
+            .HasOne(f => f.Merchant)
+            .WithMany()
+            .HasForeignKey(f => f.MerchantId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // ── decimal precision ─────────────────────────────────────────────────
         modelBuilder.Entity<Order>().Property(o => o.TotalAmount).HasColumnType("decimal(18,2)");
         modelBuilder.Entity<Order>().Property(o => o.ShippingAmount).HasColumnType("decimal(18,2)");
@@ -578,5 +604,38 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Dispute>().Property(d => d.Status).HasConversion<string>();
         modelBuilder.Entity<Dispute>().Property(d => d.Reason).HasConversion<string>();
         modelBuilder.Entity<Product>().Property(p => p.ModerationStatus).HasConversion<string>();
+
+        // ── CustomerTransaction ───────────────────────────────────────────────
+        modelBuilder
+            .Entity<CustomerTransaction>()
+            .HasOne(t => t.Customer)
+            .WithMany()
+            .HasForeignKey(t => t.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<CustomerTransaction>().Property(t => t.Amount).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<User>().Property(u => u.WalletBalance).HasColumnType("decimal(18,2)");
+
+        // ── Coupon ────────────────────────────────────────────────────────────
+        modelBuilder.Entity<Coupon>().HasIndex(c => c.Code).IsUnique();
+        modelBuilder.Entity<Coupon>().Property(c => c.DiscountValue).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<Coupon>().Property(c => c.MaxDiscount).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<Coupon>().Property(c => c.MinOrderAmount).HasColumnType("decimal(18,2)");
+
+        // ── Referral ──────────────────────────────────────────────────────────
+        modelBuilder
+            .Entity<Referral>()
+            .HasOne(r => r.Referrer)
+            .WithMany()
+            .HasForeignKey(r => r.ReferrerId)
+            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder
+            .Entity<Referral>()
+            .HasOne(r => r.ReferredUser)
+            .WithMany()
+            .HasForeignKey(r => r.ReferredUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Referral>().HasIndex(r => r.ReferredUserId).IsUnique();
+        modelBuilder.Entity<Referral>().Property(r => r.EarnedAmount).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<User>().HasIndex(u => u.ReferralCode).IsUnique().HasFilter("\"ReferralCode\" IS NOT NULL");
     }
 }

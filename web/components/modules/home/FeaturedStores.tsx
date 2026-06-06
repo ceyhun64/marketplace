@@ -1,8 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle2, Store } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, Store, Heart, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { useStoreList } from "@/queries/useStore";
+import { useStoreFollowStatus, useFollowStore } from "@/queries/useStoreFollow";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { MerchantProfile } from "@/types/entities";
 
@@ -55,26 +58,90 @@ function StoreCardSkeleton() {
   );
 }
 
+function CardFollowButton({ slug, storeName }: { slug: string; storeName: string }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const { data } = useStoreFollowStatus(slug);
+  const { isLoggedIn, isPending, toggle } = useFollowStore(slug);
+  const isFollowing = mounted && (data?.isFollowing ?? false);
+
+  function handleClick(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isLoggedIn) {
+      toast.error("Please sign in to follow stores.", {
+        action: { label: "Sign in", onClick: () => { window.location.href = "/auth/login"; } },
+      });
+      return;
+    }
+    toggle();
+    if (!isFollowing) toast.success(`Following ${storeName}`);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={isPending}
+      title={isFollowing ? "Unfollow" : "Follow store"}
+      style={{
+        width: 28,
+        height: 28,
+        borderRadius: "50%",
+        border: `1px solid ${isFollowing ? "rgba(200,16,46,0.35)" : "var(--border-light)"}`,
+        background: isFollowing ? "rgba(200,16,46,0.08)" : "var(--off-white-2)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        flexShrink: 0,
+        transition: "all var(--dur-fast)",
+      }}
+    >
+      {isPending ? (
+        <Loader2 size={11} style={{ color: "var(--charcoal-soft)" }} className="animate-spin" />
+      ) : (
+        <Heart
+          size={11}
+          style={{
+            color: isFollowing ? "var(--red)" : "var(--charcoal-mist)",
+            fill: isFollowing ? "var(--red)" : "none",
+            transition: "all var(--dur-fast)",
+          }}
+        />
+      )}
+    </button>
+  );
+}
+
 function StoreCard({ store }: { store: MerchantProfile }) {
   const emoji = getStoreEmoji(store.storeName);
   return (
-    <Link
-      href={`/store/${store.slug}`}
+    <div
       style={{
         position: "relative",
-        display: "block",
         background: "var(--white)",
         borderRadius: "var(--radius-lg)",
         padding: "1.75rem",
-        textDecoration: "none",
         border: "1px solid var(--border-subtle)",
         boxShadow: "var(--shadow-xs)",
         overflow: "hidden",
         transition:
           "transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out)",
       }}
-      className="group hover:-translate-y-1 hover:shadow-md hover:!border-[rgba(200,16,46,0.2)]"
+      className="group hover:-translate-y-1 hover:shadow-md hover:border-[rgba(200,16,46,0.2)]!"
     >
+      {/* Invisible overlay link — card-level navigation, behind interactive elements */}
+      <Link
+        href={`/store/${store.slug}`}
+        className="absolute inset-0 z-0"
+        style={{ borderRadius: "var(--radius-lg)" }}
+        tabIndex={-1}
+        aria-hidden
+      />
+
+      {/* Red top sweep */}
       <div
         style={{
           position: "absolute",
@@ -87,9 +154,12 @@ function StoreCard({ store }: { store: MerchantProfile }) {
           transform: "scaleX(0)",
           transition: "transform var(--dur-base) var(--ease-out)",
         }}
-        className="group-hover:!scale-x-100"
+        className="group-hover:scale-x-100!"
       />
+
+      {/* Logo + Verified */}
       <div
+        className="relative z-10"
         style={{
           display: "flex",
           justifyContent: "space-between",
@@ -110,7 +180,7 @@ function StoreCard({ store }: { store: MerchantProfile }) {
             transition:
               "background var(--dur-base), transform var(--dur-base) var(--ease-spring)",
           }}
-          className="group-hover:bg-[var(--red-subtle)] group-hover:scale-105"
+          className="group-hover:bg-(--red-subtle) group-hover:scale-105"
         >
           {store.logoUrl ? (
             <img
@@ -145,7 +215,9 @@ function StoreCard({ store }: { store: MerchantProfile }) {
           </span>
         </div>
       </div>
-      <div style={{ marginBottom: "1.25rem" }}>
+
+      {/* Name + description */}
+      <div className="relative z-10" style={{ marginBottom: "1.25rem" }}>
         <h3
           style={{
             fontFamily: "var(--font-body)",
@@ -156,7 +228,7 @@ function StoreCard({ store }: { store: MerchantProfile }) {
             marginBottom: "0.5rem",
             transition: "color var(--dur-fast)",
           }}
-          className="group-hover:text-[var(--red)]"
+          className="group-hover:text-(--red)"
         >
           {store.storeName}
         </h3>
@@ -176,7 +248,10 @@ function StoreCard({ store }: { store: MerchantProfile }) {
             "Discover quality products from this verified seller."}
         </p>
       </div>
+
+      {/* Stats */}
       <div
+        className="relative z-10"
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
@@ -227,7 +302,10 @@ function StoreCard({ store }: { store: MerchantProfile }) {
           </div>
         ))}
       </div>
+
+      {/* Bottom row: Visit Store + Follow */}
       <div
+        className="relative z-10"
         style={{
           display: "flex",
           alignItems: "center",
@@ -247,28 +325,31 @@ function StoreCard({ store }: { store: MerchantProfile }) {
         >
           Visit Store
         </span>
-        <div
-          style={{
-            width: 28,
-            height: 28,
-            background: "var(--off-white-2)",
-            borderRadius: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transition:
-              "background var(--dur-fast), transform var(--dur-fast) var(--ease-spring)",
-          }}
-          className="group-hover:!bg-[var(--red-muted)] group-hover:scale-110"
-        >
-          <ArrowUpRight
-            size={13}
-            style={{ color: "var(--charcoal-mid)" }}
-            className="group-hover:text-[var(--red)]"
-          />
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <CardFollowButton slug={store.slug} storeName={store.storeName} />
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              background: "var(--off-white-2)",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition:
+                "background var(--dur-fast), transform var(--dur-fast) var(--ease-spring)",
+            }}
+            className="group-hover:bg-(--red-muted)! group-hover:scale-110"
+          >
+            <ArrowUpRight
+              size={13}
+              style={{ color: "var(--charcoal-mid)" }}
+              className="group-hover:text-(--red)"
+            />
+          </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 

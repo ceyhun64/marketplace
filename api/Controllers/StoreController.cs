@@ -23,13 +23,27 @@ public class StoreController : ControllerBase
     [HttpGet("list")]
     public async Task<IActionResult> GetStoreList(
         [FromQuery] int page = 1,
-        [FromQuery] int limit = 20
+        [FromQuery] int limit = 20,
+        [FromQuery] string? category = null
     )
     {
-        var total = await _db.MerchantProfiles.CountAsync(m => m.IsActive);
+        var query = _db.MerchantProfiles.Where(m => m.IsActive);
 
-        var stores = await _db
-            .MerchantProfiles.Where(m => m.IsActive)
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            query = query.Where(m =>
+                m.Products.Any(p =>
+                    !p.IsDeleted &&
+                    p.PublishToStore &&
+                    p.Category != null &&
+                    (p.Category.Slug == category || p.Category.Parent != null && p.Category.Parent.Slug == category)
+                )
+            );
+        }
+
+        var total = await query.CountAsync();
+
+        var stores = await query
             .OrderBy(m => m.StoreName)
             .Skip((page - 1) * limit)
             .Take(limit)
@@ -282,6 +296,91 @@ public class StoreController : ControllerBase
             .ToListAsync();
 
         return Ok(categories);
+    }
+
+    // ── GET /api/store/{slug}/follow — follower count + auth user's status ──────
+
+    [HttpGet("{slug}/follow")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetFollowStatus(string slug)
+    {
+        var merchant = await _db.MerchantProfiles
+            .Where(m => m.Slug == slug && m.IsActive)
+            .Select(m => new { m.Id })
+            .FirstOrDefaultAsync();
+
+        if (merchant == null)
+            return NotFound(new { message = "Store not found." });
+
+        var followerCount = await _db.StoreFollows.CountAsync(f => f.MerchantId == merchant.Id);
+
+        var userId = _currentUser?.UserId ?? Guid.Empty;
+        var isFollowing = userId != Guid.Empty &&
+            await _db.StoreFollows.AnyAsync(f => f.MerchantId == merchant.Id && f.CustomerId == userId);
+
+        return Ok(new { followerCount, isFollowing });
+    }
+
+    // ── POST /api/store/{slug}/follow — follow a store ────────────────────────
+
+    [HttpPost("{slug}/follow")]
+    [Authorize]
+    public async Task<IActionResult> FollowStore(string slug)
+    {
+        var merchant = await _db.MerchantProfiles
+            .Where(m => m.Slug == slug && m.IsActive)
+            .Select(m => new { m.Id })
+            .FirstOrDefaultAsync();
+
+        if (merchant == null)
+            return NotFound(new { message = "Store not found." });
+
+        var userId = _currentUser!.UserId;
+
+        var already = await _db.StoreFollows
+            .AnyAsync(f => f.MerchantId == merchant.Id && f.CustomerId == userId);
+
+        if (already)
+            return Conflict(new { message = "Already following." });
+
+        _db.StoreFollows.Add(new api.Domain.Entities.StoreFollow
+        {
+            CustomerId = userId,
+            MerchantId = merchant.Id,
+        });
+        await _db.SaveChangesAsync();
+
+        var followerCount = await _db.StoreFollows.CountAsync(f => f.MerchantId == merchant.Id);
+        return Ok(new { followerCount, isFollowing = true });
+    }
+
+    // ── DELETE /api/store/{slug}/follow — unfollow a store ───────────────────
+
+    [HttpDelete("{slug}/follow")]
+    [Authorize]
+    public async Task<IActionResult> UnfollowStore(string slug)
+    {
+        var merchant = await _db.MerchantProfiles
+            .Where(m => m.Slug == slug && m.IsActive)
+            .Select(m => new { m.Id })
+            .FirstOrDefaultAsync();
+
+        if (merchant == null)
+            return NotFound(new { message = "Store not found." });
+
+        var userId = _currentUser!.UserId;
+
+        var follow = await _db.StoreFollows
+            .FirstOrDefaultAsync(f => f.MerchantId == merchant.Id && f.CustomerId == userId);
+
+        if (follow == null)
+            return NotFound(new { message = "Not following this store." });
+
+        _db.StoreFollows.Remove(follow);
+        await _db.SaveChangesAsync();
+
+        var followerCount = await _db.StoreFollows.CountAsync(f => f.MerchantId == merchant.Id);
+        return Ok(new { followerCount, isFollowing = false });
     }
 
     // ── PUT /api/store/settings — Merchant: mağaza ayarlarını güncelle ────────

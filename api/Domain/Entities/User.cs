@@ -19,6 +19,8 @@ public class User
     public DateTime? RefreshTokenExpiry { get; set; }
     public string? PasswordResetToken { get; set; }
     public DateTime? PasswordResetExpiry { get; set; }
+    public decimal WalletBalance { get; set; } = 0;
+    public string? ReferralCode { get; set; }
     public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

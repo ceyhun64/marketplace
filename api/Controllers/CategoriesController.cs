@@ -19,23 +19,29 @@ public class CategoriesController : ControllerBase
 
     // ── PUBLIC ──────────────────────────────────────────────────────────────
 
-    /// <summary>Tüm kategoriler — ağaç yapısı (sadece kök kategoriler + alt kategoriler)</summary>
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var all = await _db
-            .Categories.Where(c => !c.IsDeleted)
+        var all = await _db.Categories
+            .Where(c => !c.IsDeleted)
             .OrderBy(c => c.SortOrder)
             .ThenBy(c => c.Name)
             .ToListAsync();
 
-        // Sadece kök kategorileri al, alt kategorileri iç içe yerleştir
-        var roots = all.Where(c => c.ParentId == null).Select(c => MapCategory(c, all)).ToList();
+        var productCounts = await _db.Products
+            .Where(p => !p.IsDeleted)
+            .GroupBy(p => p.CategoryId)
+            .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.CategoryId, x => x.Count);
+
+        var roots = all
+            .Where(c => c.ParentId == null)
+            .Select(c => MapCategory(c, all, productCounts))
+            .ToList();
 
         return Ok(roots);
     }
 
-    /// <summary>Kategori detayı + ürünleri (slug ile)</summary>
     [HttpGet("{slug}")]
     public async Task<IActionResult> GetBySlug(
         string slug,
@@ -43,18 +49,17 @@ public class CategoriesController : ControllerBase
         [FromQuery] int limit = 20
     )
     {
-        var category = await _db
-            .Categories.Include(c => c.SubCategories!.Where(sc => !sc.IsDeleted))
+        var category = await _db.Categories
+            .Include(c => c.SubCategories!.Where(sc => !sc.IsDeleted))
             .FirstOrDefaultAsync(c => c.Slug == slug && !c.IsDeleted);
 
         if (category == null)
             return NotFound(new { message = "Kategori bulunamadı." });
 
-        // Bu kategoriye + alt kategorilere ait ürünler
         var categoryIds = await GetCategoryIdsRecursiveAsync(category.Id);
 
-        var products = await _db
-            .Products.Include(p => p.Merchant)
+        var products = await _db.Products
+            .Include(p => p.Merchant)
             .Where(p => !p.IsDeleted && p.IsApproved && categoryIds.Contains(p.CategoryId) && p.Stock > 0)
             .OrderByDescending(p => p.CreatedAt)
             .Skip((page - 1) * limit)
@@ -71,41 +76,35 @@ public class CategoriesController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(
-            new
+        return Ok(new
+        {
+            category = new
             {
-                category = new
-                {
-                    category.Id,
-                    category.Name,
-                    category.Slug,
-                    category.IconUrl,
-                },
-                SubCategories = category.SubCategories?.Select(sc => new
-                {
-                    sc.Id,
-                    sc.Name,
-                    sc.Slug,
-                }),
-                products,
-            }
-        );
+                category.Id,
+                category.Name,
+                category.Slug,
+                category.IconUrl,
+                category.ParentId,
+            },
+            SubCategories = category.SubCategories?.Select(sc => new
+            {
+                sc.Id,
+                sc.Name,
+                sc.Slug,
+                sc.IconUrl,
+            }),
+            products,
+        });
     }
 
-    /// <summary>Alt kategoriler</summary>
     [HttpGet("{id:guid}/subcategories")]
     public async Task<IActionResult> GetSubcategories(Guid id)
     {
-        var subs = await _db
-            .Categories.Where(c => c.ParentId == id && !c.IsDeleted)
+        var subs = await _db.Categories
+            .Where(c => c.ParentId == id && !c.IsDeleted)
             .OrderBy(c => c.SortOrder)
-            .Select(c => new
-            {
-                c.Id,
-                c.Name,
-                c.Slug,
-                c.IconUrl,
-            })
+            .ThenBy(c => c.Name)
+            .Select(c => new { c.Id, c.Name, c.Slug, c.IconUrl })
             .ToListAsync();
 
         return Ok(subs);
@@ -113,7 +112,6 @@ public class CategoriesController : ControllerBase
 
     // ── ADMIN ───────────────────────────────────────────────────────────────
 
-    /// <summary>Kategori oluştur — Admin</summary>
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Create([FromBody] CategoryDto dto)
@@ -121,19 +119,16 @@ public class CategoriesController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        // Slug benzersizliği
         var slugExists = await _db.Categories.AnyAsync(c => c.Slug == dto.Slug && !c.IsDeleted);
         if (slugExists)
-            return BadRequest(new { message = "Bu slug zaten kullanımda." });
+            return BadRequest(new { message = "This slug is already in use." });
 
-        // Parent kontrolü
         if (dto.ParentId.HasValue)
         {
             var parentExists = await _db.Categories.AnyAsync(c =>
-                c.Id == dto.ParentId && !c.IsDeleted
-            );
+                c.Id == dto.ParentId.Value && !c.IsDeleted && c.ParentId == null);
             if (!parentExists)
-                return BadRequest(new { message = "Üst kategori bulunamadı." });
+                return BadRequest(new { message = "Parent category not found or is not a root category." });
         }
 
         var category = new Category
@@ -150,10 +145,19 @@ public class CategoriesController : ControllerBase
         _db.Categories.Add(category);
         await _db.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetBySlug), new { slug = category.Slug }, category);
+        return CreatedAtAction(nameof(GetBySlug), new { slug = category.Slug }, new
+        {
+            category.Id,
+            category.Name,
+            category.Slug,
+            category.IconUrl,
+            category.SortOrder,
+            category.ParentId,
+            ProductCount = 0,
+            SubCategories = Array.Empty<object>(),
+        });
     }
 
-    /// <summary>Kategori güncelle — Admin</summary>
     [HttpPut("{id:guid}")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Update(Guid id, [FromBody] CategoryDto dto)
@@ -162,14 +166,30 @@ public class CategoriesController : ControllerBase
         if (category == null || category.IsDeleted)
             return NotFound();
 
-        // Slug değiştiyse benzersizlik kontrolü
         if (category.Slug != dto.Slug)
         {
             var slugExists = await _db.Categories.AnyAsync(c =>
-                c.Slug == dto.Slug && c.Id != id && !c.IsDeleted
-            );
+                c.Slug == dto.Slug && c.Id != id && !c.IsDeleted);
             if (slugExists)
-                return BadRequest(new { message = "Bu slug zaten kullanımda." });
+                return BadRequest(new { message = "This slug is already in use." });
+        }
+
+        if (dto.ParentId.HasValue)
+        {
+            if (dto.ParentId.Value == id)
+                return BadRequest(new { message = "A category cannot be its own parent." });
+
+            var descendants = await GetCategoryIdsRecursiveAsync(id);
+            if (descendants.Contains(dto.ParentId.Value))
+                return BadRequest(new { message = "Cannot create a circular category reference." });
+
+            var parent = await _db.Categories.FirstOrDefaultAsync(c =>
+                c.Id == dto.ParentId.Value && !c.IsDeleted);
+            if (parent == null)
+                return BadRequest(new { message = "Parent category not found." });
+
+            if (parent.ParentId != null)
+                return BadRequest(new { message = "Only root categories can be used as parents (max 2 levels)." });
         }
 
         category.Name = dto.Name;
@@ -179,10 +199,17 @@ public class CategoriesController : ControllerBase
         category.SortOrder = dto.SortOrder ?? category.SortOrder;
 
         await _db.SaveChangesAsync();
-        return Ok(category);
+        return Ok(new
+        {
+            category.Id,
+            category.Name,
+            category.Slug,
+            category.IconUrl,
+            category.SortOrder,
+            category.ParentId,
+        });
     }
 
-    /// <summary>Kategori sil (soft-delete) — Admin</summary>
     [HttpDelete("{id:guid}")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete(Guid id)
@@ -191,25 +218,19 @@ public class CategoriesController : ControllerBase
         if (category == null || category.IsDeleted)
             return NotFound();
 
-        // Alt kategorisi varsa uyar
         var hasChildren = await _db.Categories.AnyAsync(c => c.ParentId == id && !c.IsDeleted);
         if (hasChildren)
-            return BadRequest(
-                new
-                {
-                    message = "Bu kategorinin alt kategorileri var. Önce onları silin veya taşıyın.",
-                }
-            );
+            return BadRequest(new
+            {
+                message = "This category has subcategories. Delete or move them first.",
+            });
 
-        // Bu kategoriye ürün bağlıysa uyar
         var hasProducts = await _db.Products.AnyAsync(p => p.CategoryId == id && !p.IsDeleted);
         if (hasProducts)
-            return BadRequest(
-                new
-                {
-                    message = "Bu kategoriye ait ürünler mevcut. Önce ürünleri başka kategoriye taşıyın.",
-                }
-            );
+            return BadRequest(new
+            {
+                message = "This category has products assigned to it. Move them to another category first.",
+            });
 
         category.IsDeleted = true;
         await _db.SaveChangesAsync();
@@ -218,7 +239,10 @@ public class CategoriesController : ControllerBase
 
     // ── HELPERS ─────────────────────────────────────────────────────────────
 
-    private static object MapCategory(Category c, List<Category> all) =>
+    private static object MapCategory(
+        Category c,
+        List<Category> all,
+        Dictionary<Guid, int> productCounts) =>
         new
         {
             c.Id,
@@ -226,9 +250,13 @@ public class CategoriesController : ControllerBase
             c.Slug,
             c.IconUrl,
             c.SortOrder,
-            SubCategories = all.Where(sc => sc.ParentId == c.Id)
+            c.ParentId,
+            ProductCount = productCounts.GetValueOrDefault(c.Id, 0),
+            SubCategories = all
+                .Where(sc => sc.ParentId == c.Id)
                 .OrderBy(sc => sc.SortOrder)
-                .Select(sc => MapCategory(sc, all))
+                .ThenBy(sc => sc.Name)
+                .Select(sc => MapCategory(sc, all, productCounts))
                 .ToList(),
         };
 

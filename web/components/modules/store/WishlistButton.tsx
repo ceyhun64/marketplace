@@ -1,7 +1,7 @@
 "use client";
 
 import { Heart, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { wishlistKeys } from "@/queries/useWishlist";
@@ -37,6 +37,8 @@ export function WishlistButton({
   const local = useLocalWishlist();
   const [isPending, setIsPending] = useState(false);
   const [optimistic, setOptimistic] = useState<boolean | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Logged in user → Check from API
   const { data: checkData } = useQuery({
@@ -53,9 +55,12 @@ export function WishlistButton({
   });
 
   // Active state: API data if logged in, otherwise local store
-  const serverState = user
-    ? (checkData?.inWishlist ?? false)
-    : local.hasItem(productId);
+  // `mounted` guard prevents SSR/client mismatch for localStorage-backed state
+  const serverState = !mounted
+    ? false
+    : user
+      ? (checkData?.inWishlist ?? false)
+      : local.hasItem(productId);
 
   // Optimistic override flips immediately on click; null means "use server state"
   const inWishlist = optimistic !== null ? optimistic : serverState;
@@ -104,7 +109,11 @@ export function WishlistButton({
     return (
       <button
         type="button"
-        onClick={handleToggle}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleToggle();
+        }}
         disabled={isPending}
         aria-busy={isPending}
         aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
@@ -123,7 +132,7 @@ export function WishlistButton({
           />
         )}
         {/* Guest badge */}
-        {!user && local.count() > 0 && local.hasItem(productId) && (
+        {mounted && !user && local.count() > 0 && local.hasItem(productId) && (
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
         )}
       </button>

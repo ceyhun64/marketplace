@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Package, MapPin, Clock, Heart, Share2, CheckCircle2 } from "lucide-react";
+import { Star, Package, MapPin, Clock, Heart, Share2, CheckCircle2, Users, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { useStoreFollowStatus, useFollowStore } from "@/queries/useStoreFollow";
 
 interface StoreHeaderProps {
   store: {
@@ -20,14 +22,49 @@ interface StoreHeaderProps {
 }
 
 export function StoreHeader({ store }: StoreHeaderProps) {
-  const [following, setFollowing] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  function handleShare() {
-    navigator.clipboard.writeText(window.location.href).then(() => {
+  const { data: followStatus } = useStoreFollowStatus(store.slug);
+  const { isLoggedIn, isPending, toggle } = useFollowStore(store.slug);
+
+  const isFollowing = followStatus?.isFollowing ?? false;
+  const followerCount = followStatus?.followerCount ?? null;
+
+  function handleFollow() {
+    if (!isLoggedIn) {
+      toast.error("Please sign in to follow stores.", {
+        action: { label: "Sign in", onClick: () => (window.location.href = "/auth/login") },
+      });
+      return;
+    }
+    toggle();
+    if (!isFollowing) {
+      toast.success(`Following ${store.storeName}`);
+    }
+  }
+
+  async function handleShare() {
+    const url = window.location.href;
+    const shareData = { title: store.storeName, url };
+
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch {
+        // user cancelled — no need to show error
+        return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
       setCopied(true);
+      toast.success("Link copied to clipboard");
       setTimeout(() => setCopied(false), 2000);
-    });
+    } catch {
+      toast.error("Could not copy link.");
+    }
   }
 
   const initials = store.storeName
@@ -62,7 +99,6 @@ export function StoreHeader({ store }: StoreHeaderProps) {
                   "linear-gradient(135deg, #0f0f0f 0%, #1c1c1c 30%, #2a1a1a 60%, #1e0a0a 100%)",
               }}
             >
-              {/* subtle texture */}
               <div
                 className="absolute inset-0 opacity-20"
                 style={{
@@ -70,7 +106,6 @@ export function StoreHeader({ store }: StoreHeaderProps) {
                     "radial-gradient(circle at 20% 50%, rgba(200,16,46,0.4) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(200,16,46,0.2) 0%, transparent 40%)",
                 }}
               />
-              {/* large faint initial */}
               <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none">
                 <span
                   className="font-black"
@@ -133,7 +168,6 @@ export function StoreHeader({ store }: StoreHeaderProps) {
                 >
                   {store.storeName}
                 </h1>
-                {/* verified badge — shown when rating exists */}
                 {store.rating !== undefined && store.rating >= 4.0 && (
                   <CheckCircle2
                     className="h-5 w-5 shrink-0"
@@ -155,10 +189,11 @@ export function StoreHeader({ store }: StoreHeaderProps) {
             {/* Action buttons */}
             <div className="flex items-center gap-2 shrink-0 mt-1">
               <button
-                onClick={() => setFollowing((f) => !f)}
+                onClick={handleFollow}
+                disabled={isPending}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150"
                 style={
-                  following
+                  isFollowing
                     ? {
                         background: "rgba(200,16,46,0.08)",
                         color: "#c8102e",
@@ -171,13 +206,26 @@ export function StoreHeader({ store }: StoreHeaderProps) {
                       }
                 }
               >
-                <Heart
-                  className="h-3.5 w-3.5"
-                  style={following ? { fill: "#c8102e" } : {}}
-                />
+                {isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Heart
+                    className="h-3.5 w-3.5"
+                    style={isFollowing ? { fill: "#c8102e" } : {}}
+                  />
+                )}
                 <span className="hidden sm:inline">
-                  {following ? "Following" : "Follow"}
+                  {isFollowing ? "Following" : "Follow"}
                 </span>
+                {followerCount !== null && followerCount > 0 && (
+                  <span
+                    className="hidden sm:inline text-xs font-mono opacity-75"
+                  >
+                    {followerCount >= 1000
+                      ? `${(followerCount / 1000).toFixed(1)}k`
+                      : followerCount}
+                  </span>
+                )}
               </button>
 
               <button
@@ -188,7 +236,7 @@ export function StoreHeader({ store }: StoreHeaderProps) {
                   border: `1.5px solid ${copied ? "rgba(34,197,94,0.3)" : "rgba(30,30,30,0.1)"}`,
                   color: copied ? "#16a34a" : "#747474",
                 }}
-                title="Copy link"
+                title={copied ? "Copied!" : "Share store"}
               >
                 <Share2 className="h-3.5 w-3.5" />
               </button>
@@ -221,6 +269,21 @@ export function StoreHeader({ store }: StoreHeaderProps) {
                     {store.productCount.toLocaleString()}
                   </span>
                   <span>products</span>
+                </span>
+              </>
+            )}
+
+            {followerCount !== null && (
+              <>
+                <span className="hidden sm:inline" aria-hidden>·</span>
+                <span className="flex items-center gap-1">
+                  <Users className="h-3.5 w-3.5" />
+                  <span className="font-semibold" style={{ color: "#1e1e1e" }}>
+                    {followerCount >= 1000
+                      ? `${(followerCount / 1000).toFixed(1)}k`
+                      : followerCount}
+                  </span>
+                  <span>followers</span>
                 </span>
               </>
             )}

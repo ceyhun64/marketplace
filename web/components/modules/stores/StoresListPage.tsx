@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import {
   Store,
@@ -12,10 +12,14 @@ import {
   ArrowRight,
   X,
   CheckCircle2,
+  Heart,
+  Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { MerchantProfile } from "@/types/entities";
 import { useStoreList } from "@/queries/useStore";
+import { useStoreFollowStatus, useFollowStore } from "@/queries/useStoreFollow";
 import {
   Select,
   SelectContent,
@@ -61,6 +65,54 @@ function StoreCardSkeleton() {
 }
 
 // ── Store Card ────────────────────────────────────────────────────────────────
+function CardFollowButton({ slug, storeName }: { slug: string; storeName: string }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const { data } = useStoreFollowStatus(slug);
+  const { isLoggedIn, isPending, toggle } = useFollowStore(slug);
+  const isFollowing = mounted && (data?.isFollowing ?? false);
+
+  function handleClick(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isLoggedIn) {
+      toast.error("Please sign in to follow stores.", {
+        action: { label: "Sign in", onClick: () => { window.location.href = "/auth/login"; } },
+      });
+      return;
+    }
+    toggle();
+    if (!isFollowing) toast.success(`Following ${storeName}`);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={isPending}
+      title={isFollowing ? "Unfollow" : "Follow store"}
+      className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0 transition-all duration-150"
+      style={{
+        border: `1.5px solid ${isFollowing ? "rgba(200,16,46,0.3)" : "var(--border-mid)"}`,
+        background: isFollowing ? "rgba(200,16,46,0.06)" : "var(--off-white)",
+      }}
+    >
+      {isPending ? (
+        <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: "var(--charcoal-soft)" }} />
+      ) : (
+        <Heart
+          className="w-3.5 h-3.5 transition-all duration-150"
+          style={{
+            color: isFollowing ? "var(--red)" : "var(--charcoal-mist)",
+            fill: isFollowing ? "var(--red)" : "none",
+          }}
+        />
+      )}
+    </button>
+  );
+}
+
 function StoreCard({ store }: { store: MerchantProfile }) {
   const { rating, productCount } = getMock(store.id);
   const memberYear = store.createdAt
@@ -221,23 +273,23 @@ function StoreCard({ store }: { store: MerchantProfile }) {
         </div>
 
         {/* CTA */}
-        <Link
-          href={`/store/${store.slug}`}
-          className="mt-auto flex items-center justify-center gap-2 h-9 rounded-xl text-[13px] font-bold transition-all duration-150"
-          style={{
-            background: "var(--charcoal)",
-            color: "white",
-          }}
-          onMouseEnter={(e) =>
-            ((e.currentTarget as HTMLAnchorElement).style.background = "#c8102e")
-          }
-          onMouseLeave={(e) =>
-            ((e.currentTarget as HTMLAnchorElement).style.background = "var(--charcoal)")
-          }
-        >
-          Visit Store
-          <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
+        <div className="mt-auto flex gap-2">
+          <Link
+            href={`/store/${store.slug}`}
+            className="flex-1 flex items-center justify-center gap-2 h-9 rounded-xl text-[13px] font-bold transition-all duration-150"
+            style={{ background: "var(--charcoal)", color: "white" }}
+            onMouseEnter={(e) =>
+              ((e.currentTarget as HTMLAnchorElement).style.background = "#c8102e")
+            }
+            onMouseLeave={(e) =>
+              ((e.currentTarget as HTMLAnchorElement).style.background = "var(--charcoal)")
+            }
+          >
+            Visit Store
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+          <CardFollowButton slug={store.slug} storeName={store.storeName} />
+        </div>
       </div>
     </div>
   );

@@ -49,6 +49,8 @@ import { useUI } from "@/hooks/use-ui";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNotifications } from "@/queries/useNotifications";
 import type { NotifType } from "@/queries/useNotifications";
+import { useWishlist } from "@/queries/useWishlist";
+import { useLocalWishlist } from "@/hooks/use-wishlist-local";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -80,6 +82,13 @@ function useAuth() {
 function useCartCount(): number {
   const cart = useCart();
   return cart.totalItems();
+}
+
+function useWishlistCount(): number {
+  const { user } = useAuthStore();
+  const { data } = useWishlist();
+  const local = useLocalWishlist();
+  return user ? (data?.total ?? 0) : local.count();
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -431,6 +440,7 @@ export default function Navbar() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const cartCount = useCartCount();
+  const wishlistCount = useWishlistCount();
   const isMobile = useIsMobile();
   const { openCart, openCommand } = useUI();
 
@@ -660,7 +670,7 @@ export default function Navbar() {
               {/* Wishlist — hidden on xs, visible sm+ */}
               <Link
                 href="/wishlist"
-                className="hidden sm:flex p-2.5 rounded-lg transition-all hover:bg-(--off-white-2)"
+                className="relative hidden sm:flex p-2.5 rounded-lg transition-all hover:bg-(--off-white-2)"
                 style={{
                   color: "var(--charcoal-soft)",
                   textDecoration: "none",
@@ -668,6 +678,19 @@ export default function Navbar() {
                 aria-label="Wishlist"
               >
                 <Heart className="w-4.25 h-4.25" strokeWidth={2} />
+                {mounted && wishlistCount > 0 && (
+                  <span
+                    className="absolute top-1 right-1 min-w-[14px] h-3.5 px-0.5 text-[8px] font-bold rounded-full flex items-center justify-center"
+                    style={{
+                      background: "var(--red)",
+                      color: "white",
+                      fontFamily: "var(--font-mono)",
+                      border: "2px solid var(--off-white)",
+                    }}
+                  >
+                    {wishlistCount > 9 ? "9+" : wishlistCount}
+                  </span>
+                )}
               </Link>
 
               {/* Notifications — logged-in only */}
@@ -1032,6 +1055,18 @@ export default function Navbar() {
               >
                 <Icon className="w-4 h-4 shrink-0" strokeWidth={2} />
                 {label}
+                {href === "/wishlist" && mounted && wishlistCount > 0 && (
+                  <span
+                    className="ml-auto min-w-[20px] h-5 px-1 text-[10px] font-bold rounded-full flex items-center justify-center"
+                    style={{
+                      background: "var(--red)",
+                      color: "white",
+                      fontFamily: "var(--font-mono)",
+                    }}
+                  >
+                    {wishlistCount > 9 ? "9+" : wishlistCount}
+                  </span>
+                )}
               </Link>
             ))}
 

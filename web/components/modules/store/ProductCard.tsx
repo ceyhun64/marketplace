@@ -8,6 +8,7 @@ import type { Product } from "@/types/entities";
 import { WishlistButton } from "@/components/modules/store/WishlistButton";
 import { useCompareStore } from "@/hooks/use-compare";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
 
 interface ProductCardProps {
   product: Product;
@@ -219,7 +220,9 @@ export default ProductCard;
 // ── Compare icon button (used inside ProductCard image overlay) ────────────────
 function CompareIconButton({ product }: { product: Product }) {
   const { toggle, isInCompare } = useCompareStore();
-  const inCompare = isInCompare(product.id);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const inCompare = mounted && isInCompare(product.id);
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();

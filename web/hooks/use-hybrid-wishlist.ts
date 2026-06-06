@@ -88,7 +88,7 @@ export function useHybridWishlist() {
         if (currentlyIn) {
           await api.delete(`/api/wishlist/${productId}`);
         } else {
-          await api.post("/api/wishlist", { productId });
+          await api.post(`/api/wishlist/${productId}`);
         }
 
         // İstek listesi genel cache'ini geçersiz kıl
@@ -128,7 +128,7 @@ export async function syncGuestWishlistToServer(): Promise<void> {
   // her birini POST et — backend idempotent olmalı (409 dön ya da upsert yap).
   const results = await Promise.allSettled(
     localItems.map((item) =>
-      api.post("/api/wishlist", { productId: item.productId }),
+      api.post(`/api/wishlist/${item.productId}`),
     ),
   );
 

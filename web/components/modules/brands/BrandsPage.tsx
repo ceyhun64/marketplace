@@ -9,24 +9,13 @@ import {
   Sparkles,
   ChevronRight,
   Award,
-  Filter,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import type { MerchantProfile } from "@/types/entities";
-
-const CATEGORIES = [
-  "All",
-  "Electronics",
-  "Fashion",
-  "Home & Living",
-  "Sports",
-  "Beauty",
-  "Toys",
-  "Books",
-];
+import { useRootCategories } from "@/queries/useCategories";
 
 const SORT_OPTIONS = [
   { key: "featured", label: "Featured" },
@@ -254,25 +243,28 @@ function BrandCard({ brand }: { brand: MerchantProfile }) {
   );
 }
 
-function useBrands() {
+function useBrands(categorySlug?: string) {
   return useQuery({
-    queryKey: ["brands"],
+    queryKey: ["brands", categorySlug ?? "all"],
     queryFn: async () => {
-      const { data } = await api.get<MerchantProfile[]>(
-        "/api/merchants?limit=48",
-      );
-      return data;
+      const params = new URLSearchParams({ limit: "48" });
+      if (categorySlug) params.set("category", categorySlug);
+      const { data } = await api.get<unknown>(`/api/store/list?${params}`);
+      if (Array.isArray(data)) return data as MerchantProfile[];
+      const paged = data as { stores?: MerchantProfile[] };
+      return (paged.stores ?? []) as MerchantProfile[];
     },
     staleTime: 1000 * 60 * 10,
   });
 }
 
 export default function BrandsPage() {
-  const { data: brands, isLoading, isError } = useBrands();
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCategorySlug, setActiveCategorySlug] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("featured");
-  const [showFilters, setShowFilters] = useState(false);
+
+  const { data: rootCategories } = useRootCategories();
+  const { data: brands, isLoading, isError } = useBrands(activeCategorySlug || undefined);
 
   const filtered = useMemo(() => {
     let list = brands ?? [];
@@ -425,27 +417,46 @@ export default function BrandsPage() {
             overflowX: "auto",
           }}
         >
-          {CATEGORIES.map((cat) => (
+          <button
+            onClick={() => setActiveCategorySlug("")}
+            style={{
+              flexShrink: 0,
+              padding: "0.875rem 1rem",
+              borderBottom: `2px solid ${activeCategorySlug === "" ? "var(--red)" : "transparent"}`,
+              background: "transparent",
+              border: "none",
+              borderBottomWidth: 2,
+              borderBottomStyle: "solid",
+              borderBottomColor: activeCategorySlug === "" ? "var(--red)" : "transparent",
+              color: activeCategorySlug === "" ? "var(--red)" : "var(--charcoal-soft)",
+              fontWeight: activeCategorySlug === "" ? 700 : 500,
+              fontSize: "0.875rem",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            All
+          </button>
+          {(rootCategories ?? []).map((cat) => (
             <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
+              key={cat.slug}
+              onClick={() => setActiveCategorySlug(cat.slug)}
               style={{
                 flexShrink: 0,
                 padding: "0.875rem 1rem",
-                borderBottom: `2px solid ${activeCategory === cat ? "var(--red)" : "transparent"}`,
                 background: "transparent",
                 border: "none",
-                color:
-                  activeCategory === cat
-                    ? "var(--red)"
-                    : "var(--charcoal-soft)",
-                fontWeight: activeCategory === cat ? 700 : 500,
+                borderBottomWidth: 2,
+                borderBottomStyle: "solid",
+                borderBottomColor: activeCategorySlug === cat.slug ? "var(--red)" : "transparent",
+                color: activeCategorySlug === cat.slug ? "var(--red)" : "var(--charcoal-soft)",
+                fontWeight: activeCategorySlug === cat.slug ? 700 : 500,
                 fontSize: "0.875rem",
                 cursor: "pointer",
                 whiteSpace: "nowrap",
               }}
             >
-              {cat}
+              {cat.name}
             </button>
           ))}
 
