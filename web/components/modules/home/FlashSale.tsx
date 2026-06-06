@@ -114,7 +114,33 @@ export default function FlashSale() {
     return () => clearInterval(id);
   }, [dealCount]);
 
-  if (done) return null;
+  if (done) return (
+    <section
+      style={{
+        background: "linear-gradient(135deg, var(--charcoal) 0%, #1a1a1a 100%)",
+        padding: "0",
+        overflow: "hidden",
+        position: "relative",
+        opacity: 0.7,
+      }}
+    >
+      <div className="max-w-325 mx-auto px-3 sm:px-8 py-2.5 sm:py-4 flex items-center justify-center gap-3 relative z-10">
+        <Zap size={13} color="rgba(255,255,255,0.4)" fill="rgba(255,255,255,0.4)" />
+        <span
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.6875rem",
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.5)",
+            fontWeight: 500,
+          }}
+        >
+          Flash Sale Ended
+        </span>
+      </div>
+    </section>
+  );
 
   return (
     <section

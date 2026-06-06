@@ -132,9 +132,9 @@ export default function RegisterPage() {
               required placeholder="Min. 8 characters"
               className="h-11 rounded-xl bg-white border-(--border-light) focus:border-(--charcoal) focus:ring-0 transition-all"
             />
-            {/* Strength meter */}
+            {/* Strength meter + requirements */}
             {form.password.length > 0 && (
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <div className="flex gap-1">
                   {[1, 2, 3].map((lvl) => (
                     <div
@@ -149,6 +149,22 @@ export default function RegisterPage() {
                     {strength.label} password
                   </p>
                 )}
+                <ul className="space-y-0.5">
+                  {[
+                    { ok: form.password.length >= 8, label: "At least 8 characters" },
+                    { ok: /[A-Z]/.test(form.password), label: "One uppercase letter" },
+                    { ok: /[0-9]/.test(form.password), label: "One number" },
+                  ].map(({ ok, label }) => (
+                    <li
+                      key={label}
+                      className="flex items-center gap-1.5 text-[11px] transition-colors"
+                      style={{ color: ok ? "var(--success)" : "var(--text-tertiary)" }}
+                    >
+                      <CheckCircle2 className={`w-3 h-3 shrink-0 transition-opacity ${ok ? "opacity-100" : "opacity-30"}`} />
+                      {label}
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
           </div>

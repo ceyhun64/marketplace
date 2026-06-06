@@ -530,6 +530,7 @@ export default function FeaturedStores() {
           </div>
           <Link
             href="/auth/register?role=merchant"
+            className="group/cta transition-colors duration-150 bg-(--white) text-(--charcoal) hover:bg-(--red) hover:text-white"
             style={{
               position: "relative",
               zIndex: 1,
@@ -542,18 +543,7 @@ export default function FeaturedStores() {
               fontSize: "var(--text-sm)",
               fontWeight: 700,
               textDecoration: "none",
-              background: "var(--white)",
-              color: "var(--charcoal)",
               flexShrink: 0,
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "var(--red)";
-              (e.currentTarget as HTMLElement).style.color = "#fff";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background =
-                "var(--white)";
-              (e.currentTarget as HTMLElement).style.color = "var(--charcoal)";
             }}
           >
             Start Selling Now <ArrowUpRight size={15} strokeWidth={2.5} />

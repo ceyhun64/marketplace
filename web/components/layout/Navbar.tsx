@@ -219,6 +219,7 @@ const NOTIF_META: Record<
 };
 
 function NotificationDropdown() {
+  const router = useRouter();
   const { notifications, unreadCount, isLoading, markRead, markAllRead } =
     useNotifications();
   const preview = notifications.slice(0, 5);
@@ -347,7 +348,7 @@ function NotificationDropdown() {
                 }}
                 onClick={() => {
                   markRead(notif.id);
-                  if (notif.link) window.location.href = notif.link;
+                  if (notif.link) router.push(notif.link);
                 }}
               >
                 <div className="relative shrink-0 mt-0.5">
@@ -406,7 +407,7 @@ function NotificationDropdown() {
           className="border-t"
           style={{ borderColor: "var(--border-light)" }}
         >
-          <a
+          <Link
             href="/notifications"
             className="flex items-center justify-center w-full py-3 text-xs font-semibold transition-colors hover:bg-(--off-white)"
             style={{
@@ -415,7 +416,7 @@ function NotificationDropdown() {
             }}
           >
             View all notifications →
-          </a>
+          </Link>
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

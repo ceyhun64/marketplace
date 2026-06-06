@@ -413,7 +413,10 @@ export default function SearchPage() {
 
   // UI state
   const [inputValue,       setInputValue]       = useState(q);
-  const [viewMode,         setViewMode]         = useState<ViewMode>("grid");
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    if (typeof window === "undefined") return "grid";
+    return (localStorage.getItem("search-view-mode") as ViewMode) ?? "grid";
+  });
   const [mobileFiltersOpen,setMobileFiltersOpen] = useState(false);
   const [minPriceInput,    setMinPriceInput]    = useState(minPrice);
   const [maxPriceInput,    setMaxPriceInput]    = useState(maxPrice);
@@ -919,7 +922,7 @@ export default function SearchPage() {
                 {(["grid", "list"] as const).map((m) => (
                   <button
                     key={m}
-                    onClick={() => setViewMode(m)}
+                    onClick={() => { setViewMode(m); localStorage.setItem("search-view-mode", m); }}
                     className="w-9 h-9 flex items-center justify-center transition-all"
                     style={{
                       background: viewMode === m ? "var(--charcoal)" : "transparent",

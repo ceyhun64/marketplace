@@ -230,6 +230,7 @@ export default function ProductVariantSelector({
                   key={size.id}
                   onClick={() => !isOutOfStock && onSizeChange(size.id)}
                   disabled={isOutOfStock}
+                  aria-label={isOutOfStock ? `${size.value} — out of stock` : size.value}
                   className="h-12 font-bold text-sm relative"
                   style={{
                     border: isSelected

@@ -27,6 +27,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DataPagination } from "@/components/ui/data-pagination";
+
+const PAGE_SIZE = 12;
 
 type SortKey = "popular" | "newest" | "name";
 
@@ -291,6 +294,7 @@ export default function StoresListPage() {
   const { data: stores, isLoading, isError } = useStoreList();
   const [query, setQuery]   = useState("");
   const [sort, setSort]     = useState<SortKey>("popular");
+  const [page, setPage]     = useState(1);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
@@ -307,6 +311,11 @@ export default function StoresListPage() {
     }
     return list;
   }, [stores, query, sort]);
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => { setPage(1); }, [query, sort]);
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
@@ -518,11 +527,16 @@ export default function StoresListPage() {
 
         {/* Cards */}
         {!isLoading && !isError && filtered.length > 0 && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filtered.map((store) => (
-              <StoreCard key={store.id} store={store} />
-            ))}
-          </div>
+          <>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {paginated.map((store) => (
+                <StoreCard key={store.id} store={store} />
+              ))}
+            </div>
+            <div className="mt-8">
+              <DataPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
+          </>
         )}
 
         {/* Become a Seller banner */}

@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useRef,
 } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useProduct } from "@/queries/useProducts";
@@ -652,13 +653,13 @@ function ReturnPolicy() {
         >
           Unused items in original packaging can be returned within 30 days at
           no cost.{" "}
-          <a
+          <Link
             href="/returns"
             className="underline font-semibold"
             style={{ color: "var(--info)" }}
           >
             View policy
-          </a>
+          </Link>
         </p>
       </div>
     </div>
@@ -1601,7 +1602,7 @@ export default function ProductDetailPage() {
               : []),
           ].map((crumb, i, arr) => (
             <React.Fragment key={crumb.href}>
-              <a
+              <Link
                 href={crumb.href}
                 className="text-[11px] font-medium hover:underline"
                 style={{
@@ -1613,7 +1614,7 @@ export default function ProductDetailPage() {
                 }}
               >
                 {crumb.label}
-              </a>
+              </Link>
               {i < arr.length - 1 && (
                 <ChevronRight
                   size={10}

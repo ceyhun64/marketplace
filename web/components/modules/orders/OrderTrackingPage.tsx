@@ -195,7 +195,7 @@ export default function TrackingPage() {
                     ? new Date(
                         data.actualDeliveredAt ??
                           data.events[data.events.length - 1].createdAt,
-                      ).toLocaleDateString("tr-TR", {
+                      ).toLocaleDateString("en-US", {
                         day: "numeric",
                         month: "long",
                         year: "numeric",
@@ -213,7 +213,7 @@ export default function TrackingPage() {
                 <p className="text-2xl font-bold">
                   {data.estimatedDeliveryEnd
                     ? new Date(data.estimatedDeliveryEnd).toLocaleDateString(
-                        "tr-TR",
+                        "en-US",
                         { weekday: "long", day: "numeric", month: "long" },
                       )
                     : "—"}
@@ -312,7 +312,7 @@ export default function TrackingPage() {
                     )}
                   </div>
                   <p className="text-xs text-gray-400 font-mono whitespace-nowrap flex-shrink-0">
-                    {new Date(event.createdAt).toLocaleString("tr-TR", {
+                    {new Date(event.createdAt).toLocaleString("en-US", {
                       day: "2-digit",
                       month: "2-digit",
                       hour: "2-digit",

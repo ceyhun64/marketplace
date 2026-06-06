@@ -139,19 +139,12 @@ export default function CartPage() {
 
           <Link
             href="/products"
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-sm font-semibold text-white transition-all"
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-sm font-semibold text-white transition-all bg-(--charcoal) hover:bg-(--red)"
             style={{
-              background: "var(--charcoal)",
               fontFamily: "var(--font-body)",
               boxShadow: "0 4px 20px rgba(51,51,51,0.15)",
               letterSpacing: "0.02em",
             }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.background = "var(--red)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.background = "var(--charcoal)")
-            }
           >
             Browse Products
             <ArrowRight className="w-4 h-4" />
@@ -201,20 +194,13 @@ export default function CartPage() {
             <div>
               <button
                 onClick={() => router.back()}
-                className="flex items-center gap-1.5 text-sm mb-4 transition-colors"
+                className="flex items-center gap-1.5 text-sm mb-4 transition-colors text-white/45 hover:text-white/75"
                 style={{
-                  color: "rgba(255,255,255,0.45)",
                   background: "none",
                   border: "none",
                   cursor: "pointer",
                   fontFamily: "var(--font-body)",
                 }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.color = "rgba(255,255,255,0.75)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.color = "rgba(255,255,255,0.45)")
-                }
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 Continue Shopping
@@ -255,20 +241,13 @@ export default function CartPage() {
 
             <button
               onClick={clearCart}
-              className="text-sm font-semibold transition-colors"
+              className="text-sm font-semibold transition-colors text-white/40 hover:text-red-400"
               style={{
-                color: "rgba(255,255,255,0.4)",
                 fontFamily: "var(--font-body)",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.color = "rgba(239,68,68,0.8)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "rgba(255,255,255,0.4)")
-              }
             >
               Clear All
             </button>
@@ -326,14 +305,8 @@ export default function CartPage() {
                       {item.merchantStoreName && (
                         <Link
                           href={`/store/${item.merchantSlug ?? item.merchantId}`}
-                          className="font-mono text-[11px] mt-1 inline-block transition-opacity"
+                          className="font-mono text-[11px] mt-1 inline-block transition-opacity hover:opacity-70"
                           style={{ color: "var(--red)" }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.opacity = "0.7")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.opacity = "1")
-                          }
                         >
                           {item.merchantStoreName}
                         </Link>
@@ -357,14 +330,8 @@ export default function CartPage() {
                         onClick={() =>
                           updateQuantity(item.offerId, item.quantity - 1)
                         }
-                        className="w-8 h-8 flex items-center justify-center rounded-lg transition-all"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg transition-all hover:bg-white"
                         style={{ color: "var(--charcoal)" }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.background = "#fff")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.background = "transparent")
-                        }
                       >
                         <Minus className="w-3 h-3" />
                       </button>
@@ -385,14 +352,8 @@ export default function CartPage() {
                           item.stock !== undefined &&
                           item.quantity >= item.stock
                         }
-                        className="w-8 h-8 flex items-center justify-center rounded-lg transition-all disabled:opacity-40"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg transition-all disabled:opacity-40 hover:bg-white"
                         style={{ color: "var(--charcoal)" }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.background = "#fff")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.background = "transparent")
-                        }
                       >
                         <Plus className="w-3 h-3" />
                       </button>

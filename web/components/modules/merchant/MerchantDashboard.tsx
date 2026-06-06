@@ -252,7 +252,7 @@ export default function MerchantDashboard() {
             ))
           : statCards.map((s) => (
               <Link key={s.label} href={s.href}>
-                <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5 hover:border-(--border-mid) hover:shadow-sm transition-all cursor-pointer">
+                <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5 hover:border-(--border-mid) hover:shadow-sm hover:ring-2 hover:ring-black/5 transition-all cursor-pointer">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-xs text-(--text-tertiary) font-medium uppercase tracking-wider">
                       {s.label}

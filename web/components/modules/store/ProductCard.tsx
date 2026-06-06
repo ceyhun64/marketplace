@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ShoppingCart, Store, GitCompare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatPrice } from "@/lib/format";
@@ -219,6 +220,7 @@ export default ProductCard;
 
 // -- Compare icon button (used inside ProductCard image overlay) ----------------
 function CompareIconButton({ product }: { product: Product }) {
+  const router = useRouter();
   const { toggle, isInCompare } = useCompareStore();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -249,7 +251,7 @@ function CompareIconButton({ product }: { product: Product }) {
       toast.success(`Removed from compare`);
     } else if (added) {
       toast.success("Added to compare", {
-        action: { label: "Compare Now", onClick: () => { window.location.href = "/compare"; } },
+        action: { label: "Compare Now", onClick: () => router.push("/compare") },
       });
     } else {
       toast.error("You can compare up to 3 products.");

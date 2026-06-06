@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 
 const FOOTER_LINKS = {
   marketplace: {
@@ -161,6 +162,17 @@ function FooterSection({
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [email, setEmail] = useState("");
+
+  const handleNewsletter = () => {
+    const trimmed = email.trim();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+    toast.success("You're subscribed!", { description: "Thanks for joining our newsletter." });
+    setEmail("");
+  };
 
   return (
     <footer className="w-full flex flex-col items-center px-3 sm:px-5 lg:px-6 pb-12 lg:pb-16 mt-16 md:mt-20 border-b-4 border-(--charcoal)">
@@ -240,20 +252,21 @@ export default function Footer() {
                 { label: "Twitter", icon: <TwitterIcon /> },
                 { label: "LinkedIn", icon: <LinkedInIcon /> },
               ].map((s) => (
-                <a
+                <button
                   key={s.label}
-                  href="#"
+                  type="button"
                   aria-label={s.label}
+                  title="Coming soon"
+                  onClick={() => toast.info(`${s.label} page coming soon.`)}
                   className="flex items-center justify-center w-11 h-11 rounded-full transition-colors hover:bg-(--off-white)"
                   style={{
                     background: "var(--off-white-2)",
                     border: "1px solid var(--border-light)",
                     color: "var(--charcoal-soft)",
-                    textDecoration: "none",
                   }}
                 >
                   {s.icon}
-                </a>
+                </button>
               ))}
             </div>
           </div>
@@ -313,6 +326,9 @@ export default function Footer() {
             <input
               type="email"
               placeholder="Your email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleNewsletter()}
               className="flex-1 min-w-0 border-none outline-none bg-transparent"
               style={{
                 fontFamily: "var(--font-body)",
@@ -322,6 +338,7 @@ export default function Footer() {
             />
             <button
               type="button"
+              onClick={handleNewsletter}
               className="shrink-0 transition-opacity hover:opacity-90"
               style={{
                 background: "var(--red)",

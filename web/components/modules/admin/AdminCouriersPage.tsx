@@ -48,6 +48,8 @@ export default function AdminCouriersPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "", phone: "" });
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
+  const [toggleConfirm, setToggleConfirm] = useState<{ courier: Courier } | null>(null);
+  const [toggling, setToggling] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -94,15 +96,21 @@ export default function AdminCouriersPage() {
     }
   }
 
-  async function handleToggleActive(id: string, current: boolean) {
+  async function confirmToggleActive() {
+    if (!toggleConfirm) return;
+    const { courier } = toggleConfirm;
+    setToggling(true);
     try {
-      await api.patch(`/api/couriers/${id}/toggle-active`);
+      await api.patch(`/api/couriers/${courier.id}/toggle-active`);
       setCouriers((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, isActive: !current } : c)),
+        prev.map((c) => (c.id === courier.id ? { ...c, isActive: !courier.isActive } : c)),
       );
-      toast.success(current ? "Courier deactivated" : "Courier activated");
+      toast.success(courier.isActive ? "Courier deactivated" : "Courier activated");
+      setToggleConfirm(null);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to update courier status");
+    } finally {
+      setToggling(false);
     }
   }
 
@@ -237,6 +245,34 @@ export default function AdminCouriersPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Toggle Active Confirm Dialog */}
+      <Dialog open={!!toggleConfirm} onOpenChange={(o) => !o && setToggleConfirm(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {toggleConfirm?.courier.isActive ? "Deactivate Courier" : "Activate Courier"}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-(--text-secondary) py-2">
+            {toggleConfirm?.courier.isActive
+              ? `Are you sure you want to deactivate ${toggleConfirm.courier.name}? They won't be able to accept new shipments.`
+              : `Activate ${toggleConfirm?.courier.name}? They will be available for new shipments.`}
+          </p>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setToggleConfirm(null)}>
+              Cancel
+            </Button>
+            <Button
+              className={toggleConfirm?.courier.isActive ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-(--success) hover:opacity-90 text-white"}
+              onClick={confirmToggleActive}
+              disabled={toggling}
+            >
+              {toggling ? "Updating…" : toggleConfirm?.courier.isActive ? "Deactivate" : "Activate"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Couriers Table */}
       <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden overflow-x-auto">
         <Table>
@@ -323,7 +359,7 @@ export default function AdminCouriersPage() {
                   </TableCell>
                   <TableCell>
                     <button
-                      onClick={() => handleToggleActive(courier.id, courier.isActive)}
+                      onClick={() => setToggleConfirm({ courier })}
                       className={`text-xs font-medium hover:underline transition-opacity ${
                         courier.isActive ? "text-(--warning)" : "text-(--info)"
                       }`}

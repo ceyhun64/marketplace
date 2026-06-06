@@ -113,9 +113,9 @@ export default function CourierEarningsPage() {
 
   const summaryCards = useMemo(() => [
     {
-      label: "Toplam Kazanç",
+      label: "Total Earnings",
       value: isLoading ? null : formatCurrency(earnings?.totalEarnings ?? 0),
-      sub: "Tüm zamanlar",
+      sub: "All time",
       icon: TrendingUp,
       text: "text-(--success)",
       bg: "bg-(--success-bg)",
@@ -125,41 +125,41 @@ export default function CourierEarningsPage() {
       value: isLoading
         ? null
         : formatCurrency(earnings?.thisMonthEarnings ?? 0),
-      sub: "Cari ay",
+      sub: "Current month",
       icon: Calendar,
       text: "text-(--info)",
       bg: "bg-(--info-bg)",
     },
     {
-      label: "Bekleyen Ödeme",
+      label: "Pending Payout",
       value: isLoading ? null : formatCurrency(earnings?.pendingPayout ?? 0),
-      sub: "Ödeme bekleniyor",
+      sub: "Awaiting payment",
       icon: Clock,
       text: "text-(--warning)",
       bg: "bg-(--warning-bg)",
     },
     {
-      label: "Çekilen Toplam",
+      label: "Total Withdrawn",
       value: isLoading ? null : formatCurrency(earnings?.withdrawnTotal ?? 0),
-      sub: "Hesabınıza aktarıldı",
+      sub: "Transferred to account",
       icon: ArrowDownCircle,
       text: "text-(--text-secondary)",
       bg: "bg-(--off-white-2)",
     },
     {
-      label: "Toplam Teslimat",
+      label: "Total Deliveries",
       value: isLoading
         ? null
         : String(
             earnings?.totalDeliveries ?? profile?.stats?.totalDelivered ?? 0,
           ),
-      sub: "Tamamlanan sipariş",
+      sub: "Completed orders",
       icon: CheckCircle2,
       text: "text-(--success)",
       bg: "bg-(--success-bg)",
     },
     {
-      label: "Bu Hafta Teslimat",
+      label: "This Week",
       value: isLoading
         ? null
         : String(
@@ -170,7 +170,7 @@ export default function CourierEarningsPage() {
                 return (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24) <= 7;
               }).length,
           ),
-      sub: "Son 7 gün",
+      sub: "Last 7 days",
       icon: Package,
       text: "text-(--info)",
       bg: "bg-(--info-bg)",
@@ -182,10 +182,10 @@ export default function CourierEarningsPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold text-(--text-primary)">
-          Kazançlarım
+          My Earnings
         </h1>
         <p className="text-sm text-(--text-tertiary) mt-1">
-          Teslim ücretleri, bahşişler ve ödeme geçmişi
+          Delivery fees, tips and payment history
         </p>
       </div>
 
@@ -227,10 +227,10 @@ export default function CourierEarningsPage() {
               className="text-sm font-semibold"
               style={{ color: "var(--success)" }}
             >
-              Bu hafta {formatCurrency(weeklyEarnings)} kazandınız
+              You earned {formatCurrency(weeklyEarnings)} this week
             </p>
             <p className="text-xs text-(--text-secondary) mt-0.5">
-              Teslimat ücretleri ve bahşişler dahil
+              Including delivery fees and tips
             </p>
           </div>
         </div>
@@ -240,10 +240,10 @@ export default function CourierEarningsPage() {
       <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) overflow-hidden">
         <div className="px-5 py-4 border-b border-(--border-light)">
           <h2 className="text-sm font-semibold text-(--text-primary)">
-            Teslimat Geçmişi
+            Delivery History
           </h2>
           <p className="text-xs text-(--text-tertiary) mt-0.5">
-            Son {records.length} teslimatlı sipariş
+            Last {records.length} completed deliveries
           </p>
         </div>
 
@@ -257,8 +257,8 @@ export default function CourierEarningsPage() {
           <Empty>
             <EmptyMedia variant="icon"><Package className="w-5 h-5" /></EmptyMedia>
             <EmptyHeader>
-              <EmptyTitle>Teslimat geçmişi yok</EmptyTitle>
-              <EmptyDescription>Tamamlanan teslimatlar burada görünecek</EmptyDescription>
+              <EmptyTitle>No delivery history</EmptyTitle>
+              <EmptyDescription>Completed deliveries will appear here</EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (

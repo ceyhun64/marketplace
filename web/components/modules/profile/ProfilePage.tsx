@@ -10,7 +10,7 @@ import { useMe, useUpdateMe } from "@/queries/useMe";
 import { useMyOrders } from "@/queries/useOrders";
 import { useWishlist, useRemoveFromWishlist } from "@/queries/useWishlist";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/types/enums";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatPrice } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -379,7 +379,7 @@ export default function ProfilePage() {
   const displayName = meData
     ? `${meData.firstName} ${meData.lastName}`.trim() || meData.email
     : user?.name || user?.email || "";
-  const initials = displayName.charAt(0)?.toUpperCase() ?? "?";
+  const initials = displayName.charAt(0)?.toLocaleUpperCase() ?? "?";
 
   const roleLabel =
     meData?.role === "Merchant"
@@ -1006,7 +1006,7 @@ export default function ProfilePage() {
                           </p>
                           <div className="flex items-center justify-between mt-3">
                             <span className="font-bold text-(--text-primary)">
-                              ${product.price.toLocaleString("tr-TR")}
+                              {formatPrice(product.price)}
                             </span>
                             <Button
                               size="sm"

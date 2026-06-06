@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Star, Package, MapPin, Clock, Heart, Share2, CheckCircle2, Users, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useStoreFollowStatus, useFollowStore } from "@/queries/useStoreFollow";
@@ -22,6 +23,7 @@ interface StoreHeaderProps {
 }
 
 export function StoreHeader({ store }: StoreHeaderProps) {
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
 
   const { data: followStatus } = useStoreFollowStatus(store.slug);
@@ -33,12 +35,14 @@ export function StoreHeader({ store }: StoreHeaderProps) {
   function handleFollow() {
     if (!isLoggedIn) {
       toast.error("Please sign in to follow stores.", {
-        action: { label: "Sign in", onClick: () => (window.location.href = "/auth/login") },
+        action: { label: "Sign in", onClick: () => router.push("/auth/login") },
       });
       return;
     }
     toggle();
-    if (!isFollowing) {
+    if (isFollowing) {
+      toast.success(`Unfollowed ${store.storeName}`);
+    } else {
       toast.success(`Following ${store.storeName}`);
     }
   }

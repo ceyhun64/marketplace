@@ -140,12 +140,12 @@ function ETAText({ dateStr }: { dateStr: string }) {
       {isOverdue && <AlertCircle className="h-3.5 w-3.5" />}
       <Clock className="h-3.5 w-3.5" />
       {isOverdue
-        ? `${Math.abs(diffHours)} saat gecikti`
+        ? `${Math.abs(diffHours)}h overdue`
         : diffHours < 1
-          ? "1 saatten az kaldı"
-          : `${diffHours} saat kaldı`}{" "}
+          ? "Less than 1h left"
+          : `${diffHours}h left`}{" "}
       ·{" "}
-      {eta.toLocaleDateString("tr-TR", {
+      {eta.toLocaleDateString("en-US", {
         day: "numeric",
         month: "short",
         hour: "2-digit",

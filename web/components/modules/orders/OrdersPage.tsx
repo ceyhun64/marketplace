@@ -800,7 +800,13 @@ export default function OrdersPage() {
                 fontFamily: "var(--font-body)",
               }}
             >
-              {filter === "all" ? "No orders yet" : "No orders here"}
+              {filter === "all"
+                ? "No orders yet"
+                : filter === "active"
+                  ? "No active orders"
+                  : filter === "DELIVERED"
+                    ? "No delivered orders"
+                    : "No cancelled orders"}
             </p>
             <p
               className="text-sm mb-6"
@@ -811,7 +817,11 @@ export default function OrdersPage() {
             >
               {filter === "all"
                 ? "Your order history will appear here once you place your first order."
-                : "No orders match this filter. Try another tab."}
+                : filter === "active"
+                  ? "You have no active or in-progress orders right now."
+                  : filter === "DELIVERED"
+                    ? "Orders that have been delivered will show here."
+                    : "Cancelled or failed orders will show here."}
             </p>
             {filter === "all" && (
               <Link

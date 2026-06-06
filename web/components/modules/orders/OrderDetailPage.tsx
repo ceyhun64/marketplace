@@ -26,6 +26,13 @@ import api from "@/lib/api";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { orderKeys } from "@/queries/useOrders";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 // -- Order lifecycle steps — Milestone 2 state machine ------------------------
 
@@ -132,6 +139,7 @@ export default function OrderDetailPage() {
   const queryClient = useQueryClient();
   const orderId = params.id as string;
   const [cancelling, setCancelling] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
   const { data: order, isLoading } = useOrder(orderId);
 
@@ -149,8 +157,8 @@ export default function OrderDetailPage() {
     order && !NON_CANCELLABLE_STATUSES.includes(order.status as OrderStatus);
 
   const handleCancel = async () => {
-    if (!confirm("Are you sure you want to cancel this order?")) return;
     setCancelling(true);
+    setCancelDialogOpen(false);
     try {
       await api.post(`/api/orders/${orderId}/cancel`);
       toast.success("Order cancelled successfully.");
@@ -262,12 +270,15 @@ export default function OrderDetailPage() {
             </CardHeader>
             <CardContent className="text-sm text-gray-600 space-y-0.5">
               {(() => {
-                const addr =
-                  typeof order.shippingAddress === "string"
-                    ? (JSON.parse(
-                        order.shippingAddress,
-                      ) as import("@/types/entities").ShippingAddress)
-                    : order.shippingAddress;
+                const addr = (() => {
+                  if (typeof order.shippingAddress !== "string") return order.shippingAddress;
+                  try {
+                    return JSON.parse(order.shippingAddress) as import("@/types/entities").ShippingAddress;
+                  } catch {
+                    return null;
+                  }
+                })();
+                if (!addr) return null;
                 return (
                   <>
                     <p className="font-medium text-gray-900">{addr.fullName}</p>
@@ -315,7 +326,7 @@ export default function OrderDetailPage() {
                 <p>
                   {new Date(
                     (order as any).shipment.estimatedDeliveryStart,
-                  ).toLocaleDateString("tr-TR", {
+                  ).toLocaleDateString("en-US", {
                     day: "numeric",
                     month: "long",
                   })}
@@ -440,12 +451,36 @@ export default function OrderDetailPage() {
           <Button
             variant="outline"
             className="w-full border-red-200 text-red-600 hover:bg-red-50"
-            onClick={handleCancel}
+            onClick={() => setCancelDialogOpen(true)}
             disabled={cancelling}
           >
             {cancelling ? "Cancelling..." : "Cancel Order"}
           </Button>
         )}
+
+        {/* Cancel confirmation dialog */}
+        <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Cancel Order?</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-gray-600">
+              This action cannot be undone. Your order will be cancelled and any payment will be refunded.
+            </p>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>
+                Keep Order
+              </Button>
+              <Button
+                className="bg-red-600 hover:bg-red-700 text-white"
+                onClick={handleCancel}
+                disabled={cancelling}
+              >
+                {cancelling ? "Cancelling..." : "Yes, Cancel"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

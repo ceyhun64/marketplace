@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { DataPagination } from "@/components/ui/data-pagination";
@@ -34,6 +34,8 @@ import {
   CheckCircle2,
   Info,
   XCircle,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 
 // -- Types ---------------------------------------------------------------------
@@ -165,6 +167,15 @@ export default function AdminAuditLogsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [eventTypeFilter, setEventTypeFilter] = useState("all");
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const toggleExpand = (id: string) =>
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   const { data, isLoading, refetch, isFetching } = useQuery<AuditLogsResponse>({
     queryKey: ["admin-audit-logs", page, eventTypeFilter],
@@ -344,48 +355,84 @@ export default function AdminAuditLogsPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((entry) => (
-                <TableRow
-                  key={entry.id}
-                  className="border-b border-(--border-subtle) hover:bg-(--bg-sunken) transition-colors"
-                >
-                  {/* Severity icon */}
-                  <TableCell className="pl-5 w-8">
-                    <SeverityIcon severity={entry.severity} />
-                  </TableCell>
+              filtered.map((entry) => {
+                const isExpanded = expandedIds.has(entry.id);
+                return (
+                  <React.Fragment key={entry.id}>
+                    <TableRow
+                      className="border-b border-(--border-subtle) hover:bg-(--bg-sunken) transition-colors cursor-pointer"
+                      onClick={() => toggleExpand(entry.id)}
+                    >
+                      {/* Expand chevron */}
+                      <TableCell className="pl-5 w-8">
+                        {isExpanded
+                          ? <ChevronDown className="w-3.5 h-3.5 text-(--text-tertiary)" />
+                          : <ChevronRight className="w-3.5 h-3.5 text-(--text-tertiary)" />}
+                      </TableCell>
 
-                  {/* Event type badge */}
-                  <TableCell>
-                    <EventBadge type={entry.eventType} />
-                  </TableCell>
+                      {/* Severity icon */}
+                      <TableCell className="w-8">
+                        <SeverityIcon severity={entry.severity} />
+                      </TableCell>
 
-                  {/* Message */}
-                  <TableCell className="max-w-0 w-full">
-                    <p className="text-sm text-(--text-secondary) truncate">
-                      {entry.message}
-                    </p>
-                  </TableCell>
+                      {/* Event type badge */}
+                      <TableCell>
+                        <EventBadge type={entry.eventType} />
+                      </TableCell>
 
-                  {/* Resource ID */}
-                  <TableCell>
-                    <span className="font-mono text-[10px] text-(--text-tertiary) truncate block max-w-[140px]">
-                      {entry.resourceId.slice(0, 8).toUpperCase()}
-                    </span>
-                  </TableCell>
+                      {/* Message */}
+                      <TableCell className="max-w-0 w-full">
+                        <p className="text-sm text-(--text-secondary) truncate">
+                          {entry.message}
+                        </p>
+                      </TableCell>
 
-                  {/* Timestamp */}
-                  <TableCell className="text-right pr-5">
-                    <span className="text-[11px] text-(--text-tertiary) whitespace-nowrap">
-                      {new Date(entry.occurredAt).toLocaleString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))
+                      {/* Resource ID */}
+                      <TableCell>
+                        <span className="font-mono text-[10px] text-(--text-tertiary) truncate block max-w-35">
+                          {entry.resourceId.slice(0, 8).toUpperCase()}
+                        </span>
+                      </TableCell>
+
+                      {/* Timestamp */}
+                      <TableCell className="text-right pr-5">
+                        <span className="text-[11px] text-(--text-tertiary) whitespace-nowrap">
+                          {new Date(entry.occurredAt).toLocaleString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                    {isExpanded && (
+                      <TableRow className="bg-(--bg-sunken)">
+                        <TableCell colSpan={6} className="px-5 py-3">
+                          <div className="space-y-1.5 text-xs font-mono">
+                            <div className="flex gap-3">
+                              <span className="text-(--text-tertiary) w-20 shrink-0">Message</span>
+                              <span className="text-(--text-primary) break-all">{entry.message}</span>
+                            </div>
+                            <div className="flex gap-3">
+                              <span className="text-(--text-tertiary) w-20 shrink-0">Actor</span>
+                              <span className="text-(--text-primary)">{entry.actorId}</span>
+                            </div>
+                            <div className="flex gap-3">
+                              <span className="text-(--text-tertiary) w-20 shrink-0">Resource</span>
+                              <span className="text-(--text-primary)">{entry.resourceId}</span>
+                            </div>
+                            <div className="flex gap-3">
+                              <span className="text-(--text-tertiary) w-20 shrink-0">Time</span>
+                              <span className="text-(--text-primary)">{new Date(entry.occurredAt).toISOString()}</span>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
+                );
+              })
             )}
           </TableBody>
         </Table>
