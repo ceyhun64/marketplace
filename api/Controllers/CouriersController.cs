@@ -211,4 +211,73 @@ public class CouriersController : ControllerBase
 
         return Ok(new ApiResponse<string>("Konum güncellendi."));
     }
+
+    // GET /api/couriers/me/earnings — Courier (kazanç özeti)
+    [HttpGet("me/earnings")]
+    [Authorize(Policy = "CourierOnly")]
+    public async Task<IActionResult> GetMyEarnings()
+    {
+        var courier = await _db.Couriers
+            .FirstOrDefaultAsync(c => c.UserId == _currentUser.UserId);
+        if (courier == null)
+            return NotFound(new { message = "Kurye profili bulunamadı." });
+
+        var delivered = await _db.Shipments
+            .Include(s => s.Order)
+            .Where(s => s.CourierId == courier.Id &&
+                        s.Status == Domain.Enums.ShipmentStatus.Delivered)
+            .ToListAsync();
+
+        var now = DateTime.UtcNow;
+        var monthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var weekStart = now.AddDays(-7);
+
+        var totalEarnings = delivered.Sum(s => s.Order.ShippingAmount);
+        var thisMonthEarnings = delivered
+            .Where(s => s.UpdatedAt >= monthStart)
+            .Sum(s => s.Order.ShippingAmount);
+        var thisWeekDeliveries = delivered.Count(s => s.UpdatedAt >= weekStart);
+
+        return Ok(new
+        {
+            totalEarnings,
+            pendingPayout = 0m,
+            withdrawnTotal = 0m,
+            totalDeliveries = delivered.Count,
+            thisMonthEarnings,
+            thisWeekDeliveries,
+        });
+    }
+
+    // GET /api/couriers/me/deliveries — Courier (teslimat geçmişi)
+    [HttpGet("me/deliveries")]
+    [Authorize(Policy = "CourierOnly")]
+    public async Task<IActionResult> GetMyDeliveries([FromQuery] int limit = 50)
+    {
+        var courier = await _db.Couriers
+            .FirstOrDefaultAsync(c => c.UserId == _currentUser.UserId);
+        if (courier == null)
+            return NotFound(new { message = "Kurye profili bulunamadı." });
+
+        var deliveries = await _db.Shipments
+            .Include(s => s.Order)
+            .ThenInclude(o => o.Customer)
+            .Where(s => s.CourierId == courier.Id &&
+                        s.Status == Domain.Enums.ShipmentStatus.Delivered)
+            .OrderByDescending(s => s.UpdatedAt)
+            .Take(limit)
+            .Select(s => new
+            {
+                id = s.Id,
+                trackingNumber = s.TrackingNumber,
+                customerName = s.Order.Customer.FirstName + " " + s.Order.Customer.LastName,
+                deliveredAt = s.UpdatedAt,
+                deliveryFee = s.Order.ShippingAmount,
+                tip = (decimal?)null,
+                orderNumber = s.OrderId.ToString().Substring(0, 8).ToUpper(),
+            })
+            .ToListAsync();
+
+        return Ok(deliveries);
+    }
 }
