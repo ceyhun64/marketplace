@@ -89,13 +89,23 @@ const nextConfig: NextConfig = {
         headers: securityHeaders,
       },
 
-      // ── Next.js static assets — long immutable cache ───────────────────────
-      {
-        source: "/_next/static/(.*)",
-        headers: [
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
-        ],
-      },
+      // ── Next.js static assets — long immutable cache (production only) ──────
+      // In dev, Turbopack must be able to revalidate chunks on hot-reload.
+      // Overriding Cache-Control here in dev breaks HMR ("module factory not
+      // available" errors when a file loses an import that was in a cached chunk).
+      ...(IS_PROD
+        ? [
+            {
+              source: "/_next/static/(.*)",
+              headers: [
+                {
+                  key: "Cache-Control",
+                  value: "public, max-age=31536000, immutable",
+                },
+              ],
+            },
+          ]
+        : []),
 
       // ── Public assets ──────────────────────────────────────────────────────
       {
