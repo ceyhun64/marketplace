@@ -207,7 +207,7 @@ export default function CourierShipmentDetailPage() {
       {!locationActive && canDeliver && (
         <button
           onClick={() => setLocationActive(true)}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-(--border-mid) text-xs text-(--text-secondary) hover:border-(--info-border) hover:text-(--info) hover:bg-(--info-bg) transition-all min-h-[44px]"
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-(--border-mid) text-xs text-(--text-secondary) hover:border-(--info-border) hover:text-(--info) hover:bg-(--info-bg) transition-all min-h-11"
         >
           <LocateFixed className="w-3.5 h-3.5" />
           Start Live Location Broadcast

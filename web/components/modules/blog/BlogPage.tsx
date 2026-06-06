@@ -191,7 +191,7 @@ export default function BlogPage() {
               </p>
             </div>
             {/* Search bar */}
-            <div className="relative max-w-xs w-full lg:w-auto flex-shrink-0">
+            <div className="relative max-w-xs w-full lg:w-auto shrink-0">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
                 style={{ color: "rgba(255,255,255,0.4)" }}
@@ -314,7 +314,7 @@ export default function BlogPage() {
                   </span>
                 </div>
                 <h2
-                  className="text-[26px] lg:text-[32px] leading-tight mb-4 group-hover:text-[var(--red)] transition-colors"
+                  className="text-[26px] lg:text-[32px] leading-tight mb-4 group-hover:text-(--red) transition-colors"
                   style={{
                     fontFamily: "var(--font-display)",
                     color: "var(--charcoal)",
@@ -354,7 +354,7 @@ export default function BlogPage() {
                 </div>
               </div>
               <div
-                className="w-full lg:w-56 h-36 rounded-xl flex-shrink-0 flex items-center justify-center"
+                className="w-full lg:w-56 h-36 rounded-xl shrink-0 flex items-center justify-center"
                 style={{ background: "var(--off-white-2)" }}
               >
                 <TrendingUp
@@ -424,7 +424,7 @@ export default function BlogPage() {
                       </span>
                     </div>
                     <h3
-                      className="font-bold text-[0.9375rem] leading-snug mb-2 group-hover:text-[var(--red)] transition-colors flex-1"
+                      className="font-bold text-[0.9375rem] leading-snug mb-2 group-hover:text-(--red) transition-colors flex-1"
                       style={{
                         color: "var(--charcoal)",
                         fontFamily: "var(--font-body)",

@@ -106,7 +106,7 @@ export default function CourierProfilePage() {
             <button
               onClick={handleToggle}
               disabled={toggleAvailability.isPending}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-60 min-h-[44px] ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-60 min-h-11 ${
                 profile.isAvailable
                   ? "bg-(--success) text-white"
                   : "bg-white/10 text-white/60 hover:bg-white/20"

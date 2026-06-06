@@ -414,7 +414,7 @@ export default function CourierShipmentsPage() {
                 <div className="flex flex-wrap gap-2">
                   <Link
                     href={`/courier/shipments/${shipment.id}`}
-                    className="flex items-center gap-1.5 text-xs border border-(--border-mid) rounded-xl px-3 py-2.5 text-(--text-secondary) hover:bg-(--bg-sunken) transition-colors font-medium min-h-[44px]"
+                    className="flex items-center gap-1.5 text-xs border border-(--border-mid) rounded-xl px-3 py-2.5 text-(--text-secondary) hover:bg-(--bg-sunken) transition-colors font-medium min-h-11"
                   >
                     <ChevronRight className="h-3.5 w-3.5" />
                     Detay
@@ -422,7 +422,7 @@ export default function CourierShipmentsPage() {
                   {shipment.labelUrl && (
                     <button
                       onClick={() => window.open(shipment.labelUrl, "_blank")}
-                      className="flex items-center gap-1.5 text-xs border border-(--border-mid) rounded-xl px-3 py-2.5 text-(--text-secondary) hover:bg-(--bg-sunken) transition-colors font-medium min-h-[44px]"
+                      className="flex items-center gap-1.5 text-xs border border-(--border-mid) rounded-xl px-3 py-2.5 text-(--text-secondary) hover:bg-(--bg-sunken) transition-colors font-medium min-h-11"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
                       Etiket

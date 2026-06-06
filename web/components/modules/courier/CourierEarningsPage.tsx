@@ -278,7 +278,7 @@ export default function CourierEarningsPage() {
                       #{record.orderNumber ?? record.trackingNumber?.slice(-8)}
                     </span>
                   </div>
-                  <p className="text-sm text-(--text-secondary) font-medium truncate max-w-[200px]">
+                  <p className="text-sm text-(--text-secondary) font-medium truncate max-w-50">
                     {record.customerName}
                   </p>
                   <p className="text-xs text-(--text-tertiary) mt-0.5">

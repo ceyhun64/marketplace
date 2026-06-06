@@ -38,7 +38,7 @@ const PERIODS: { value: AnalyticsPeriod; label: string }[] = [
 
 function KpiSkeleton() {
   return (
-    <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-3.5 md:p-5 space-y-3 min-h-[88px]">
+    <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-3.5 md:p-5 space-y-3 min-h-22">
       <div className="flex items-start justify-between gap-2">
         <Skeleton className="h-2.5 w-20 rounded" />
         <Skeleton className="h-6 w-6 rounded-lg shrink-0" />
@@ -187,7 +187,7 @@ export default function MerchantAnalyticsDashboard() {
               return (
                 <div
                   key={k.label}
-                  className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-3.5 md:p-5 flex flex-col justify-between min-h-[88px]"
+                  className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-3.5 md:p-5 flex flex-col justify-between min-h-22"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-[10px] md:text-[11px] text-(--text-tertiary) font-semibold uppercase tracking-wider leading-tight">
@@ -246,7 +246,7 @@ export default function MerchantAnalyticsDashboard() {
               <button
                 key={p.value}
                 onClick={() => setPeriod(p.value)}
-                className={`px-3 py-2 rounded-md text-xs font-medium transition-all min-h-[36px] min-w-[56px] ${
+                className={`px-3 py-2 rounded-md text-xs font-medium transition-all min-h-9 min-w-14 ${
                   period === p.value
                     ? "bg-(--bg-surface) text-(--text-primary) shadow-sm"
                     : "text-(--text-secondary) hover:text-(--text-primary)"
@@ -260,13 +260,13 @@ export default function MerchantAnalyticsDashboard() {
 
         {/* Chart — responsive heights across breakpoints */}
         {chartLoading ? (
-          <Skeleton className="h-40 sm:h-48 md:h-[220px] w-full rounded-lg" />
+          <Skeleton className="h-40 sm:h-48 md:h-55 w-full rounded-lg" />
         ) : chartData.length > 0 ? (
-          <div className="h-40 sm:h-48 md:h-[220px] w-full">
+          <div className="h-40 sm:h-48 md:h-55 w-full">
             <MerchantSalesChart data={chartData} />
           </div>
         ) : (
-          <div className="h-40 sm:h-48 md:h-[220px] flex items-center justify-center text-sm text-(--text-tertiary)">
+          <div className="h-40 sm:h-48 md:h-55 flex items-center justify-center text-sm text-(--text-tertiary)">
             No sales data for this period
           </div>
         )}

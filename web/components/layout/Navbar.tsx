@@ -236,7 +236,7 @@ function NotificationDropdown() {
           <Bell className="w-4.25 h-4.25" strokeWidth={2} />
           {unreadCount > 0 && (
             <span
-              className="absolute top-1 right-1 min-w-[14px] h-3.5 px-0.5 text-[8px] font-bold rounded-full flex items-center justify-center"
+              className="absolute top-1 right-1 min-w-3.5 h-3.5 px-0.5 text-[8px] font-bold rounded-full flex items-center justify-center"
               style={{
                 background: "var(--red)",
                 color: "white",
@@ -304,7 +304,7 @@ function NotificationDropdown() {
         </div>
 
         {/* List */}
-        <div className="max-h-[360px] overflow-y-auto">
+        <div className="max-h-90 overflow-y-auto">
           {isLoading && (
             <div className="py-8 flex flex-col items-center gap-2">
               <div
@@ -681,7 +681,7 @@ export default function Navbar() {
                 <Heart className="w-4.25 h-4.25" strokeWidth={2} />
                 {mounted && wishlistCount > 0 && (
                   <span
-                    className="absolute top-1 right-1 min-w-[14px] h-3.5 px-0.5 text-[8px] font-bold rounded-full flex items-center justify-center"
+                    className="absolute top-1 right-1 min-w-3.5 h-3.5 px-0.5 text-[8px] font-bold rounded-full flex items-center justify-center"
                     style={{
                       background: "var(--red)",
                       color: "white",
@@ -1058,7 +1058,7 @@ export default function Navbar() {
                 {label}
                 {href === "/wishlist" && mounted && wishlistCount > 0 && (
                   <span
-                    className="ml-auto min-w-[20px] h-5 px-1 text-[10px] font-bold rounded-full flex items-center justify-center"
+                    className="ml-auto min-w-5 h-5 px-1 text-[10px] font-bold rounded-full flex items-center justify-center"
                     style={{
                       background: "var(--red)",
                       color: "white",

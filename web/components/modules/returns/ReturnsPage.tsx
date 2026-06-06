@@ -171,7 +171,7 @@ export default function ReturnsPage() {
         style={{ background: "var(--charcoal)" }}
       >
         <div
-          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full pointer-events-none"
+          className="absolute top-0 right-0 w-125 h-125 rounded-full pointer-events-none"
           style={{
             background:
               "radial-gradient(circle, rgba(200,16,46,0.10) 0%, transparent 70%)",
@@ -215,7 +215,7 @@ export default function ReturnsPage() {
             ].map(({ icon: Icon, label }) => (
               <div key={label} className="flex items-center gap-2">
                 <Icon
-                  className="w-4 h-4 flex-shrink-0"
+                  className="w-4 h-4 shrink-0"
                   style={{ color: "var(--red)" }}
                 />
                 <span
@@ -243,7 +243,7 @@ export default function ReturnsPage() {
         }}
       >
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
           style={{
             background: "var(--info-bg)",
             border: "1px solid var(--info-border)",
@@ -283,7 +283,7 @@ export default function ReturnsPage() {
         >
           <div className="flex items-center gap-3 mb-6">
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: "var(--red-muted)" }}
             >
               <Ticket className="w-5 h-5" style={{ color: "var(--red)" }} />
@@ -365,7 +365,7 @@ export default function ReturnsPage() {
               }}
             >
               <AlertCircle
-                className="w-4 h-4 flex-shrink-0"
+                className="w-4 h-4 shrink-0"
                 style={{ color: "var(--red)" }}
               />
               <p
@@ -507,7 +507,7 @@ export default function ReturnsPage() {
           </div>
           <div className="relative">
             <div
-              className="absolute left-[28px] top-10 bottom-10 w-px hidden lg:block"
+              className="absolute left-7 top-10 bottom-10 w-px hidden lg:block"
               style={{ background: "var(--border-light)" }}
             />
             <div className="space-y-4">
@@ -516,7 +516,7 @@ export default function ReturnsPage() {
                 const isLast = i === RETURN_STEPS.length - 1;
                 return (
                   <div key={step.number} className="flex gap-6 items-start">
-                    <div className="flex-shrink-0 relative z-10">
+                    <div className="shrink-0 relative z-10">
                       <div
                         className="w-14 h-14 rounded-2xl flex items-center justify-center"
                         style={{
@@ -622,7 +622,7 @@ export default function ReturnsPage() {
             >
               <div className="flex items-center gap-2 mb-5">
                 <CheckCircle2
-                  className="w-5 h-5 flex-shrink-0"
+                  className="w-5 h-5 shrink-0"
                   style={{ color: "var(--success)" }}
                 />
                 <h3
@@ -639,7 +639,7 @@ export default function ReturnsPage() {
                 {ELIGIBLE.map((item) => (
                   <li key={item} className="flex items-start gap-3">
                     <span
-                      className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 text-white text-[10px] font-bold"
+                      className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 text-white text-[10px] font-bold"
                       style={{ background: "var(--success)" }}
                     >
                       ✓
@@ -666,7 +666,7 @@ export default function ReturnsPage() {
             >
               <div className="flex items-center gap-2 mb-5">
                 <PackageX
-                  className="w-5 h-5 flex-shrink-0"
+                  className="w-5 h-5 shrink-0"
                   style={{ color: "var(--red)" }}
                 />
                 <h3
@@ -683,7 +683,7 @@ export default function ReturnsPage() {
                 {NOT_ELIGIBLE.map((item) => (
                   <li key={item} className="flex items-start gap-3">
                     <span
-                      className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 text-white text-[10px] font-bold"
+                      className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 text-white text-[10px] font-bold"
                       style={{ background: "var(--red)" }}
                     >
                       ✗
@@ -848,7 +848,7 @@ export default function ReturnsPage() {
                     {item.q}
                   </span>
                   <ChevronDown
-                    className="w-4 h-4 flex-shrink-0 transition-transform"
+                    className="w-4 h-4 shrink-0 transition-transform"
                     style={{
                       color:
                         openFaq === i ? "var(--red)" : "var(--charcoal-mist)",

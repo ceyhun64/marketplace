@@ -329,7 +329,7 @@ export default function AdminPendingProductsPage() {
                     <p className="text-sm font-medium text-(--text-primary)">
                       {product.name}
                     </p>
-                    <p className="text-xs text-(--text-tertiary) line-clamp-1 max-w-[200px]">
+                    <p className="text-xs text-(--text-tertiary) line-clamp-1 max-w-50">
                       {product.description}
                     </p>
                   </TableCell>

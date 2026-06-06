@@ -399,7 +399,7 @@ export default function AdminFulfillmentPage() {
                     <p className="font-medium text-(--text-primary)">
                       {shipment.customerName}
                     </p>
-                    <p className="text-xs text-(--text-tertiary) truncate max-w-[140px]">
+                    <p className="text-xs text-(--text-tertiary) truncate max-w-35">
                       {shipment.customerAddress}
                     </p>
                   </TableCell>

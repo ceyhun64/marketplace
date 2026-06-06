@@ -521,7 +521,7 @@ export default function ProfilePage() {
 
         {/* -- Personal Info ---------------------------------------------------- */}
         {tab === "info" && (
-          <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-6 shadow-[var(--shadow-sm)]">
+          <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-6 shadow-(--shadow-sm)">
             <div className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
@@ -626,7 +626,7 @@ export default function ProfilePage() {
 
         {/* -- Password -------------------------------------------------------- */}
         {tab === "password" && (
-          <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-6 shadow-[var(--shadow-sm)]">
+          <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-6 shadow-(--shadow-sm)">
             <div className="space-y-5 max-w-sm">
               <div className="space-y-1.5">
                 <Label>Current Password</Label>
@@ -727,7 +727,7 @@ export default function ProfilePage() {
         {tab === "addresses" && (
           <div className="space-y-3">
             {addresses.length === 0 && (
-              <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-10 text-center shadow-[var(--shadow-sm)]">
+              <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-10 text-center shadow-(--shadow-sm)">
                 <MapPin className="w-10 h-10 mx-auto mb-3 text-(--text-tertiary) opacity-30" />
                 <p className="text-sm font-semibold text-(--text-secondary) mb-1">
                   No addresses saved
@@ -741,7 +741,7 @@ export default function ProfilePage() {
             {addresses.map((addr) => (
               <div
                 key={addr.id}
-                className={`bg-(--bg-surface) rounded-2xl p-5 shadow-[var(--shadow-sm)] ${
+                className={`bg-(--bg-surface) rounded-2xl p-5 shadow-(--shadow-sm) ${
                   addr.isDefault
                     ? "border-[1.5px] border-(--red-subtle)"
                     : "border border-(--border-light)"
@@ -846,7 +846,7 @@ export default function ProfilePage() {
                 </div>
               ))
             ) : orders.length === 0 ? (
-              <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-12 text-center shadow-[var(--shadow-sm)]">
+              <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-12 text-center shadow-(--shadow-sm)">
                 <Package className="w-10 h-10 mx-auto mb-3 text-(--text-tertiary) opacity-30" />
                 <p className="text-sm font-semibold text-(--text-secondary) mb-1">
                   No orders yet
@@ -877,7 +877,7 @@ export default function ProfilePage() {
                     <Link
                       key={order.id}
                       href={`/orders/${order.id}`}
-                      className="block bg-(--bg-surface) rounded-2xl border border-(--border-light) p-5 transition-all hover:border-(--red-subtle) shadow-[var(--shadow-xs)]"
+                      className="block bg-(--bg-surface) rounded-2xl border border-(--border-light) p-5 transition-all hover:border-(--red-subtle) shadow-(--shadow-xs)"
                     >
                       <div className="flex items-center justify-between gap-3 flex-wrap">
                         <div>
@@ -938,7 +938,7 @@ export default function ProfilePage() {
                 ))}
               </div>
             ) : wishlistItems.length === 0 ? (
-              <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-12 text-center shadow-[var(--shadow-sm)]">
+              <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-12 text-center shadow-(--shadow-sm)">
                 <Heart className="w-10 h-10 mx-auto mb-3 text-(--text-tertiary) opacity-30" />
                 <p className="text-sm font-semibold text-(--text-secondary) mb-1">
                   Your wishlist is empty

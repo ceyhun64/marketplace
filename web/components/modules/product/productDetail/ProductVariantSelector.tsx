@@ -108,7 +108,7 @@ export default function ProductVariantSelector({
               {currentColor && (
                 <div className="flex items-center gap-1 justify-center">
                   <div
-                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    className="w-3 h-3 rounded-full shrink-0"
                     style={{
                       backgroundColor: currentColor.hexCode,
                       border: "1px solid rgba(30,30,30,0.1)",
@@ -165,14 +165,14 @@ export default function ProductVariantSelector({
                 {colorOption.color && (
                   <div className="flex items-center gap-1 justify-center">
                     <div
-                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      className="w-3 h-3 rounded-full shrink-0"
                       style={{
                         backgroundColor: colorOption.color.hexCode,
                         border: "1px solid rgba(30,30,30,0.1)",
                       }}
                     />
                     <span
-                      className="hidden sm:inline text-[9px] font-medium truncate max-w-[60px]"
+                      className="hidden sm:inline text-[9px] font-medium truncate max-w-15"
                       style={{
                         color: "#747474",
                         fontFamily: "'JetBrains Mono', monospace",

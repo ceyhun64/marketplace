@@ -133,7 +133,7 @@ export default function CourierDashboardPage() {
           <button
             onClick={handleToggleAvailability}
             disabled={toggleAvailability.isPending}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all min-w-[130px] justify-center ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all min-w-32.5 justify-center ${
               profile.isAvailable
                 ? "bg-(--success-bg) border-(--success-border) text-(--success)"
                 : "bg-(--off-white-2) border-(--border-mid) text-(--text-secondary)"

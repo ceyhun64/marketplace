@@ -386,7 +386,7 @@ export default function HelpCenterPage() {
           }}
         />
 
-        <div className="max-w-[760px] mx-auto relative z-10 text-center">
+        <div className="max-w-190 mx-auto relative z-10 text-center">
           <div className="inline-flex items-center gap-2 mb-4">
             <LifeBuoy
               style={{ width: 14, height: 14, color: "rgba(6,182,212,0.9)" }}
@@ -412,7 +412,7 @@ export default function HelpCenterPage() {
             Search our knowledge base or browse by topic below.
           </p>
 
-          <div className="relative max-w-[520px] mx-auto">
+          <div className="relative max-w-130 mx-auto">
             <Search
               className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
               style={{ color: "rgba(255,255,255,0.4)" }}
@@ -629,7 +629,7 @@ export default function HelpCenterPage() {
                     return (
                       <div key={idx}>
                         <button
-                          className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-black/[0.02] transition-colors"
+                          className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-black/2 transition-colors"
                           onClick={() => toggleItem(key)}
                         >
                           <span className="text-[14px] font-semibold text-(--charcoal) pr-4">
@@ -756,7 +756,7 @@ export default function HelpCenterPage() {
             if (e.target === e.currentTarget) resetTicket();
           }}
         >
-          <div className="bg-white rounded-2xl w-full max-w-[520px] shadow-2xl overflow-hidden">
+          <div className="bg-white rounded-2xl w-full max-w-130 shadow-2xl overflow-hidden">
             {/* Header */}
             <div
               className="flex items-center justify-between px-6 py-4"

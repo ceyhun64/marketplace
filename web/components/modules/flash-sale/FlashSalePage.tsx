@@ -233,7 +233,7 @@ function Ticker() {
         }
         .fs-countdown-pulse { animation: fs-ring-pulse 2s ease-out infinite; }
       `}</style>
-      <span className="fs-ticker-inner text-white text-xs font-semibold tracking-wide leading-[34px]">
+      <span className="fs-ticker-inner text-white text-xs font-semibold tracking-wide leading-8.5">
         {TICKER_MSG.repeat(6)}
       </span>
     </div>

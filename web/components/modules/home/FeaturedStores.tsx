@@ -38,7 +38,7 @@ function StoreCardSkeleton() {
           marginBottom: "1.5rem",
         }}
       >
-        <Skeleton className="w-[52px] h-[52px] rounded-xl" />
+        <Skeleton className="w-13 h-13 rounded-xl" />
         <Skeleton className="w-16 h-7 rounded-lg" />
       </div>
       <Skeleton className="h-5 w-3/4 mb-2" />
@@ -432,7 +432,7 @@ export default function FeaturedStores() {
               color: "var(--charcoal-mid)",
               textDecoration: "none",
             }}
-            className="hover:text-[var(--red)]"
+            className="hover:text-(--red)"
           >
             All Stores <ArrowUpRight size={15} strokeWidth={2.5} />
           </Link>

@@ -476,7 +476,7 @@ export default function AdminProductsPage() {
                             <p className="font-medium text-sm text-(--text-primary)">
                               {product.name}
                             </p>
-                            <p className="text-xs text-(--text-tertiary) truncate max-w-[180px]">
+                            <p className="text-xs text-(--text-tertiary) truncate max-w-45">
                               {product.description}
                             </p>
                           </div>
@@ -630,7 +630,7 @@ export default function AdminProductsPage() {
                             <p className="font-medium text-sm text-(--text-primary)">
                               {product.name}
                             </p>
-                            <p className="text-xs text-(--text-tertiary) truncate max-w-[200px]">
+                            <p className="text-xs text-(--text-tertiary) truncate max-w-50">
                               {product.description}
                             </p>
                           </div>
@@ -696,7 +696,7 @@ export default function AdminProductsPage() {
 
       {/* Add Product Dialog */}
       <Dialog open={addOpen} onOpenChange={handleDialogClose}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-150 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Product</DialogTitle>
             <DialogDescription>
@@ -905,7 +905,7 @@ export default function AdminProductsPage() {
 
       {/* Edit Product Dialog */}
       <Dialog open={editOpen} onOpenChange={handleEditDialogClose}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-150 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
             <DialogDescription>
@@ -1071,7 +1071,7 @@ export default function AdminProductsPage() {
           if (!o) setProductToDelete(null);
         }}
       >
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="sm:max-w-100">
           <DialogHeader>
             <DialogTitle>Delete Product</DialogTitle>
             <DialogDescription>This action cannot be undone.</DialogDescription>

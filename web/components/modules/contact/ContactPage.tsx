@@ -128,8 +128,8 @@ export default function ContactPage() {
     <>
       <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
         {/* Hero */}
-        <div className="bg-[var(--charcoal)] py-16 px-4 relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-48 h-48 border-[20px] border-[var(--red)]/10 rounded-full pointer-events-none" />
+        <div className="bg-(--charcoal) py-16 px-4 relative overflow-hidden">
+          <div className="absolute -top-10 -right-10 w-48 h-48 border-20 border-(--red)/10 rounded-full pointer-events-none" />
           <div className="max-w-325 mx-auto relative z-10">
             <div className="inline-flex items-center gap-2 mb-4">
               <MessageSquare
@@ -144,7 +144,7 @@ export default function ContactPage() {
               </span>
             </div>
             <h1
-              className="text-[var(--off-white)] text-[36px] lg:text-[56px] leading-tight mb-3"
+              className="text-(--off-white) text-[36px] lg:text-[56px] leading-tight mb-3"
               style={{ fontFamily: "var(--font-display)" }}
             >
               How Can We <span style={{ color: "var(--red)" }}>Help</span> You?
@@ -196,7 +196,7 @@ export default function ContactPage() {
                       }}
                     >
                       <Icon
-                        className="w-4 h-4 flex-shrink-0"
+                        className="w-4 h-4 shrink-0"
                         style={{
                           color:
                             form.topic === value
@@ -444,7 +444,7 @@ export default function ContactPage() {
                           {item.q}
                         </span>
                         <ChevronDown
-                          className="w-4 h-4 flex-shrink-0 transition-transform"
+                          className="w-4 h-4 shrink-0 transition-transform"
                           style={{
                             color:
                               openFaq === i
@@ -486,7 +486,7 @@ export default function ContactPage() {
                 <a
                   key={item.title}
                   href={item.href}
-                  className="flex items-start gap-4 p-5 rounded-2xl transition-all block"
+                  className="flex items-start gap-4 p-5 rounded-2xl transition-all"
                   style={{
                     background: "var(--white)",
                     border: "1px solid var(--border-light)",
@@ -495,7 +495,7 @@ export default function ContactPage() {
                   }}
                 >
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                     style={{
                       background: "var(--red-muted)",
                       color: "var(--red)",

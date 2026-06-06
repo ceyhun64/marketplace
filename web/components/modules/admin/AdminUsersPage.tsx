@@ -348,7 +348,7 @@ export default function AdminUsersPage() {
                 >
                   <TableCell>
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-(--charcoal-2) to-(--charcoal) flex items-center justify-center text-white text-xs font-bold">
+                      <div className="w-8 h-8 rounded-full bg-linear-to-br from-(--charcoal-2) to-(--charcoal) flex items-center justify-center text-white text-xs font-bold">
                         {(user.firstName?.charAt(0) || user.email?.charAt(0) || "?").toUpperCase()}
                       </div>
                       <div>
@@ -452,7 +452,7 @@ export default function AdminUsersPage() {
             <div className="space-y-4">
               {/* Avatar + Name */}
               <div className="flex items-center gap-4 pb-4 border-b border-(--border-light)">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-(--charcoal-2) to-(--charcoal) flex items-center justify-center text-white text-xl font-bold">
+                <div className="w-14 h-14 rounded-full bg-linear-to-br from-(--charcoal-2) to-(--charcoal) flex items-center justify-center text-white text-xl font-bold">
                   {(
                     selectedUser.firstName?.charAt(0) ||
                     selectedUser.email?.charAt(0) ||

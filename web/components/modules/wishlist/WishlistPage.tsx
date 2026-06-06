@@ -129,7 +129,7 @@ function GuestWishlist() {
 
               <div className="flex items-center justify-between mt-3">
                 {item.price != null ? (
-                  <span className="text-xl font-bold font-heading text-[var(--charcoal)]">
+                  <span className="text-xl font-bold font-heading text-(--charcoal)">
                     ${item.price.toFixed(2)}
                   </span>
                 ) : (
@@ -378,7 +378,7 @@ function AuthWishlist() {
               </h3>
 
               <div className="flex items-center justify-between">
-                <span className="text-xl font-bold font-heading text-[var(--charcoal)]">
+                <span className="text-xl font-bold font-heading text-(--charcoal)">
                   ${item.product.price.toFixed(2)}
                 </span>
                 <Button

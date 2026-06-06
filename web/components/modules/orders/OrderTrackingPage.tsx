@@ -251,7 +251,7 @@ export default function TrackingPage() {
                   <div key={step.status} className="flex gap-4">
                     <div className="flex flex-col items-center">
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 transition-all ${done ? (active ? "bg-gray-900 text-white ring-4 ring-gray-200" : "bg-gray-900 text-white") : "bg-gray-100 text-gray-300"}`}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0 transition-all ${done ? (active ? "bg-gray-900 text-white ring-4 ring-gray-200" : "bg-gray-900 text-white") : "bg-gray-100 text-gray-300"}`}
                       >
                         {done ? (active ? step.icon : "✓") : ""}
                       </div>
@@ -311,7 +311,7 @@ export default function TrackingPage() {
                       </p>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400 font-mono whitespace-nowrap flex-shrink-0">
+                  <p className="text-xs text-gray-400 font-mono whitespace-nowrap shrink-0">
                     {new Date(event.createdAt).toLocaleString("en-US", {
                       day: "2-digit",
                       month: "2-digit",

@@ -264,7 +264,7 @@ export default function ProductTabs({
         </div>
       </nav>
 
-      <div className="min-h-[300px] md:min-h-[400px]">
+      <div className="min-h-75 md:min-h-100">
         {/* 1. TECHNICAL DETAILS */}
         {activeTab === "info" && (
           <div className="animate-in fade-in slide-in-from-bottom-3 duration-500 grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -521,7 +521,7 @@ export default function ProductTabs({
                   </div>
 
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left min-w-[280px]">
+                    <table className="w-full text-left min-w-70">
                       <thead>
                         <tr
                           className="text-[8px] md:text-[9px] font-black tracking-widest uppercase"
@@ -653,7 +653,7 @@ export default function ProductTabs({
 
             <div className="relative mb-6 md:mb-8">
               <textarea
-                className="w-full p-4 md:p-6 text-sm outline-none min-h-[120px] resize-none transition-all"
+                className="w-full p-4 md:p-6 text-sm outline-none min-h-30 resize-none transition-all"
                 placeholder="Example: Extra knee reinforcement or reflector placement..."
                 value={suggestion}
                 onChange={(e) => setSuggestion(e.target.value)}
@@ -837,7 +837,7 @@ export default function ProductTabs({
                 </label>
                 <textarea
                   placeholder="How did the product perform in your work environment?"
-                  className="w-full px-4 py-3 text-sm outline-none transition-all min-h-[100px] resize-none"
+                  className="w-full px-4 py-3 text-sm outline-none transition-all min-h-25 resize-none"
                   style={{
                     background: "#fafafa",
                     border: "1.5px solid rgba(30,30,30,0.1)",

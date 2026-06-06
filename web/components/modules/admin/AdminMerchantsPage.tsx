@@ -614,7 +614,7 @@ export default function AdminMerchantsPage() {
                     <TableCell className="text-sm text-(--text-tertiary)">
                       {p.phone || <span className="text-(--charcoal-mist)">—</span>}
                     </TableCell>
-                    <TableCell className="text-sm text-(--text-tertiary) max-w-[200px] truncate">
+                    <TableCell className="text-sm text-(--text-tertiary) max-w-50 truncate">
                       {p.store?.description || (
                         <span className="text-(--charcoal-mist)">—</span>
                       )}
@@ -657,7 +657,7 @@ export default function AdminMerchantsPage() {
 
       {/* Create Dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-[480px]">
+        <DialogContent className="sm:max-w-120">
           <DialogHeader>
             <DialogTitle>Create New Merchant</DialogTitle>
           </DialogHeader>
@@ -746,7 +746,7 @@ export default function AdminMerchantsPage() {
 
       {/* Setup Dialog */}
       <Dialog open={setupOpen} onOpenChange={setSetupOpen}>
-        <DialogContent className="sm:max-w-[480px]">
+        <DialogContent className="sm:max-w-120">
           <DialogHeader>
             <DialogTitle>
               Setup Store — {selectedMerchant?.storeName}
@@ -815,7 +815,7 @@ export default function AdminMerchantsPage() {
           if (!o) setMerchantToSuspend(null);
         }}
       >
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="sm:max-w-100">
           <DialogHeader>
             <DialogTitle>
               {merchantToSuspend?.isActive
@@ -883,7 +883,7 @@ export default function AdminMerchantsPage() {
 
       {/* Reject Dialog */}
       <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
-        <DialogContent className="sm:max-w-[440px]">
+        <DialogContent className="sm:max-w-110">
           <DialogHeader>
             <DialogTitle>Reject Application</DialogTitle>
           </DialogHeader>
