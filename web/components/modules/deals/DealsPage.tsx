@@ -72,7 +72,7 @@ function buildPages(current: number, total: number): (number | "…")[] {
   return result;
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
+// -- Skeleton ------------------------------------------------------------------
 function DealSkeleton() {
   return (
     <div className="bg-white rounded-2xl overflow-hidden border border-black/6">
@@ -86,7 +86,7 @@ function DealSkeleton() {
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// -- Page ----------------------------------------------------------------------
 export default function DealsPage() {
   const { data: products, isLoading, isError } = useDealsProducts();
   const { addItem } = useCart();
@@ -127,7 +127,7 @@ export default function DealsPage() {
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      {/* -- Hero ----------------------------------------------------------- */}
       <div
         className="relative overflow-hidden py-14 px-4"
         style={{ background: "var(--charcoal)" }}
@@ -215,7 +215,7 @@ export default function DealsPage() {
         </div>
       </div>
 
-      {/* ── Controls bar ─────────────────────────────────────────────────── */}
+      {/* -- Controls bar --------------------------------------------------- */}
       <div
         className="bg-white sticky top-0 z-10 px-4 py-3"
         style={{ borderBottom: "1px solid var(--border-subtle)" }}
@@ -264,7 +264,7 @@ export default function DealsPage() {
         </div>
       </div>
 
-      {/* ── Content ──────────────────────────────────────────────────────── */}
+      {/* -- Content -------------------------------------------------------- */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
         {/* Error */}
         {isError && (

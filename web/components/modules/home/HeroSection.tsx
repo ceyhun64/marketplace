@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Truck, Store, ChevronRight, ArrowRight } from "lucide-react";
 import { useHeroSettings, type HeroSettings } from "@/queries/useSiteSettings";
 
-// ── Fallback — mirrors the seeded DB defaults ────────────────────────────────
+// -- Fallback — mirrors the seeded DB defaults --------------------------------
 
 const FALLBACK: HeroSettings = {
   badgeText: "Next-Gen Commerce",
@@ -25,16 +25,16 @@ const FALLBACK: HeroSettings = {
   updatedAt: "",
 };
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// -- Component -----------------------------------------------------------------
 
 export default function HeroSection() {
-  // ── All hooks declared unconditionally at the top of the component ──────────
+  // -- All hooks declared unconditionally at the top of the component ----------
   // React requires hooks to be called in the same order on every render.
   // No hook may appear after a conditional return.
   const { data, isLoading } = useHeroSettings(); // hook 1 (useQuery internally)
   const [query, setQuery] = useState(""); // hook 2
 
-  // ── Derived values (not hooks — safe to compute after the hook block) ───────
+  // -- Derived values (not hooks — safe to compute after the hook block) -------
   // When isLoading is true, data is undefined so hero resolves to FALLBACK.
   // Those values aren't rendered (we return the skeleton below), but computing
   // them here is harmless and keeps the hook count constant across all renders.
@@ -49,7 +49,7 @@ export default function HeroSection() {
     }
   };
 
-  // ── Conditional rendering AFTER all hooks ────────────────────────────────────
+  // -- Conditional rendering AFTER all hooks ------------------------------------
   // The early return is now safe because every hook above has already been called.
   if (isLoading) return <HeroSkeleton />;
 
@@ -121,7 +121,7 @@ export default function HeroSection() {
          * Tailwind grid utilities on the same element — inline style wins.
          */}
         <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-10 lg:gap-20">
-          {/* ── Left: Text ── */}
+          {/* -- Left: Text -- */}
           <div style={{ zIndex: 10 }}>
             {/* Badge */}
             {hero.badgeText && (
@@ -334,7 +334,7 @@ export default function HeroSection() {
             )}
           </div>
 
-          {/* ── Right: Decorative cards (static visual — unchanged) ── */}
+          {/* -- Right: Decorative cards (static visual — unchanged) -- */}
           <div
             className="hidden lg:flex"
             style={{
@@ -606,7 +606,7 @@ export default function HeroSection() {
   );
 }
 
-// ── Shape-matched skeleton — mirrors the real hero layout ─────────────────────
+// -- Shape-matched skeleton — mirrors the real hero layout ---------------------
 // Renders while `useHeroSettings()` is fetching so the page height is stable
 // from the very first paint and there is no layout shift on hydration.
 

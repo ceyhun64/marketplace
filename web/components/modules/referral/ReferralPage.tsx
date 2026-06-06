@@ -19,6 +19,7 @@ import {
   Clock,
   Home,
 } from "lucide-react";
+import { formatDate } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,7 +51,7 @@ function useReferralData(enabled: boolean) {
   });
 }
 
-// ── Brand logo SVGs ───────────────────────────────────────────────────────────
+// -- Brand logo SVGs -----------------------------------------------------------
 function WhatsAppLogo({ size = 18 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="#25D366">
@@ -87,7 +88,7 @@ function XLogo({ size = 18 }: { size?: number }) {
   );
 }
 
-// ── Static data ───────────────────────────────────────────────────────────────
+// -- Static data ---------------------------------------------------------------
 const HOW_IT_WORKS = [
   {
     step:  "01",
@@ -126,7 +127,7 @@ const SHARE_CHANNELS = [
   { label: "Email",       color: "#6366f1", Logo: null,          textColor: "#6366f1" },
 ];
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// -- Page ----------------------------------------------------------------------
 export default function ReferralPage() {
   const { user }                  = useAuth();
   const [copied, setCopied]       = useState(false);
@@ -150,7 +151,7 @@ export default function ReferralPage() {
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      {/* -- Hero ----------------------------------------------------------- */}
       <section
         style={{
           background: "var(--charcoal)",
@@ -177,7 +178,7 @@ export default function ReferralPage() {
           pointerEvents: "none",
         }} />
 
-        {/* ── Floating social logos (bg decoration) ── */}
+        {/* -- Floating social logos (bg decoration) -- */}
         <div style={{ position:"absolute", top:"14%", left:"4%",  opacity:.14, animation:"ref-float  4.2s ease-in-out infinite",       pointerEvents:"none" }}><WhatsAppLogo  size={56} /></div>
         <div style={{ position:"absolute", top:"18%", right:"5%", opacity:.12, animation:"ref-float2 5.1s ease-in-out infinite 0.8s",   pointerEvents:"none" }}><InstagramLogo size={50} /></div>
         <div style={{ position:"absolute", bottom:"22%", right:"3%", opacity:.10, animation:"ref-float3 3.8s ease-in-out infinite 1.6s", pointerEvents:"none" }}><XLogo         size={42} /></div>
@@ -221,7 +222,7 @@ export default function ReferralPage() {
             <strong style={{ color: "white" }}>$25</strong> off their first order.
           </p>
 
-          {/* ── Share platforms visual ── */}
+          {/* -- Share platforms visual -- */}
           <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:"0.5rem", marginBottom:"2.5rem", flexWrap:"wrap" }}>
             {/* "Your link" pill */}
             <div style={{
@@ -347,7 +348,7 @@ export default function ReferralPage() {
         </div>
       </section>
 
-      {/* ── Content ──────────────────────────────────────────────────────── */}
+      {/* -- Content -------------------------------------------------------- */}
       <section style={{ maxWidth: 1100, margin: "0 auto", padding: "3rem 1.5rem" }}>
         {/* Tabs */}
         {user && (
@@ -376,7 +377,7 @@ export default function ReferralPage() {
           </div>
         )}
 
-        {/* ── Overview ─────────────────────────────────────────────────── */}
+        {/* -- Overview --------------------------------------------------- */}
         {(!user || activeTab === "overview") && (
           <>
             {/* How it works */}
@@ -512,7 +513,7 @@ export default function ReferralPage() {
           </>
         )}
 
-        {/* ── History tab ───────────────────────────────────────────────── */}
+        {/* -- History tab ------------------------------------------------- */}
         {user && activeTab === "history" && (
           <div>
             {/* Summary cards */}
@@ -586,7 +587,7 @@ export default function ReferralPage() {
                           <div>
                             <div style={{ fontWeight: 600, fontSize: "0.9375rem", color: "var(--charcoal)" }}>{ref.referredName}</div>
                             <div style={{ fontSize: "0.8125rem", color: "var(--charcoal-soft)" }}>
-                              Joined: {new Date(ref.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                              Joined: {formatDate(ref.createdAt)}
                             </div>
                           </div>
                         </div>
@@ -614,7 +615,7 @@ export default function ReferralPage() {
           </div>
         )}
 
-        {/* ── CTA for guests ────────────────────────────────────────────── */}
+        {/* -- CTA for guests ---------------------------------------------- */}
         {!user && (
           <div style={{
             marginTop: "3rem", background: "var(--charcoal)",

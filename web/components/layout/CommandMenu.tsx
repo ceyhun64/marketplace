@@ -35,7 +35,7 @@ import { useCategories } from "@/queries/useCategories";
 import { formatPrice } from "@/lib/format";
 import type { Product } from "@/types/entities";
 
-// ── Sabitler ──────────────────────────────────────────────────────────────────
+// -- Sabitler ------------------------------------------------------------------
 
 const RECENT_KEY = "bazr_recent_v2";
 const MAX_RECENT = 5;
@@ -68,7 +68,7 @@ const MERCHANT_ITEMS = [
   { label: "Analytics",   href: "/merchant/analytics", icon: TrendingUp      },
 ] as const;
 
-// ── localStorage helpers ──────────────────────────────────────────────────────
+// -- localStorage helpers ------------------------------------------------------
 
 function loadRecent(): string[] {
   if (typeof window === "undefined") return [];
@@ -86,7 +86,7 @@ function removeRecent(query: string) {
   localStorage.setItem(RECENT_KEY, JSON.stringify(next));
 }
 
-// ── Küçük yardımcı bileşenler ─────────────────────────────────────────────────
+// -- Küçük yardımcı bileşenler -------------------------------------------------
 
 function GroupLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -105,7 +105,7 @@ function GroupLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ── Ana bileşen ───────────────────────────────────────────────────────────────
+// -- Ana bileşen ---------------------------------------------------------------
 
 export default function CommandMenu() {
   const router    = useRouter();
@@ -145,7 +145,7 @@ export default function CommandMenu() {
     }
   }, [commandOpen]);
 
-  // ── Veri ─────────────────────────────────────────────────────────────────
+  // -- Veri -----------------------------------------------------------------
   const { data: productData, isFetching: productsLoading } = useProducts({
     search: queryReady ? search.trim() : undefined,
     limit: 5,
@@ -155,7 +155,7 @@ export default function CommandMenu() {
   const products = (productData?.items ?? []).slice(0, 5);
   const topCats  = (categories ?? []).filter((c) => !c.parentId).slice(0, 6);
 
-  // ── Global kısayol ────────────────────────────────────────────────────────
+  // -- Global kısayol --------------------------------------------------------
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -167,7 +167,7 @@ export default function CommandMenu() {
     return () => window.removeEventListener("keydown", onKey);
   }, [openCommand]);
 
-  // ── Navigasyon ────────────────────────────────────────────────────────────
+  // -- Navigasyon ------------------------------------------------------------
   const navigate = useCallback(
     (href: string, query?: string) => {
       if (query) saveRecent(query);
@@ -190,7 +190,7 @@ export default function CommandMenu() {
 
   const clearSearch = () => { setSearch(""); inputRef.current?.focus(); };
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // -- Render ----------------------------------------------------------------
   return (
     <Dialog open={commandOpen} onOpenChange={handleOpenChange}>
       <DialogContent
@@ -226,7 +226,7 @@ export default function CommandMenu() {
           className="flex flex-col overflow-hidden"
           style={{ background: "transparent" }}
         >
-          {/* ── Arama çubuğu ── */}
+          {/* -- Arama çubuğu -- */}
           <div
             className="flex items-center gap-3 px-4 py-3.5"
             style={{ borderBottom: "1px solid var(--border-subtle)" }}
@@ -281,7 +281,7 @@ export default function CommandMenu() {
             )}
           </div>
 
-          {/* ── Sonuç listesi ── */}
+          {/* -- Sonuç listesi -- */}
           <Command.List
             className="overflow-y-auto overscroll-contain"
             style={{ maxHeight: "min(440px, 55vh)" }}
@@ -311,7 +311,7 @@ export default function CommandMenu() {
               </Command.Group>
             )}
 
-            {/* ── Ürün sonuçları (API) ── */}
+            {/* -- Ürün sonuçları (API) -- */}
             {queryReady && (
               <>
                 {products.length > 0 && (
@@ -390,7 +390,7 @@ export default function CommandMenu() {
               </>
             )}
 
-            {/* ── Idle state (sorgu yok) ── */}
+            {/* -- Idle state (sorgu yok) -- */}
             {!hasQuery && (
               <>
                 {/* Son aramalar */}
@@ -481,7 +481,7 @@ export default function CommandMenu() {
               </>
             )}
 
-            {/* ── Hızlı gezinme ── */}
+            {/* -- Hızlı gezinme -- */}
             <>
               <GroupLabel>Quick Navigation</GroupLabel>
               <Command.Group>
@@ -534,7 +534,7 @@ export default function CommandMenu() {
               </Command.Group>
             </>
 
-            {/* ── Hesap / Merchant kısayolları ── */}
+            {/* -- Hesap / Merchant kısayolları -- */}
             {user && (
               <>
                 <div className="mx-3 my-1.5 h-px" style={{ background: "var(--border-subtle)" }} />
@@ -583,7 +583,7 @@ export default function CommandMenu() {
             </Command.Empty>
           </Command.List>
 
-          {/* ── Alt kısayol çubuğu ── */}
+          {/* -- Alt kısayol çubuğu -- */}
           <div
             className="flex items-center justify-between px-4 py-2.5 shrink-0"
             style={{

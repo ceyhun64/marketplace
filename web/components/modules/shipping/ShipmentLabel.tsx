@@ -19,7 +19,7 @@ import type { Shipment } from "@/types/entities";
 import { SHIPMENT_STATUS_LABELS, SHIPMENT_STATUS_COLORS } from "@/types/enums";
 import api from "@/lib/api";
 
-// ── Props ─────────────────────────────────────────────────────────────────────
+// -- Props ---------------------------------------------------------------------
 
 interface ShipmentLabelProps {
   shipment: Shipment;
@@ -29,7 +29,7 @@ interface ShipmentLabelProps {
   onGenerated?: () => void;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// -- Component -----------------------------------------------------------------
 
 export function ShipmentLabel({
   shipment,
@@ -42,7 +42,7 @@ export function ShipmentLabel({
 
   const hasLabel = !!shipment.labelUrl;
 
-  // ── Label oluştur (admin) ─────────────────────────────────────────────────
+  // -- Label oluştur (admin) -------------------------------------------------
 
   async function handleGenerate() {
     setGenerating(true);
@@ -56,7 +56,7 @@ export function ShipmentLabel({
     }
   }
 
-  // ── PDF indir ──────────────────────────────────────────────────────────────
+  // -- PDF indir --------------------------------------------------------------
 
   async function handleDownload() {
     if (!shipment.labelUrl) return;
@@ -78,7 +78,7 @@ export function ShipmentLabel({
     }
   }
 
-  // ── Print ────────────────────────────────────────────────────────────────
+  // -- Print ----------------------------------------------------------------
 
   function handlePrint() {
     if (!shipment.labelUrl) return;
@@ -247,7 +247,7 @@ export function ShipmentLabel({
   );
 }
 
-// ── Skeleton ─────────────────────────────────────────────────────────────────
+// -- Skeleton -----------------------------------------------------------------
 
 export function ShipmentLabelSkeleton() {
   return (

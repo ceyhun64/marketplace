@@ -14,48 +14,29 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { StatCardSkeleton } from "@/components/ui/stat-card-skeleton";
+import { Empty, EmptyMedia, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { useMerchantStats } from "@/queries/useAnalytics";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatDate } from "@/lib/format";
 import type { Order } from "@/types/entities";
-
-// ── Skeleton primitives ───────────────────────────────────────────────────────
-
-function SkeletonBox({ className }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse rounded bg-(--off-white-2) ${className ?? ""}`}
-    />
-  );
-}
-
-function StatCardSkeleton() {
-  return (
-    <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5">
-      <div className="flex items-center justify-between mb-3">
-        <SkeletonBox className="h-3 w-24" />
-        <SkeletonBox className="h-7 w-7 rounded-lg" />
-      </div>
-      <SkeletonBox className="h-7 w-20 mt-1" />
-    </div>
-  );
-}
 
 function OrderRowSkeleton() {
   return (
     <div className="flex items-center justify-between px-5 py-3">
       <div className="space-y-1.5">
-        <SkeletonBox className="h-3.5 w-24" />
-        <SkeletonBox className="h-3 w-16" />
+        <Skeleton className="h-3.5 w-24" />
+        <Skeleton className="h-3 w-16" />
       </div>
       <div className="flex items-center gap-3">
-        <SkeletonBox className="h-4 w-16" />
-        <SkeletonBox className="h-5 w-20 rounded-md" />
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-5 w-20 rounded-md" />
       </div>
     </div>
   );
 }
 
-// ── Dashboard ─────────────────────────────────────────────────────────────────
+// -- Dashboard -----------------------------------------------------------------
 
 export default function MerchantDashboard() {
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -221,7 +202,7 @@ export default function MerchantDashboard() {
       <div className="flex items-center justify-between">
         <div>
           {profileLoading ? (
-            <SkeletonBox className="h-7 w-48 mb-2" />
+            <Skeleton className="h-7 w-48 mb-2" />
           ) : (
             <h1 className="text-2xl font-semibold text-(--text-primary)">
               Welcome, {storeName}
@@ -340,9 +321,13 @@ export default function MerchantDashboard() {
             ))}
           </div>
         ) : orders.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-(--text-tertiary) text-center">
-            No pending orders.
-          </p>
+          <Empty>
+            <EmptyMedia variant="icon"><ShoppingCart className="w-5 h-5" /></EmptyMedia>
+            <EmptyHeader>
+              <EmptyTitle>No pending orders</EmptyTitle>
+              <EmptyDescription>New orders will appear here</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <div className="divide-y divide-(--border-subtle)">
             {orders.slice(0, 5).map((order) => (
@@ -355,12 +340,12 @@ export default function MerchantDashboard() {
                     #{order.id?.slice(-8).toUpperCase()}
                   </p>
                   <p className="text-xs text-(--text-tertiary)">
-                    {new Date(order.createdAt).toLocaleDateString("en-US")}
+                    {formatDate(order.createdAt)}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-semibold text-sm text-(--text-primary)">
-                    ${order.totalAmount?.toLocaleString("en-US")}
+                    ${(order.totalAmount ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   <span className="text-xs px-2 py-0.5 rounded-md font-medium bg-(--off-white-2) text-(--text-secondary) capitalize">
                     {order.status}

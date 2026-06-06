@@ -85,7 +85,7 @@ export default function CartPage() {
     }
   };
 
-  // ── Empty State ────────────────────────────────────────────────────────────
+  // -- Empty State ------------------------------------------------------------
 
   if (summary.isEmpty) {
     return (
@@ -161,7 +161,7 @@ export default function CartPage() {
     );
   }
 
-  // ── Cart ───────────────────────────────────────────────────────────────────
+  // -- Cart -------------------------------------------------------------------
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
@@ -278,7 +278,7 @@ export default function CartPage() {
 
       <div className="max-w-325 mx-auto px-4 lg:px-8 py-10">
         <div className="grid lg:grid-cols-[1fr_400px] gap-8">
-          {/* ── Cart Items ─────────────────────────────────────────────────── */}
+          {/* -- Cart Items --------------------------------------------------- */}
           <div className="space-y-3">
             {items.map((item) => (
               <div
@@ -427,7 +427,7 @@ export default function CartPage() {
             ))}
           </div>
 
-          {/* ── Right Column ─────────────────────────────────────────────── */}
+          {/* -- Right Column ----------------------------------------------- */}
           <div className="space-y-4">
             {/* Shipping Speed */}
             <div

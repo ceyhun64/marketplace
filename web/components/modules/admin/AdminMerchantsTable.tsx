@@ -9,7 +9,7 @@ import { useAdminMerchantList } from "@/queries/useMerchant";
 import api from "@/lib/api";
 import type { MerchantProfile } from "@/types/entities";
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
+// -- Skeleton ------------------------------------------------------------------
 
 function TableSkeleton() {
   return (
@@ -58,7 +58,7 @@ function TableSkeleton() {
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// -- Main component ------------------------------------------------------------
 
 export default function AdminMerchantsTable() {
   const { data: merchants = [], isLoading, refetch } = useAdminMerchantList();
@@ -88,7 +88,7 @@ export default function AdminMerchantsTable() {
 
   return (
     <div className="bg-(--bg-surface) border border-(--border-light) rounded-xl overflow-hidden">
-      {/* ── Desktop table — hidden below sm ─────────────────────────────────── */}
+      {/* -- Desktop table — hidden below sm ----------------------------------- */}
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-(--bg-sunken) border-b border-(--border-light)">
@@ -165,7 +165,7 @@ export default function AdminMerchantsTable() {
         </table>
       </div>
 
-      {/* ── Mobile cards — hidden above sm ──────────────────────────────────── */}
+      {/* -- Mobile cards — hidden above sm ------------------------------------ */}
       <div className="sm:hidden divide-y divide-(--border-subtle)">
         {merchants.map((m) => (
           <div key={m.id} className="p-4 space-y-3">

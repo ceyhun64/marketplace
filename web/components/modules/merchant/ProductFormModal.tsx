@@ -378,7 +378,7 @@ export default function ProductFormModal({
   );
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// -- Helpers -------------------------------------------------------------------
 
 // On-brand focus: charcoal ring matching the design system
 const inputCls =
@@ -399,7 +399,7 @@ function Field({
     <div>
       <label className="flex items-center gap-1 text-sm font-medium text-(--text-secondary) mb-1.5">
         {label}
-        {required && <span className="text-red-500">*</span>}
+        {required && <span className="text-(--danger)">*</span>}
         {hint && (
           <span className="text-(--text-tertiary) font-normal text-xs">
             ({hint})

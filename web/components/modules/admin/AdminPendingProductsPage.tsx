@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
+import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -132,11 +133,7 @@ function ProductDetailDialog({
             <div>
               <p className="text-xs text-(--text-tertiary)">Date</p>
               <p className="text-sm font-medium">
-                {new Date(product.createdAt).toLocaleDateString("en-US", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })}
+                {formatDate(product.createdAt)}
               </p>
             </div>
           </div>
@@ -356,7 +353,7 @@ export default function AdminPendingProductsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-xs text-(--text-tertiary)">
-                    {new Date(product.createdAt).toLocaleDateString("en-US")}
+                    {formatDate(product.createdAt)}
                   </TableCell>
                   <TableCell
                     className="text-right"

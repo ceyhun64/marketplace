@@ -44,7 +44,7 @@ export function PortalShell({ links, role, children }: PortalShellProps) {
         onMobileOpenChange={setMobileSidebarOpen}
       />
 
-      {/* ── Mobile / tablet top bar — hidden on lg+ ───────────────────────── */}
+      {/* -- Mobile / tablet top bar — hidden on lg+ ------------------------- */}
       <div
         className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center gap-3 px-4"
         style={{

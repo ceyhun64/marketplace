@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
+import { formatDate } from "@/lib/format";
+import { Empty, EmptyMedia, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +44,7 @@ import {
   Clock,
   Image as ImageIcon,
   Pencil,
+  Loader2,
 } from "lucide-react";
 import MultiImageUploader from "@/components/ui/multiImageUploader";
 
@@ -175,7 +178,8 @@ export default function AdminProductsPage() {
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["pending-products"] });
     },
-    onError: () => toast.error("Operation failed"),
+    onError: (err: any) =>
+      toast.error(err?.response?.data?.message || "Failed to approve/reject product"),
   });
 
   const updateMutation = useMutation({
@@ -405,21 +409,22 @@ export default function AdminProductsPage() {
             </div>
             {productsLoading ? (
               <div className="flex items-center justify-center py-16">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--charcoal)" />
+                <Loader2 className="w-8 h-8 animate-spin text-(--text-tertiary)" />
               </div>
             ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-(--text-tertiary)">
-                <Package className="w-12 h-12 mb-3 opacity-20" />
-                <p className="text-sm font-medium">No products yet</p>
+              <Empty>
+                <EmptyMedia variant="icon"><Package className="w-5 h-5" /></EmptyMedia>
+                <EmptyHeader>
+                  <EmptyTitle>No products yet</EmptyTitle>
+                </EmptyHeader>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="mt-3"
                   onClick={() => setAddOpen(true)}
                 >
                   Add First Product
                 </Button>
-              </div>
+              </Empty>
             ) : (
               <Table>
                 <TableHeader>
@@ -517,9 +522,7 @@ export default function AdminProductsPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-xs text-(--text-tertiary)">
-                        {new Date(product.createdAt).toLocaleDateString(
-                          "en-US",
-                        )}
+                        {formatDate(product.createdAt)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
@@ -571,13 +574,15 @@ export default function AdminProductsPage() {
           <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) overflow-hidden">
             {pendingLoading ? (
               <div className="flex items-center justify-center py-16">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--charcoal)" />
+                <Loader2 className="w-8 h-8 animate-spin text-(--text-tertiary)" />
               </div>
             ) : pendingProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-(--text-tertiary)">
-                <CheckCircle className="w-12 h-12 mb-3 opacity-20" />
-                <p className="text-sm font-medium">No pending products</p>
-              </div>
+              <Empty>
+                <EmptyMedia variant="icon"><CheckCircle className="w-5 h-5" /></EmptyMedia>
+                <EmptyHeader>
+                  <EmptyTitle>No pending products</EmptyTitle>
+                </EmptyHeader>
+              </Empty>
             ) : (
               <Table>
                 <TableHeader>
@@ -645,9 +650,7 @@ export default function AdminProductsPage() {
                         ${(product as any).price?.toFixed(2) ?? "—"}
                       </TableCell>
                       <TableCell className="text-xs text-(--text-tertiary)">
-                        {new Date(product.createdAt).toLocaleDateString(
-                          "en-US",
-                        )}
+                        {formatDate(product.createdAt)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">

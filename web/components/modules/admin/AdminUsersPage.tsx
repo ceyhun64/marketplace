@@ -28,6 +28,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { DataPagination } from "@/components/ui/data-pagination";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { toast } from "sonner";
 import {
   Users,
@@ -97,19 +100,6 @@ const ROLE_CONFIG: Record<
   },
 };
 
-const STATUS_CONFIG: Record<
-  AccountStatus,
-  { label: string; color: string }
-> = {
-  Active: { label: "Active", color: "bg-(--success-bg) text-(--success)" },
-  PendingApproval: {
-    label: "Pending",
-    color: "bg-(--warning-bg) text-(--warning)",
-  },
-  Suspended: { label: "Suspended", color: "bg-(--warning-bg) text-(--warning)" },
-  Banned: { label: "Banned", color: "bg-(--danger-bg) text-(--danger)" },
-};
-
 function RoleBadge({ role }: { role: UserRole }) {
   const cfg = ROLE_CONFIG[role] ?? {
     label: role,
@@ -126,19 +116,6 @@ function RoleBadge({ role }: { role: UserRole }) {
   );
 }
 
-function StatusBadge({ status }: { status: AccountStatus }) {
-  const cfg = STATUS_CONFIG[status] ?? {
-    label: status,
-    color: "bg-(--off-white-2) text-(--text-secondary)",
-  };
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${cfg.color}`}
-    >
-      {cfg.label}
-    </span>
-  );
-}
 
 export default function AdminUsersPage() {
   const queryClient = useQueryClient();
@@ -388,13 +365,13 @@ export default function AdminUsersPage() {
                     <RoleBadge role={user.role as UserRole} />
                   </TableCell>
                   <TableCell>
-                    <StatusBadge status={user.accountStatus as AccountStatus} />
+                    <StatusBadge type="account" status={user.accountStatus} />
                   </TableCell>
                   <TableCell className="text-sm text-(--text-tertiary)">
                     {user.phone || <span className="text-(--charcoal-mist)">—</span>}
                   </TableCell>
                   <TableCell className="text-xs text-(--text-tertiary)">
-                    {new Date(user.createdAt).toLocaleDateString("en-US")}
+                    {formatDate(user.createdAt)}
                   </TableCell>
                   <TableCell>
                     <Select
@@ -463,30 +440,7 @@ export default function AdminUsersPage() {
         </Table>
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page === 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            ← Previous
-          </Button>
-          <span className="px-3 py-1 text-sm text-(--text-secondary)">
-            Page {page} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page >= totalPages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next →
-          </Button>
-        </div>
-      )}
+      <DataPagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
       {/* User Detail Dialog */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
@@ -511,9 +465,7 @@ export default function AdminUsersPage() {
                   </p>
                   <div className="flex items-center gap-2 mt-1">
                     <RoleBadge role={selectedUser.role as UserRole} />
-                    <StatusBadge
-                      status={selectedUser.accountStatus as AccountStatus}
-                    />
+                    <StatusBadge type="account" status={selectedUser.accountStatus} />
                   </div>
                 </div>
               </div>
@@ -533,21 +485,14 @@ export default function AdminUsersPage() {
                 <div className="flex items-center gap-3 text-(--text-secondary)">
                   <Calendar className="w-4 h-4 text-(--text-tertiary) shrink-0" />
                   <span>
-                    Joined{" "}
-                    {new Date(selectedUser.createdAt).toLocaleDateString(
-                      "en-US",
-                      { year: "numeric", month: "long", day: "numeric" },
-                    )}
+                    Joined {formatDate(selectedUser.createdAt)}
                   </span>
                 </div>
                 {selectedUser.lastLoginAt && (
                   <div className="flex items-center gap-3 text-(--text-secondary)">
                     <Shield className="w-4 h-4 text-(--text-tertiary) shrink-0" />
                     <span>
-                      Last login:{" "}
-                      {new Date(selectedUser.lastLoginAt).toLocaleDateString(
-                        "en-US",
-                      )}
+                      Last login: {formatDateTime(selectedUser.lastLoginAt)}
                     </span>
                   </div>
                 )}

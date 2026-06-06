@@ -15,7 +15,7 @@ import {
 import { formatPrice, formatDate } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/types/enums";
 
-// ── Animated checkmark ────────────────────────────────────────────────────────
+// -- Animated checkmark --------------------------------------------------------
 
 function AnimatedCheck() {
   const [mounted, setMounted] = useState(false);
@@ -60,7 +60,7 @@ function AnimatedCheck() {
   );
 }
 
-// ── Delivery timeline step ────────────────────────────────────────────────────
+// -- Delivery timeline step ----------------------------------------------------
 
 interface TimelineStep {
   icon:   React.ReactNode;
@@ -120,7 +120,7 @@ function DeliveryTimeline({ steps }: { steps: TimelineStep[] }) {
   );
 }
 
-// ── Quick action cards ────────────────────────────────────────────────────────
+// -- Quick action cards --------------------------------------------------------
 
 function ActionCard({
   icon, title, desc, href, variant = "default",
@@ -174,9 +174,9 @@ function ActionCard({
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// -- Main component ------------------------------------------------------------
 
-// ── Timeline helpers ──────────────────────────────────────────────────────────
+// -- Timeline helpers ----------------------------------------------------------
 
 // Order status progression — used to derive done/active state for each step.
 const STATUS_PROGRESSION = [
@@ -252,7 +252,7 @@ export default function OrderSuccessPage() {
     >
       <div className="w-full max-w-2xl space-y-5">
 
-        {/* ── Hero confirmation card ── */}
+        {/* -- Hero confirmation card -- */}
         <div
           className="rounded-3xl overflow-hidden"
           style={{ background: "#fff", border: "1px solid rgba(51,51,51,0.07)" }}
@@ -308,7 +308,7 @@ export default function OrderSuccessPage() {
           </div>
         </div>
 
-        {/* ── Order summary ── */}
+        {/* -- Order summary -- */}
         {(isLoading || order) && (
           <div
             className="rounded-3xl overflow-hidden"
@@ -412,7 +412,7 @@ export default function OrderSuccessPage() {
           </div>
         )}
 
-        {/* ── Delivery timeline ── */}
+        {/* -- Delivery timeline -- */}
         <div
           className="rounded-3xl overflow-hidden"
           style={{ background: "#fff", border: "1px solid rgba(51,51,51,0.07)" }}
@@ -436,7 +436,7 @@ export default function OrderSuccessPage() {
           </div>
         </div>
 
-        {/* ── Shipping address ── */}
+        {/* -- Shipping address -- */}
         {order?.shippingAddress && typeof order.shippingAddress !== "string" && (
           <div
             className="rounded-3xl px-6 py-5 flex items-start gap-4"
@@ -471,7 +471,7 @@ export default function OrderSuccessPage() {
           </div>
         )}
 
-        {/* ── Quick actions ── */}
+        {/* -- Quick actions -- */}
         <div className="space-y-2.5">
           <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] px-1"
             style={{ color: "var(--charcoal-mist)", fontFamily: "var(--font-mono)" }}>

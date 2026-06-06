@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// -- Types ---------------------------------------------------------------------
 
 export interface VariantRow {
   id?: string; // undefined = new (not yet saved)
@@ -29,7 +29,7 @@ interface Props {
   basePrice: number;
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// -- Sub-components ------------------------------------------------------------
 
 function AxisBadge({ name, onRemove }: { name: string; onRemove: () => void }) {
   return (
@@ -47,7 +47,7 @@ function AxisBadge({ name, onRemove }: { name: string; onRemove: () => void }) {
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// -- Main Component ------------------------------------------------------------
 
 export default function ProductVariantEditor({
   variants,

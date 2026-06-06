@@ -27,14 +27,14 @@ import {
 } from "@/components/ui/select";
 import type { Product } from "@/types/entities";
 
-// ── Deterministic discount % per product ─────────────────────────────────────
+// -- Deterministic discount % per product -------------------------------------
 function getDiscount(id: string): number {
   let h = 0;
   for (const c of id) h = (h * 31 + c.charCodeAt(0)) & 0xffffffff;
   return 10 + (Math.abs(h) % 41); // 10 – 50 %
 }
 
-// ── Data ──────────────────────────────────────────────────────────────────────
+// -- Data ----------------------------------------------------------------------
 function useFlashSaleProducts() {
   return useQuery({
     queryKey: ["products", "flash-sale"],
@@ -48,7 +48,7 @@ function useFlashSaleProducts() {
   });
 }
 
-// ── Countdown hook ────────────────────────────────────────────────────────────
+// -- Countdown hook ------------------------------------------------------------
 function useCountdown(end: Date) {
   const calc = useCallback(() => {
     const diff = Math.max(0, end.getTime() - Date.now());
@@ -68,7 +68,7 @@ function useCountdown(end: Date) {
   return time;
 }
 
-// ── Animated digit ────────────────────────────────────────────────────────────
+// -- Animated digit ------------------------------------------------------------
 function Digit({ value }: { value: number }) {
   const [prev, setPrev]     = useState(value);
   const [flash, setFlash]   = useState(false);
@@ -120,7 +120,7 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
   );
 }
 
-// ── Stock bar ─────────────────────────────────────────────────────────────────
+// -- Stock bar -----------------------------------------------------------------
 function StockBar({ stock, maxStock = 50 }: { stock?: number; maxStock?: number }) {
   if (stock === undefined) return null;
   const pct   = Math.min(100, Math.round((stock / maxStock) * 100));
@@ -156,7 +156,7 @@ function StockBar({ stock, maxStock = 50 }: { stock?: number; maxStock?: number 
   );
 }
 
-// ── Flash card ────────────────────────────────────────────────────────────────
+// -- Flash card ----------------------------------------------------------------
 function FlashCard({ product, onAddToCart }: { product: Product; onAddToCart: () => void }) {
   const discount  = getDiscount(product.id);
   const isHot     = product.stock !== undefined && product.stock > 0 && product.stock <= 8;
@@ -201,7 +201,7 @@ function FlashCard({ product, onAddToCart }: { product: Product; onAddToCart: ()
   );
 }
 
-// ── Scrolling ticker ──────────────────────────────────────────────────────────
+// -- Scrolling ticker ----------------------------------------------------------
 const TICKER_MSG =
   "⚡ FLASH SALE IS LIVE — Up to 50% off on selected products — " +
   "Limited stock — Free shipping over $500 — Don't miss out — ";
@@ -240,7 +240,7 @@ function Ticker() {
   );
 }
 
-// ── Sort options ──────────────────────────────────────────────────────────────
+// -- Sort options --------------------------------------------------------------
 type SortKey = "discount" | "lowstock" | "price_asc";
 
 const SORT_PILLS: { key: SortKey; label: string; icon: React.ReactNode }[] = [
@@ -249,7 +249,7 @@ const SORT_PILLS: { key: SortKey; label: string; icon: React.ReactNode }[] = [
   { key: "price_asc", label: "Lowest Price",      icon: <Flame         className="w-3.5 h-3.5" /> },
 ];
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// -- Page ----------------------------------------------------------------------
 export default function FlashSalePage() {
   const { data: products, isLoading, isError } = useFlashSaleProducts();
   const { addItem } = useCart();
@@ -276,10 +276,10 @@ export default function FlashSalePage() {
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
-      {/* ── Ticker ───────────────────────────────────────────────────────── */}
+      {/* -- Ticker --------------------------------------------------------- */}
       <Ticker />
 
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      {/* -- Hero ----------------------------------------------------------- */}
       <div
         className="relative overflow-hidden py-14 px-4"
         style={{
@@ -428,7 +428,7 @@ export default function FlashSalePage() {
         </div>
       </div>
 
-      {/* ── Controls bar ─────────────────────────────────────────────────── */}
+      {/* -- Controls bar --------------------------------------------------- */}
       <div
         className="bg-white sticky top-0 z-10 px-4 py-3"
         style={{ borderBottom: "1px solid var(--border-subtle)" }}
@@ -482,7 +482,7 @@ export default function FlashSalePage() {
         </div>
       </div>
 
-      {/* ── Content ──────────────────────────────────────────────────────── */}
+      {/* -- Content -------------------------------------------------------- */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
         {/* Error */}
         {isError && (

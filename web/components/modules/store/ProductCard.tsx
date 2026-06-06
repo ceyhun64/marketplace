@@ -75,7 +75,7 @@ export function ProductCard({
         style={{ background: "var(--red)" }}
       />
 
-      {/* ── Product image ────────────────────────────────────────────────────── */}
+      {/* -- Product image ------------------------------------------------------ */}
       <Link
         href={href}
         className="relative block aspect-square overflow-hidden bg-white"
@@ -132,19 +132,19 @@ export function ProductCard({
             ))}
           </div>
         )}
-
-        {/* Action buttons (wishlist + compare) — revealed on hover */}
-        <div className="absolute right-2.5 top-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col gap-1.5">
-          <WishlistButton
-            productId={product.id}
-            productName={product.name}
-            variant="icon"
-          />
-          <CompareIconButton product={product} />
-        </div>
       </Link>
 
-      {/* ── Info ─────────────────────────────────────────────────────────────── */}
+      {/* Action buttons — outside Link so clicks don't trigger navigation */}
+      <div className="absolute right-2.5 top-2.5 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col gap-1.5">
+        <WishlistButton
+          productId={product.id}
+          productName={product.name}
+          variant="icon"
+        />
+        <CompareIconButton product={product} />
+      </div>
+
+      {/* -- Info --------------------------------------------------------------- */}
       <div className="flex flex-1 flex-col gap-2 p-3.5">
         {/* Store name */}
         {context === "marketplace" && product.merchantStoreName && (
@@ -217,7 +217,7 @@ export function ProductCard({
 
 export default ProductCard;
 
-// ── Compare icon button (used inside ProductCard image overlay) ────────────────
+// -- Compare icon button (used inside ProductCard image overlay) ----------------
 function CompareIconButton({ product }: { product: Product }) {
   const { toggle, isInCompare } = useCompareStore();
   const [mounted, setMounted] = useState(false);

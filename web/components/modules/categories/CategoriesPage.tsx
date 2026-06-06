@@ -33,7 +33,7 @@ function accent(index: number) {
   return PALETTE[index % PALETTE.length];
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
+// -- Skeleton ------------------------------------------------------------------
 function CategoryCardSkeleton() {
   return (
     <div className="bg-white rounded-2xl border border-black/6 p-5 space-y-4">
@@ -53,7 +53,7 @@ function CategoryCardSkeleton() {
   );
 }
 
-// ── Category Card ─────────────────────────────────────────────────────────────
+// -- Category Card -------------------------------------------------------------
 function CategoryCard({
   category,
   index,
@@ -150,7 +150,7 @@ function CategoryCard({
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// -- Main Page -----------------------------------------------------------------
 export default function CategoriesPage() {
   const { data: categories, isLoading, isError } = useCategories();
   const [query, setQuery] = useState("");
@@ -179,7 +179,7 @@ export default function CategoriesPage() {
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
-      {/* ── Hero ───────────────────────────────────────────────────────────── */}
+      {/* -- Hero ------------------------------------------------------------- */}
       <div
         className="relative overflow-hidden py-14 px-4"
         style={{ background: "var(--charcoal)" }}
@@ -295,7 +295,7 @@ export default function CategoriesPage() {
         </div>
       </div>
 
-      {/* ── Grid ───────────────────────────────────────────────────────────── */}
+      {/* -- Grid ------------------------------------------------------------- */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
         {/* Error */}
         {isError && (

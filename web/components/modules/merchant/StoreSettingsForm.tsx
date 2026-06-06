@@ -73,7 +73,7 @@ export default function StoreSettingsForm({ store }: Props) {
 
   return (
     <div className="space-y-6 ">
-      {/* ── Branding ──────────────────────────────────────────────── */}
+      {/* -- Branding ------------------------------------------------ */}
       <SettingsSection
         icon={<Store className="w-4 h-4" />}
         title="Store Branding"
@@ -169,7 +169,7 @@ export default function StoreSettingsForm({ store }: Props) {
         />
       </SettingsSection>
 
-      {/* ── Operations ────────────────────────────────────────────── */}
+      {/* -- Operations ---------------------------------------------- */}
       <SettingsSection
         icon={<Clock className="w-4 h-4" />}
         title="Operations"
@@ -195,7 +195,7 @@ export default function StoreSettingsForm({ store }: Props) {
         </Field>
       </SettingsSection>
 
-      {/* ── Domain ────────────────────────────────────────────────── */}
+      {/* -- Domain -------------------------------------------------- */}
       <SettingsSection
         icon={<Globe className="w-4 h-4" />}
         title="Domain"
@@ -333,7 +333,7 @@ export default function StoreSettingsForm({ store }: Props) {
   );
 }
 
-// ── Shared sub-components ──────────────────────────────────────────────────────
+// -- Shared sub-components ------------------------------------------------------
 
 function SettingsSection({
   icon,

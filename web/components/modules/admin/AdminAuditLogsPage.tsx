@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
+import { DataPagination } from "@/components/ui/data-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -35,7 +36,7 @@ import {
   XCircle,
 } from "lucide-react";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// -- Types ---------------------------------------------------------------------
 
 interface AuditLogEntry {
   id: string;
@@ -54,7 +55,7 @@ interface AuditLogsResponse {
   items: AuditLogEntry[];
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// -- Constants -----------------------------------------------------------------
 
 const EVENT_TYPE_CONFIG: Record<
   string,
@@ -108,7 +109,7 @@ const SEVERITY_CONFIG: Record<
   },
 };
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// -- Sub-components ------------------------------------------------------------
 
 function EventBadge({ type }: { type: string }) {
   const cfg = EVENT_TYPE_CONFIG[type] ?? {
@@ -158,7 +159,7 @@ function TableSkeleton({ rows = 10 }: { rows?: number }) {
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// -- Main Component ------------------------------------------------------------
 
 export default function AdminAuditLogsPage() {
   const [page, setPage] = useState(1);
@@ -394,28 +395,9 @@ export default function AdminAuditLogsPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-(--text-tertiary)">
-            Page {page} of {totalPages} — {data?.total ?? 0} total events
+            {data?.total ?? 0} total events
           </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === 1}
-              onClick={() => setPage((p) => p - 1)}
-              className="border-(--border-mid) text-(--text-secondary) h-8 text-xs"
-            >
-              ← Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-              className="border-(--border-mid) text-(--text-secondary) h-8 text-xs"
-            >
-              Next →
-            </Button>
-          </div>
+          <DataPagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       )}
     </div>

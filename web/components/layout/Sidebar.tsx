@@ -120,7 +120,7 @@ export function Sidebar({
 
   const displayEmail = mounted ? (user?.email ?? "") : "";
 
-  // ── Shared inner content ─────────────────────────────────────────────────
+  // -- Shared inner content -------------------------------------------------
   // Rendered identically inside both the desktop <aside> and the mobile <Sheet>
 
   const SidebarBrand = (
@@ -234,7 +234,7 @@ export function Sidebar({
 
   return (
     <>
-      {/* ── Desktop sidebar — always visible on lg+ ──────────────────────── */}
+      {/* -- Desktop sidebar — always visible on lg+ ------------------------ */}
       <aside
         className="hidden lg:flex fixed left-0 top-0 h-screen w-60 flex-col z-40"
         style={{
@@ -247,7 +247,7 @@ export function Sidebar({
         {SidebarFooter}
       </aside>
 
-      {/* ── Mobile sidebar — Sheet for < lg ─────────────────────────────── */}
+      {/* -- Mobile sidebar — Sheet for < lg ------------------------------- */}
       {/*
        * SheetContent close button is styled for the dark theme via
        * the [&>button:first-of-type] selector targeting the direct-child

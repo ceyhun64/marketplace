@@ -80,7 +80,7 @@ export function StoreHeader({ store }: StoreHeaderProps) {
 
   return (
     <div className="w-full">
-      {/* ── Banner — no overflow-hidden so logo translate-y isn't clipped ──── */}
+      {/* -- Banner — no overflow-hidden so logo translate-y isn't clipped ---- */}
       <div className="relative h-52 md:h-72">
         {/* Image/gradient clipped inside its own wrapper */}
         <div className="absolute inset-0 overflow-hidden">
@@ -155,7 +155,7 @@ export function StoreHeader({ store }: StoreHeaderProps) {
         </div>
       </div>
 
-      {/* ── Info panel ─────────────────────────────────────────────────────── */}
+      {/* -- Info panel ------------------------------------------------------- */}
       <div className="bg-white border-b" style={{ borderColor: "rgba(30,30,30,0.1)" }}>
         <div className="max-w-6xl mx-auto px-4 md:px-8">
           {/* Name + actions row — pt must clear the logo overlap */}

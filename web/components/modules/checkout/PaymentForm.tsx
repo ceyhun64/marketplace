@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { useInitiateCheckout, useConfirmPayment } from "@/queries/usePayment";
 import { useCart } from "@/hooks/use-cart";
 
-// ── Props ─────────────────────────────────────────────────────────────────────
+// -- Props ---------------------------------------------------------------------
 
 interface PaymentFormProps {
   orderId: string;
@@ -23,7 +23,7 @@ interface PaymentFormProps {
   className?: string;
 }
 
-// ── Inner Stripe form (Elements context içinde) ───────────────────────────────
+// -- Inner Stripe form (Elements context içinde) -------------------------------
 
 function StripeCheckoutForm({
   orderId,
@@ -148,7 +148,7 @@ function StripeCheckoutForm({
         </div>
       </form>
 
-      {/* ── Full-screen processing overlay ─────────────────────────────────── */}
+      {/* -- Full-screen processing overlay ----------------------------------- */}
       {isSubmitting && (
         <div
           className="fixed inset-0 z-100 flex items-center justify-center animate-in fade-in duration-300"
@@ -192,7 +192,7 @@ function StripeCheckoutForm({
   );
 }
 
-// ── Ana bileşen — Stripe Elements sağlayıcısını kurar ────────────────────────
+// -- Ana bileşen — Stripe Elements sağlayıcısını kurar ------------------------
 
 export function PaymentForm({
   orderId,

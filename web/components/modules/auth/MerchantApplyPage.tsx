@@ -87,7 +87,7 @@ export default function MerchantApplyPage() {
 
   const displayError = validationError || error;
 
-  // ── Başvuru tamamlandı ekranı ─────────────────────────────────────────────
+  // -- Başvuru tamamlandı ekranı ---------------------------------------------
   if (submitted) {
     return (
       <AuthSplitLayout variant="merchant" wide>
@@ -119,7 +119,7 @@ export default function MerchantApplyPage() {
     );
   }
 
-  // ── Başvuru formu ─────────────────────────────────────────────────────────
+  // -- Başvuru formu ---------------------------------------------------------
   return (
     <AuthSplitLayout variant="merchant" wide>
       <div className="w-full">
@@ -143,7 +143,7 @@ export default function MerchantApplyPage() {
             </div>
           )}
 
-          {/* ── Kişisel Bilgiler ── */}
+          {/* -- Kişisel Bilgiler -- */}
           <div className="space-y-4">
             <p className="label-mono">Personal Details</p>
 
@@ -223,7 +223,7 @@ export default function MerchantApplyPage() {
           {/* Divider */}
           <div className="border-t border-(--border-light)" />
 
-          {/* ── Mağaza Bilgileri ── */}
+          {/* -- Mağaza Bilgileri -- */}
           <div className="space-y-4">
             <p className="label-mono">Store Details</p>
 

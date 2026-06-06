@@ -58,9 +58,9 @@ import { useCart } from "@/hooks/use-cart";
 import { useCompareStore } from "@/hooks/use-compare";
 import api from "@/lib/api";
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Types
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 interface Size {
   id: number;
@@ -185,9 +185,9 @@ interface ProductData {
   bulkDiscountRate: number | null;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // API hook — product variants
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 function useProductVariants(productId: string) {
   return useQuery<Variant[]>({
@@ -201,9 +201,9 @@ function useProductVariants(productId: string) {
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // DynamicVariantSelector — JSONB variant matrix selector
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 interface DynamicVariantSelectorProps {
   variants: Variant[];
@@ -455,9 +455,9 @@ function DynamicVariantSelector({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // DeliveryEstimate — dynamic "order by X, receive by Y"
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 function addBusinessDays(date: Date, days: number): Date {
   const d = new Date(date);
@@ -619,9 +619,9 @@ function DeliveryEstimate({ handlingHours = 24 }: { handlingHours?: number }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // ReturnPolicy — inline policy snippet
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 function ReturnPolicy() {
   return (
@@ -665,9 +665,9 @@ function ReturnPolicy() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // StickyAddToCart — mobile bar visible when primary CTA scrolls out of view
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 interface StickyProps {
   productTitle: string;
@@ -729,9 +729,9 @@ function StickyAddToCart({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // ShippingSection
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 function ShippingSection({ shipping }: { shipping: ProductData["shipping"] }) {
   return (
@@ -850,9 +850,9 @@ function ShippingSection({ shipping }: { shipping: ProductData["shipping"] }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // TrustBadges
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 function TrustBadges() {
   const badges = [
@@ -925,9 +925,9 @@ function TrustBadges() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // RatingBar
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 function RatingBar({
   rating,
@@ -1046,9 +1046,9 @@ function RatingBar({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // CompareButton — uses shared useCompareStore (localStorage-persisted)
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 function CompareButton({ product }: { product: ProductData }) {
   const { toggle, isInCompare } = useCompareStore();
@@ -1110,9 +1110,9 @@ function CompareButton({ product }: { product: ProductData }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // ChannelBadges
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 function ChannelBadges({
   publishToMarket,
@@ -1168,9 +1168,9 @@ function ChannelBadges({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // TagChips
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 function TagChips({ tags }: { tags: string[] }) {
   if (!tags?.length) return null;
@@ -1195,9 +1195,9 @@ function TagChips({ tags }: { tags: string[] }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Main Component
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 export default function ProductDetailPage() {
   const params = useParams() as { id?: string };
@@ -1507,7 +1507,7 @@ export default function ProductDetailPage() {
     }
   };
 
-  // ─── Render ───────────────────────────────────────────────────────────────
+  // --- Render ---------------------------------------------------------------
 
   if (loading) return <ProductDetailSkeleton />;
 
@@ -1625,7 +1625,7 @@ export default function ProductDetailPage() {
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          {/* ── Gallery ─────────────────────────────────────────────────────── */}
+          {/* -- Gallery ------------------------------------------------------- */}
           <div className="lg:col-span-6 lg:sticky lg:top-20 lg:self-start lg:z-40">
             <ProductImageGallery
               images={
@@ -1651,7 +1651,7 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* ── Product Panel ────────────────────────────────────────────────── */}
+          {/* -- Product Panel -------------------------------------------------- */}
           <div className="lg:col-span-6 flex flex-col pt-2 space-y-6">
             {/* Channel badges + tags */}
             <div className="space-y-2">
@@ -1684,7 +1684,7 @@ export default function ProductDetailPage() {
               selectedStock={selectedStock}
             />
 
-            {/* ── Variant selectors ─────────────────────────────────────────── */}
+            {/* -- Variant selectors ------------------------------------------- */}
             {hasJSONBVariants ? (
               <DynamicVariantSelector
                 variants={apiVariants}
@@ -2018,7 +2018,7 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* ── Meta stats bar ─────────────────────────────────────────────────── */}
+        {/* -- Meta stats bar --------------------------------------------------- */}
         <div className="grid grid-cols-3 gap-3 mt-8">
           {[
             {
@@ -2072,7 +2072,7 @@ export default function ProductDetailPage() {
           ))}
         </div>
 
-        {/* ── Other sellers / BuyBox ──────────────────────────────────────────── */}
+        {/* -- Other sellers / BuyBox -------------------------------------------- */}
         <OtherSellers
           productId={product.id}
           productName={product.title}
@@ -2080,7 +2080,7 @@ export default function ProductDetailPage() {
           currentMerchantSlug={product.brand?.slug}
         />
 
-        {/* ── Related products ────────────────────────────────────────────────── */}
+        {/* -- Related products -------------------------------------------------- */}
         {product.relatedProducts.length > 0 && (
           <ProductCarousel
             products={product.relatedProducts}
@@ -2089,7 +2089,7 @@ export default function ProductDetailPage() {
           />
         )}
 
-        {/* ── More from this store ─────────────────────────────────────────────── */}
+        {/* -- More from this store ----------------------------------------------- */}
         {product.brand && product.brandProducts.length > 0 && (
           <ProductCarousel
             products={product.brandProducts}
@@ -2098,7 +2098,7 @@ export default function ProductDetailPage() {
           />
         )}
 
-        {/* ── Tabs (Description / Reviews / Q&A) ──────────────────────────────── */}
+        {/* -- Tabs (Description / Reviews / Q&A) -------------------------------- */}
         <div
           className="mt-12 pt-8"
           style={{ borderTop: "1px solid rgba(30,30,30,0.06)" }}
@@ -2111,7 +2111,7 @@ export default function ProductDetailPage() {
           />
         </div>
 
-        {/* ── Recently viewed ──────────────────────────────────────────────────── */}
+        {/* -- Recently viewed ---------------------------------------------------- */}
         <RecentlyViewedSection currentProductId={product.id} />
       </div>
     </div>

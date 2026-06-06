@@ -4,6 +4,7 @@ import {
   useMyCourierProfile,
   useToggleCourierAvailability,
 } from "@/queries/useCouriers";
+import { formatDate } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
@@ -60,11 +61,7 @@ export default function CourierProfilePage() {
     );
   }
 
-  const memberSince = new Date(profile.createdAt).toLocaleDateString("en-GB", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const memberSince = formatDate(profile.createdAt);
   const lastLocationTime = profile.lastLocationUpdate
     ? new Date(profile.lastLocationUpdate).toLocaleString("en-GB", {
         day: "2-digit",

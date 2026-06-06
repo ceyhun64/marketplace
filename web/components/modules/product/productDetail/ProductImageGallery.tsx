@@ -16,7 +16,7 @@ interface ProductImageGalleryProps {
   productTitle: string;
 }
 
-// ─── Video Player ──────────────────────────────────────────────────────────────
+// --- Video Player --------------------------------------------------------------
 function VideoPlayer({ videoUrl }: { videoUrl: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -140,7 +140,7 @@ function VideoPlayer({ videoUrl }: { videoUrl: string }) {
   );
 }
 
-// ─── Main Gallery ──────────────────────────────────────────────────────────────
+// --- Main Gallery --------------------------------------------------------------
 export default function ProductImageGallery({
   images,
   videoUrl,

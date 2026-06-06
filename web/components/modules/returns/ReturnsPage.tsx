@@ -272,7 +272,7 @@ export default function ReturnsPage() {
       </div>
 
       <div className="max-w-325 mx-auto px-4 lg:px-8 py-16 space-y-20">
-        {/* ── NEW: Return Ticket Tracker ── */}
+        {/* -- NEW: Return Ticket Tracker -- */}
         <section
           className="rounded-2xl p-6 lg:p-8"
           style={{

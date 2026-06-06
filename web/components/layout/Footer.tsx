@@ -65,7 +65,7 @@ const FOOTER_LINKS = {
   },
 };
 
-// ── Accordion bölümü — mobilde açılır/kapanır, sm+ her zaman açık ──────────────
+// -- Accordion bölümü — mobilde açılır/kapanır, sm+ her zaman açık --------------
 
 function FooterSection({
   title,
@@ -157,14 +157,14 @@ function FooterSection({
   );
 }
 
-// ── Footer ────────────────────────────────────────────────────────────────────
+// -- Footer --------------------------------------------------------------------
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
     <footer className="w-full flex flex-col items-center px-3 sm:px-5 lg:px-6 pb-12 lg:pb-16 mt-16 md:mt-20 border-b-4 border-(--charcoal)">
-      {/* ── Ana footer kartı ─────────────────────────────────────────────── */}
+      {/* -- Ana footer kartı ----------------------------------------------- */}
       <div
         className="w-full max-w-325 p-6 sm:p-8 md:p-10 lg:p-14 rounded-[28px] overflow-hidden"
         style={{
@@ -268,7 +268,7 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* ── Newsletter ────────────────────────────────────────────────── */}
+        {/* -- Newsletter -------------------------------------------------- */}
         <div
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mt-10 p-6 sm:p-8 rounded-3xl"
           style={{
@@ -341,7 +341,7 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* ── Stats ─────────────────────────────────────────────────────── */}
+        {/* -- Stats ------------------------------------------------------- */}
         <div
           className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6 mt-8 pt-8"
           style={{ borderTop: "1px solid var(--border-light)" }}
@@ -380,7 +380,7 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* ── Alt hukuki bar ────────────────────────────────────────────────── */}
+      {/* -- Alt hukuki bar -------------------------------------------------- */}
       <div className="w-full max-w-275 mt-6 px-1 flex flex-col sm:flex-row items-center sm:items-center sm:justify-between gap-4">
         <p
           className="text-center sm:text-left"
@@ -441,7 +441,7 @@ export default function Footer() {
   );
 }
 
-// ── SVG icon helpers ─────────────────────────────────────────────────────────
+// -- SVG icon helpers ---------------------------------------------------------
 
 function InstagramIcon() {
   return (

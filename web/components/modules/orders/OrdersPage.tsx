@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useMyOrders } from "@/queries/useOrders";
-import { ORDER_STATUS_LABELS } from "@/types/enums";
 import type { OrderStatus } from "@/types/enums";
 import { useState } from "react";
 import type { Order, OrderItem } from "@/types/entities";
@@ -20,13 +19,14 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { toast } from "sonner";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatDate } from "@/lib/format";
 import api from "@/lib/api";
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Constants & pure helpers
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 const FILTER_TABS = [
   { key: "all", label: "All" },
@@ -47,67 +47,12 @@ function statusMatch(status: OrderStatus, filter: FilterKey | string): boolean {
 }
 
 // Maps each OrderStatus to design-system token strings (no raw hex)
-function statusTokens(status: OrderStatus): {
-  text: string;
-  bg: string;
-  border: string;
-  accent: string | null;
-} {
-  switch (status) {
-    case "DELIVERED":
-      return {
-        text: "var(--success)",
-        bg: "var(--success-bg)",
-        border: "var(--success-border)",
-        accent: "var(--success)",
-      };
-    case "OUT_FOR_DELIVERY":
-      return {
-        text: "var(--danger)",
-        bg: "var(--danger-bg)",
-        border: "var(--danger-border)",
-        accent: "var(--danger)",
-      };
-    case "IN_TRANSIT":
-    case "PICKED_UP":
-      return {
-        text: "var(--info)",
-        bg: "var(--info-bg)",
-        border: "var(--info-border)",
-        accent: null,
-      };
-    case "PAYMENT_CONFIRMED":
-    case "LABEL_GENERATED":
-    case "COURIER_ASSIGNED":
-      return {
-        text: "var(--warning)",
-        bg: "var(--warning-bg)",
-        border: "var(--warning-border)",
-        accent: null,
-      };
-    case "FAILED":
-    case "CANCELLED":
-      return {
-        text: "var(--text-secondary)",
-        bg: "rgba(51,51,51,0.06)",
-        border: "rgba(51,51,51,0.12)",
-        accent: null,
-      };
-    default: // PENDING
-      return {
-        text: "var(--charcoal-soft)",
-        bg: "rgba(51,51,51,0.05)",
-        border: "rgba(51,51,51,0.10)",
-        accent: null,
-      };
-  }
-}
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // OrderCard skeleton
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Review Modal
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 interface ReviewTarget {
   item: OrderItem;
@@ -308,7 +253,7 @@ function ReviewModal({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 function OrderCardSkeleton() {
   return (
@@ -331,15 +276,13 @@ function OrderCardSkeleton() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // OrderCard
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 function OrderCard({ order, onReview }: { order: Order; onReview: (item: OrderItem) => void }) {
   const [expanded, setExpanded] = useState(false);
 
-  const st = statusTokens(order.status);
-  const label = ORDER_STATUS_LABELS[order.status] ?? order.status;
   const isDelivered = order.status === "DELIVERED";
   const hasTracking = !!order.shipment?.trackingNumber;
 
@@ -354,11 +297,11 @@ function OrderCard({ order, onReview }: { order: Order; onReview: (item: OrderIt
       style={{ border: "1px solid rgba(51,51,51,0.08)" }}
     >
       {/* Delivered top-accent bar */}
-      {st.accent && (
-        <div className="h-0.5 w-full" style={{ background: st.accent }} />
+      {order.status === "DELIVERED" && (
+        <div className="h-0.5 w-full" style={{ background: "var(--success)" }} />
       )}
 
-      {/* ── Collapsed header ───────────────────────────────────────────────── */}
+      {/* -- Collapsed header ------------------------------------------------- */}
       {/*
        * min-h ensures the tap target always reaches 52px on mobile
        * hover:bg- uses the Tailwind design-token class (no JS mutation needed)
@@ -374,19 +317,7 @@ function OrderCard({ order, onReview }: { order: Order; onReview: (item: OrderIt
           <div className="flex-1 min-w-0">
             {/* Status badge + meta chips */}
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <span
-                className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border"
-                style={{
-                  color: st.text,
-                  background: st.bg,
-                  borderColor: st.border,
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  fontFamily: "var(--font-mono)",
-                }}
-              >
-                {label}
-              </span>
+              <StatusBadge type="order" status={order.status} />
 
               {/* Source + rate — visible sm+ only (shown in expanded panel on mobile) */}
               <span
@@ -433,11 +364,7 @@ function OrderCard({ order, onReview }: { order: Order; onReview: (item: OrderIt
             >
               #{order.id.slice(0, 8).toUpperCase()}
               {" · "}
-              {new Date(order.createdAt).toLocaleDateString("en-US", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
+              {formatDate(order.createdAt)}
             </p>
           </div>
 
@@ -469,7 +396,7 @@ function OrderCard({ order, onReview }: { order: Order; onReview: (item: OrderIt
         </div>
       </button>
 
-      {/* ── Expanded detail panel ───────────────────────────────────────────── */}
+      {/* -- Expanded detail panel --------------------------------------------- */}
       {expanded && (
         <div
           className="px-4 md:px-5 pb-4 md:pb-5 pt-0 space-y-4"
@@ -730,9 +657,9 @@ function OrderCard({ order, onReview }: { order: Order; onReview: (item: OrderIt
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Page
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 export default function OrdersPage() {
   const [filter, setFilter] = useState<FilterKey>("all");
@@ -752,7 +679,7 @@ export default function OrdersPage() {
   return (
     <>
     <div className="min-h-screen" style={{ background: "var(--off-white)" }}>
-      {/* ── Page header ─────────────────────────────────────────────────────── */}
+      {/* -- Page header ------------------------------------------------------- */}
       <div
         className="relative overflow-hidden py-10 px-4"
         style={{ background: "var(--charcoal)" }}
@@ -847,7 +774,7 @@ export default function OrdersPage() {
           })}
         </div>
 
-        {/* ── Content ──────────────────────────────────────────────────────── */}
+        {/* -- Content -------------------------------------------------------- */}
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -855,7 +782,7 @@ export default function OrdersPage() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          /* ── Empty state ──────────────────────────────────────────────────── */
+          /* -- Empty state ---------------------------------------------------- */
           <div className="text-center py-16 md:py-24">
             <div
               className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5 mx-auto"
@@ -901,7 +828,7 @@ export default function OrdersPage() {
             )}
           </div>
         ) : (
-          /* ── Order list ──────────────────────────────────────────────────── */
+          /* -- Order list ---------------------------------------------------- */
           <div className="space-y-3">
             {filtered.map((order) => (
               <OrderCard

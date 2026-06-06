@@ -52,7 +52,7 @@ import type { NotifType } from "@/queries/useNotifications";
 import { useWishlist } from "@/queries/useWishlist";
 import { useLocalWishlist } from "@/hooks/use-wishlist-local";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// -- Types ---------------------------------------------------------------------
 
 type UserRole = "customer" | "merchant" | "admin" | "courier";
 
@@ -64,7 +64,7 @@ interface CurrentUser {
   avatarUrl?: string;
 }
 
-// ── Hooks ─────────────────────────────────────────────────────────────────────
+// -- Hooks ---------------------------------------------------------------------
 
 function useAuth() {
   const { user: storeUser, logout } = useAuthStore();
@@ -91,7 +91,7 @@ function useWishlistCount(): number {
   return user ? (data?.total ?? 0) : local.count();
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// -- Constants -----------------------------------------------------------------
 
 const PUBLIC_NAV = [
   { label: "Categories", href: "/categories" },
@@ -119,7 +119,7 @@ const DASHBOARD_HREF: Record<UserRole, string> = {
   customer: "/profile",
 };
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// -- Sub-components ------------------------------------------------------------
 
 function LogoMark() {
   return (
@@ -422,7 +422,7 @@ function NotificationDropdown() {
   );
 }
 
-// ── Divider helper for the mobile sheet ──────────────────────────────────────
+// -- Divider helper for the mobile sheet --------------------------------------
 
 function SheetDivider() {
   return (
@@ -433,7 +433,7 @@ function SheetDivider() {
   );
 }
 
-// ── Navbar ────────────────────────────────────────────────────────────────────
+// -- Navbar --------------------------------------------------------------------
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -451,7 +451,7 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // ── Lifecycle ───────────────────────────────────────────────────────────────
+  // -- Lifecycle ---------------------------------------------------------------
 
   useEffect(() => {
     setMounted(true);
@@ -472,7 +472,7 @@ export default function Navbar() {
     if (searchOpen) setTimeout(() => searchRef.current?.focus(), 100);
   }, [searchOpen]);
 
-  // ── Handlers ────────────────────────────────────────────────────────────────
+  // -- Handlers ----------------------------------------------------------------
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -488,7 +488,7 @@ export default function Navbar() {
     router.push("/auth/login");
   };
 
-  // ── Render ───────────────────────────────────────────────────────────────────
+  // -- Render -------------------------------------------------------------------
 
   return (
     <>
@@ -517,7 +517,7 @@ export default function Navbar() {
           }}
         >
           <div className="flex items-center h-10 gap-2 md:gap-3">
-            {/* ── Logo ─────────────────────────────────────────────────────── */}
+            {/* -- Logo ------------------------------------------------------- */}
             <Link
               href="/"
               style={{ textDecoration: "none" }}
@@ -526,7 +526,7 @@ export default function Navbar() {
               <LogoMark />
             </Link>
 
-            {/* ── Desktop nav — hidden below lg ────────────────────────────── */}
+            {/* -- Desktop nav — hidden below lg ------------------------------ */}
             <nav className="hidden lg:flex items-center gap-0.5 ml-4">
               {PUBLIC_NAV.map((link) => (
                 <Link
@@ -620,7 +620,7 @@ export default function Navbar() {
 
             <div className="flex-1" />
 
-            {/* ── Action cluster ────────────────────────────────────────────── */}
+            {/* -- Action cluster ---------------------------------------------- */}
             <div className="flex items-center gap-0.5">
               {/* Desktop inline search — hidden on mobile (lives inside Sheet instead) */}
               <div className="hidden md:flex relative items-center">
@@ -769,7 +769,7 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* ── Desktop auth ─────────────────────────────────────────────── */}
+            {/* -- Desktop auth ----------------------------------------------- */}
             <div
               className="hidden lg:block pl-2 ml-1"
               style={{ borderLeft: "1px solid var(--border-light)" }}
@@ -912,7 +912,7 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* ── Mobile navigation Sheet ───────────────────────────────────────────
+      {/* -- Mobile navigation Sheet -------------------------------------------
        *
        * Replaces the old `headerBottom`-positioned floating div.
        * shadcn Sheet handles:

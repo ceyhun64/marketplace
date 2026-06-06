@@ -355,7 +355,7 @@ export default function HelpCenterPage() {
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
-      {/* ── Hero — teal/support identity ─────────────────────────────────────── */}
+      {/* -- Hero — teal/support identity --------------------------------------- */}
       <div
         className="py-16 px-4 relative overflow-hidden"
         style={{
@@ -455,7 +455,7 @@ export default function HelpCenterPage() {
         </div>
       </div>
 
-      {/* ── Category pills ───────────────────────────────────────────────────── */}
+      {/* -- Category pills ----------------------------------------------------- */}
       {!search && (
         <div
           className="border-b px-4 py-4"
@@ -501,7 +501,7 @@ export default function HelpCenterPage() {
         </div>
       )}
 
-      {/* ── Content ──────────────────────────────────────────────────────────── */}
+      {/* -- Content ------------------------------------------------------------ */}
       <div className="max-w-300 mx-auto px-4 lg:px-8 py-14">
         {/* Empty state */}
         {displayCategories.length === 0 && (
@@ -747,7 +747,7 @@ export default function HelpCenterPage() {
         </div>
       </div>
 
-      {/* ── Ticket Modal ─────────────────────────────────────────────────────── */}
+      {/* -- Ticket Modal ------------------------------------------------------- */}
       {ticketOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"

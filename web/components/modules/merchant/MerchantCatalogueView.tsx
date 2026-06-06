@@ -33,7 +33,7 @@ import {
 
 import type { Product } from "@/types/entities";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// -- Constants -----------------------------------------------------------------
 
 const PAGE_SIZE = 20;
 
@@ -55,7 +55,7 @@ const PUBLISH_FILTERS = [
 
 type PublishFilter = (typeof PUBLISH_FILTERS)[number]["key"];
 
-// ── Stat Card ─────────────────────────────────────────────────────────────────
+// -- Stat Card -----------------------------------------------------------------
 
 function StatCard({
   label,
@@ -100,7 +100,7 @@ function StatCard({
   );
 }
 
-// ── Main Component ─────────────────────────────────────────────────────────────
+// -- Main Component -------------------------------------------------------------
 
 export default function MerchantCatalogueView() {
   const [modalOpen, setModalOpen] = useState(false);

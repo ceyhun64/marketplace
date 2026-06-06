@@ -213,7 +213,7 @@ export default function RecentlyViewed() {
   );
 }
 
-// ── RecentlyViewedSection — inline section for product detail page ─────────────
+// -- RecentlyViewedSection — inline section for product detail page -------------
 
 export function RecentlyViewedSection({
   currentProductId,

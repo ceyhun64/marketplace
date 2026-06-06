@@ -10,6 +10,7 @@ import { useMe, useUpdateMe } from "@/queries/useMe";
 import { useMyOrders } from "@/queries/useOrders";
 import { useWishlist, useRemoveFromWishlist } from "@/queries/useWishlist";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/types/enums";
+import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,7 +43,7 @@ import {
   Loader2,
 } from "lucide-react";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// -- Types ---------------------------------------------------------------------
 
 type Tab = "info" | "password" | "addresses" | "orders" | "wishlist";
 
@@ -57,7 +58,7 @@ interface Address {
   isDefault: boolean;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// -- Helpers -------------------------------------------------------------------
 
 const PASSWORD_STRENGTH = (pw: string) => {
   if (pw.length === 0) return 0;
@@ -78,7 +79,7 @@ const STRENGTH_COLORS = [
   "bg-(--success)",
 ];
 
-// ── Address Dialog ────────────────────────────────────────────────────────────
+// -- Address Dialog ------------------------------------------------------------
 
 const emptyAddress = (): Omit<Address, "id"> => ({
   title: "",
@@ -234,7 +235,7 @@ function AddressDialog({
   );
 }
 
-// ── Tab config ────────────────────────────────────────────────────────────────
+// -- Tab config ----------------------------------------------------------------
 
 const TAB_META: {
   key: Tab;
@@ -248,7 +249,7 @@ const TAB_META: {
   { key: "wishlist", label: "Wishlist", icon: Heart },
 ];
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// -- Main Component ------------------------------------------------------------
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -258,7 +259,7 @@ export default function ProfilePage() {
 
   const [tab, setTab] = useState<Tab>("info");
 
-  // ── Personal Info ──────────────────────────────────────────────────────────
+  // -- Personal Info ----------------------------------------------------------
   const [info, setInfo] = useState({
     firstName: "",
     lastName: "",
@@ -294,7 +295,7 @@ export default function ProfilePage() {
     }
   }
 
-  // ── Password ───────────────────────────────────────────────────────────────
+  // -- Password ---------------------------------------------------------------
   const [passwords, setPasswords] = useState({
     current: "",
     next: "",
@@ -331,7 +332,7 @@ export default function ProfilePage() {
     }
   }
 
-  // ── Addresses (client-side — backend CRUD not yet implemented) ─────────────
+  // -- Addresses (client-side — backend CRUD not yet implemented) -------------
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [addrDialog, setAddrDialog] = useState<{
     open: boolean;
@@ -366,15 +367,15 @@ export default function ProfilePage() {
     toast.success("Address removed.");
   }
 
-  // ── Orders ─────────────────────────────────────────────────────────────────
+  // -- Orders -----------------------------------------------------------------
   const { data: orders = [], isLoading: ordersLoading } = useMyOrders();
 
-  // ── Wishlist ───────────────────────────────────────────────────────────────
+  // -- Wishlist ---------------------------------------------------------------
   const { data: wishlistData, isLoading: wishlistLoading } = useWishlist();
   const removeFromWishlist = useRemoveFromWishlist();
   const wishlistItems = wishlistData?.items ?? [];
 
-  // ── Derived ────────────────────────────────────────────────────────────────
+  // -- Derived ----------------------------------------------------------------
   const displayName = meData
     ? `${meData.firstName} ${meData.lastName}`.trim() || meData.email
     : user?.name || user?.email || "";
@@ -518,7 +519,7 @@ export default function ProfilePage() {
           ))}
         </div>
 
-        {/* ── Personal Info ──────────────────────────────────────────────────── */}
+        {/* -- Personal Info ---------------------------------------------------- */}
         {tab === "info" && (
           <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-6 shadow-[var(--shadow-sm)]">
             <div className="space-y-5">
@@ -623,7 +624,7 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* ── Password ──────────────────────────────────────────────────────── */}
+        {/* -- Password -------------------------------------------------------- */}
         {tab === "password" && (
           <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-6 shadow-[var(--shadow-sm)]">
             <div className="space-y-5 max-w-sm">
@@ -722,7 +723,7 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* ── Addresses ─────────────────────────────────────────────────────── */}
+        {/* -- Addresses ------------------------------------------------------- */}
         {tab === "addresses" && (
           <div className="space-y-3">
             {addresses.length === 0 && (
@@ -823,7 +824,7 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* ── Orders ────────────────────────────────────────────────────────── */}
+        {/* -- Orders ---------------------------------------------------------- */}
         {tab === "orders" && (
           <div className="space-y-3">
             {ordersLoading ? (
@@ -871,10 +872,7 @@ export default function ProfilePage() {
                   const statusColor =
                     ORDER_STATUS_COLORS[order.status] ??
                     "bg-(--off-white-2) text-(--text-secondary)";
-                  const date = new Date(order.createdAt).toLocaleDateString(
-                    "en-US",
-                    { day: "2-digit", month: "short", year: "numeric" },
-                  );
+                  const date = formatDate(order.createdAt);
                   return (
                     <Link
                       key={order.id}
@@ -923,7 +921,7 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* ── Wishlist ───────────────────────────────────────────────────────── */}
+        {/* -- Wishlist --------------------------------------------------------- */}
         {tab === "wishlist" && (
           <div className="space-y-3">
             {wishlistLoading ? (
@@ -1033,7 +1031,7 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* ── Danger Zone ───────────────────────────────────────────────────── */}
+        {/* -- Danger Zone ----------------------------------------------------- */}
         <div className="mt-10 pt-6 border-t border-(--border-light)">
           <button
             onClick={async () => { await logout(); router.push("/"); }}

@@ -16,13 +16,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { useOrder } from "@/queries/useOrders";
 import { formatPrice, formatDateTime } from "@/lib/format";
-import {
-  ORDER_STATUS_LABELS,
-  ORDER_STATUS_COLORS,
-  NON_CANCELLABLE_STATUSES,
-} from "@/types/enums";
+import { NON_CANCELLABLE_STATUSES } from "@/types/enums";
 import type { OrderStatus } from "@/types/enums";
 import { toast } from "sonner";
 import api from "@/lib/api";
@@ -30,7 +27,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { orderKeys } from "@/queries/useOrders";
 
-// ── Order lifecycle steps — Milestone 2 state machine ────────────────────────
+// -- Order lifecycle steps — Milestone 2 state machine ------------------------
 
 const LIFECYCLE_STEPS: { status: OrderStatus; label: string; icon: string }[] =
   [
@@ -51,7 +48,7 @@ function getStepIndex(status: OrderStatus): number {
   return STATUS_ORDER.indexOf(status);
 }
 
-// ── Progress Stepper ──────────────────────────────────────────────────────────
+// -- Progress Stepper ----------------------------------------------------------
 
 function OrderProgress({ status }: { status: OrderStatus }) {
   const currentIdx = getStepIndex(status);
@@ -127,7 +124,7 @@ function OrderProgress({ status }: { status: OrderStatus }) {
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// -- Main Component ------------------------------------------------------------
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -166,7 +163,7 @@ export default function OrderDetailPage() {
     }
   };
 
-  // ── Loading ──────────────────────────────────────────────────────────────
+  // -- Loading --------------------------------------------------------------
 
   if (isLoading) {
     return (
@@ -195,9 +192,6 @@ export default function OrderDetailPage() {
     );
   }
 
-  const statusColor =
-    ORDER_STATUS_COLORS[order.status as OrderStatus] ??
-    "bg-gray-100 text-gray-600";
   const trackingNumber =
     (order as any).shipment?.trackingNumber ?? (order as any).trackingNumber;
 
@@ -227,11 +221,7 @@ export default function OrderDetailPage() {
                 {formatDateTime(order.createdAt)}
               </p>
             </div>
-            <span
-              className={`text-xs px-3 py-1.5 rounded-full font-semibold ${statusColor}`}
-            >
-              {ORDER_STATUS_LABELS[order.status as OrderStatus] ?? order.status}
-            </span>
+            <StatusBadge type="order" status={order.status} />
           </div>
         </div>
       </div>

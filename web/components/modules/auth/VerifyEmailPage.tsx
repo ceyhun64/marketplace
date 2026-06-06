@@ -39,7 +39,7 @@ function VerifyEmailContent() {
       });
   }, [token, router]);
 
-  // ── Missing token ───────────────────────────────────────────────────────── //
+  // -- Missing token --------------------------------------------------------- //
   if (state === "missing_token") {
     return (
       <Card>
@@ -61,7 +61,7 @@ function VerifyEmailContent() {
     );
   }
 
-  // ── Loading ─────────────────────────────────────────────────────────────── //
+  // -- Loading --------------------------------------------------------------- //
   if (state === "loading") {
     return (
       <Card>
@@ -78,7 +78,7 @@ function VerifyEmailContent() {
     );
   }
 
-  // ── Error ────────────────────────────────────────────────────────────────── //
+  // -- Error ------------------------------------------------------------------ //
   if (state === "error") {
     return (
       <Card>
@@ -110,7 +110,7 @@ function VerifyEmailContent() {
     );
   }
 
-  // ── Success ──────────────────────────────────────────────────────────────── //
+  // -- Success ---------------------------------------------------------------- //
   return (
     <Card>
       <div className="w-16 h-16 rounded-full bg-(--red-muted) border border-(--red-subtle) flex items-center justify-center mx-auto mb-6">

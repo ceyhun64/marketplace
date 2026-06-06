@@ -5,6 +5,9 @@ import { useMemo } from "react";
 import api from "@/lib/api";
 import { useMyCourierProfile } from "@/queries/useCouriers";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCardSkeleton } from "@/components/ui/stat-card-skeleton";
+import { Empty, EmptyMedia, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
+import { formatCurrency, formatDateTime } from "@/lib/format";
 import {
   TrendingUp,
   Package,
@@ -15,7 +18,7 @@ import {
   Calendar,
 } from "lucide-react";
 
-// ── Types ──────────────────────────────────────────────────────────────────────
+// -- Types ----------------------------------------------------------------------
 
 interface CourierEarningsSummary {
   totalEarnings: number;
@@ -36,36 +39,7 @@ interface DeliveryRecord {
   orderNumber: string;
 }
 
-// ── Formatters ─────────────────────────────────────────────────────────────────
-
-function formatCurrency(amount: number) {
-  return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-// ── Skeleton Components ────────────────────────────────────────────────────────
-
-function StatCardSkeleton() {
-  return (
-    <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5">
-      <div className="flex items-center justify-between mb-3">
-        <Skeleton className="h-3 w-24" />
-        <Skeleton className="h-7 w-7 rounded-lg" />
-      </div>
-      <Skeleton className="h-7 w-20" />
-      <Skeleton className="h-3 w-16 mt-1.5" />
-    </div>
-  );
-}
+// -- Skeleton Components --------------------------------------------------------
 
 function DeliveryRowSkeleton() {
   return (
@@ -83,7 +57,7 @@ function DeliveryRowSkeleton() {
   );
 }
 
-// ── Main Component ─────────────────────────────────────────────────────────────
+// -- Main Component -------------------------------------------------------------
 
 export default function CourierEarningsPage() {
   const { data: profile, isLoading: profileLoading } = useMyCourierProfile();
@@ -280,15 +254,13 @@ export default function CourierEarningsPage() {
             ))}
           </div>
         ) : records.length === 0 ? (
-          <div className="py-16 text-center">
-            <Package className="w-10 h-10 text-(--text-tertiary) opacity-20 mx-auto mb-3" />
-            <p className="text-sm text-(--text-secondary) font-medium">
-              Teslimat geçmişi yok
-            </p>
-            <p className="text-xs text-(--text-tertiary) mt-1">
-              Tamamlanan teslimatlar burada görünecek
-            </p>
-          </div>
+          <Empty>
+            <EmptyMedia variant="icon"><Package className="w-5 h-5" /></EmptyMedia>
+            <EmptyHeader>
+              <EmptyTitle>Teslimat geçmişi yok</EmptyTitle>
+              <EmptyDescription>Tamamlanan teslimatlar burada görünecek</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <div className="divide-y divide-(--border-subtle)">
             {records.map((record) => (
@@ -310,7 +282,7 @@ export default function CourierEarningsPage() {
                     {record.customerName}
                   </p>
                   <p className="text-xs text-(--text-tertiary) mt-0.5">
-                    {formatDate(record.deliveredAt)}
+                    {formatDateTime(record.deliveredAt)}
                   </p>
                 </div>
 

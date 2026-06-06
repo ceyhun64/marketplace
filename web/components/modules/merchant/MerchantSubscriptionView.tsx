@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDate } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMySubscription, useUpgradePlan } from "@/queries/useSubscription";
@@ -133,11 +134,7 @@ export default function MerchantSubscriptionView() {
               {subscription?.endDate && (
                 <p className="text-xs text-(--text-tertiary) mt-1">
                   Renews:{" "}
-                  {new Date(subscription.endDate).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
+                  {formatDate(subscription.endDate)}
                 </p>
               )}
             </div>

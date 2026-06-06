@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
+import { formatDate } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Truck,
@@ -147,7 +148,7 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
         <td className="px-5 py-4 text-xs text-(--text-secondary)">
           {shipment.actualDeliveredAt ? (
             <span className="text-(--success) font-medium">
-              Teslim: {new Date(shipment.actualDeliveredAt).toLocaleDateString("en-US")}
+              Teslim: {formatDate(shipment.actualDeliveredAt)}
             </span>
           ) : eta ? (
             `Est. ${eta}`

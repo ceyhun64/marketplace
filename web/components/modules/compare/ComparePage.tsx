@@ -22,7 +22,7 @@ import { useCompareStore, type CompareItem, MAX_COMPARE } from "@/hooks/use-comp
 import { useCart } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/format";
 
-// ── Spec definitions ──────────────────────────────────────────────────────────
+// -- Spec definitions ----------------------------------------------------------
 type SpecDef = {
   key: string;
   label: string;
@@ -157,7 +157,7 @@ function EmDash() {
   return <Minus className="w-3.5 h-3.5 mx-auto" style={{ color: "var(--charcoal-mist)" }} />;
 }
 
-// ── Best value detection ──────────────────────────────────────────────────────
+// -- Best value detection ------------------------------------------------------
 function getBestIdx(def: SpecDef, items: CompareItem[]): number {
   if (!def.compareMode || !def.numericExtract) return -1;
   const nums = items.map(def.numericExtract);
@@ -167,7 +167,7 @@ function getBestIdx(def: SpecDef, items: CompareItem[]): number {
   return vals.indexOf(Math.max(...vals)); // "higher" or "bool"
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// -- Page ----------------------------------------------------------------------
 export default function ComparePage() {
   const { items, remove, clear } = useCompareStore();
   const { addItem }              = useCart();
@@ -184,7 +184,7 @@ export default function ComparePage() {
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      {/* -- Hero ----------------------------------------------------------- */}
       <div
         className="relative overflow-hidden py-12 px-4"
         style={{ background: "var(--charcoal)" }}
@@ -254,9 +254,9 @@ export default function ComparePage() {
         </div>
       </div>
 
-      {/* ── Content ──────────────────────────────────────────────────────── */}
+      {/* -- Content -------------------------------------------------------- */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
-        {/* ── Empty state ──────────────────────────────────────────────── */}
+        {/* -- Empty state ------------------------------------------------ */}
         {items.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div
@@ -284,7 +284,7 @@ export default function ComparePage() {
           </div>
         )}
 
-        {/* ── Compare table ─────────────────────────────────────────────── */}
+        {/* -- Compare table ----------------------------------------------- */}
         {items.length > 0 && (
           <>
           {/* Scroll hint — mobile only */}
@@ -319,7 +319,7 @@ export default function ComparePage() {
                 ))}
               </colgroup>
 
-              {/* ── Product header cards ─────────────────────────────── */}
+              {/* -- Product header cards ------------------------------- */}
               <thead>
                 <tr>
                   {/* Corner cell — sticky so it stays visible while scrolling */}
@@ -501,7 +501,7 @@ export default function ComparePage() {
                 </tr>
               </thead>
 
-              {/* ── Spec rows ─────────────────────────────────────────── */}
+              {/* -- Spec rows ------------------------------------------- */}
               <tbody>
                 {visibleSpecs.map((def, rowIdx) => {
                   const bestIdx = getBestIdx(def, items);
@@ -547,7 +547,7 @@ export default function ComparePage() {
               </tbody>
             </table>
 
-            {/* ── Show more / less ─────────────────────────────────────── */}
+            {/* -- Show more / less --------------------------------------- */}
             <div
               className="flex items-center justify-center py-4"
               style={{ background: "white", borderTop: "1px solid var(--border-subtle)" }}

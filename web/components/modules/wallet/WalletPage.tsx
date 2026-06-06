@@ -15,6 +15,7 @@ import {
   Gift,
   ArrowDownRight,
 } from "lucide-react";
+import { formatDate } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -622,7 +623,7 @@ export default function WalletPage() {
                               {tx.description}
                             </div>
                             <div style={{ fontSize: "0.8125rem", color: "var(--charcoal-mist)" }}>
-                              {new Date(tx.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                              {formatDate(tx.createdAt)}
                             </div>
                           </div>
                           <div

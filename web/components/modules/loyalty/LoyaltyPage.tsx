@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
-// ── Static data ───────────────────────────────────────────────────────────────
+// -- Static data ---------------------------------------------------------------
 const TIERS = [
   {
     id: "bronze",
@@ -119,7 +119,7 @@ const REDEEM_OPTIONS = [
 
 const TIER_SCALE_MAX = 20000;
 
-// ── Hero tier badge visual ────────────────────────────────────────────────────
+// -- Hero tier badge visual ----------------------------------------------------
 const HERO_BADGES = [
   { label: "Bronze",   color: "#cd7f32", size: 68,  x: 0,   y: 80  },
   { label: "Silver",   color: "#9ca3af", size: 78,  x: 55,  y: 50  },
@@ -162,7 +162,7 @@ function HeroTierVisual() {
   );
 }
 
-// ── Progress tracker ──────────────────────────────────────────────────────────
+// -- Progress tracker ----------------------------------------------------------
 function ProgressTracker({ userPoints }: { userPoints: number }) {
   const currentTier =
     TIERS.find((t) => userPoints >= t.minPoints && userPoints <= t.maxPoints) ?? TIERS[0];
@@ -275,7 +275,7 @@ function ProgressTracker({ userPoints }: { userPoints: number }) {
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// -- Page ----------------------------------------------------------------------
 export default function LoyaltyPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"earn" | "redeem" | "tiers">("tiers");
@@ -287,7 +287,7 @@ export default function LoyaltyPage() {
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      {/* -- Hero ----------------------------------------------------------- */}
       <section
         className="relative overflow-hidden px-4 py-20"
         style={{ background: "var(--charcoal)" }}
@@ -380,7 +380,7 @@ export default function LoyaltyPage() {
         </div>
       </section>
 
-      {/* ── How It Works ─────────────────────────────────────────────────── */}
+      {/* -- How It Works --------------------------------------------------- */}
       <section className="max-w-7xl mx-auto px-4 md:px-8 py-14">
         <div className="flex items-center gap-2 mb-3">
           <Zap className="w-4 h-4" style={{ color: "var(--red)" }} />
@@ -407,7 +407,7 @@ export default function LoyaltyPage() {
         </div>
       </section>
 
-      {/* ── Tabs ─────────────────────────────────────────────────────────── */}
+      {/* -- Tabs ----------------------------------------------------------- */}
       <section className="max-w-7xl mx-auto px-4 md:px-8 pb-16">
         <div className="flex gap-1.5 mb-8 p-1 rounded-xl w-fit" style={{ background: "var(--off-white-2)", border: "1px solid var(--border-light)" }}>
           {(["tiers", "earn", "redeem"] as const).map((tab) => (
@@ -426,7 +426,7 @@ export default function LoyaltyPage() {
           ))}
         </div>
 
-        {/* ── Tiers ───────────────────────────────────────────────────── */}
+        {/* -- Tiers ----------------------------------------------------- */}
         {activeTab === "tiers" && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {TIERS.map((tier) => {
@@ -493,7 +493,7 @@ export default function LoyaltyPage() {
           </div>
         )}
 
-        {/* ── Ways to Earn ────────────────────────────────────────────── */}
+        {/* -- Ways to Earn ---------------------------------------------- */}
         {activeTab === "earn" && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {WAYS_TO_EARN.map((item, i) => (
@@ -514,7 +514,7 @@ export default function LoyaltyPage() {
           </div>
         )}
 
-        {/* ── Redeem ──────────────────────────────────────────────────── */}
+        {/* -- Redeem ---------------------------------------------------- */}
         {activeTab === "redeem" && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {REDEEM_OPTIONS.map((opt, i) => {

@@ -89,7 +89,7 @@ export default function ImageUploader({
       )}
 
       {preview ? (
-        /* ── Preview card ── */
+        /* -- Preview card -- */
         <div className="relative w-full h-44 rounded-xl overflow-hidden border border-gray-200 group">
           <Image
             src={preview}
@@ -126,7 +126,7 @@ export default function ImageUploader({
           )}
         </div>
       ) : (
-        /* ── Drop zone ── */
+        /* -- Drop zone -- */
         <div
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}

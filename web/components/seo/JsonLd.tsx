@@ -9,7 +9,7 @@
  * of dangerouslySetInnerHTML inside Server Components.
  */
 
-// ── Types ──────────────────────────────────────────────────────────────────────
+// -- Types ----------------------------------------------------------------------
 
 export interface ProductJsonLdProps {
   id: string;
@@ -31,7 +31,7 @@ export interface BreadcrumbItem {
   url: string;
 }
 
-// ── Components ─────────────────────────────────────────────────────────────────
+// -- Components -----------------------------------------------------------------
 
 /**
  * Emits a schema.org/Product JSON-LD block.

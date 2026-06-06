@@ -22,7 +22,7 @@ import {
   Info,
 } from "lucide-react";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// -- Types ---------------------------------------------------------------------
 
 interface CommissionSettings {
   marketplaceFeePercent: number;
@@ -36,7 +36,7 @@ interface CommissionSettings {
   updatedAt: string;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// -- Helpers -------------------------------------------------------------------
 
 function SettingRow({
   label,
@@ -139,7 +139,7 @@ function StatCard({
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// -- Main Component ------------------------------------------------------------
 
 export default function AdminCommissionPage() {
   const queryClient = useQueryClient();

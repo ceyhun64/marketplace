@@ -5,7 +5,7 @@ import Link from "next/link";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAnnouncements, type AnnouncementItem } from "@/queries/useSiteSettings";
 
-// ── Fallback data — shown while the API loads or if it fails ─────────────────
+// -- Fallback data — shown while the API loads or if it fails -----------------
 
 const FALLBACK: AnnouncementItem[] = [
   {
@@ -48,7 +48,7 @@ const FALLBACK: AnnouncementItem[] = [
 
 const DISMISSED_KEY = "bazr_announcement_dismissed_v2";
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// -- Component -----------------------------------------------------------------
 
 export default function AnnouncementBar() {
   const { data: apiItems } = useAnnouncements();

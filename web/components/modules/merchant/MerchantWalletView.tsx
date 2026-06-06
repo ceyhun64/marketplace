@@ -7,6 +7,7 @@ import {
   useWithdraw,
   type WalletTransaction,
 } from "@/queries/useWallet";
+import { formatDateTime } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,21 +30,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// -- Helpers -------------------------------------------------------------------
 
 function fmt(n: number) {
   return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-function fmtDate(s: string) {
-  return new Date(s).toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 const TYPE_META: Record<
   WalletTransaction["type"],
@@ -75,7 +67,7 @@ const TYPE_META: Record<
   },
 };
 
-// ── Skeleton helpers ──────────────────────────────────────────────────────────
+// -- Skeleton helpers ----------------------------------------------------------
 
 function CardSkeleton() {
   return (
@@ -99,7 +91,7 @@ function RowSkeleton() {
   );
 }
 
-// ── Main View ─────────────────────────────────────────────────────────────────
+// -- Main View -----------------------------------------------------------------
 
 export default function MerchantWalletView() {
   const { data: wallet, isLoading: walletLoading } = useMerchantWallet();
@@ -285,7 +277,7 @@ export default function MerchantWalletView() {
                         {txn.notes ?? txn.reference ?? "—"}
                       </p>
                       <p className="text-[11px] text-(--text-tertiary) mt-0.5">
-                        {fmtDate(txn.createdAt)}
+                        {formatDateTime(txn.createdAt)}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
@@ -385,7 +377,7 @@ export default function MerchantWalletView() {
   );
 }
 
-// ── BalanceCard ───────────────────────────────────────────────────────────────
+// -- BalanceCard ---------------------------------------------------------------
 
 function BalanceCard({
   icon: Icon,

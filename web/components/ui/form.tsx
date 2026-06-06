@@ -13,10 +13,10 @@ import { Slot } from "radix-ui";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-// ── Form = react-hook-form FormProvider ───────────────────────────────────────
+// -- Form = react-hook-form FormProvider ---------------------------------------
 const Form = FormProvider;
 
-// ── FormField context ─────────────────────────────────────────────────────────
+// -- FormField context ---------------------------------------------------------
 type FormFieldContextValue<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
@@ -37,14 +37,14 @@ function FormField<
   );
 }
 
-// ── FormItem context ──────────────────────────────────────────────────────────
+// -- FormItem context ----------------------------------------------------------
 type FormItemContextValue = { id: string };
 
 const FormItemContext = React.createContext<FormItemContextValue>(
   {} as FormItemContextValue,
 );
 
-// ── useFormField ──────────────────────────────────────────────────────────────
+// -- useFormField --------------------------------------------------------------
 function useFormField() {
   const fieldCtx = React.useContext(FormFieldContext);
   const itemCtx  = React.useContext(FormItemContext);
@@ -67,7 +67,7 @@ function useFormField() {
   };
 }
 
-// ── FormItem ──────────────────────────────────────────────────────────────────
+// -- FormItem ------------------------------------------------------------------
 const FormItem = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
   ({ className, ...props }, ref) => {
     const id = React.useId();
@@ -80,7 +80,7 @@ const FormItem = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
 );
 FormItem.displayName = "FormItem";
 
-// ── FormLabel ─────────────────────────────────────────────────────────────────
+// -- FormLabel -----------------------------------------------------------------
 const FormLabel = React.forwardRef<
   React.ElementRef<typeof Label>,
   React.ComponentPropsWithoutRef<typeof Label>
@@ -97,7 +97,7 @@ const FormLabel = React.forwardRef<
 });
 FormLabel.displayName = "FormLabel";
 
-// ── FormControl ───────────────────────────────────────────────────────────────
+// -- FormControl ---------------------------------------------------------------
 // Uses Radix Slot.Root to merge id + aria props into the single child element,
 // so the child (Input, PasswordInput, etc.) receives the correct ids.
 const FormControl = React.forwardRef<
@@ -121,7 +121,7 @@ const FormControl = React.forwardRef<
 });
 FormControl.displayName = "FormControl";
 
-// ── FormDescription ───────────────────────────────────────────────────────────
+// -- FormDescription -----------------------------------------------------------
 const FormDescription = React.forwardRef<
   HTMLParagraphElement,
   React.ComponentProps<"p">
@@ -138,7 +138,7 @@ const FormDescription = React.forwardRef<
 });
 FormDescription.displayName = "FormDescription";
 
-// ── FormMessage ───────────────────────────────────────────────────────────────
+// -- FormMessage ---------------------------------------------------------------
 const FormMessage = React.forwardRef<
   HTMLParagraphElement,
   React.ComponentProps<"p">

@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import api from "@/lib/api";
+import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +25,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Truck, UserCheck, Package, Plus } from "lucide-react";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// -- Types ---------------------------------------------------------------------
 
 interface Courier {
   id: string;
@@ -37,7 +39,7 @@ interface Courier {
   createdAt: string;
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// -- Main Component ------------------------------------------------------------
 
 export default function AdminCouriersPage() {
   const [couriers, setCouriers] = useState<Courier[]>([]);
@@ -98,8 +100,9 @@ export default function AdminCouriersPage() {
       setCouriers((prev) =>
         prev.map((c) => (c.id === id ? { ...c, isActive: !current } : c)),
       );
-    } catch {
-      /* silent */
+      toast.success(current ? "Courier deactivated" : "Courier activated");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to update courier status");
     }
   }
 
@@ -315,7 +318,7 @@ export default function AdminCouriersPage() {
                   </TableCell>
                   <TableCell className="text-xs text-(--text-tertiary)">
                     {courier.createdAt
-                      ? new Date(courier.createdAt).toLocaleDateString("en-US")
+                      ? formatDate(courier.createdAt)
                       : "—"}
                   </TableCell>
                   <TableCell>

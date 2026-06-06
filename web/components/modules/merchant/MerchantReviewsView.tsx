@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
+import { formatDate } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Star,
@@ -359,11 +360,7 @@ export default function MerchantReviewsView() {
                       </div>
                     </div>
                     <span className="text-xs text-(--text-tertiary) shrink-0">
-                      {new Date(review.createdAt).toLocaleDateString("en-US", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
+                      {formatDate(review.createdAt)}
                     </span>
                   </div>
 

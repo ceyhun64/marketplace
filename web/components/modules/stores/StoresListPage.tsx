@@ -36,7 +36,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "name",    label: "A – Z" },
 ];
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
+// -- Skeleton ------------------------------------------------------------------
 function StoreCardSkeleton() {
   return (
     <div className="bg-white rounded-2xl overflow-hidden border border-black/6">
@@ -52,7 +52,7 @@ function StoreCardSkeleton() {
   );
 }
 
-// ── Store Card ────────────────────────────────────────────────────────────────
+// -- Store Card ----------------------------------------------------------------
 function CardFollowButton({ slug, storeName }: { slug: string; storeName: string }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -286,7 +286,7 @@ function StoreCard({ store }: { store: MerchantProfile }) {
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// -- Main Page -----------------------------------------------------------------
 export default function StoresListPage() {
   const { data: stores, isLoading, isError } = useStoreList();
   const [query, setQuery]   = useState("");
@@ -310,7 +310,7 @@ export default function StoresListPage() {
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      {/* -- Hero ----------------------------------------------------------- */}
       <div
         className="relative overflow-hidden py-14 px-4"
         style={{ background: "var(--charcoal)" }}
@@ -428,7 +428,7 @@ export default function StoresListPage() {
         </div>
       </div>
 
-      {/* ── Controls bar ─────────────────────────────────────────────────── */}
+      {/* -- Controls bar --------------------------------------------------- */}
       <div
         className="bg-white sticky top-0 z-10 px-4 py-3"
         style={{ borderBottom: "1px solid var(--border-subtle)" }}
@@ -469,7 +469,7 @@ export default function StoresListPage() {
         </div>
       </div>
 
-      {/* ── Grid ─────────────────────────────────────────────────────────── */}
+      {/* -- Grid ----------------------------------------------------------- */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
         {/* Error */}
         {isError && (

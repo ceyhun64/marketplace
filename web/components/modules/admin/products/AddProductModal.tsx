@@ -99,7 +99,7 @@ export default function AddProductModal({ onClose, onSuccess }: Props) {
           {/* Product Name */}
           <div>
             <label className="block text-sm font-medium text-(--text-secondary) mb-1">
-              Product Name <span className="text-red-500">*</span>
+              Product Name <span className="text-(--danger)">*</span>
             </label>
             <input
               type="text"
@@ -129,7 +129,7 @@ export default function AddProductModal({ onClose, onSuccess }: Props) {
           {/* Kategori */}
           <div>
             <label className="block text-sm font-medium text-(--text-secondary) mb-1">
-              Kategori <span className="text-red-500">*</span>
+              Kategori <span className="text-(--danger)">*</span>
             </label>
             <Select value={form.categoryId || undefined} onValueChange={(v) => setForm((f) => ({ ...f, categoryId: v }))}>
               <SelectTrigger className="w-full text-sm">

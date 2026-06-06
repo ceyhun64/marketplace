@@ -19,7 +19,7 @@ interface Props {
 
 const HEADERS = ["Order No.", "Customer", "Amount", "Status", "Channel", "Date", "Action"];
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
+// -- Skeleton ------------------------------------------------------------------
 
 function TableSkeleton() {
   return (
@@ -68,7 +68,7 @@ function TableSkeleton() {
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// -- Main component ------------------------------------------------------------
 
 export default function MerchantOrdersTable({ orders, loading }: Props) {
   const packMutation = usePackOrder();
@@ -88,7 +88,7 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
 
   return (
     <div className="overflow-hidden">
-      {/* ── Desktop table — hidden below sm ─────────────────────────────────── */}
+      {/* -- Desktop table — hidden below sm ----------------------------------- */}
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-(--bg-sunken) border-b border-(--border-light)">
@@ -192,7 +192,7 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
         </table>
       </div>
 
-      {/* ── Mobile cards — hidden above sm ──────────────────────────────────── */}
+      {/* -- Mobile cards — hidden above sm ------------------------------------ */}
       <div className="sm:hidden divide-y divide-(--border-subtle)">
         {orders.map((order) => {
           const isExpanded = expandedId === order.id;

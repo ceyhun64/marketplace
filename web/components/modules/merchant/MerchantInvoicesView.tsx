@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
+import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -377,14 +378,7 @@ export default function MerchantInvoicesView() {
                           {formatCurrency(invoice.totalAmount)}
                         </TableCell>
                         <TableCell className="text-xs text-(--text-secondary)">
-                          {new Date(invoice.issuedAt).toLocaleDateString(
-                            "en-US",
-                            {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            },
-                          )}
+                          {formatDate(invoice.issuedAt)}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
@@ -533,7 +527,7 @@ export default function MerchantInvoicesView() {
                         {entry.paymentReference ?? "—"}
                       </TableCell>
                       <TableCell className="text-sm text-(--text-secondary)">
-                        {new Date(entry.createdAt).toLocaleDateString()}
+                        {formatDate(entry.createdAt)}
                       </TableCell>
                     </TableRow>
                   ))}

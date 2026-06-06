@@ -83,7 +83,7 @@ function validateAddress(form: Partial<ShippingAddress>): AddressErrors {
   return errors;
 }
 
-// ── Step Indicator ──────────────────────────────────────────────────────────
+// -- Step Indicator ----------------------------------------------------------
 
 function StepIndicator({ current }: { current: Step }) {
   const currentIdx = STEPS.indexOf(current);
@@ -158,7 +158,7 @@ function StepIndicator({ current }: { current: Step }) {
   );
 }
 
-// ── Address Step ────────────────────────────────────────────────────────────
+// -- Address Step ------------------------------------------------------------
 
 const fieldStyle = {
   height: "2.75rem",
@@ -361,7 +361,7 @@ function AddressStep({
   );
 }
 
-// ── Shipping Step ───────────────────────────────────────────────────────────
+// -- Shipping Step -----------------------------------------------------------
 
 function ShippingStep({
   address,
@@ -489,14 +489,14 @@ function ShippingStep({
   );
 }
 
-// ── Ana Checkout sayfası ────────────────────────────────────────────────────
+// -- Ana Checkout sayfası ----------------------------------------------------
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { items } = useCart();
 
-  // ── Local UI state ─────────────────────────────────────────────────────────
+  // -- Local UI state ---------------------------------------------------------
   const [step, setStep] = useState<Step>("address");
   // address is kept local (Partial) while the form is being filled;
   // the validated ShippingAddress is synced to the store on step advance.
@@ -506,7 +506,7 @@ export default function CheckoutPage() {
   });
   const [shippingRate, setShippingRate] = useState<ShippingRate | null>("REGULAR");
 
-  // ── Persistent checkout state (Zustand) ────────────────────────────────────
+  // -- Persistent checkout state (Zustand) ------------------------------------
   const {
     orderId,
     setOrderResult,

@@ -1,6 +1,7 @@
 "use client";
 
 import type { Product } from "./types";
+import { formatDate } from "@/lib/format";
 
 interface Props {
   products: Product[];
@@ -85,7 +86,7 @@ export default function ProductsTable({
                 </span>
               </td>
               <td className="px-4 py-3 text-(--text-tertiary)">
-                {new Date(p.createdAt).toLocaleDateString("en-US")}
+                {formatDate(p.createdAt)}
               </td>
               <td className="px-4 py-3">
                 <div className="flex gap-3">

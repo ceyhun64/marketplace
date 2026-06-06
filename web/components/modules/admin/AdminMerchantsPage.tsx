@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
+import { formatDate } from "@/lib/format";
+import { Empty, EmptyMedia, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +45,7 @@ import {
   TrendingUp,
   Clock,
   UserCheck,
+  Loader2,
 } from "lucide-react";
 
 interface Merchant {
@@ -178,7 +181,8 @@ export default function AdminMerchantsPage() {
       setSuspendConfirmOpen(false);
       setMerchantToSuspend(null);
     },
-    onError: () => toast.error("Operation failed"),
+    onError: (err: any) =>
+      toast.error(err?.response?.data?.message || "Failed to update merchant status"),
   });
 
   const setupMutation = useMutation({
@@ -345,21 +349,22 @@ export default function AdminMerchantsPage() {
             </div>
             {isLoading ? (
               <div className="flex items-center justify-center py-16">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--charcoal)" />
+                <Loader2 className="w-8 h-8 animate-spin text-(--text-tertiary)" />
               </div>
             ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-(--text-tertiary)">
-                <Building2 className="w-10 h-10 mb-3 opacity-20" />
-                <p className="text-sm font-medium">No merchants yet</p>
+              <Empty>
+                <EmptyMedia variant="icon"><Building2 className="w-5 h-5" /></EmptyMedia>
+                <EmptyHeader>
+                  <EmptyTitle>No merchants yet</EmptyTitle>
+                </EmptyHeader>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="mt-3"
                   onClick={() => setCreateOpen(true)}
                 >
                   Add First Merchant
                 </Button>
-              </div>
+              </Empty>
             ) : (
               <Table>
                 <TableHeader>
@@ -461,9 +466,7 @@ export default function AdminMerchantsPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-xs text-(--text-tertiary)">
-                        {new Date(merchant.createdAt).toLocaleDateString(
-                          "en-US",
-                        )}
+                        {formatDate(merchant.createdAt)}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -543,14 +546,16 @@ export default function AdminMerchantsPage() {
 
           {pendingLoading ? (
             <div className="flex items-center justify-center py-16">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--charcoal)" />
+              <Loader2 className="w-8 h-8 animate-spin text-(--text-tertiary)" />
             </div>
           ) : pending.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-(--text-tertiary)">
-              <UserCheck className="w-10 h-10 mb-3 opacity-20" />
-              <p className="text-sm font-medium">No pending applications</p>
-              <p className="text-xs mt-1">All caught up!</p>
-            </div>
+            <Empty>
+              <EmptyMedia variant="icon"><UserCheck className="w-5 h-5" /></EmptyMedia>
+              <EmptyHeader>
+                <EmptyTitle>No pending applications</EmptyTitle>
+                <EmptyDescription>All caught up!</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <Table>
               <TableHeader>
@@ -615,7 +620,7 @@ export default function AdminMerchantsPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-xs text-(--text-tertiary)">
-                      {new Date(p.createdAt).toLocaleDateString("en-US")}
+                      {formatDate(p.createdAt)}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

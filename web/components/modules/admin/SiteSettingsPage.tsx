@@ -164,7 +164,7 @@ function SkeletonCard({ rows = 3 }: { rows?: number }) {
 export default function SiteSettingsPage() {
   return (
     <div className="space-y-8">
-      {/* ── Page header ── */}
+      {/* -- Page header -- */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-(--text-primary)">
@@ -176,7 +176,7 @@ export default function SiteSettingsPage() {
         </div>
       </div>
 
-      {/* ── Info banner ── */}
+      {/* -- Info banner -- */}
       <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl border border-(--border-mid) bg-(--bg-sunken)/60">
         <Info className="w-4 h-4 text-(--text-tertiary) mt-0.5 shrink-0" />
         <p className="text-xs text-(--text-secondary) leading-relaxed">
@@ -186,7 +186,7 @@ export default function SiteSettingsPage() {
         </p>
       </div>
 
-      {/* ── Tabs ── */}
+      {/* -- Tabs -- */}
       <Tabs defaultValue="announcements">
         <TabsList className="border border-(--border-light) bg-(--bg-sunken)/50 p-1 rounded-xl h-auto">
           <TabsTrigger
@@ -256,7 +256,7 @@ function AnnouncementsTab() {
 
   return (
     <>
-      {/* ── Summary stat ── */}
+      {/* -- Summary stat -- */}
       {!isLoading && (
         <div className="grid grid-cols-3 gap-4 mb-6">
           {[
@@ -283,7 +283,7 @@ function AnnouncementsTab() {
         </div>
       )}
 
-      {/* ── Main table card ── */}
+      {/* -- Main table card -- */}
       {isLoading ? (
         <SkeletonCard rows={4} />
       ) : (
@@ -367,7 +367,7 @@ function AnnouncementsTab() {
         </SectionCard>
       )}
 
-      {/* ── Live preview ── */}
+      {/* -- Live preview -- */}
       {activeItems.length > 0 && (
         <div className="mt-6">
           <div className="flex items-center gap-2 mb-3">
@@ -420,14 +420,14 @@ function AnnouncementsTab() {
         </div>
       )}
 
-      {/* ── Add / Edit dialog ── */}
+      {/* -- Add / Edit dialog -- */}
       <AnnouncementDialog
         open={formOpen}
         onClose={() => setFormOpen(false)}
         editing={editing}
       />
 
-      {/* ── Delete confirmation ── */}
+      {/* -- Delete confirmation -- */}
       <AlertDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
@@ -467,7 +467,7 @@ function AnnouncementsTab() {
   );
 }
 
-// ── Single announcement row ───────────────────────────────────────────────────
+// -- Single announcement row ---------------------------------------------------
 
 function AnnouncementRow({
   item,
@@ -561,7 +561,7 @@ function AnnouncementRow({
   );
 }
 
-// ── Add / Edit dialog ─────────────────────────────────────────────────────────
+// -- Add / Edit dialog ---------------------------------------------------------
 
 function AnnouncementDialog({
   open,
@@ -946,7 +946,7 @@ function HeroTab() {
         </div>
       </div>
 
-      {/* ── Two-column layout ── */}
+      {/* -- Two-column layout -- */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* LEFT column */}
         <div className="space-y-6">
@@ -1201,7 +1201,7 @@ function HeroTab() {
         </div>
       </div>
 
-      {/* ── Floating unsaved-changes bar ── */}
+      {/* -- Floating unsaved-changes bar -- */}
       {isDirty && (
         <div
           className="fixed bottom-6 right-8 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl"

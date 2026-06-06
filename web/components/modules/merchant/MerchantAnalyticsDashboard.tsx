@@ -22,7 +22,7 @@ import { formatPrice, formatCompactNumber, formatPercent } from "@/lib/format";
 import type { AnalyticsPeriod } from "@/types/api";
 import { TrendingUp, ShoppingBag, Store, Package } from "lucide-react";
 
-// ── Lazy-load the radar/bar comparison chart (SSR off — it uses canvas APIs)
+// -- Lazy-load the radar/bar comparison chart (SSR off — it uses canvas APIs)
 const ComparisonChart = dynamic(
   () => import("@/components/modules/analytics/ComparisonChart"),
   { ssr: false },
@@ -34,7 +34,7 @@ const PERIODS: { value: AnalyticsPeriod; label: string }[] = [
   { value: "monthly", label: "Monthly" },
 ];
 
-// ── KPI card skeleton ─────────────────────────────────────────────────────────
+// -- KPI card skeleton ---------------------------------------------------------
 
 function KpiSkeleton() {
   return (
@@ -49,7 +49,7 @@ function KpiSkeleton() {
   );
 }
 
-// ── Main dashboard ────────────────────────────────────────────────────────────
+// -- Main dashboard ------------------------------------------------------------
 
 export default function MerchantAnalyticsDashboard() {
   const [period, setPeriod] = useState<AnalyticsPeriod>("weekly");
@@ -83,7 +83,7 @@ export default function MerchantAnalyticsDashboard() {
     estore: d.source === "ESTORE" ? (d.revenue ?? 0) : 0,
   }));
 
-  // ── KPI definitions ──────────────────────────────────────────────────────────
+  // -- KPI definitions ----------------------------------------------------------
 
   const kpis = [
     {
@@ -126,7 +126,7 @@ export default function MerchantAnalyticsDashboard() {
     },
   ] as const;
 
-  // ── Comparison table rows (derived once, shared between mobile/desktop renders)
+  // -- Comparison table rows (derived once, shared between mobile/desktop renders)
 
   const comparisonRows = comparison
     ? [
@@ -164,11 +164,11 @@ export default function MerchantAnalyticsDashboard() {
       ]
     : [];
 
-  // ────────────────────────────────────────────────────────────────────────────
+  // ----------------------------------------------------------------------------
 
   return (
     <div className="space-y-5 md:space-y-6 lg:space-y-8">
-      {/* ── Page header ────────────────────────────────────────────────────── */}
+      {/* -- Page header ------------------------------------------------------ */}
       <div>
         <h1 className="text-xl md:text-2xl font-semibold text-(--text-primary)">
           Analytics
@@ -178,7 +178,7 @@ export default function MerchantAnalyticsDashboard() {
         </p>
       </div>
 
-      {/* ── KPI cards — 2 cols mobile · 2 cols tablet · 4 cols desktop ────── */}
+      {/* -- KPI cards — 2 cols mobile · 2 cols tablet · 4 cols desktop ------ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {statsLoading
           ? Array.from({ length: 4 }).map((_, i) => <KpiSkeleton key={i} />)
@@ -213,7 +213,7 @@ export default function MerchantAnalyticsDashboard() {
             })}
       </div>
 
-      {/* ── Sales chart ────────────────────────────────────────────────────── */}
+      {/* -- Sales chart ------------------------------------------------------ */}
       <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-4 md:p-5">
         {/* Header — stacks on mobile, inline on sm+ */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
@@ -284,10 +284,10 @@ export default function MerchantAnalyticsDashboard() {
         </div>
       </div>
 
-      {/* ── Channel comparison + Top products ──────────────────────────────── */}
+      {/* -- Channel comparison + Top products -------------------------------- */}
       {/*   1 col mobile · 2 cols tablet · 2 cols desktop                     */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* ── Channel comparison ─────────────────────────────────────────── */}
+        {/* -- Channel comparison ------------------------------------------- */}
         <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-4 md:p-5">
           <h2 className="text-sm font-semibold text-(--text-secondary) mb-4">
             Channel Comparison
@@ -383,7 +383,7 @@ export default function MerchantAnalyticsDashboard() {
           )}
         </div>
 
-        {/* ── Top products ───────────────────────────────────────────────── */}
+        {/* -- Top products ------------------------------------------------- */}
         <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-4 md:p-5">
           <h2 className="text-sm font-semibold text-(--text-secondary) mb-4">
             Top Products
@@ -458,7 +458,7 @@ export default function MerchantAnalyticsDashboard() {
         </div>
       </div>
 
-      {/* ── Summary banner ─────────────────────────────────────────────────── */}
+      {/* -- Summary banner --------------------------------------------------- */}
       {stats && (
         <div
           className="rounded-xl p-4 md:p-5 lg:p-6"

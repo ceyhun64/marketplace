@@ -11,7 +11,7 @@ import PhoneInput from "@/components/ui/phone-input";
 import PasswordInput from "@/components/ui/password-input";
 import AuthSplitLayout from "./AuthSplitLayout";
 
-// ── Password strength helper ──────────────────────────────────────────────────
+// -- Password strength helper --------------------------------------------------
 
 function passwordStrength(pw: string): { level: 0 | 1 | 2 | 3; label: string; color: string } {
   if (pw.length < 4)  return { level: 0, label: "",        color: ""                  };
@@ -23,7 +23,7 @@ function passwordStrength(pw: string): { level: 0 | 1 | 2 | 3; label: string; co
                       return { level: 1, label: "Weak",    color: "var(--red)"        };
 }
 
-// ── Form component ────────────────────────────────────────────────────────────
+// -- Form component ------------------------------------------------------------
 
 export default function RegisterPage() {
   const router = useRouter();

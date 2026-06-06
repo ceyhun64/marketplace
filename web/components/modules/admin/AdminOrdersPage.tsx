@@ -27,6 +27,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { DataPagination } from "@/components/ui/data-pagination";
 import { toast } from "sonner";
 import {
   Search,
@@ -40,7 +42,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { formatCurrency, formatDateTime } from "@/lib/format";
-import { ORDER_STATUS_COLORS, type OrderStatus } from "@/types/enums";
+import { ORDER_STATUS_LABELS, type OrderStatus } from "@/types/enums";
 
 interface OrderItem {
   productName: string;
@@ -99,18 +101,6 @@ const NEXT_STATUSES: Partial<Record<OrderStatus, OrderStatus>> = {
 
 const TERMINAL_STATUSES: OrderStatus[] = ["DELIVERED", "FAILED", "CANCELLED"];
 
-const STATUS_LABEL_EN: Partial<Record<OrderStatus, string>> = {
-  PENDING: "Pending",
-  PAYMENT_CONFIRMED: "Payment Confirmed",
-  LABEL_GENERATED: "Label Generated",
-  COURIER_ASSIGNED: "Courier Assigned",
-  PICKED_UP: "Picked Up",
-  IN_TRANSIT: "In Transit",
-  OUT_FOR_DELIVERY: "Out for Delivery",
-  DELIVERED: "Delivered",
-  FAILED: "Failed",
-  CANCELLED: "Cancelled",
-};
 
 export default function AdminOrdersPage() {
   const queryClient = useQueryClient();
@@ -360,11 +350,7 @@ export default function AdminOrdersPage() {
                     {formatCurrency(order.totalAmount)}
                   </TableCell>
                   <TableCell>
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ORDER_STATUS_COLORS[order.status] ?? "bg-(--off-white-2) text-(--text-primary)"}`}
-                    >
-                      {STATUS_LABEL_EN[order.status] ?? order.status}
-                    </span>
+                    <StatusBadge type="order" status={order.status} />
                   </TableCell>
                   <TableCell className="text-xs text-(--text-tertiary)">
                     {formatDateTime(order.createdAt)}
@@ -386,29 +372,7 @@ export default function AdminOrdersPage() {
         </Table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page === 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            ← Previous
-          </Button>
-          <span className="px-3 py-1 text-sm text-(--text-secondary)">
-            Page {page} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page >= totalPages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next →
-          </Button>
-        </div>
-      )}
+      <DataPagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
       <Dialog
         open={!!selectedOrder}
@@ -491,12 +455,7 @@ export default function AdminOrdersPage() {
                   Update Status
                 </p>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${ORDER_STATUS_COLORS[selectedOrder.status] ?? ""}`}
-                  >
-                    {STATUS_LABEL_EN[selectedOrder.status] ??
-                      selectedOrder.status}
-                  </span>
+                  <StatusBadge type="order" status={selectedOrder.status} />
                   {NEXT_STATUSES[selectedOrder.status] && (
                     <>
                       <span className="text-(--text-tertiary)">→</span>
@@ -510,7 +469,7 @@ export default function AdminOrdersPage() {
                         }
                         disabled={updateStatusMutation.isPending}
                       >
-                        {STATUS_LABEL_EN[NEXT_STATUSES[selectedOrder.status]!]}
+                        {ORDER_STATUS_LABELS[NEXT_STATUSES[selectedOrder.status]!]}
                       </Button>
                     </>
                   )}

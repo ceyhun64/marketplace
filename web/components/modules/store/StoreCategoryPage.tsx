@@ -15,14 +15,14 @@ import {
 } from "@/components/modules/store/TagFilter";
 import type { Product, MerchantProfile, Category } from "@/types/entities";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// -- Types ---------------------------------------------------------------------
 
 interface PageProps {
   params: Promise<{ slug: string; cat: string }>;
   searchParams: Promise<Record<string, string | string[]>>;
 }
 
-// ── Data Fetchers (SSR / ISR) ─────────────────────────────────────────────────
+// -- Data Fetchers (SSR / ISR) -------------------------------------------------
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5010";
 
@@ -87,7 +87,7 @@ async function getProducts(
   }
 }
 
-// ── Metadata ──────────────────────────────────────────────────────────────────
+// -- Metadata ------------------------------------------------------------------
 
 export async function generateMetadata({
   params,
@@ -104,7 +104,7 @@ export async function generateMetadata({
   };
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// -- Page ----------------------------------------------------------------------
 
 export default async function StoreCategoryPage({
   params,

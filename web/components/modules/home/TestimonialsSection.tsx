@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Star, Quote, ChevronLeft, ChevronRight } from "lucide-react";
 
-// ── Data ──────────────────────────────────────────────────────────────────────
+// -- Data ----------------------------------------------------------------------
 
 const STATS = [
   { value: "120K+", label: "Happy Customers" },
@@ -69,7 +69,7 @@ const TESTIMONIALS = [
   },
 ];
 
-// ── Responsive visible-count hook ─────────────────────────────────────────────
+// -- Responsive visible-count hook ---------------------------------------------
 // Returns how many cards fit side by side for the current viewport width.
 // Uses ResizeObserver so it responds to live resize without a scroll listener.
 // Starts at 3 (server-safe) then corrects on the client inside useEffect.
@@ -92,7 +92,7 @@ function useVisibleCount(): number {
   return visible;
 }
 
-// ── Star row ─────────────────────────────────────────────────────────────────
+// -- Star row -----------------------------------------------------------------
 
 function StarRating({ count = 5 }: { count?: number }) {
   return (
@@ -104,7 +104,7 @@ function StarRating({ count = 5 }: { count?: number }) {
   );
 }
 
-// ── Section ───────────────────────────────────────────────────────────────────
+// -- Section -------------------------------------------------------------------
 
 export default function TestimonialsSection() {
   const VISIBLE  = useVisibleCount();
@@ -164,7 +164,7 @@ export default function TestimonialsSection() {
        */}
       <div className="max-w-325 mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* ── Header ──────────────────────────────────────────────────────── */}
+        {/* -- Header -------------------------------------------------------- */}
         <div className="flex flex-col items-center text-center mb-12 sm:mb-14">
           <div className="flex items-center gap-3 mb-5">
             <span className="inline-block w-6 h-px" style={{ background: "var(--red)" }} />
@@ -199,7 +199,7 @@ export default function TestimonialsSection() {
           </p>
         </div>
 
-        {/* ── Carousel ────────────────────────────────────────────────────── */}
+        {/* -- Carousel ------------------------------------------------------ */}
         <div className="relative">
           {/* overflow-hidden clips cards outside the viewport window */}
           <div className="overflow-hidden">
@@ -340,7 +340,7 @@ export default function TestimonialsSection() {
           </div>
         </div>
 
-        {/* ── Stats bar ────────────────────────────────────────────────────── */}
+        {/* -- Stats bar ------------------------------------------------------ */}
         {/*
          * Mobile (< 640 px): grid-cols-2  → 2×2 layout
          * sm+              : grid-cols-4  → single row

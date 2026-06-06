@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// -- Types ---------------------------------------------------------------------
 
 export interface TagFilterState {
   tags: string[];
@@ -39,7 +39,7 @@ interface TagFilterProps {
   className?: string;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// -- Component -----------------------------------------------------------------
 
 export function TagFilter({
   availableTags,

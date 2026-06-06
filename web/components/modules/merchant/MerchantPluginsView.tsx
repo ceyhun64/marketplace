@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
+import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -112,7 +113,7 @@ export default function MerchantPluginsView() {
                       {p.createdAt && (
                         <p className="text-xs text-(--success) mt-1">
                           Active since{" "}
-                          {new Date(p.createdAt).toLocaleDateString()}
+                          {formatDate(p.createdAt)}
                         </p>
                       )}
                     </div>

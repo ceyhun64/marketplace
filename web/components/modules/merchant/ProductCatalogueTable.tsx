@@ -21,7 +21,7 @@ interface Props {
 
 const HEADERS = ["Product", "Price", "Stock", "Marketplace", "E-Store", "Status", "Actions"];
 
-// ── Toggle switch ─────────────────────────────────────────────────────────────
+// -- Toggle switch -------------------------------------------------------------
 
 interface PublishToggleProps {
   checked: boolean;
@@ -51,7 +51,7 @@ function PublishToggle({ checked, disabled, onChange, activeColor }: PublishTogg
   );
 }
 
-// ── Stock badge ───────────────────────────────────────────────────────────────
+// -- Stock badge ---------------------------------------------------------------
 
 function StockBadge({ stock }: { stock: number }) {
   const cls =
@@ -67,7 +67,7 @@ function StockBadge({ stock }: { stock: number }) {
   );
 }
 
-// ── Approval badge ────────────────────────────────────────────────────────────
+// -- Approval badge ------------------------------------------------------------
 
 function ApprovalBadge({ approved }: { approved: boolean }) {
   return approved ? (
@@ -81,7 +81,7 @@ function ApprovalBadge({ approved }: { approved: boolean }) {
   );
 }
 
-// ── Product thumbnail ─────────────────────────────────────────────────────────
+// -- Product thumbnail ---------------------------------------------------------
 
 function ProductThumb({ src, alt }: { src?: string; alt: string }) {
   return (
@@ -95,7 +95,7 @@ function ProductThumb({ src, alt }: { src?: string; alt: string }) {
   );
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
+// -- Skeleton ------------------------------------------------------------------
 
 function TableSkeleton() {
   return (
@@ -148,7 +148,7 @@ function TableSkeleton() {
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// -- Main component ------------------------------------------------------------
 
 export default function ProductCatalogueTable({
   products,
@@ -188,7 +188,7 @@ export default function ProductCatalogueTable({
 
   return (
     <div className="bg-(--bg-surface) border border-(--border-light) rounded-xl overflow-hidden">
-      {/* ── Desktop table — hidden below sm ─────────────────────────────────── */}
+      {/* -- Desktop table — hidden below sm ----------------------------------- */}
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-(--bg-sunken) border-b border-(--border-light)">
@@ -276,7 +276,7 @@ export default function ProductCatalogueTable({
         </table>
       </div>
 
-      {/* ── Mobile cards — hidden above sm ──────────────────────────────────── */}
+      {/* -- Mobile cards — hidden above sm ------------------------------------ */}
       <div className="sm:hidden divide-y divide-(--border-subtle)">
         {products.map((p) => (
           <div key={p.id} className="p-4 space-y-3">

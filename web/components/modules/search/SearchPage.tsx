@@ -37,7 +37,7 @@ import { toast } from "sonner";
 import { formatPrice } from "@/lib/format";
 import { ProductCard as SharedProductCard } from "@/components/modules/store/ProductCard";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// --- Types --------------------------------------------------------------------
 
 interface Product {
   id: string;
@@ -90,7 +90,7 @@ interface SearchResult {
 type SortOption = "relevance" | "price_asc" | "price_desc" | "newest" | "popular";
 type ViewMode = "grid" | "list";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// --- Constants ----------------------------------------------------------------
 
 const SORT_OPTIONS: { value: SortOption; label: string; icon: React.ReactNode }[] = [
   { value: "relevance",  label: "Most Relevant",    icon: <Sparkles className="w-3.5 h-3.5" /> },
@@ -108,7 +108,7 @@ const PRICE_PRESETS = [
   { label: "$5,000+",            min: 5000, max: 999999},
 ];
 
-// ─── Highlight Helper ─────────────────────────────────────────────────────────
+// --- Highlight Helper ---------------------------------------------------------
 
 function Highlighted({ text, parts }: { text: string; parts?: string[] }) {
   if (!parts?.length) return <>{text}</>;
@@ -133,7 +133,7 @@ function Highlighted({ text, parts }: { text: string; parts?: string[] }) {
   );
 }
 
-// ─── Search List Card (list-view only; grid view uses shared ProductCard) ────────
+// --- Search List Card (list-view only; grid view uses shared ProductCard) --------
 
 function SearchListCard({ product }: { product: Product }) {
   const href = `/product/${product.id}`;
@@ -282,7 +282,7 @@ function SearchListCard({ product }: { product: Product }) {
   );
 }
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
+// --- Skeleton -----------------------------------------------------------------
 
 function CardSkeleton({ view }: { view: ViewMode }) {
   if (view === "list") {
@@ -318,7 +318,7 @@ function CardSkeleton({ view }: { view: ViewMode }) {
   );
 }
 
-// ─── Filter Accordion ─────────────────────────────────────────────────────────
+// --- Filter Accordion ---------------------------------------------------------
 
 function FilterAccordion({
   title,
@@ -365,7 +365,7 @@ function FilterAccordion({
   );
 }
 
-// ─── Filter button ────────────────────────────────────────────────────────────
+// --- Filter button ------------------------------------------------------------
 
 function FilterBtn({
   active,
@@ -394,7 +394,7 @@ function FilterBtn({
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// --- Main Component -----------------------------------------------------------
 
 export default function SearchPage() {
   const router       = useRouter();
@@ -431,7 +431,7 @@ export default function SearchPage() {
   const inputRef       = useRef<HTMLInputElement>(null);
   const { addItem }    = useCart();
 
-  // ── URL builder ────────────────────────────────────────────────────────────
+  // -- URL builder ------------------------------------------------------------
   const buildUrl = useCallback(
     (overrides: Record<string, string | number | undefined>) => {
       const params = new URLSearchParams();
@@ -454,7 +454,7 @@ export default function SearchPage() {
     [buildUrl, router],
   );
 
-  // ── Fetch ──────────────────────────────────────────────────────────────────
+  // -- Fetch ------------------------------------------------------------------
   const fetchResults = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -559,7 +559,7 @@ export default function SearchPage() {
     (category ? 1 : 0) + (minPrice || maxPrice ? 1 : 0) + activeTagList.length;
   const currentSort = SORT_OPTIONS.find((o) => o.value === sort) ?? SORT_OPTIONS[0];
 
-  // ── Filter sidebar content ─────────────────────────────────────────────────
+  // -- Filter sidebar content -------------------------------------------------
   const SidebarContent = (
     <div className="space-y-0">
       {/* Categories */}
@@ -719,7 +719,7 @@ export default function SearchPage() {
   return (
     <div className="min-h-screen" style={{ background: "var(--bg-page)" }}>
 
-      {/* ── Search Header ──────────────────────────────────────────────────────
+      {/* -- Search Header ------------------------------------------------------
        * NOT sticky — the main site Navbar is already sticky (z-50).
        * Two sibling sticky elements at top:0 would overlap.
        * The header sits in normal document flow below the Navbar.
@@ -822,7 +822,7 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {/* ── Active Filters Bar ─────────────────────────────────────────────────── */}
+      {/* -- Active Filters Bar --------------------------------------------------- */}
       {activeFilterCount > 0 && (
         <div className="bg-white border-b border-(--border-subtle)">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2.5 flex items-center gap-2 flex-wrap">
@@ -858,7 +858,7 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* ── Main Layout ─────────────────────────────────────────────────────────── */}
+      {/* -- Main Layout ----------------------------------------------------------- */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex gap-7 items-start">
 
         {/* Desktop sidebar */}
@@ -1139,7 +1139,7 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {/* ── Mobile Filters Drawer ──────────────────────────────────────────────── */}
+      {/* -- Mobile Filters Drawer ------------------------------------------------ */}
       {mobileFiltersOpen && (
         <>
           {/* Backdrop — NO backdrop-filter blur (was causing page-wide blur) */}

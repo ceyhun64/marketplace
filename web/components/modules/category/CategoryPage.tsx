@@ -20,7 +20,7 @@ interface PageProps {
   }>;
 }
 
-// ── Data fetching ─────────────────────────────────────────────────────────────
+// -- Data fetching -------------------------------------------------------------
 async function CategoryProducts({
   slug,
   searchParams,
@@ -83,7 +83,7 @@ async function CategoryProducts({
 
   return (
     <>
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      {/* -- Hero ----------------------------------------------------------- */}
       <div
         className="relative overflow-hidden py-12 px-4"
         style={{ background: "var(--charcoal)" }}
@@ -229,7 +229,7 @@ async function CategoryProducts({
         </div>
       </div>
 
-      {/* ── Content ──────────────────────────────────────────────────────── */}
+      {/* -- Content -------------------------------------------------------- */}
       <div
         className="max-w-7xl mx-auto px-4 md:px-8 py-8"
         style={{ background: "var(--off-white)" }}
@@ -247,7 +247,7 @@ async function CategoryProducts({
   );
 }
 
-// ── Skeleton fallback ─────────────────────────────────────────────────────────
+// -- Skeleton fallback ---------------------------------------------------------
 function CategorySkeleton() {
   return (
     <>
@@ -274,7 +274,7 @@ function CategorySkeleton() {
   );
 }
 
-// ── Page exports ──────────────────────────────────────────────────────────────
+// -- Page exports --------------------------------------------------------------
 export default async function CategoryPage({ params, searchParams }: PageProps) {
   const resolvedParams = await params;
   const resolvedSearch = await searchParams;

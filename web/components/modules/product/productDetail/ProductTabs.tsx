@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import api from "@/lib/api";
+import { formatDate } from "@/lib/format";
 import {
   Star,
   ArrowRight,
@@ -429,9 +430,7 @@ export default function ProductTabs({
                             fontFamily: "'JetBrains Mono', monospace",
                           }}
                         >
-                          {new Date(comment.createdAt).toLocaleDateString(
-                            "en-US",
-                          )}
+                          {formatDate(comment.createdAt)}
                         </span>
                       </div>
                       <div className="space-y-3">

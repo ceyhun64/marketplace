@@ -55,7 +55,7 @@ function ResetPasswordForm() {
 
   const strength = passwordStrength(form.password);
 
-  /* ── Invalid Token ─────────────────────────────────────── */
+  /* -- Invalid Token --------------------------------------- */
   if (!token) {
     return (
       <div className="min-h-screen bg-(--bg-page) flex items-center justify-center p-6">
@@ -82,7 +82,7 @@ function ResetPasswordForm() {
     );
   }
 
-  /* ── Success ───────────────────────────────────────────── */
+  /* -- Success --------------------------------------------- */
   if (done) {
     return (
       <div className="min-h-screen bg-(--bg-page) flex items-center justify-center p-6">
@@ -116,7 +116,7 @@ function ResetPasswordForm() {
     );
   }
 
-  /* ── Main Form ─────────────────────────────────────────── */
+  /* -- Main Form ------------------------------------------- */
   return (
     <div className="min-h-screen bg-(--bg-page) flex items-center justify-center p-6">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

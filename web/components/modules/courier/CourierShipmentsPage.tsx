@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// -- Types ---------------------------------------------------------------------
 
 type ShipmentStatus =
   | "COURIER_ASSIGNED"
@@ -64,7 +64,7 @@ interface Shipment {
   orderNumber?: string;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// -- Helpers -------------------------------------------------------------------
 
 const STATUS_LABEL: Record<ShipmentStatus, string> = {
   COURIER_ASSIGNED: "Awaiting Pickup",
@@ -155,7 +155,7 @@ function ETAText({ dateStr }: { dateStr: string }) {
   );
 }
 
-// ── Confirm Dialog ─────────────────────────────────────────────────────────────
+// -- Confirm Dialog -------------------------------------------------------------
 
 function ActionDialog({
   open,
@@ -250,7 +250,7 @@ function ActionDialog({
   );
 }
 
-// ── Shipment Card Skeleton ─────────────────────────────────────────────────────
+// -- Shipment Card Skeleton -----------------------------------------------------
 
 function ShipmentCardSkeleton() {
   return (
@@ -269,7 +269,7 @@ function ShipmentCardSkeleton() {
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// -- Main Page -----------------------------------------------------------------
 
 export default function CourierShipmentsPage() {
   const [search, setSearch] = useState("");

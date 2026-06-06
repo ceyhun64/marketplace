@@ -106,7 +106,7 @@ export function StoreProductGrid({ storeSlug, offers, isLoading }: StoreProductG
 
   return (
     <div>
-      {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
+      {/* -- Toolbar ----------------------------------------------------------- */}
       <div
         className="flex flex-col sm:flex-row gap-3 mb-5 p-3 rounded-2xl"
         style={{
@@ -166,7 +166,7 @@ export function StoreProductGrid({ storeSlug, offers, isLoading }: StoreProductG
         </div>
       </div>
 
-      {/* ── Category tabs ───────────────────────────────────────────────────── */}
+      {/* -- Category tabs ----------------------------------------------------- */}
       {categories.length > 0 && (
         <div className="flex items-center gap-2 mb-5 overflow-x-auto pb-1 scrollbar-none">
           <button
@@ -198,7 +198,7 @@ export function StoreProductGrid({ storeSlug, offers, isLoading }: StoreProductG
         </div>
       )}
 
-      {/* ── Result count ────────────────────────────────────────────────────── */}
+      {/* -- Result count ------------------------------------------------------ */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-xs" style={{ color: "#9a9a9a" }}>
           {filtered.length} {filtered.length === 1 ? "product" : "products"}
@@ -211,7 +211,7 @@ export function StoreProductGrid({ storeSlug, offers, isLoading }: StoreProductG
         </p>
       </div>
 
-      {/* ── Empty state ─────────────────────────────────────────────────────── */}
+      {/* -- Empty state ------------------------------------------------------- */}
       {filtered.length === 0 ? (
         <div
           className="flex flex-col items-center justify-center py-20 rounded-2xl"
@@ -240,7 +240,7 @@ export function StoreProductGrid({ storeSlug, offers, isLoading }: StoreProductG
           )}
         </div>
       ) : (
-        /* ── Product grid ─────────────────────────────────────────────────── */
+        /* -- Product grid --------------------------------------------------- */
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {filtered.map((offer) => {
             const product = offerToProduct(offer);

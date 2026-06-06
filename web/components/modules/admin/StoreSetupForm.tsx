@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useAdminSetupStore } from "@/queries/useAdmin";
 
-// ── Schema ────────────────────────────────────────────────────────────────────
+// -- Schema --------------------------------------------------------------------
 
 const schema = z.object({
   storeName: z
@@ -42,14 +42,14 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-// ── Helper: inline field error ────────────────────────────────────────────────
+// -- Helper: inline field error ------------------------------------------------
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return <p className="text-xs font-medium text-destructive mt-1">{message}</p>;
 }
 
-// ── Props ─────────────────────────────────────────────────────────────────────
+// -- Props ---------------------------------------------------------------------
 
 interface StoreSetupFormProps {
   merchantId: string;
@@ -58,7 +58,7 @@ interface StoreSetupFormProps {
   onSuccess?: () => void;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// -- Component -----------------------------------------------------------------
 
 export function StoreSetupForm({
   merchantId,

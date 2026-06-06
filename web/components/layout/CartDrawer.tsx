@@ -30,7 +30,7 @@ import { useUI } from "@/hooks/use-ui";
 import { useAuth } from "@/hooks/use-auth";
 import { formatPrice } from "@/lib/format";
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// -- Component -----------------------------------------------------------------
 
 export default function CartDrawer() {
   const { cartOpen, closeCart } = useUI();
@@ -54,7 +54,7 @@ export default function CartDrawer() {
         className="w-full sm:max-w-md p-0 flex flex-col"
         style={{ background: "var(--bg-surface)" }}
       >
-        {/* ── Header ── */}
+        {/* -- Header -- */}
         <SheetHeader className="px-5 pt-5 pb-4 border-b border-(--border-light) shrink-0">
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2.5">
@@ -85,7 +85,7 @@ export default function CartDrawer() {
           </div>
         </SheetHeader>
 
-        {/* ── Body ── */}
+        {/* -- Body -- */}
         {isEmpty ? (
           <EmptyCart onClose={closeCart} />
         ) : (
@@ -109,7 +109,7 @@ export default function CartDrawer() {
                 ))}
               </div>
 
-              {/* ── Shipping selector ── */}
+              {/* -- Shipping selector -- */}
               <div className="px-5 pb-4">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-(--text-tertiary) mb-2.5">
                   Shipping
@@ -154,7 +154,7 @@ export default function CartDrawer() {
               </div>
             </ScrollArea>
 
-            {/* ── Footer: Order summary + CTA ── */}
+            {/* -- Footer: Order summary + CTA -- */}
             <div
               className="shrink-0 px-5 pt-4 pb-5 border-t border-(--border-light) space-y-3"
               style={{ background: "var(--off-white-2)" }}
@@ -208,7 +208,7 @@ export default function CartDrawer() {
   );
 }
 
-// ── Cart item row ─────────────────────────────────────────────────────────────
+// -- Cart item row -------------------------------------------------------------
 
 function CartItemRow({
   item,
@@ -309,7 +309,7 @@ function CartItemRow({
   );
 }
 
-// ── Empty state ───────────────────────────────────────────────────────────────
+// -- Empty state ---------------------------------------------------------------
 
 function EmptyCart({ onClose }: { onClose: () => void }) {
   return (

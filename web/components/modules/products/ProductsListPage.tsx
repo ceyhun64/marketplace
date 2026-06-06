@@ -32,7 +32,7 @@ import { ProductCard } from "@/components/modules/store/ProductCard";
 import { formatPrice } from "@/lib/format";
 import type { Product } from "@/types/entities";
 
-// ── Sort options ──────────────────────────────────────────────────────────────
+// -- Sort options --------------------------------------------------------------
 
 const SORT_OPTIONS = [
   { value: "newest",     label: "Newest first"       },
@@ -43,7 +43,7 @@ const SORT_OPTIONS = [
 
 const PRICE_MAX = 50_000;
 
-// ── Skeleton card ─────────────────────────────────────────────────────────────
+// -- Skeleton card -------------------------------------------------------------
 
 function ProductSkeleton() {
   return (
@@ -65,7 +65,7 @@ function ProductSkeleton() {
   );
 }
 
-// ── Filter section wrapper ────────────────────────────────────────────────────
+// -- Filter section wrapper ----------------------------------------------------
 
 function FilterSection({
   title,
@@ -107,7 +107,7 @@ function FilterSection({
   );
 }
 
-// ── Filter sidebar content ────────────────────────────────────────────────────
+// -- Filter sidebar content ----------------------------------------------------
 
 interface SidebarProps {
   filters:         ProductFilters;
@@ -143,7 +143,7 @@ function SidebarContent({
   return (
     <div className="space-y-0 divide-y divide-(--border-subtle)">
 
-      {/* ── Categories ── */}
+      {/* -- Categories -- */}
       <FilterSection title="Category">
         <ul className="space-y-0.5">
           {[{ slug: undefined, name: "All Categories", count: undefined }, ...rootCats.map(c => ({ slug: c.slug, name: c.name, count: c.productCount }))].map((cat) => {
@@ -180,7 +180,7 @@ function SidebarContent({
         </ul>
       </FilterSection>
 
-      {/* ── Price range ── */}
+      {/* -- Price range -- */}
       <FilterSection title="Price Range" count={
         (filters.minPrice || filters.maxPrice) ? 1 : 0
       }>
@@ -217,7 +217,7 @@ function SidebarContent({
         </div>
       </FilterSection>
 
-      {/* ── Rating ── */}
+      {/* -- Rating -- */}
       <FilterSection title="Min Rating" count={minRating > 0 ? 1 : 0}>
         <div className="space-y-1">
           {[4, 3, 2, 1].map((stars) => {
@@ -255,7 +255,7 @@ function SidebarContent({
         </div>
       </FilterSection>
 
-      {/* ── Availability ── */}
+      {/* -- Availability -- */}
       <FilterSection title="Availability" count={inStockOnly ? 1 : 0}>
         <div className="flex items-center justify-between px-1">
           <span
@@ -271,7 +271,7 @@ function SidebarContent({
         </div>
       </FilterSection>
 
-      {/* ── Tags ── */}
+      {/* -- Tags -- */}
       {availTags && availTags.length > 0 && (
         <FilterSection title="Tags" count={selectedTags.length}>
           <div className="flex flex-wrap gap-1.5 px-1">
@@ -298,7 +298,7 @@ function SidebarContent({
         </FilterSection>
       )}
 
-      {/* ── Reset ── */}
+      {/* -- Reset -- */}
       {activeCount > 0 && (
         <div className="pt-4">
           <button
@@ -337,7 +337,7 @@ function SidebarContent({
   );
 }
 
-// ── Active filter chips ───────────────────────────────────────────────────────
+// -- Active filter chips -------------------------------------------------------
 
 function ActiveChips({
   filters, minRating, inStockOnly, priceRange,
@@ -388,13 +388,13 @@ function ActiveChips({
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// -- Main page -----------------------------------------------------------------
 
 export default function ProductsListPage() {
   const searchParams = useSearchParams();
   const router       = useRouter();
 
-  // ── URL-driven filter state ────────────────────────────────────────────────
+  // -- URL-driven filter state ------------------------------------------------
   const [filters, setFilters] = useState<ProductFilters>({
     page:     1,
     limit:    24,
@@ -434,7 +434,7 @@ export default function ProductsListPage() {
     inStockOnly ? "stock" : null,
   ].filter(Boolean).length;
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
+  // -- Handlers ---------------------------------------------------------------
 
   const handleFilter = useCallback((key: keyof ProductFilters, value: unknown) => {
     setFilters((p) => ({ ...p, [key]: value, page: 1 }));
@@ -473,12 +473,12 @@ export default function ProductsListPage() {
     activeCount,
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // -- Render -----------------------------------------------------------------
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
 
-      {/* ── Hero header ── */}
+      {/* -- Hero header -- */}
       <div
         style={{
           background: "var(--charcoal)",
@@ -569,10 +569,10 @@ export default function ProductsListPage() {
         </div>
       </div>
 
-      {/* ── Body ── */}
+      {/* -- Body -- */}
       <div className="max-w-325 mx-auto px-4 lg:px-8 py-7">
 
-        {/* ── Toolbar ── */}
+        {/* -- Toolbar -- */}
         <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
           <div className="flex items-center gap-2">
             {/* Mobile filter trigger */}
@@ -666,7 +666,7 @@ export default function ProductsListPage() {
           onPriceRange={setPriceRange} onPriceCommit={handlePriceCommit}
         />
 
-        {/* ── Layout: sidebar + grid ── */}
+        {/* -- Layout: sidebar + grid -- */}
         <div className="flex gap-8 items-start">
 
           {/* Desktop sidebar */}
@@ -780,7 +780,7 @@ export default function ProductsListPage() {
         </div>
       </div>
 
-      {/* ── Mobile filter sheet ── */}
+      {/* -- Mobile filter sheet -- */}
       <Sheet open={showFilters} onOpenChange={(o) => !o && setShowFilters(false)}>
         <SheetContent side="left" className="w-80 p-0 flex flex-col" style={{ background: "#fff" }}>
           <SheetHeader className="px-5 pt-5 pb-4 border-b border-(--border-light) shrink-0">

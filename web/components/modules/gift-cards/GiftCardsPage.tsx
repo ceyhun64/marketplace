@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
-// ── Static data ───────────────────────────────────────────────────────────────
+// -- Static data ---------------------------------------------------------------
 const AMOUNTS = [50, 100, 200, 500, 1000];
 
 const DESIGNS = [
@@ -70,7 +70,7 @@ const HOW_IT_WORKS = [
 const CODE_REGEX = /^GC-[A-Z0-9]{4}-[A-Z0-9]{4}$/i;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// ── Types ──────────────────────────────────────────────────────────────────────
+// -- Types ----------------------------------------------------------------------
 type BalanceState =
   | { status: "idle" }
   | { status: "loading" }
@@ -81,7 +81,7 @@ type BalanceState =
 type RedeemState = "idle" | "loading" | "success" | "invalid";
 type PurchaseState = "idle" | "loading" | "success";
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
+// -- Helpers --------------------------------------------------------------------
 function formatCode(raw: string): string {
   const clean = raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
   if (clean.length <= 2) return clean;
@@ -93,7 +93,7 @@ function isValidEmail(email: string): boolean {
   return EMAIL_REGEX.test(email.trim());
 }
 
-// ── Hero gift-card visual ──────────────────────────────────────────────────────
+// -- Hero gift-card visual ------------------------------------------------------
 function HeroCards() {
   return (
     <div
@@ -234,7 +234,7 @@ function HeroCards() {
   );
 }
 
-// ── Card preview component ─────────────────────────────────────────────────────
+// -- Card preview component -----------------------------------------------------
 function CardPreview({
   gradient,
   amount,
@@ -337,7 +337,7 @@ function CardPreview({
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// -- Page ----------------------------------------------------------------------
 export default function GiftCardsPage() {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(100);
   const [customAmount, setCustomAmount] = useState("");
@@ -371,7 +371,7 @@ export default function GiftCardsPage() {
 
   const selectedDesignObj = DESIGNS.find((d) => d.id === selectedDesign)!;
 
-  // ── Handlers ────────────────────────────────────────────────────────────────
+  // -- Handlers ----------------------------------------------------------------
   const handleCheckBalance = async () => {
     const code = balanceCode.trim();
     if (!code) return;
@@ -423,7 +423,7 @@ export default function GiftCardsPage() {
 
   return (
     <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      {/* -- Hero ----------------------------------------------------------- */}
       <div
         className="relative overflow-hidden py-16 px-4"
         style={{ background: "var(--charcoal)" }}
@@ -530,12 +530,12 @@ export default function GiftCardsPage() {
         </div>
       </div>
 
-      {/* ── Main content ─────────────────────────────────────────────────── */}
+      {/* -- Main content --------------------------------------------------- */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-14 grid lg:grid-cols-[1fr_400px] gap-12">
-        {/* ── Left: Purchase form ─────────────────────────────────────── */}
+        {/* -- Left: Purchase form --------------------------------------- */}
         <div className="space-y-8">
           {purchaseState === "success" ? (
-            /* ── Success state ── */
+            /* -- Success state -- */
             <div
               className="rounded-2xl p-10 text-center"
               style={{
@@ -852,7 +852,7 @@ export default function GiftCardsPage() {
           )}
         </div>
 
-        {/* ── Right: Preview + tools ──────────────────────────────────── */}
+        {/* -- Right: Preview + tools ------------------------------------ */}
         <div className="space-y-6">
           {/* Card preview */}
           <div
@@ -1064,7 +1064,7 @@ export default function GiftCardsPage() {
         </div>
       </div>
 
-      {/* ── How it works ─────────────────────────────────────────────────── */}
+      {/* -- How it works --------------------------------------------------- */}
       <div
         className="py-16 px-4"
         style={{

@@ -23,80 +23,10 @@ import {
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { StatCardSkeleton } from "@/components/ui/stat-card-skeleton";
+import { Empty, EmptyMedia, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 
-// ── Status helpers ──────────────────────────────────────────────────────────
-
-const STATUS_LABEL: Record<string, string> = {
-  COURIER_ASSIGNED: "Awaiting Pickup",
-  PICKED_UP: "Picked Up",
-  IN_TRANSIT: "In Transit",
-  OUT_FOR_DELIVERY: "Out for Delivery",
-  DELIVERED: "Delivered",
-  FAILED: "Failed",
-};
-
-const STATUS_TOKENS: Record<
-  string,
-  { text: string; bg: string; border: string }
-> = {
-  COURIER_ASSIGNED: {
-    text: "text-(--warning)",
-    bg: "bg-(--warning-bg)",
-    border: "border-(--warning-border)",
-  },
-  PICKED_UP: {
-    text: "text-(--info)",
-    bg: "bg-(--info-bg)",
-    border: "border-(--info-border)",
-  },
-  IN_TRANSIT: {
-    text: "text-(--info)",
-    bg: "bg-(--info-bg)",
-    border: "border-(--info-border)",
-  },
-  OUT_FOR_DELIVERY: {
-    text: "text-(--danger)",
-    bg: "bg-(--danger-bg)",
-    border: "border-(--danger-border)",
-  },
-  DELIVERED: {
-    text: "text-(--success)",
-    bg: "bg-(--success-bg)",
-    border: "border-(--success-border)",
-  },
-  FAILED: {
-    text: "text-(--danger)",
-    bg: "bg-(--danger-bg)",
-    border: "border-(--danger-border)",
-  },
-};
-
-function StatusPill({ status }: { status: string }) {
-  const t = STATUS_TOKENS[status] ?? {
-    text: "text-(--text-secondary)",
-    bg: "bg-(--off-white-2)",
-    border: "border-(--border-light)",
-  };
-  return (
-    <span
-      className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold border ${t.text} ${t.bg} ${t.border}`}
-    >
-      {STATUS_LABEL[status] ?? status}
-    </span>
-  );
-}
-
-function StatSkeleton() {
-  return (
-    <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5">
-      <div className="flex items-center justify-between mb-3">
-        <Skeleton className="h-3 w-20" />
-        <Skeleton className="h-7 w-7 rounded-lg" />
-      </div>
-      <Skeleton className="h-8 w-12" />
-    </div>
-  );
-}
 
 function ShipmentCardSkeleton() {
   return (
@@ -112,7 +42,7 @@ function ShipmentCardSkeleton() {
   );
 }
 
-// ── Main Component ──────────────────────────────────────────────────────────
+// -- Main Component ----------------------------------------------------------
 
 export default function CourierDashboardPage() {
   const { data: shipments = [], isLoading } = useMyCourierShipments();
@@ -228,7 +158,7 @@ export default function CourierDashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {isLoading
-          ? Array.from({ length: 4 }).map((_, i) => <StatSkeleton key={i} />)
+          ? Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
           : stats.map((s) => (
               <div
                 key={s.label}
@@ -273,15 +203,13 @@ export default function CourierDashboardPage() {
             ))}
           </div>
         ) : active.length === 0 ? (
-          <div className="p-12 text-center">
-            <Package className="w-10 h-10 text-(--text-tertiary) opacity-20 mx-auto mb-3" />
-            <p className="text-sm text-(--text-secondary) font-medium">
-              No active tasks
-            </p>
-            <p className="text-xs text-(--text-tertiary) mt-1">
-              New tasks will appear here
-            </p>
-          </div>
+          <Empty>
+            <EmptyMedia variant="icon"><Package className="w-5 h-5" /></EmptyMedia>
+            <EmptyHeader>
+              <EmptyTitle>No active tasks</EmptyTitle>
+              <EmptyDescription>New tasks will appear here</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <div className="divide-y divide-(--border-subtle)">
             {active.slice(0, 8).map((s: any) => (
@@ -298,7 +226,7 @@ export default function CourierDashboardPage() {
                       </span>
                     )}
                   </div>
-                  <StatusPill status={s.status} />
+                  <StatusBadge type="order" status={s.status} />
                 </div>
 
                 {/* Customer & Address */}

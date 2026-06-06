@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 
-// ── Typed helper for Axios-shaped errors ─────────────────────────────────────
+// -- Typed helper for Axios-shaped errors -------------------------------------
 
 interface ApiError {
   response?: { status?: number };
@@ -22,7 +22,7 @@ function shouldRetry(failureCount: number, error: unknown): boolean {
   return failureCount < 2;
 }
 
-// ── Provider ──────────────────────────────────────────────────────────────────
+// -- Provider ------------------------------------------------------------------
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   // Rehydrate the Zustand auth store synchronously before any query runs.

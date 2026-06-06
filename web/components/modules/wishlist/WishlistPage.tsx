@@ -47,7 +47,7 @@ function WishlistSkeleton() {
   );
 }
 
-// ── Guest view ────────────────────────────────────────────────────────────────
+// -- Guest view ----------------------------------------------------------------
 
 function GuestWishlist() {
   const local = useLocalWishlist();
@@ -181,7 +181,7 @@ function GuestWishlist() {
   );
 }
 
-// ── Authenticated user view ───────────────────────────────────────────────────
+// -- Authenticated user view ---------------------------------------------------
 
 function AuthWishlist() {
   const { addItem, hasItem } = useCart();
@@ -418,7 +418,7 @@ function AuthWishlist() {
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// -- Page ----------------------------------------------------------------------
 
 export default function WishlistPage() {
   const { user } = useAuth();

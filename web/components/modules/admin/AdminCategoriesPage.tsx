@@ -36,7 +36,7 @@ import {
   Tag,
 } from "lucide-react";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// -- Types ---------------------------------------------------------------------
 
 interface Category {
   id: string;
@@ -57,7 +57,7 @@ interface CategoryForm {
   sortOrder: string;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// -- Helpers -------------------------------------------------------------------
 
 const EMPTY_FORM: CategoryForm = {
   name: "",
@@ -101,7 +101,7 @@ function isUrl(val: string): boolean {
   return val.startsWith("http://") || val.startsWith("https://");
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// -- Main Page -----------------------------------------------------------------
 
 export default function AdminCategoriesPage() {
   const queryClient = useQueryClient();
@@ -348,7 +348,7 @@ export default function AdminCategoriesPage() {
   );
 }
 
-// ── Category Card (root row + expandable subs) ─────────────────────────────────
+// -- Category Card (root row + expandable subs) ---------------------------------
 
 function CategoryCard({
   cat,
@@ -465,7 +465,7 @@ function CategoryCard({
   );
 }
 
-// ── Subcategory Row ────────────────────────────────────────────────────────────
+// -- Subcategory Row ------------------------------------------------------------
 
 function SubCategoryRow({
   sub,
@@ -519,7 +519,7 @@ function SubCategoryRow({
   );
 }
 
-// ── Category Icon ─────────────────────────────────────────────────────────────
+// -- Category Icon -------------------------------------------------------------
 
 function CategoryIcon({
   icon,
@@ -561,7 +561,7 @@ function CategoryIcon({
   );
 }
 
-// ── Category Form Dialog ───────────────────────────────────────────────────────
+// -- Category Form Dialog -------------------------------------------------------
 
 function CategoryDialog({
   mode,
@@ -656,7 +656,7 @@ function CategoryDialog({
           {/* Name */}
           <div className="space-y-1.5">
             <Label>
-              Name <span className="text-red-500">*</span>
+              Name <span className="text-(--danger)">*</span>
             </Label>
             <Input
               placeholder="e.g. Electronics"
@@ -778,7 +778,7 @@ function CategoryDialog({
           <Button variant="outline" onClick={onClose} disabled={isSaving}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSaving}>
+          <Button onClick={handleSubmit} disabled={isSaving || !form.name.trim() || !form.slug.trim()}>
             {isSaving ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
@@ -796,7 +796,7 @@ function CategoryDialog({
   );
 }
 
-// ── Delete Dialog ─────────────────────────────────────────────────────────────
+// -- Delete Dialog -------------------------------------------------------------
 
 function DeleteDialog({
   target,

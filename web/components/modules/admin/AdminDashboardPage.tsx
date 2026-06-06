@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { Skeleton } from "@/components/ui/skeleton";
+import { StatCardSkeleton } from "@/components/ui/stat-card-skeleton";
 import {
   ShoppingCart,
   Users,
@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// -- Types ---------------------------------------------------------------------
 
 interface DashboardStats {
   totalOrders: number;
@@ -38,19 +38,7 @@ interface DashboardStats {
   totalUsers: number;
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
-
-function StatCardSkeleton() {
-  return (
-    <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5">
-      <Skeleton className="h-7 w-7 rounded-lg mb-3" />
-      <Skeleton className="h-7 w-20 mb-1.5" />
-      <Skeleton className="h-3 w-28" />
-    </div>
-  );
-}
-
-// ── Stat card ─────────────────────────────────────────────────────────────────
+// -- Stat card -----------------------------------------------------------------
 
 // Maps arbitrary color groups to our 4 semantic tokens
 const COLOR_MAP: Record<string, { text: string; bg: string }> = {
@@ -68,7 +56,7 @@ const COLOR_MAP: Record<string, { text: string; bg: string }> = {
   gray: { text: "text-(--text-tertiary)", bg: "bg-(--off-white-2)" },
 };
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// -- Main Component ------------------------------------------------------------
 
 export default function AdminDashboardPage() {
   const { data, isLoading } = useQuery({

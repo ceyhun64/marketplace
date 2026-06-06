@@ -10,7 +10,7 @@ import {
   type ShippingOption,
 } from "@/queries/useShipping";
 
-// ── Props ─────────────────────────────────────────────────────────────────────
+// -- Props ---------------------------------------------------------------------
 
 interface ShippingRateSelectProps {
   merchantId: string;
@@ -21,7 +21,7 @@ interface ShippingRateSelectProps {
   className?: string;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// -- Helpers -------------------------------------------------------------------
 
 function formatWindow(start?: string, end?: string): string {
   if (!start || !end) return "";
@@ -30,7 +30,7 @@ function formatWindow(start?: string, end?: string): string {
   return s === e ? s : `${s} – ${e}`;
 }
 
-// ── Sub-component: tek bir kargo seçeneği kartı ────────────────────────────
+// -- Sub-component: tek bir kargo seçeneği kartı ----------------------------
 
 function ShippingOptionCard({
   option,
@@ -128,7 +128,7 @@ function ShippingOptionCard({
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// -- Main Component ------------------------------------------------------------
 
 export function ShippingRateSelect({
   merchantId,

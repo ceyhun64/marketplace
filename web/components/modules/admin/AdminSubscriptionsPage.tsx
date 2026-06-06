@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
+import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -365,12 +366,12 @@ export default function AdminSubscriptionsPage() {
                   </TableCell>
                   <TableCell className="text-xs text-(--text-tertiary)">
                     {merchant.startDate
-                      ? new Date(merchant.startDate).toLocaleDateString("en-US")
+                      ? formatDate(merchant.startDate)
                       : "—"}
                   </TableCell>
                   <TableCell className="text-xs text-(--text-tertiary)">
                     {merchant.endDate
-                      ? new Date(merchant.endDate).toLocaleDateString("en-US")
+                      ? formatDate(merchant.endDate)
                       : "—"}
                   </TableCell>
                   <TableCell className="text-right">

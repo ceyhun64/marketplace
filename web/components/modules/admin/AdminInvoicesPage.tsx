@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
+import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -324,7 +325,7 @@ export default function AdminInvoicesPage() {
                           ${(inv.totalAmount / 100).toFixed(2)}
                         </TableCell>
                         <TableCell className="text-sm text-(--text-tertiary)">
-                          {new Date(inv.issuedAt).toLocaleDateString()}
+                          {formatDate(inv.issuedAt)}
                         </TableCell>
                         <TableCell>
                           {inv.pdfUrl ? (
@@ -470,7 +471,7 @@ export default function AdminInvoicesPage() {
                         {entry.paymentReference ?? "—"}
                       </TableCell>
                       <TableCell className="text-sm text-(--text-tertiary)">
-                        {new Date(entry.createdAt).toLocaleDateString()}
+                        {formatDate(entry.createdAt)}
                       </TableCell>
                     </TableRow>
                   ))}

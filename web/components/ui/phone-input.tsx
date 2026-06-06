@@ -32,7 +32,7 @@ function FlagIcon({ code, className }: { code: string; className?: string }) {
   return <Flag className={cn("h-full w-full", className)} />;
 }
 
-// ─── 1. Professional Country Selector (using Shadcn UI) ──────────────────────
+// --- 1. Professional Country Selector (using Shadcn UI) ----------------------
 const CountrySelect = ({
   disabled,
   value,
@@ -116,7 +116,7 @@ const CountrySelect = ({
   );
 };
 
-// ─── 2. Phone Input Field (Right Side) ───────────────────────────────────────
+// --- 2. Phone Input Field (Right Side) ---------------------------------------
 const PhoneInputField = React.forwardRef<
   HTMLInputElement,
   React.InputHTMLAttributes<HTMLInputElement>
@@ -136,7 +136,7 @@ const PhoneInputField = React.forwardRef<
 ));
 PhoneInputField.displayName = "PhoneInputField";
 
-// ─── 3. Main PhoneInput Component ───────────────────────────────────────────
+// --- 3. Main PhoneInput Component -------------------------------------------
 export interface PhoneInputProps {
   value?: Value | string;
   onChange: (value: Value | undefined) => void;
