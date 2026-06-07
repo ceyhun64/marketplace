@@ -33,6 +33,14 @@ function accent(index: number) {
   return PALETTE[index % PALETTE.length];
 }
 
+// Parent categories report productCount: 0 when their products live on
+// subcategories rather than the parent itself — roll subcategory counts up
+// so the displayed total reflects everything reachable under this category.
+function effectiveProductCount(category: Category): number {
+  const subs = category.subCategories ?? [];
+  return (category.productCount ?? 0) + subs.reduce((sum, s) => sum + (s.productCount ?? 0), 0);
+}
+
 // -- Skeleton ------------------------------------------------------------------
 function CategoryCardSkeleton() {
   return (
@@ -65,6 +73,7 @@ function CategoryCard({
 }) {
   const { bg, color } = accent(index);
   const subs = category.subCategories ?? [];
+  const productCount = effectiveProductCount(category);
 
   // When searching, highlight matching subcategories
   const visibleSubs = query
@@ -103,9 +112,9 @@ function CategoryCard({
           >
             {category.name}
           </h3>
-          {category.productCount !== undefined && (
+          {productCount > 0 && (
             <p className="text-xs mt-0.5" style={{ color: "var(--charcoal-mist)" }}>
-              {category.productCount.toLocaleString()} products
+              {productCount.toLocaleString()} products
             </p>
           )}
         </div>
@@ -173,7 +182,7 @@ export default function CategoriesPage() {
     () =>
       (categories ?? [])
         .filter((c) => !c.parentId)
-        .reduce((sum, c) => sum + (c.productCount ?? 0), 0),
+        .reduce((sum, c) => sum + effectiveProductCount(c), 0),
     [categories],
   );
 

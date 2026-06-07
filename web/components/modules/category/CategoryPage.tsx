@@ -5,9 +5,7 @@ import Link from "next/link";
 import { ChevronRight, Home, Layers, Tag } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
-import { CategoryControls } from "@/components/modules/category/CategoryControls";
-import { CategoryProductGrid } from "@/components/modules/category/CategoryProductGrid";
-import type { Product } from "@/types/entities";
+import { CategoryFilteredGrid } from "@/components/modules/category/CategoryFilteredGrid";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -23,60 +21,20 @@ interface PageProps {
 // -- Data fetching -------------------------------------------------------------
 async function CategoryProducts({
   slug,
-  searchParams,
 }: {
   slug: string;
-  searchParams: Record<string, string | undefined>;
 }) {
-  const qs = new URLSearchParams();
-  if (searchParams.page)       qs.set("page", searchParams.page);
-  if (searchParams.sort)       qs.set("sort", searchParams.sort);
-  if (searchParams.subcategory) qs.set("subcategory", searchParams.subcategory);
-  if (searchParams.minPrice)   qs.set("minPrice", searchParams.minPrice);
-  if (searchParams.maxPrice)   qs.set("maxPrice", searchParams.maxPrice);
-
-  const [categoryData, productsData] = await Promise.all([
-    fetchISR<{ category: any; SubCategories: any[]; products: any[] }>(
-      `/api/categories/${slug}`,
-    ),
-    fetchISR<{ items: any[]; data?: any[] }>(
-      `/api/products?category=${slug}&${qs.toString()}`,
-    ),
-  ]);
+  const categoryData = await fetchISR<{ category: any; subCategories: any[] }>(
+    `/api/categories/${slug}`,
+  );
 
   if (!categoryData?.category) notFound();
 
   const category = {
     ...categoryData.category,
-    subCategories: categoryData.SubCategories ?? [],
+    subCategories: categoryData.subCategories ?? [],
     parent: categoryData.category.parent ?? null,
   };
-
-  const rawProducts =
-    (categoryData.products?.length ?? 0) > 0
-      ? categoryData.products
-      : (productsData?.items ?? productsData?.data ?? []);
-
-  const products: Product[] = rawProducts.map((p: any): Product => ({
-    id: p.id ?? p.Id,
-    merchantId: p.merchantId ?? "",
-    merchantStoreName: p.merchantStoreName ?? p.merchant?.storeName ?? "",
-    merchantSlug: p.merchantSlug ?? p.merchant?.slug ?? "",
-    name: p.name ?? p.Name,
-    description: p.description ?? "",
-    categoryId: p.categoryId ?? "",
-    categoryName: p.categoryName ?? p.category?.name ?? "",
-    images: p.images ?? p.Images ?? [],
-    tags: p.tags ?? [],
-    price: p.price ?? p.Price ?? p.minPrice ?? 0,
-    stock: p.stock ?? 0,
-    publishToMarket: p.publishToMarket ?? true,
-    publishToStore: p.publishToStore ?? true,
-    isApproved: p.isApproved ?? true,
-    isDeleted: p.isDeleted ?? false,
-    createdAt: p.createdAt ?? "",
-    updatedAt: p.updatedAt,
-  }));
 
   const subcategories: { id: string; name: string; slug: string; productCount?: number }[] =
     category.subCategories ?? [];
@@ -168,62 +126,18 @@ async function CategoryProducts({
           </div>
 
           {/* Product count */}
-          <div
-            className="flex items-center gap-1.5 mb-6"
-            style={{ color: "rgba(255,255,255,0.45)" }}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span className="text-sm">
-              <span className="font-semibold text-white">
-                {products.length.toLocaleString()}
-              </span>{" "}
-              products
-            </span>
-          </div>
-
-          {/* Subcategory tabs */}
-          {subcategories.length > 0 && (
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none -mb-1">
-              <Link
-                href={`/category/${slug}`}
-                className="shrink-0 px-3.5 h-8 rounded-lg text-xs font-semibold transition-all duration-150 flex items-center"
-                style={
-                  !searchParams.subcategory
-                    ? { background: "#c8102e", color: "#fff" }
-                    : {
-                        background: "rgba(255,255,255,0.08)",
-                        color: "rgba(255,255,255,0.65)",
-                        border: "1px solid rgba(255,255,255,0.12)",
-                      }
-                }
-              >
-                All
-              </Link>
-              {subcategories.map((sub) => (
-                <Link
-                  key={sub.id}
-                  href={`/category/${slug}?subcategory=${sub.slug}`}
-                  className="shrink-0 px-3.5 h-8 rounded-lg text-xs font-semibold transition-all duration-150 flex items-center gap-1.5"
-                  style={
-                    searchParams.subcategory === sub.slug
-                      ? { background: "#c8102e", color: "#fff" }
-                      : {
-                          background: "rgba(255,255,255,0.08)",
-                          color: "rgba(255,255,255,0.65)",
-                          border: "1px solid rgba(255,255,255,0.12)",
-                        }
-                  }
-                >
-                  {sub.name}
-                  {sub.productCount !== undefined && (
-                    <span
-                      className="text-[10px] opacity-70"
-                    >
-                      {sub.productCount}
-                    </span>
-                  )}
-                </Link>
-              ))}
+          {category.productCount != null && (
+            <div
+              className="flex items-center gap-1.5 mb-2"
+              style={{ color: "rgba(255,255,255,0.45)" }}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span className="text-sm">
+                <span className="font-semibold text-white">
+                  {category.productCount.toLocaleString()}
+                </span>{" "}
+                products
+              </span>
             </div>
           )}
         </div>
@@ -234,14 +148,7 @@ async function CategoryProducts({
         className="max-w-7xl mx-auto px-4 md:px-8 py-8"
         style={{ background: "var(--off-white)" }}
       >
-        <CategoryControls
-          productCount={products.length}
-          currentSort={searchParams.sort}
-        />
-
-        <div className="pt-6">
-          <CategoryProductGrid products={products} />
-        </div>
+        <CategoryFilteredGrid slug={slug} subcategories={subcategories} />
       </div>
     </>
   );
@@ -275,9 +182,8 @@ function CategorySkeleton() {
 }
 
 // -- Page exports --------------------------------------------------------------
-export default async function CategoryPage({ params, searchParams }: PageProps) {
+export default async function CategoryPage({ params }: PageProps) {
   const resolvedParams = await params;
-  const resolvedSearch = await searchParams;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bazr.com";
 
   const data     = await fetchISR<{ category: { name: string; slug: string } }>(
@@ -297,10 +203,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     <div className="min-h-screen" style={{ background: "var(--off-white)" }}>
       <BreadcrumbJsonLd items={breadcrumbs} />
       <Suspense fallback={<CategorySkeleton />}>
-        <CategoryProducts
-          slug={resolvedParams.slug}
-          searchParams={resolvedSearch}
-        />
+        <CategoryProducts slug={resolvedParams.slug} />
       </Suspense>
     </div>
   );

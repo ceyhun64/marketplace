@@ -38,6 +38,14 @@ function getIcon(slug: string): React.ReactNode {
   return CATEGORY_ICONS[slug] ?? <Tag className="w-5 h-5" />;
 }
 
+// Parent categories report productCount: 0 when their products live on
+// subcategories rather than the parent itself — roll subcategory counts up
+// so the displayed total reflects everything reachable under this category.
+function effectiveProductCount(category: Category): number {
+  const subs = category.subCategories ?? [];
+  return (category.productCount ?? 0) + subs.reduce((sum, s) => sum + (s.productCount ?? 0), 0);
+}
+
 export default function CategoryGrid() {
   const { data, isLoading } = useCategories();
   const [mounted, setMounted] = useState(false);
@@ -143,9 +151,9 @@ function CategoryCard({
         >
           {category.name}
         </h3>
-        {category.productCount != null && (
+        {effectiveProductCount(category) > 0 && (
           <p className="font-mono text-[11px] text-(--charcoal-soft) uppercase tracking-[0.08em]">
-            {category.productCount.toLocaleString("en-US")} items
+            {effectiveProductCount(category).toLocaleString("en-US")} items
           </p>
         )}
       </div>
