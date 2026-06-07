@@ -174,11 +174,13 @@ export default function AnnouncementBar() {
             >
               <span
                 aria-hidden="true"
-                className="block rounded-full transition-all duration-300"
+                className="block rounded-full transition-[transform,background] duration-300"
                 style={{
-                  width: i === current ? 16 : 5,
+                  width: 16,
                   height: 5,
                   borderRadius: 999,
+                  transform: `scaleX(${i === current ? 1 : 0.3125})`,
+                  transformOrigin: "left center",
                   background: i === current ? "#fff" : "rgba(255,255,255,0.25)",
                 }}
               />

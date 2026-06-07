@@ -320,10 +320,12 @@ export default function TestimonialsSection() {
                 >
                   <span
                     aria-hidden="true"
-                    className="block rounded-full transition-all duration-300"
+                    className="block rounded-full transition-[transform,background] duration-300"
                     style={{
-                      width: i === activeIndex ? 20 : 6,
+                      width: 20,
                       height: 6,
+                      transform: `scaleX(${i === activeIndex ? 1 : 0.3})`,
+                      transformOrigin: "left center",
                       background: i === activeIndex ? "var(--red)" : "var(--border-mid)",
                     }}
                   />

@@ -4,6 +4,9 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import ClientLayoutWrapper from "@/components/layout/ClientLayoutWrapper";
+import { API_URL } from "@/lib/constants";
+
+const API_ORIGIN = new URL(API_URL).origin;
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -74,6 +77,10 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${manrope.variable} ${cormorant.variable} ${jetbrainsMono.variable} ${inter.variable}`}
     >
+      <head>
+        <link rel="preconnect" href={API_ORIGIN} crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href={API_ORIGIN} />
+      </head>
       <body
         style={{ fontFamily: "var(--font-manrope), sans-serif" }}
         className="antialiased overflow-x-clip"
