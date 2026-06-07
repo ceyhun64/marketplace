@@ -23,6 +23,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { formatShortDateTime } from "@/lib/format";
 import { toast } from "sonner";
 import {
   Package,
@@ -34,19 +36,10 @@ import {
   ExternalLink,
   ChevronRight,
   AlertCircle,
-  Phone,
 } from "lucide-react";
 import Link from "next/link";
 
 // -- Types ---------------------------------------------------------------------
-
-type ShipmentStatus =
-  | "COURIER_ASSIGNED"
-  | "PICKED_UP"
-  | "IN_TRANSIT"
-  | "OUT_FOR_DELIVERY"
-  | "DELIVERED"
-  | "FAILED";
 
 interface Shipment {
   id: string;
@@ -54,77 +47,14 @@ interface Shipment {
   /** Backend may return any ShipmentStatus value; narrowed at render time */
   status: string;
   customerName: string;
-  customerPhone?: string;
   deliveryAddress: string;
   merchantStoreName: string;
-  merchantAddress?: string;
   estimatedDelivery: string;
   labelUrl?: string;
-  productSummary?: string;
   orderNumber?: string;
 }
 
 // -- Helpers -------------------------------------------------------------------
-
-const STATUS_LABEL: Record<ShipmentStatus, string> = {
-  COURIER_ASSIGNED: "Awaiting Pickup",
-  PICKED_UP: "Picked Up",
-  IN_TRANSIT: "In Transit",
-  OUT_FOR_DELIVERY: "Out for Delivery",
-  DELIVERED: "Delivered",
-  FAILED: "Failed",
-};
-
-const STATUS_TOKENS: Record<
-  ShipmentStatus,
-  { text: string; bg: string; border: string }
-> = {
-  COURIER_ASSIGNED: {
-    text: "text-(--warning)",
-    bg: "bg-(--warning-bg)",
-    border: "border-(--warning-border)",
-  },
-  PICKED_UP: {
-    text: "text-(--info)",
-    bg: "bg-(--info-bg)",
-    border: "border-(--info-border)",
-  },
-  IN_TRANSIT: {
-    text: "text-(--info)",
-    bg: "bg-(--info-bg)",
-    border: "border-(--info-border)",
-  },
-  OUT_FOR_DELIVERY: {
-    text: "text-(--danger)",
-    bg: "bg-(--danger-bg)",
-    border: "border-(--danger-border)",
-  },
-  DELIVERED: {
-    text: "text-(--success)",
-    bg: "bg-(--success-bg)",
-    border: "border-(--success-border)",
-  },
-  FAILED: {
-    text: "text-(--danger)",
-    bg: "bg-(--danger-bg)",
-    border: "border-(--danger-border)",
-  },
-};
-
-function StatusPill({ status }: { status: ShipmentStatus }) {
-  const t = STATUS_TOKENS[status] ?? {
-    text: "text-(--text-secondary)",
-    bg: "bg-(--off-white-2)",
-    border: "border-(--border-light)",
-  };
-  return (
-    <span
-      className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold border ${t.text} ${t.bg} ${t.border}`}
-    >
-      {STATUS_LABEL[status]}
-    </span>
-  );
-}
 
 function ETAText({ dateStr }: { dateStr: string }) {
   const eta = new Date(dateStr);
@@ -144,13 +74,7 @@ function ETAText({ dateStr }: { dateStr: string }) {
         : diffHours < 1
           ? "Less than 1h left"
           : `${diffHours}h left`}{" "}
-      ·{" "}
-      {eta.toLocaleDateString("en-US", {
-        day: "numeric",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-      })}
+      · {formatShortDateTime(eta)}
     </span>
   );
 }
@@ -180,17 +104,17 @@ function ActionDialog({
     try {
       if (action === "pickup") {
         await pickupConfirm.mutateAsync({ id: shipment.id });
-        toast.success("Paket alındı olarak işaretlendi.");
+        toast.success("Package marked as picked up.");
       } else {
         await delivered.mutateAsync({
           id: shipment.id,
           recipientName: recipientName || undefined,
         });
-        toast.success("Paket teslim edildi olarak işaretlendi.");
+        toast.success("Package marked as delivered.");
       }
       onOpenChange(false);
     } catch {
-      toast.error("İşlem başarısız. Tekrar deneyin.");
+      toast.error("Action failed. Please try again.");
     }
   };
 
@@ -199,7 +123,7 @@ function ActionDialog({
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>
-            {action === "pickup" ? "Paketi Aldığını Onayla" : "Teslim Onayı"}
+            {action === "pickup" ? "Confirm Pickup" : "Confirm Delivery"}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
@@ -211,16 +135,16 @@ function ActionDialog({
               {shipment.deliveryAddress}
             </p>
             <p className="font-mono text-xs text-(--text-tertiary)">
-              {shipment.trackingNumber}
+              {shipment.trackingNumber.slice(0, 8).toUpperCase()}
             </p>
           </div>
           {action === "delivered" && (
             <div className="space-y-1.5">
               <Label className="text-sm text-(--text-primary)">
-                Teslim Alan Ad Soyad (isteğe bağlı)
+                Recipient&apos;s Full Name (optional)
               </Label>
               <Input
-                placeholder="Ad Soyad..."
+                placeholder="Full name..."
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
                 className="border-(--border-mid)"
@@ -234,7 +158,7 @@ function ActionDialog({
             className="flex-1"
             onClick={() => onOpenChange(false)}
           >
-            İptal
+            Cancel
           </Button>
           <Button
             className="flex-1 h-11"
@@ -242,7 +166,7 @@ function ActionDialog({
             disabled={isPending}
             style={{ backgroundColor: "var(--charcoal)" }}
           >
-            {isPending ? "İşleniyor..." : "Onayla"}
+            {isPending ? "Processing..." : "Confirm"}
           </Button>
         </div>
       </DialogContent>
@@ -307,12 +231,12 @@ export default function CourierShipmentsPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold text-(--text-primary)">
-          Sevkiyatlarım
+          My Shipments
         </h1>
         <p className="text-sm text-(--text-tertiary) mt-1">
           {activeCount > 0
-            ? `${activeCount} aktif sevkiyat bekliyor`
-            : "Tüm sevkiyatlar tamamlandı"}
+            ? `${activeCount} active shipment${activeCount === 1 ? "" : "s"} pending`
+            : "All shipments completed"}
         </p>
       </div>
 
@@ -321,7 +245,7 @@ export default function CourierShipmentsPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--text-tertiary)" />
           <Input
-            placeholder="Takip no, müşteri adı veya adres..."
+            placeholder="Tracking no, customer name or address..."
             className="pl-9 border-(--border-mid) h-11"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -335,9 +259,9 @@ export default function CourierShipmentsPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="active">Aktif</SelectItem>
-            <SelectItem value="delivered">Teslim Edildi</SelectItem>
-            <SelectItem value="all">Tümü</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="delivered">Delivered</SelectItem>
+            <SelectItem value="all">All</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -352,12 +276,12 @@ export default function CourierShipmentsPage() {
           <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) py-16 text-center">
             <Package className="mx-auto mb-3 h-10 w-10 text-(--text-tertiary) opacity-20" />
             <p className="text-sm font-medium text-(--text-secondary)">
-              Sevkiyat bulunamadı
+              No shipments found
             </p>
             <p className="mt-1 text-xs text-(--text-tertiary)">
               {search
-                ? "Arama kriterlerini değiştirmeyi deneyin."
-                : "Bu filtre için sevkiyat yok."}
+                ? "Try adjusting your search criteria."
+                : "No shipments for this filter."}
             </p>
           </div>
         ) : (
@@ -373,10 +297,13 @@ export default function CourierShipmentsPage() {
               <div className="p-5">
                 {/* Tracking + Status */}
                 <div className="flex items-start justify-between gap-3 mb-3">
-                  <span className="font-mono text-sm font-bold text-(--text-primary)">
-                    {shipment.trackingNumber}
+                  <span
+                    className="font-mono text-sm font-bold text-(--text-primary)"
+                    title={shipment.trackingNumber}
+                  >
+                    {shipment.trackingNumber.slice(0, 8).toUpperCase()}
                   </span>
-                  <StatusPill status={shipment.status as ShipmentStatus} />
+                  <StatusBadge type="shipment" status={shipment.status} />
                 </div>
 
                 {/* Details */}
@@ -393,18 +320,11 @@ export default function CourierShipmentsPage() {
                   </div>
                   <div className="flex items-center gap-2 text-xs text-(--text-tertiary)">
                     <Package className="h-3.5 w-3.5 shrink-0" />
-                    {shipment.productSummary}
+                    {shipment.orderNumber && (
+                      <span className="font-mono">#{shipment.orderNumber}</span>
+                    )}
                     <span>· {shipment.merchantStoreName}</span>
                   </div>
-                  {shipment.customerPhone && (
-                    <a
-                      href={`tel:${shipment.customerPhone}`}
-                      className="flex items-center gap-1.5 text-xs text-(--info) font-medium w-fit"
-                    >
-                      <Phone className="h-3.5 w-3.5" />
-                      {shipment.customerPhone}
-                    </a>
-                  )}
                   {shipment.estimatedDelivery && (
                     <ETAText dateStr={shipment.estimatedDelivery} />
                   )}
@@ -417,16 +337,18 @@ export default function CourierShipmentsPage() {
                     className="flex items-center gap-1.5 text-xs border border-(--border-mid) rounded-xl px-3 py-2.5 text-(--text-secondary) hover:bg-(--bg-sunken) transition-colors font-medium min-h-11"
                   >
                     <ChevronRight className="h-3.5 w-3.5" />
-                    Detay
+                    Details
                   </Link>
                   {shipment.labelUrl && (
-                    <button
-                      onClick={() => window.open(shipment.labelUrl, "_blank")}
+                    <a
+                      href={shipment.labelUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="flex items-center gap-1.5 text-xs border border-(--border-mid) rounded-xl px-3 py-2.5 text-(--text-secondary) hover:bg-(--bg-sunken) transition-colors font-medium min-h-11"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
-                      Etiket
-                    </button>
+                      Label
+                    </a>
                   )}
                   {shipment.status === "COURIER_ASSIGNED" && (
                     <Button
@@ -435,7 +357,7 @@ export default function CourierShipmentsPage() {
                       onClick={() => openAction(shipment, "pickup")}
                     >
                       <Truck className="mr-1.5 h-4 w-4" />
-                      Paketi Aldım
+                      Picked Up
                     </Button>
                   )}
                   {(shipment.status === "PICKED_UP" ||
@@ -448,12 +370,12 @@ export default function CourierShipmentsPage() {
                       onClick={() => openAction(shipment, "delivered")}
                     >
                       <CheckCircle2 className="mr-1.5 h-4 w-4" />
-                      Teslim Ettim
+                      Delivered
                     </Button>
                   )}
                   {shipment.status === "DELIVERED" && (
                     <span className="flex items-center gap-1.5 text-xs text-(--success) font-semibold">
-                      <CheckCircle2 className="h-4 w-4" /> Teslim Edildi
+                      <CheckCircle2 className="h-4 w-4" /> Delivered
                     </span>
                   )}
                 </div>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -36,6 +36,7 @@ import {
   ArrowUpCircle,
 } from "lucide-react";
 import { useAdminAccountingEntries } from "@/queries/useInvoices";
+import { useAdminMerchants } from "@/queries/useAdmin";
 import type { AccountingEntry } from "@/types/entities";
 
 interface AdminInvoice {
@@ -67,11 +68,14 @@ export default function AdminInvoicesPage() {
   );
   const [accountingEntryType, setAccountingEntryType] = useState("all");
 
+  const { data: merchants } = useAdminMerchants({ limit: 100 });
+
   const { data: invoices, isLoading } = useQuery<AdminInvoice[]>({
-    queryKey: ["admin-invoices", search, merchantFilter],
+    queryKey: ["admin-invoices", merchantFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (search) params.set("search", search);
+      // Backend GetAllInvoices doesn't support a "search" query param —
+      // filtering by invoice/customer name is done client-side below.
       if (merchantFilter !== "all") params.set("merchantId", merchantFilter);
       const res = await api.get(`/api/invoices/admin/all?${params}`);
       // Backend: ApiResponse<{ items, totalCount, page, limit }>
@@ -86,6 +90,16 @@ export default function AdminInvoicesPage() {
         vatAmount: inv.vatAmount ?? 0,
       }));
     },
+  });
+
+  const filteredInvoices = (invoices ?? []).filter((inv) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      inv.invoiceNumber.toLowerCase().includes(q) ||
+      inv.customerName.toLowerCase().includes(q) ||
+      inv.merchantName.toLowerCase().includes(q)
+    );
   });
 
   const { data: summary } = useQuery<InvoiceSummary>({
@@ -158,14 +172,14 @@ export default function AdminInvoicesPage() {
     },
     {
       label: "Total Revenue",
-      value: `$${((summary?.totalRevenue ?? 0) / 100).toFixed(2)}`,
+      value: formatCurrency(summary?.totalRevenue ?? 0),
       icon: DollarSign,
       color: "text-(--success)",
       bg: "bg-(--success-bg)",
     },
     {
       label: "Total VAT Collected",
-      value: `$${((summary?.totalVat ?? 0) / 100).toFixed(2)}`,
+      value: formatCurrency(summary?.totalVat ?? 0),
       icon: TrendingUp,
       color: "text-(--info)",
       bg: "bg-(--info-bg)",
@@ -257,6 +271,11 @@ export default function AdminInvoicesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Merchants</SelectItem>
+                  {(merchants?.items ?? []).map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.storeName}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -301,7 +320,7 @@ export default function AdminInvoicesPage() {
                         ))}
                       </TableRow>
                     ))
-                  : (invoices ?? []).map((inv) => (
+                  : filteredInvoices.map((inv) => (
                       <TableRow
                         key={inv.id}
                         className="hover:bg-(--bg-sunken) transition-colors"
@@ -316,13 +335,13 @@ export default function AdminInvoicesPage() {
                           {inv.customerName}
                         </TableCell>
                         <TableCell className="text-sm text-(--text-secondary)">
-                          ${(inv.subTotal / 100).toFixed(2)}
+                          {formatCurrency(inv.subTotal)}
                         </TableCell>
                         <TableCell className="text-sm text-(--text-tertiary)">
-                          ${(inv.vatAmount / 100).toFixed(2)}
+                          {formatCurrency(inv.vatAmount)}
                         </TableCell>
                         <TableCell className="text-sm font-semibold text-(--text-primary)">
-                          ${(inv.totalAmount / 100).toFixed(2)}
+                          {formatCurrency(inv.totalAmount)}
                         </TableCell>
                         <TableCell className="text-sm text-(--text-tertiary)">
                           {formatDate(inv.issuedAt)}
@@ -462,7 +481,9 @@ export default function AdminInvoicesPage() {
                             : "text-(--danger)"
                         }`}
                       >
-                        {entry.amount >= 0 ? "+" : ""}${entry.amount.toFixed(2)}
+                        {entry.amount >= 0
+                          ? `+${formatCurrency(entry.amount)}`
+                          : `-${formatCurrency(Math.abs(entry.amount))}`}
                       </TableCell>
                       <TableCell className="text-sm text-(--text-secondary) max-w-xs truncate">
                         {entry.description}

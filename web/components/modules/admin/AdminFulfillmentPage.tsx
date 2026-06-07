@@ -29,31 +29,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { toast } from "sonner";
+import { Package, Search, UserCheck, Eye, RefreshCw } from "lucide-react";
 import {
-  Truck,
-  Package,
-  MapPin,
-  Clock,
-  Search,
-  UserCheck,
-  Eye,
-  RefreshCw,
-  CheckCircle2,
-  AlertCircle,
-  CircleDot,
-} from "lucide-react";
-
-type ShipmentStatus =
-  | "PLACED"
-  | "PAYMENT_CONFIRMED"
-  | "LABEL_GENERATED"
-  | "COURIER_ASSIGNED"
-  | "PICKED_UP"
-  | "IN_TRANSIT"
-  | "OUT_FOR_DELIVERY"
-  | "DELIVERED"
-  | "FAILED";
+  SHIPMENT_STATUS_LABELS,
+  SHIPMENT_STATUS_ORDER,
+  type ShipmentStatus,
+} from "@/types/enums";
 
 interface Shipment {
   id: string;
@@ -77,73 +60,6 @@ interface Courier {
   phone: string;
   isActive: boolean;
   activeShipmentCount: number; // backend alanı — activeShipments değil
-}
-
-const STATUS_CONFIG: Record<
-  ShipmentStatus,
-  { label: string; color: string; icon: React.ReactNode }
-> = {
-  PLACED: {
-    label: "Order Placed",
-    color: "bg-slate-100 text-slate-700",
-    icon: <CircleDot className="w-3 h-3" />,
-  },
-  PAYMENT_CONFIRMED: {
-    label: "Payment Confirmed",
-    color: "bg-(--info-bg) text-(--info)",
-    icon: <CheckCircle2 className="w-3 h-3" />,
-  },
-  LABEL_GENERATED: {
-    label: "Label Ready",
-    color: "bg-(--info-bg) text-(--info)",
-    icon: <Package className="w-3 h-3" />,
-  },
-  COURIER_ASSIGNED: {
-    label: "Courier Assigned",
-    color: "bg-(--warning-bg) text-(--warning)",
-    icon: <UserCheck className="w-3 h-3" />,
-  },
-  PICKED_UP: {
-    label: "Picked Up",
-    color: "bg-(--warning-bg) text-(--warning)",
-    icon: <Truck className="w-3 h-3" />,
-  },
-  IN_TRANSIT: {
-    label: "In Transit",
-    color: "bg-(--info-bg) text-(--info)",
-    icon: <Truck className="w-3 h-3" />,
-  },
-  OUT_FOR_DELIVERY: {
-    label: "Out for Delivery",
-    color: "bg-(--info-bg) text-(--info)",
-    icon: <MapPin className="w-3 h-3" />,
-  },
-  DELIVERED: {
-    label: "Delivered",
-    color: "bg-(--success-bg) text-(--success)",
-    icon: <CheckCircle2 className="w-3 h-3" />,
-  },
-  FAILED: {
-    label: "Failed",
-    color: "bg-(--danger-bg) text-(--danger)",
-    icon: <AlertCircle className="w-3 h-3" />,
-  },
-};
-
-function StatusBadge({ status }: { status: string }) {
-  const cfg = STATUS_CONFIG[status as ShipmentStatus] ?? {
-    label: status ?? "Unknown",
-    color: "bg-(--off-white-2) text-(--text-secondary)",
-    icon: <CircleDot className="w-3 h-3" />,
-  };
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${cfg.color}`}
-    >
-      {cfg.icon}
-      {cfg.label}
-    </span>
-  );
 }
 
 export default function AdminFulfillmentPage() {
@@ -221,7 +137,7 @@ export default function AdminFulfillmentPage() {
   const stats = {
     total: shipments.length,
     active: shipments.filter(
-      (s) => !["DELIVERED", "FAILED", "PLACED"].includes(s.status),
+      (s) => !["DELIVERED", "FAILED", "PENDING"].includes(s.status),
     ).length,
     delivered: shipments.filter((s) => s.status === "DELIVERED").length,
     needsCourier: shipments.filter(
@@ -317,9 +233,9 @@ export default function AdminFulfillmentPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+            {SHIPMENT_STATUS_ORDER.concat("FAILED").map((key) => (
               <SelectItem key={key} value={key}>
-                {cfg.label}
+                {SHIPMENT_STATUS_LABELS[key]}
               </SelectItem>
             ))}
           </SelectContent>
@@ -407,7 +323,7 @@ export default function AdminFulfillmentPage() {
                     {shipment.merchantName}
                   </TableCell>
                   <TableCell>
-                    <StatusBadge status={shipment.status} />
+                    <StatusBadge type="shipment" status={shipment.status} />
                   </TableCell>
                   <TableCell>
                     <span
@@ -437,7 +353,7 @@ export default function AdminFulfillmentPage() {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
                       {(shipment.status === "LABEL_GENERATED" ||
-                        shipment.status === "PAYMENT_CONFIRMED") &&
+                        shipment.status === "PENDING") &&
                         !shipment.courierId && (
                           <Button
                             size="sm"

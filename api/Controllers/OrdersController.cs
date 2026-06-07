@@ -335,6 +335,7 @@ public class OrdersController(
                 CustomerEmail = o.Customer.Email,
                 o.Status,
                 o.Source,
+                o.ShippingRate,
                 o.TotalAmount,
                 o.ShippingAmount,
                 o.PaymentId,
@@ -348,8 +349,11 @@ public class OrdersController(
                 o.PostalCode,
                 o.CancellationReason,
                 ItemCount = o.Items.Count,
+                ShipmentId = o.Shipment != null ? (Guid?)o.Shipment.Id : null,
                 TrackingNumber = o.Shipment != null ? o.Shipment.TrackingNumber : null,
                 ShipmentStatus = o.Shipment != null ? (ShipmentStatus?)o.Shipment.Status : null,
+                ShipmentEstimatedDelivery = o.Shipment != null ? (DateTime?)o.Shipment.EstimatedDelivery : null,
+                ShipmentLabelUrl = o.Shipment != null ? o.Shipment.LabelUrl : null,
                 InvoiceNumber = o.Invoice != null ? o.Invoice.InvoiceNumber : null,
                 VatAmount = o.Invoice != null ? (decimal?)o.Invoice.VatAmount : null,
                 FirstMerchantId = o.Items.Select(i => (Guid?)i.MerchantId).FirstOrDefault(),
@@ -389,7 +393,7 @@ public class OrdersController(
                     TotalAmount = o.TotalAmount,
                     ShippingCost = o.ShippingAmount,
                     VatAmount = o.VatAmount ?? 0,
-                    ShippingRate = string.Empty,
+                    ShippingRate = o.ShippingRate.ToApiString(),
                     PaymentId = o.PaymentId,
                     ShippingAddress = new ShippingAddressDto
                     {
@@ -414,6 +418,16 @@ public class OrdersController(
                             SubTotal = i.UnitPrice * i.Quantity,
                         })
                         .ToList(),
+                    Shipment = o.ShipmentId.HasValue
+                        ? new ShipmentSummaryDto
+                        {
+                            Id = o.ShipmentId.Value,
+                            Status = o.ShipmentStatus!.Value.ToApiString(),
+                            TrackingNumber = o.TrackingNumber ?? string.Empty,
+                            EstimatedDelivery = o.ShipmentEstimatedDelivery,
+                            LabelUrl = o.ShipmentLabelUrl,
+                        }
+                        : null,
                     CreatedAt = o.CreatedAt,
                     UpdatedAt = o.UpdatedAt,
                 }),

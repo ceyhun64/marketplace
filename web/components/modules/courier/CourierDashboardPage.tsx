@@ -9,7 +9,6 @@ import {
   ToggleRight,
   ToggleLeft,
   MapPin,
-  Phone,
   ArrowRight,
   TrendingUp,
 } from "lucide-react";
@@ -59,13 +58,15 @@ export default function CourierDashboardPage() {
   );
   const pending = shipments.filter((s: any) => s.status === "COURIER_ASSIGNED");
 
+  // eslint-disable-next-line react-hooks/purity
+  const todayStr = new Date().toDateString();
   const todayDelivered =
     profile?.stats?.todayDelivered ??
     shipments.filter((s: any) => {
       if (s.status !== "DELIVERED") return false;
       const updated = s.actualDeliveredAt ?? s.updatedAt;
       if (!updated) return false;
-      return new Date(updated).toDateString() === new Date().toDateString();
+      return new Date(updated).toDateString() === todayStr;
     }).length;
 
   const handleToggleAvailability = async () => {
@@ -133,6 +134,7 @@ export default function CourierDashboardPage() {
           <button
             onClick={handleToggleAvailability}
             disabled={toggleAvailability.isPending}
+            aria-pressed={profile.isAvailable}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all min-w-32.5 justify-center ${
               profile.isAvailable
                 ? "bg-(--success-bg) border-(--success-border) text-(--success)"
@@ -226,7 +228,7 @@ export default function CourierDashboardPage() {
                       </span>
                     )}
                   </div>
-                  <StatusBadge type="order" status={s.status} />
+                  <StatusBadge type="shipment" status={s.status} />
                 </div>
 
                 {/* Customer & Address */}
@@ -237,18 +239,8 @@ export default function CourierDashboardPage() {
                   </div>
                   <div className="flex items-start gap-2 text-xs text-(--text-secondary)">
                     <MapPin className="w-3.5 h-3.5 text-(--text-tertiary) shrink-0 mt-0.5" />
-                    <span className="line-clamp-2">{s.deliveryAddress}</span>
+                    <span className="line-clamp-2">{s.customerAddress}</span>
                   </div>
-                  {s.customerPhone && (
-                    <a
-                      href={`tel:${s.customerPhone}`}
-                      className="flex items-center gap-2 text-xs text-(--info) font-medium w-fit"
-                      style={{ WebkitTapHighlightColor: "transparent" }}
-                    >
-                      <Phone className="w-3.5 h-3.5" />
-                      {s.customerPhone}
-                    </a>
-                  )}
                 </div>
 
                 {/* Action buttons — large 44px touch targets */}
@@ -285,6 +277,15 @@ export default function CourierDashboardPage() {
                 </div>
               </div>
             ))}
+            {active.length > 8 && (
+              <Link
+                href="/courier/shipments"
+                className="block px-5 py-3 text-center text-xs font-semibold text-(--text-secondary) hover:text-(--text-primary) hover:bg-(--bg-sunken) transition-colors"
+              >
+                +{active.length - 8} more active task
+                {active.length - 8 === 1 ? "" : "s"} — view all
+              </Link>
+            )}
           </div>
         )}
       </div>

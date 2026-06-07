@@ -16,6 +16,7 @@ import {
   Clock,
   ArrowDownCircle,
   Calendar,
+  AlertCircle,
 } from "lucide-react";
 
 // -- Types ----------------------------------------------------------------------
@@ -27,6 +28,7 @@ interface CourierEarningsSummary {
   totalDeliveries: number;
   thisMonthEarnings: number;
   thisWeekDeliveries: number;
+  isFallback?: boolean;
 }
 
 interface DeliveryRecord {
@@ -70,7 +72,8 @@ export default function CourierEarningsPage() {
           const { data } = await api.get("/api/couriers/me/earnings");
           return data;
         } catch {
-          // Fallback to derived data from profile stats if endpoint not ready
+          // Endpoint not ready yet — fall back to whatever profile stats we have
+          // and flag the summary as incomplete so the UI can warn the courier.
           return {
             totalEarnings: 0,
             pendingPayout: 0,
@@ -78,6 +81,7 @@ export default function CourierEarningsPage() {
             totalDeliveries: profile?.stats?.totalDelivered ?? 0,
             thisMonthEarnings: 0,
             thisWeekDeliveries: profile?.stats?.todayDelivered ?? 0,
+            isFallback: true,
           } as CourierEarningsSummary;
         }
       },
@@ -101,15 +105,23 @@ export default function CourierEarningsPage() {
   const isLoading = earningsLoading || profileLoading;
   const records: DeliveryRecord[] = deliveryHistory ?? [];
 
-  // Compute weekly total from history as fallback
-  const weeklyEarnings = records
-    .filter((r) => {
-      const d = new Date(r.deliveredAt);
-      const now = new Date();
-      const diffDays = (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24);
-      return diffDays <= 7;
-    })
-    .reduce((sum, r) => sum + r.deliveryFee + (r.tip ?? 0), 0);
+  // Single shared "last 7 days" cutoff — reused for the weekly earnings
+  // banner and the This Week stat fallback so the two never disagree.
+  const thisWeekRecords = useMemo(
+    () =>
+      records.filter((r) => {
+        const d = new Date(r.deliveredAt);
+        // eslint-disable-next-line react-hooks/purity
+        const diffDays = (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24);
+        return diffDays <= 7;
+      }),
+    [records],
+  );
+
+  const weeklyEarnings = thisWeekRecords.reduce(
+    (sum, r) => sum + r.deliveryFee + (r.tip ?? 0),
+    0,
+  );
 
   const summaryCards = useMemo(() => [
     {
@@ -121,7 +133,7 @@ export default function CourierEarningsPage() {
       bg: "bg-(--success-bg)",
     },
     {
-      label: "Bu Ay",
+      label: "This Month",
       value: isLoading
         ? null
         : formatCurrency(earnings?.thisMonthEarnings ?? 0),
@@ -162,20 +174,13 @@ export default function CourierEarningsPage() {
       label: "This Week",
       value: isLoading
         ? null
-        : String(
-            earnings?.thisWeekDeliveries ??
-              records.filter((r) => {
-                const d = new Date(r.deliveredAt);
-                // eslint-disable-next-line react-hooks/purity
-                return (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24) <= 7;
-              }).length,
-          ),
+        : String(earnings?.thisWeekDeliveries ?? thisWeekRecords.length),
       sub: "Last 7 days",
       icon: Package,
       text: "text-(--info)",
       bg: "bg-(--info-bg)",
     },
-  ], [isLoading, earnings, profile, records]);
+  ], [isLoading, earnings, profile, thisWeekRecords]);
 
   return (
     <div className="space-y-8">
@@ -187,10 +192,16 @@ export default function CourierEarningsPage() {
         <p className="text-sm text-(--text-tertiary) mt-1">
           Delivery fees, tips and payment history
         </p>
+        {!isLoading && earnings?.isFallback && (
+          <p className="flex items-center gap-1.5 text-xs text-(--warning) mt-2">
+            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+            Earnings data is temporarily unavailable — figures below may be incomplete.
+          </p>
+        )}
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {isLoading
           ? Array.from({ length: 6 }).map((_, i) => (
               <StatCardSkeleton key={i} />
@@ -243,7 +254,9 @@ export default function CourierEarningsPage() {
             Delivery History
           </h2>
           <p className="text-xs text-(--text-tertiary) mt-0.5">
-            Last {records.length} completed deliveries
+            {records.length >= 50
+              ? `Showing your ${records.length} most recent deliveries`
+              : `${records.length} completed ${records.length === 1 ? "delivery" : "deliveries"}`}
           </p>
         </div>
 
@@ -275,10 +288,15 @@ export default function CourierEarningsPage() {
                       style={{ color: "var(--success)" }}
                     />
                     <span className="font-mono text-xs font-bold text-(--text-primary)">
-                      #{record.orderNumber ?? record.trackingNumber?.slice(-8)}
+                      #
+                      {record.orderNumber ??
+                        record.trackingNumber?.slice(0, 8).toUpperCase()}
                     </span>
                   </div>
-                  <p className="text-sm text-(--text-secondary) font-medium truncate max-w-50">
+                  <p
+                    className="text-sm text-(--text-secondary) font-medium truncate max-w-50"
+                    title={record.customerName}
+                  >
                     {record.customerName}
                   </p>
                   <p className="text-xs text-(--text-tertiary) mt-0.5">
@@ -291,15 +309,12 @@ export default function CourierEarningsPage() {
                     {formatCurrency(record.deliveryFee + (record.tip ?? 0))}
                   </p>
                   {record.tip && record.tip > 0 && (
-                    <p
-                      className="text-xs text-(--success) font-medium"
-                      style={{ color: "var(--success)" }}
-                    >
-                      +{formatCurrency(record.tip)} bahşiş
+                    <p className="text-xs text-(--success) font-medium">
+                      +{formatCurrency(record.tip)} tip
                     </p>
                   )}
                   <p className="text-xs text-(--text-tertiary)">
-                    Ücret: {formatCurrency(record.deliveryFee)}
+                    Fee: {formatCurrency(record.deliveryFee)}
                   </p>
                 </div>
               </div>

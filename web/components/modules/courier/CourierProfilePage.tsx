@@ -4,7 +4,7 @@ import {
   useMyCourierProfile,
   useToggleCourierAvailability,
 } from "@/queries/useCouriers";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatShortDateTime } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
@@ -63,12 +63,7 @@ export default function CourierProfilePage() {
 
   const memberSince = formatDate(profile.createdAt);
   const lastLocationTime = profile.lastLocationUpdate
-    ? new Date(profile.lastLocationUpdate).toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+    ? formatShortDateTime(profile.lastLocationUpdate)
     : null;
 
   return (
@@ -90,6 +85,8 @@ export default function CourierProfilePage() {
         >
           <div className="flex items-center gap-4">
             <div
+              role="img"
+              aria-label={`${profile.fullName} avatar`}
               className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold text-white shrink-0"
               style={{ background: "var(--red)" }}
             >
@@ -159,7 +156,10 @@ export default function CourierProfilePage() {
               <span className="text-sm text-(--text-secondary) w-32 shrink-0">
                 {row.label}
               </span>
-              <span className="text-sm font-medium text-(--text-primary)">
+              <span
+                className="text-sm font-medium text-(--text-primary) truncate min-w-0"
+                title={row.value}
+              >
                 {row.value}
               </span>
             </div>
@@ -218,14 +218,8 @@ export default function CourierProfilePage() {
         {profile.currentLatitude && profile.currentLongitude ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <span
-                className="w-2 h-2 rounded-full bg-(--success) animate-pulse"
-                style={{ backgroundColor: "var(--success)" }}
-              />
-              <span
-                className="text-sm text-(--success) font-medium"
-                style={{ color: "var(--success)" }}
-              >
+              <span className="w-2 h-2 rounded-full bg-(--success) animate-pulse" />
+              <span className="text-sm text-(--success) font-medium">
                 Location active
               </span>
             </div>
@@ -273,10 +267,7 @@ export default function CourierProfilePage() {
         className={`rounded-xl p-4 flex items-center gap-3 ${profile.isActive ? "bg-(--success-bg) border border-(--success-border)" : "bg-(--danger-bg) border border-(--danger-border)"}`}
       >
         {profile.isActive ? (
-          <CheckCircle2
-            className="w-5 h-5 shrink-0"
-            style={{ color: "var(--success)" }}
-          />
+          <CheckCircle2 className="w-5 h-5 shrink-0 text-(--success)" />
         ) : (
           <XCircle className="w-5 h-5 text-(--danger) shrink-0" />
         )}

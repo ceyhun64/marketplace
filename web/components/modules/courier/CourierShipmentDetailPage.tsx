@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, useCallback } from "react";
 import api from "@/lib/api";
+import { formatShortDateTime } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import {
   ArrowLeft, Package, MapPin, Clock, Printer, CheckCircle2,
-  Truck, Phone, FileText, Navigation, LocateFixed, Wifi, WifiOff,
+  Truck, FileText, Navigation, LocateFixed, Wifi, WifiOff,
 } from "lucide-react";
 import { useUpdateCourierLocation } from "@/queries/useCouriers";
 
@@ -24,17 +25,19 @@ interface ShipmentDetail {
   id: string;
   trackingNumber: string;
   status: ShipmentStatus;
-  shippingRate: "EXPRESS" | "REGULAR";
+  shippingRate: string;
   orderId: string;
   orderNumber: string;
   labelUrl?: string;
-  merchant: { name: string; address: string; phone?: string; latitude?: number; longitude?: number };
-  customer: { name: string; address: string; phone?: string };
-  estimatedPickupWindow?: { start: string; end: string };
-  estimatedDeliveryWindow?: { start: string; end: string };
+  merchantName: string;
+  customerName: string;
+  customerAddress: string;
+  estimatedPickupStart?: string;
+  estimatedPickupEnd?: string;
+  estimatedDeliveryStart?: string;
+  estimatedDeliveryEnd?: string;
   actualDeliveredAt?: string;
-  items: Array<{ productName: string; quantity: number }>;
-  events: Array<{ id: string; status: ShipmentStatus; note?: string; location?: string; createdAt: string; createdByName: string }>;
+  events: Array<{ id: string; status: ShipmentStatus; note?: string; location?: string; createdAt: string }>;
 }
 
 const STATUS_LABELS: Record<ShipmentStatus, string> = {
@@ -57,10 +60,6 @@ function StatusPill({ status }: { status: ShipmentStatus }) {
       {STATUS_LABELS[status]}
     </span>
   );
-}
-
-function formatDateTime(dt: string) {
-  return new Date(dt).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 function useCourierLocationBroadcast(active: boolean) {
@@ -135,7 +134,8 @@ export default function CourierShipmentDetailPage() {
     onError: () => toast.error("Operation failed"),
   });
 
-  const shipment: ShipmentDetail | null = data?.data || null;
+  // Backend returns the ShipmentDto directly (flat, unwrapped) — not { data: ... }.
+  const shipment: ShipmentDetail | null = data ?? null;
 
   useEffect(() => {
     if (!shipment) return;
@@ -178,12 +178,12 @@ export default function CourierShipmentDetailPage() {
         </Button>
         <div className="flex-1">
           <h1 className="text-lg font-bold text-(--text-primary)">Shipment Detail</h1>
-          <p className="text-xs font-mono text-(--info)" style={{ color: "var(--info)" }}>{shipment.trackingNumber}</p>
+          <p className="text-xs font-mono text-(--info)" title={shipment.trackingNumber}>{shipment.trackingNumber.slice(0, 8).toUpperCase()}</p>
         </div>
         <StatusPill status={shipment.status} />
       </div>
 
-      {/* Konum Yayın Durumu */}
+      {/* Live Location Broadcast Status */}
       {locationActive && (
         <div className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-medium border transition-all ${
           locationError ? "bg-(--danger-bg) text-(--danger) border-(--danger-border)"
@@ -197,13 +197,18 @@ export default function CourierShipmentDetailPage() {
               <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: isSending ? "var(--info)" : "var(--success)" }} />
               <Wifi className="w-3.5 h-3.5 shrink-0" />
               <span>{isSending ? "Sending location..." : "Live location broadcasting"}</span>
-              <button onClick={() => setLocationActive(false)} className="ml-auto text-xs underline opacity-60 hover:opacity-100">Stop</button>
+              <button
+                onClick={() => setLocationActive(false)}
+                className="ml-auto min-h-11 px-3 text-xs underline opacity-60 hover:opacity-100 focus-visible:outline-2 focus-visible:outline-(--info) focus-visible:-outline-offset-2 rounded-md"
+              >
+                Stop
+              </button>
             </>
           )}
         </div>
       )}
 
-      {/* Konum Başlat */}
+      {/* Start Location Broadcast */}
       {!locationActive && canDeliver && (
         <button
           onClick={() => setLocationActive(true)}
@@ -240,9 +245,9 @@ export default function CourierShipmentDetailPage() {
       {/* Delivered Banner */}
       {isCompleted && shipment.status === "DELIVERED" && (
         <div className="bg-(--success-bg) border border-(--success-border) rounded-xl p-5 text-center">
-          <CheckCircle2 className="w-8 h-8 mx-auto mb-2" style={{ color: "var(--success)" }} />
-          <p className="font-semibold text-sm" style={{ color: "var(--success)" }}>Delivery Completed</p>
-          {shipment.actualDeliveredAt && <p className="text-xs mt-1 text-(--text-secondary)">{formatDateTime(shipment.actualDeliveredAt)}</p>}
+          <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-(--success)" />
+          <p className="font-semibold text-sm text-(--success)">Delivery Completed</p>
+          {shipment.actualDeliveredAt && <p className="text-xs mt-1 text-(--text-secondary)">{formatShortDateTime(shipment.actualDeliveredAt)}</p>}
         </div>
       )}
 
@@ -257,28 +262,36 @@ export default function CourierShipmentDetailPage() {
             <p className="text-xs text-(--text-tertiary)">{shipment.labelUrl ? "Label ready" : "Label pending"}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => shipment.labelUrl ? window.open(shipment.labelUrl, "_blank") : toast.error("Shipping label not yet generated")} disabled={!shipment.labelUrl} className="border-(--border-mid)">
-          <Printer className="w-4 h-4 mr-1.5" />Print
-        </Button>
+        {shipment.labelUrl ? (
+          <a href={shipment.labelUrl} target="_blank" rel="noopener noreferrer">
+            <Button variant="outline" size="sm" className="border-(--border-mid)">
+              <Printer className="w-4 h-4 mr-1.5" />Print
+            </Button>
+          </a>
+        ) : (
+          <Button variant="outline" size="sm" disabled className="border-(--border-mid)">
+            <Printer className="w-4 h-4 mr-1.5" />Print
+          </Button>
+        )}
       </div>
 
       {/* ETA */}
-      {(shipment.estimatedPickupWindow || shipment.estimatedDeliveryWindow) && (
+      {(shipment.estimatedPickupStart || shipment.estimatedDeliveryStart) && (
         <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-5 space-y-3">
           <h3 className="text-sm font-semibold text-(--text-primary) flex items-center gap-2">
-            <Clock className="w-4 h-4" style={{ color: "var(--info)" }} />
+            <Clock className="w-4 h-4 text-(--info)" />
             Delivery Time Window
           </h3>
-          {shipment.estimatedPickupWindow && (
+          {shipment.estimatedPickupStart && shipment.estimatedPickupEnd && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-(--text-secondary)">Pickup Window</span>
-              <span className="font-medium text-(--text-primary)">{formatDateTime(shipment.estimatedPickupWindow.start)} – {formatDateTime(shipment.estimatedPickupWindow.end)}</span>
+              <span className="font-medium text-(--text-primary)">{formatShortDateTime(shipment.estimatedPickupStart)} – {formatShortDateTime(shipment.estimatedPickupEnd)}</span>
             </div>
           )}
-          {shipment.estimatedDeliveryWindow && (
+          {shipment.estimatedDeliveryStart && shipment.estimatedDeliveryEnd && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-(--text-secondary)">Delivery Window</span>
-              <span className="font-medium text-(--text-primary)">{formatDateTime(shipment.estimatedDeliveryWindow.start)} – {formatDateTime(shipment.estimatedDeliveryWindow.end)}</span>
+              <span className="font-medium text-(--text-primary)">{formatShortDateTime(shipment.estimatedDeliveryStart)} – {formatShortDateTime(shipment.estimatedDeliveryEnd)}</span>
             </div>
           )}
           <div className="flex items-center justify-between text-sm">
@@ -295,61 +308,33 @@ export default function CourierShipmentDetailPage() {
         <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-4">
           <div className="flex items-start gap-3">
             <div className="p-2 bg-(--warning-bg) rounded-xl mt-0.5">
-              <Package className="w-4 h-4" style={{ color: "var(--warning)" }} />
+              <Package className="w-4 h-4 text-(--warning)" />
             </div>
             <div className="flex-1">
-              <p className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide mb-1">Pickup Address (Seller)</p>
-              <p className="text-sm font-semibold text-(--text-primary)">{shipment.merchant.name}</p>
-              <p className="text-sm text-(--text-secondary) mt-0.5">{shipment.merchant.address}</p>
-              {shipment.merchant.phone && (
-                <a href={`tel:${shipment.merchant.phone}`} className="flex items-center gap-1 text-sm mt-1.5 hover:underline" style={{ color: "var(--info)" }}>
-                  <Phone className="w-3.5 h-3.5" />{shipment.merchant.phone}
-                </a>
-              )}
+              <p className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide mb-1">Pickup From (Seller)</p>
+              <p className="text-sm font-semibold text-(--text-primary)">{shipment.merchantName}</p>
             </div>
-            {shipment.merchant.latitude && shipment.merchant.longitude && (
-              <a href={`https://maps.google.com/?q=${shipment.merchant.latitude},${shipment.merchant.longitude}`} target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="sm" className="p-2" style={{ color: "var(--info)" }}>
-                  <Navigation className="w-4 h-4" />
-                </Button>
-              </a>
-            )}
           </div>
         </div>
 
         <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-4">
           <div className="flex items-start gap-3">
             <div className="p-2 bg-(--success-bg) rounded-xl mt-0.5">
-              <MapPin className="w-4 h-4" style={{ color: "var(--success)" }} />
+              <MapPin className="w-4 h-4 text-(--success)" />
             </div>
             <div className="flex-1">
               <p className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide mb-1">Delivery Address (Customer)</p>
-              <p className="text-sm font-semibold text-(--text-primary)">{shipment.customer.name}</p>
-              <p className="text-sm text-(--text-secondary) mt-0.5">{shipment.customer.address}</p>
-              {shipment.customer.phone && (
-                <a href={`tel:${shipment.customer.phone}`} className="flex items-center gap-1 text-sm mt-1.5 hover:underline" style={{ color: "var(--info)" }}>
-                  <Phone className="w-3.5 h-3.5" />{shipment.customer.phone}
-                </a>
-              )}
+              <p className="text-sm font-semibold text-(--text-primary)">{shipment.customerName}</p>
+              <p className="text-sm text-(--text-secondary) mt-0.5">{shipment.customerAddress}</p>
             </div>
+            <a href={`https://maps.google.com/?q=${encodeURIComponent(shipment.customerAddress)}`} target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="sm" className="p-2 text-(--info)" aria-label="Open delivery address in maps">
+                <Navigation className="w-4 h-4" />
+              </Button>
+            </a>
           </div>
         </div>
       </div>
-
-      {/* Order Items */}
-      {shipment.items?.length > 0 && (
-        <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-5">
-          <h3 className="text-sm font-semibold text-(--text-primary) mb-3">Order Contents</h3>
-          <div className="space-y-2">
-            {shipment.items.map((item, i) => (
-              <div key={i} className="flex items-center justify-between text-sm">
-                <span className="text-(--text-secondary)">{item.productName}</span>
-                <span className="font-medium text-(--text-primary) bg-(--off-white-2) border border-(--border-light) px-2 py-0.5 rounded text-xs">x{item.quantity}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Status Timeline */}
       <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) p-5">
@@ -378,7 +363,7 @@ export default function CourierShipmentDetailPage() {
                       <MapPin className="w-3 h-3" />{event.location}
                     </p>
                   )}
-                  <p className="text-xs text-(--text-tertiary) mt-1">{formatDateTime(event.createdAt)} · {event.createdByName}</p>
+                  <p className="text-xs text-(--text-tertiary) mt-1">{formatShortDateTime(event.createdAt)}</p>
                 </div>
               </div>
             ))}
@@ -386,7 +371,7 @@ export default function CourierShipmentDetailPage() {
         )}
       </div>
 
-      {/* Delivery confirmation dialog — replaces the broken window.prompt() */}
+      {/* Delivery confirmation dialog */}
       <Dialog open={deliveryDialog} onOpenChange={(v) => { if (!v) { setDeliveryDialog(false); setRecipientName(""); } }}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
@@ -394,8 +379,8 @@ export default function CourierShipmentDetailPage() {
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="rounded-xl bg-(--bg-sunken) border border-(--border-light) p-4 text-sm">
-              <p className="font-semibold text-(--text-primary)">{shipment?.customer?.name}</p>
-              <p className="text-xs text-(--text-secondary) mt-0.5">{shipment?.customer?.address}</p>
+              <p className="font-semibold text-(--text-primary)">{shipment?.customerName}</p>
+              <p className="text-xs text-(--text-secondary) mt-0.5">{shipment?.customerAddress}</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-sm text-(--text-primary)">

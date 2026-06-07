@@ -61,7 +61,7 @@ interface Order {
   shippingRate: "EXPRESS" | "REGULAR";
   createdAt: string;
   items?: OrderItem[];
-  shipment?: { trackingNumber: string; courierName?: string };
+  shipment?: { trackingNumber: string };
 }
 
 interface PaginatedOrders {

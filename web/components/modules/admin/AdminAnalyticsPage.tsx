@@ -109,27 +109,28 @@ export default function AdminAnalyticsPage() {
     siparis: d.orderCount ?? 0,
   }));
 
-  // Sipariş kaynak dağılımı — AdminOverview'den marketplace/estore siparişleri
-  const marketplaceOrders = (overview as any)?.marketplaceOrders ?? 0;
-  const eStoreOrders = (overview as any)?.eStoreOrders ?? 0;
-  const totalSourceOrders = marketplaceOrders + eStoreOrders;
+  // Teslimat sonucu dağılımı — AdminOverview'de marketplace/estore kırılımı yok,
+  // FulfillmentAnalyticsDto'daki gerçek delivered/failed sayıları kullanılıyor.
+  const deliveredCount = (fulfillmentStats as any)?.deliveredCount ?? 0;
+  const failedCount = (fulfillmentStats as any)?.failedCount ?? 0;
+  const totalOutcomes = deliveredCount + failedCount;
   const sourceData =
-    totalSourceOrders > 0
+    totalOutcomes > 0
       ? [
           {
-            name: "Marketplace",
-            value: Math.round((marketplaceOrders / totalSourceOrders) * 100),
+            name: "Delivered",
+            value: Math.round((deliveredCount / totalOutcomes) * 100),
             color: "var(--chart-2)",
           },
           {
-            name: "E-Store",
-            value: Math.round((eStoreOrders / totalSourceOrders) * 100),
+            name: "Failed",
+            value: Math.round((failedCount / totalOutcomes) * 100),
             color: "var(--chart-3)",
           },
         ]
       : [
-          { name: "Marketplace", value: 0, color: "var(--chart-2)" },
-          { name: "E-Store", value: 0, color: "var(--chart-3)" },
+          { name: "Delivered", value: 0, color: "var(--chart-2)" },
+          { name: "Failed", value: 0, color: "var(--chart-3)" },
         ];
 
   return (
@@ -216,7 +217,7 @@ export default function AdminAnalyticsPage() {
         {/* Order Source Pie */}
         <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-5 flex flex-col items-center">
           <h2 className="text-sm font-semibold text-(--text-secondary) mb-4 self-start">
-            Order Source
+            Delivery Outcome
           </h2>
           <SourceChart data={sourceData} />
         </div>
