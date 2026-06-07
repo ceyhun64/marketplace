@@ -115,7 +115,7 @@ export function useProducts(filters: ProductFilters = {}) {
       if (filters.limit)       params.set("limit", String(filters.limit));
       if (filters.category)    params.set("category", filters.category);
       if (filters.subcategory) params.set("subcategory", filters.subcategory);
-      if (filters.tags?.length) filters.tags.forEach((t) => params.append("tags[]", t));
+      if (filters.tags?.length) filters.tags.forEach((t) => params.append("tags", t));
       if (filters.search)      params.set("search", filters.search);
       if (filters.minPrice)    params.set("minPrice", String(filters.minPrice));
       if (filters.maxPrice)    params.set("maxPrice", String(filters.maxPrice));
@@ -163,7 +163,7 @@ export function useSearchProducts(q: string, filters?: ProductFilters) {
       const params = new URLSearchParams({ q });
       if (filters?.category)    params.set("category", filters.category);
       if (filters?.subcategory) params.set("subcategory", filters.subcategory);
-      if (filters?.tags?.length) filters.tags!.forEach((t) => params.append("tags[]", t));
+      if (filters?.tags?.length) filters.tags!.forEach((t) => params.append("tags", t));
       const { data } = await api.get<RawProductsBackend>(`/api/products/search?${params}`);
       return normalizeProductsResponse(data, filters);
     },

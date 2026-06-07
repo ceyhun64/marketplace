@@ -1,15 +1,13 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
 import {
-  Search, SlidersHorizontal, ShoppingBag, X, ChevronDown,
-  Loader2, Tag, Star, ChevronRight,
-  Package, RefreshCw, Check, ChevronUp,
+  SlidersHorizontal, X, ChevronDown, ChevronUp, Loader2,
+  Star, Check, RefreshCw, ChevronRight, Package,
 } from "lucide-react";
 import { useProducts, useProductTags, type ProductFilters } from "@/queries/useProducts";
 import { useCategories } from "@/queries/useCategories";
+import { useCart } from "@/hooks/use-cart";
 import { Button }   from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch }   from "@/components/ui/switch";
@@ -44,7 +42,6 @@ function effectiveProductCount(category: Category): number {
 
 const SORT_OPTIONS = [
   { value: "newest",     label: "Newest first"       },
-  { value: "popular",    label: "Most popular"       },
   { value: "price_asc",  label: "Price: Low → High"  },
   { value: "price_desc", label: "Price: High → Low"  },
 ];
@@ -129,17 +126,17 @@ function FilterSection({
 // -- Filter sidebar content ----------------------------------------------------
 
 interface SidebarProps {
-  filters:         ProductFilters;
-  priceRange:      [number, number];
-  minRating:       number;
-  inStockOnly:     boolean;
-  onFilter:        (key: keyof ProductFilters, v: unknown) => void;
-  onPriceRange:    (r: [number, number]) => void;
-  onPriceCommit:   (r: [number, number]) => void;
-  onRating:        (r: number) => void;
-  onInStock:       (v: boolean) => void;
-  onReset:         () => void;
-  activeCount:     number;
+  filters:       ProductFilters;
+  priceRange:    [number, number];
+  minRating:     number;
+  inStockOnly:   boolean;
+  onFilter:      (key: keyof ProductFilters, v: unknown) => void;
+  onPriceRange:  (r: [number, number]) => void;
+  onPriceCommit: (r: [number, number]) => void;
+  onRating:      (r: number) => void;
+  onInStock:     (v: boolean) => void;
+  onReset:       () => void;
+  activeCount:   number;
 }
 
 function SidebarContent({
@@ -147,8 +144,8 @@ function SidebarContent({
   onFilter, onPriceRange, onPriceCommit, onRating, onInStock,
   onReset, activeCount,
 }: SidebarProps) {
-  const { data: categories  } = useCategories();
-  const { data: availTags   } = useProductTags();
+  const { data: categories } = useCategories();
+  const { data: availTags  } = useProductTags();
 
   // Gate dynamic lists behind `mounted` so SSR and the first client render
   // both produce the same markup — the query cache can already be populated
@@ -195,9 +192,7 @@ function SidebarContent({
                     {cat.name}
                   </span>
                   {cat.count != null && (
-                    <span
-                      className="text-[10px] tabular-nums opacity-50 font-mono"
-                    >
+                    <span className="text-[10px] tabular-nums opacity-50 font-mono">
                       {cat.count}
                     </span>
                   )}
@@ -229,10 +224,7 @@ function SidebarContent({
             >
               {formatPrice(priceRange[0])}
             </span>
-            <span
-              className="text-[11px] font-mono"
-              style={{ color: "var(--charcoal-mist)" }}
-            >
+            <span className="text-[11px] font-mono" style={{ color: "var(--charcoal-mist)" }}>
               to
             </span>
             <span
@@ -292,10 +284,7 @@ function SidebarContent({
           >
             In stock only
           </span>
-          <Switch
-            checked={inStockOnly}
-            onCheckedChange={onInStock}
-          />
+          <Switch checked={inStockOnly} onCheckedChange={onInStock} />
         </div>
       </FilterSection>
 
@@ -353,9 +342,7 @@ function SidebarContent({
           >
             <RefreshCw className="w-3.5 h-3.5" />
             Reset all filters
-            <Badge
-              className="h-4 px-1.5 text-[9px] font-bold bg-(--red) text-white border-0 rounded-full"
-            >
+            <Badge className="h-4 px-1.5 text-[9px] font-bold bg-(--red) text-white border-0 rounded-full">
               {activeCount}
             </Badge>
           </button>
@@ -383,8 +370,8 @@ function ActiveChips({
 }) {
   const chips: { label: string; onRemove: () => void }[] = [];
 
-  if (filters.search)   chips.push({ label: `"${filters.search}"`, onRemove: () => onFilter("search", undefined) });
-  if (filters.category) chips.push({ label: filters.category, onRemove: () => onFilter("category", undefined) });
+  if (filters.category)
+    chips.push({ label: filters.category, onRemove: () => onFilter("category", undefined) });
   if (filters.minPrice || filters.maxPrice)
     chips.push({
       label: `${formatPrice(priceRange[0])} – ${priceRange[1] >= PRICE_MAX ? formatPrice(PRICE_MAX) + "+" : formatPrice(priceRange[1])}`,
@@ -416,31 +403,20 @@ function ActiveChips({
   );
 }
 
-// -- Main page -----------------------------------------------------------------
+// -- Main component -------------------------------------------------------------
 
-export default function ProductsListPage() {
-  const searchParams = useSearchParams();
-  const router       = useRouter();
+export function DealsFilteredGrid() {
+  const { addItem } = useCart();
 
-  // -- URL-driven filter state ------------------------------------------------
   const [filters, setFilters] = useState<ProductFilters>({
-    page:     1,
-    limit:    24,
-    sort:     searchParams.get("sort") ?? "newest",
-    category: searchParams.get("category") ?? undefined,
-    search:   searchParams.get("q") ?? undefined,
-    minPrice: searchParams.get("minPrice") ? +searchParams.get("minPrice")! : undefined,
-    maxPrice: searchParams.get("maxPrice") ? +searchParams.get("maxPrice")! : undefined,
-    tags:     searchParams.getAll("tag").length ? searchParams.getAll("tag") : undefined,
+    page: 1, limit: 24, sort: "newest",
   });
-
-  const [searchInput,  setSearchInput]  = useState(filters.search ?? "");
-  const [priceRange,   setPriceRange]   = useState<[number, number]>([filters.minPrice ?? 0, filters.maxPrice ?? PRICE_MAX]);
-  const [minRating,    setMinRating]    = useState(0);
-  const [inStockOnly,  setInStockOnly]  = useState(false);
-  const [showFilters,  setShowFilters]  = useState(false);  // mobile drawer
-  const [sidebarOpen,  setSidebarOpen]  = useState(true);   // desktop sidebar
-  const [gridCols,     setGridCols]     = useState<GridCols>(4);
+  const [priceRange,  setPriceRange]  = useState<[number, number]>([0, PRICE_MAX]);
+  const [minRating,   setMinRating]   = useState(0);
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [showFilters, setShowFilters] = useState(false); // mobile drawer
+  const [sidebarOpen, setSidebarOpen] = useState(true);  // desktop sidebar
+  const [gridCols,    setGridCols]    = useState<GridCols>(4);
 
   const { data, isLoading, isFetching, isError } = useProducts(filters);
 
@@ -456,7 +432,6 @@ export default function ProductsListPage() {
     filters.category,
     filters.minPrice,
     filters.maxPrice,
-    filters.search,
     ...(filters.tags ?? []),
     minRating > 0 ? "rating" : null,
     inStockOnly ? "stock" : null,
@@ -471,20 +446,18 @@ export default function ProductsListPage() {
   const handlePriceCommit = useCallback((r: [number, number]) => {
     setFilters((p) => ({
       ...p,
-      minPrice: r[0] > 0      ? r[0] : undefined,
+      minPrice: r[0] > 0         ? r[0] : undefined,
       maxPrice: r[1] < PRICE_MAX ? r[1] : undefined,
       page: 1,
     }));
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleFilter("search", searchInput.trim() || undefined);
-  };
+  const handlePage = useCallback((page: number) => {
+    setFilters((p) => ({ ...p, page }));
+  }, []);
 
   const handleReset = () => {
     setFilters({ page: 1, limit: 24, sort: "newest" });
-    setSearchInput("");
     setPriceRange([0, PRICE_MAX]);
     setMinRating(0);
     setInStockOnly(false);
@@ -501,247 +474,156 @@ export default function ProductsListPage() {
     activeCount,
   };
 
-  // -- Render -----------------------------------------------------------------
-
   return (
-    <main className="min-h-screen" style={{ background: "var(--off-white)" }}>
-
-      {/* -- Hero header -- */}
-      <div
-        style={{
-          background: "var(--charcoal)",
-          padding: "3.5rem 1rem 3rem",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* Decorative ring */}
-        <div
-          className="absolute -top-16 -right-16 w-72 h-72 rounded-full pointer-events-none"
-          style={{ border: "60px solid rgba(200,16,46,0.06)" }}
-        />
-        <div
-          className="absolute -bottom-20 -left-20 w-60 h-60 rounded-full pointer-events-none"
-          style={{ border: "40px solid rgba(255,255,255,0.03)" }}
-        />
-
-        <div className="max-w-325 mx-auto relative z-10">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="inline-block w-5 h-px" style={{ background: "var(--red)" }} />
-            <span
-              className="font-mono text-[10px] tracking-[0.2em] uppercase"
-              style={{ color: "rgba(255,255,255,0.35)" }}
-            >
-              Catalogue
-            </span>
-          </div>
-
-          <h1
-            className="font-normal leading-tight mb-5 text-white"
-            style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.875rem, 4vw, 3rem)" }}
+    <>
+      {/* -- Toolbar -- */}
+      <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+        <div className="flex items-center gap-2">
+          {/* Mobile filter trigger */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFilters(true)}
+            className="lg:hidden gap-2 rounded-xl font-semibold text-[13px] h-9 border-(--border-mid) text-(--charcoal)"
           >
-            {filters.search
-              ? <>Results for <em style={{ color: "var(--red)" }}>"{filters.search}"</em></>
-              : filters.category
-              ? <><em style={{ color: "var(--red)" }}>{filters.category}</em> Products</>
-              : <>All <em style={{ color: "var(--red)" }}>Products</em></>}
-          </h1>
+            <SlidersHorizontal className="w-4 h-4" />
+            Filters
+            {activeCount > 0 && (
+              <span
+                className="w-5 h-5 flex items-center justify-center text-[10px] font-bold rounded-full text-white"
+                style={{ background: "var(--red)" }}
+              >
+                {activeCount}
+              </span>
+            )}
+          </Button>
 
-          {/* Search bar */}
-          <form onSubmit={handleSearch} className="flex gap-2 max-w-lg">
-            <div className="relative flex-1">
-              <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-                style={{ color: "rgba(255,255,255,0.35)" }}
-              />
-              <input
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Search products, brands, stores…"
-                className="w-full pl-11 pr-10 h-12 rounded-xl text-sm outline-none text-white placeholder:opacity-40 transition-all"
+          {/* Desktop sidebar toggle */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSidebarOpen((p) => !p)}
+            className="hidden lg:flex gap-2 rounded-xl font-semibold text-[13px] h-9 border-(--border-mid) text-(--charcoal)"
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+            {sidebarOpen ? "Hide" : "Filters"}
+            {activeCount > 0 && (
+              <span
+                className="w-5 h-5 flex items-center justify-center text-[10px] font-bold rounded-full text-white"
+                style={{ background: "var(--red)" }}
+              >
+                {activeCount}
+              </span>
+            )}
+          </Button>
+
+          {/* Grid column-count toggle */}
+          <div
+            className="hidden sm:flex rounded-xl overflow-hidden"
+            style={{ border: "1.5px solid rgba(51,51,51,0.12)", background: "#fff" }}
+          >
+            {GRID_COLS_OPTIONS.map((cols) => (
+              <button
+                key={cols}
+                onClick={() => setGridCols(cols)}
+                className="w-9 h-9 flex items-center justify-center text-[13px] font-bold transition-all"
                 style={{
-                  background: "rgba(255,255,255,0.07)",
-                  border: "1.5px solid rgba(255,255,255,0.1)",
-                  fontFamily: "var(--font-body)",
+                  background: gridCols === cols ? "var(--charcoal)" : "transparent",
+                  color:      gridCols === cols ? "#fff" : "var(--charcoal-soft)",
+                  fontFamily: "var(--font-mono)",
                 }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "var(--red)";
-                  e.currentTarget.style.background = "rgba(255,255,255,0.1)";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
-                  e.currentTarget.style.background = "rgba(255,255,255,0.07)";
-                }}
-              />
-              {searchInput && (
-                <button
-                  type="button"
-                  onClick={() => { setSearchInput(""); handleFilter("search", undefined); }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-60"
-                  style={{ color: "rgba(255,255,255,0.4)" }}
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-            <button
-              type="submit"
-              className="h-12 px-6 rounded-xl text-sm font-semibold text-white transition-all"
-              style={{ background: "var(--red)", fontFamily: "var(--font-body)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--red-dark)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "var(--red)")}
-            >
-              Search
-            </button>
-          </form>
+                aria-label={`${cols} columns`}
+                aria-pressed={gridCols === cols}
+              >
+                {cols}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 ml-auto">
+          {data && (
+            <p className="font-mono text-[12px]" style={{ color: "var(--charcoal-soft)" }}>
+              <strong style={{ color: "var(--charcoal)" }}>{data.totalCount}</strong>{" "}
+              {data.totalCount === 1 ? "deal" : "deals"}
+              {isFetching && <Loader2 className="inline ml-1.5 w-3 h-3 animate-spin" />}
+            </p>
+          )}
+
+          {/* Sort select */}
+          <Select value={filters.sort ?? "newest"} onValueChange={(v) => handleFilter("sort", v)}>
+            <SelectTrigger className="h-9 w-auto text-[13px] font-semibold rounded-xl">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      {/* -- Body -- */}
-      <div className="max-w-325 mx-auto px-4 lg:px-8 py-7">
+      {/* Active filter chips */}
+      <ActiveChips
+        filters={filters} minRating={minRating} inStockOnly={inStockOnly}
+        priceRange={priceRange}
+        onFilter={handleFilter} onRating={setMinRating} onInStock={setInStockOnly}
+        onPriceRange={setPriceRange} onPriceCommit={handlePriceCommit}
+      />
 
-        {/* -- Toolbar -- */}
-        <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
-          <div className="flex items-center gap-2">
-            {/* Mobile filter trigger */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(true)}
-              className="lg:hidden gap-2 rounded-xl font-semibold text-[13px] h-9 border-(--border-mid) text-(--charcoal)"
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              Filters
-              {activeCount > 0 && (
-                <span
-                  className="w-5 h-5 flex items-center justify-center text-[10px] font-bold rounded-full text-white"
-                  style={{ background: "var(--red)" }}
-                >
-                  {activeCount}
-                </span>
-              )}
-            </Button>
+      {/* -- Layout: sidebar + grid -- */}
+      <div className="flex gap-8 items-start">
 
-            {/* Desktop sidebar toggle */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSidebarOpen((p) => !p)}
-              className="hidden lg:flex gap-2 rounded-xl font-semibold text-[13px] h-9 border-(--border-mid) text-(--charcoal)"
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              {sidebarOpen ? "Hide" : "Filters"}
-              {activeCount > 0 && (
-                <span
-                  className="w-5 h-5 flex items-center justify-center text-[10px] font-bold rounded-full text-white"
-                  style={{ background: "var(--red)" }}
-                >
-                  {activeCount}
-                </span>
-              )}
-            </Button>
+        {/* Desktop sidebar */}
+        {sidebarOpen && (
+          <aside
+            className="hidden lg:block w-56 shrink-0 sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto"
+            style={{
+              background: "#fff",
+              border: "1px solid rgba(51,51,51,0.07)",
+              borderRadius: "1.25rem",
+              padding: "1.25rem 1rem",
+            }}
+          >
+            <SidebarContent {...sidebarProps} />
+          </aside>
+        )}
 
-            {/* Grid column-count toggle */}
-            <div
-              className="hidden sm:flex rounded-xl overflow-hidden"
-              style={{ border: "1.5px solid rgba(51,51,51,0.12)", background: "#fff" }}
-            >
-              {GRID_COLS_OPTIONS.map((cols) => (
-                <button
-                  key={cols}
-                  onClick={() => setGridCols(cols)}
-                  className="w-9 h-9 flex items-center justify-center text-[13px] font-bold transition-all"
-                  style={{
-                    background: gridCols === cols ? "var(--charcoal)" : "transparent",
-                    color:      gridCols === cols ? "#fff" : "var(--charcoal-soft)",
-                    fontFamily: "var(--font-mono)",
-                  }}
-                  aria-label={`${cols} columns`}
-                  aria-pressed={gridCols === cols}
-                >
-                  {cols}
-                </button>
-              ))}
+        {/* Deals grid */}
+        <div className="flex-1 min-w-0">
+          {isError && (
+            <div className="text-center py-20">
+              <p className="font-semibold text-red-500 mb-3">Failed to load deals.</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-5 py-2 rounded-xl text-sm font-bold"
+                style={{ background: "var(--charcoal)", color: "#fff" }}
+              >
+                Try again
+              </button>
             </div>
-          </div>
-
-          <div className="flex items-center gap-3 ml-auto">
-            {data && (
-              <p className="font-mono text-[12px]" style={{ color: "var(--charcoal-soft)" }}>
-                <strong style={{ color: "var(--charcoal)" }}>{data.totalCount}</strong>{" "}
-                products
-                {isFetching && <Loader2 className="inline ml-1.5 w-3 h-3 animate-spin" />}
-              </p>
-            )}
-
-            {/* Sort select */}
-            <Select value={filters.sort ?? "newest"} onValueChange={(v) => handleFilter("sort", v)}>
-              <SelectTrigger className="h-9 w-auto text-[13px] font-semibold rounded-xl">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {SORT_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Active filter chips */}
-        <ActiveChips
-          filters={filters} minRating={minRating} inStockOnly={inStockOnly}
-          priceRange={priceRange}
-          onFilter={handleFilter} onRating={setMinRating} onInStock={setInStockOnly}
-          onPriceRange={setPriceRange} onPriceCommit={handlePriceCommit}
-        />
-
-        {/* -- Layout: sidebar + grid -- */}
-        <div className="flex gap-8 items-start">
-
-          {/* Desktop sidebar */}
-          {sidebarOpen && (
-            <aside
-              className="hidden lg:block w-56 shrink-0 sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto"
-              style={{
-                background: "#fff",
-                border: "1px solid rgba(51,51,51,0.07)",
-                borderRadius: "1.25rem",
-                padding: "1.25rem 1rem",
-              }}
-            >
-              <SidebarContent {...sidebarProps} />
-            </aside>
           )}
 
-          {/* Product grid / list */}
-          <div className="flex-1 min-w-0">
-            {isError && (
-              <div className="text-center py-20">
-                <p className="font-semibold text-red-500 mb-3">Failed to load products.</p>
-                <button
-                  onClick={() => router.refresh()}
-                  className="px-5 py-2 rounded-xl text-sm font-bold"
-                  style={{ background: "var(--charcoal)", color: "#fff" }}
-                >
-                  Try again
-                </button>
+          {isLoading ? (
+            <div className={`grid ${GRID_COLS_CLASSES[gridCols]} gap-4`}>
+              {Array.from({ length: 12 }).map((_, i) => <ProductSkeleton key={i} />)}
+            </div>
+          ) : !isError && items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+                style={{ background: "rgba(30,30,30,0.05)" }}
+              >
+                <Package className="w-6 h-6" style={{ color: "var(--charcoal-mist)" }} />
               </div>
-            )}
-
-            {isLoading ? (
-              <div className={`grid ${GRID_COLS_CLASSES[gridCols]} gap-4`}>
-                {Array.from({ length: 12 }).map((_, i) => <ProductSkeleton key={i} />)}
-              </div>
-            ) : !isError && items.length === 0 ? (
-              <div className="text-center py-24">
-                <ShoppingBag className="w-14 h-14 mx-auto mb-5" style={{ color: "rgba(51,51,51,0.1)" }} />
-                <p className="font-bold text-lg mb-2" style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}>
-                  No products found
-                </p>
-                <p className="text-[0.875rem] mb-7" style={{ color: "var(--charcoal-soft)" }}>
-                  Try adjusting your filters or search term.
-                </p>
+              <p className="font-bold text-base mb-2" style={{ color: "var(--charcoal)", fontFamily: "var(--font-body)" }}>
+                No deals found
+              </p>
+              <p className="text-[0.875rem] mb-7" style={{ color: "var(--charcoal-soft)" }}>
+                Try adjusting your filters or check back later.
+              </p>
+              {activeCount > 0 && (
                 <Button
                   onClick={handleReset}
                   className="px-7 h-11 rounded-2xl font-bold text-sm"
@@ -749,60 +631,80 @@ export default function ProductsListPage() {
                 >
                   Clear all filters
                 </Button>
+              )}
+            </div>
+          ) : !isLoading && (
+            <>
+              <div className={`grid ${GRID_COLS_CLASSES[gridCols]} gap-4`}>
+                {items.map((p) => (
+                  <ProductCard
+                    key={p.id}
+                    product={p}
+                    context="marketplace"
+                    onAddToCart={() =>
+                      addItem({
+                        offerId: p.id,
+                        productId: p.id,
+                        productName: p.name,
+                        productImage: p.images?.[0] ?? "",
+                        merchantId: p.merchantId,
+                        merchantStoreName: p.merchantStoreName,
+                        merchantSlug: p.merchantSlug,
+                        price: p.price,
+                        stock: p.stock,
+                        source: "MARKETPLACE",
+                      })
+                    }
+                  />
+                ))}
               </div>
-            ) : !isLoading && (
-              <>
-                <div className={`grid ${GRID_COLS_CLASSES[gridCols]} gap-4`}>
-                  {items.map((p) => <ProductCard key={p.id} product={p} />)}
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-12">
+                  <button
+                    onClick={() => handlePage((filters.page ?? 1) - 1)}
+                    disabled={(filters.page ?? 1) <= 1}
+                    className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-bold text-sm transition-all disabled:opacity-30"
+                    style={{ border: "1.5px solid rgba(51,51,51,0.15)", background: "#fff", color: "var(--charcoal)" }}
+                  >
+                    ‹
+                  </button>
+
+                  {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                    const pg = i + 1;
+                    const cur = filters.page ?? 1;
+                    const active = pg === cur;
+                    if (totalPages > 7 && pg > 3 && pg < totalPages - 2 && Math.abs(pg - cur) > 1)
+                      return <span key={pg} className="text-(--charcoal-mist) text-sm">…</span>;
+                    return (
+                      <button
+                        key={pg}
+                        onClick={() => handlePage(pg)}
+                        className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-all"
+                        style={{
+                          background: active ? "var(--charcoal)" : "#fff",
+                          color: active ? "#fff" : "var(--charcoal)",
+                          border: `1.5px solid ${active ? "var(--charcoal)" : "rgba(51,51,51,0.15)"}`,
+                        }}
+                      >
+                        {pg}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    onClick={() => handlePage((filters.page ?? 1) + 1)}
+                    disabled={(filters.page ?? 1) >= totalPages}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm transition-all disabled:opacity-30"
+                    style={{ border: "1.5px solid rgba(51,51,51,0.15)", background: "#fff", color: "var(--charcoal)" }}
+                  >
+                    ›
+                  </button>
                 </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-2 mt-12">
-                    <button
-                      onClick={() => handleFilter("page", (filters.page ?? 1) - 1)}
-                      disabled={(filters.page ?? 1) <= 1}
-                      className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-bold text-sm transition-all disabled:opacity-30"
-                      style={{ border: "1.5px solid rgba(51,51,51,0.15)", background: "#fff", color: "var(--charcoal)" }}
-                    >
-                      ‹
-                    </button>
-
-                    {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                      const pg = i + 1;
-                      const cur = filters.page ?? 1;
-                      const active = pg === cur;
-                      if (totalPages > 7 && pg > 3 && pg < totalPages - 2 && Math.abs(pg - cur) > 1)
-                        return <span key={pg} className="text-(--charcoal-mist) text-sm">…</span>;
-                      return (
-                        <button
-                          key={pg}
-                          onClick={() => handleFilter("page", pg)}
-                          className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-all"
-                          style={{
-                            background: active ? "var(--charcoal)" : "#fff",
-                            color: active ? "#fff" : "var(--charcoal)",
-                            border: `1.5px solid ${active ? "var(--charcoal)" : "rgba(51,51,51,0.15)"}`,
-                          }}
-                        >
-                          {pg}
-                        </button>
-                      );
-                    })}
-
-                    <button
-                      onClick={() => handleFilter("page", (filters.page ?? 1) + 1)}
-                      disabled={(filters.page ?? 1) >= totalPages}
-                      className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm transition-all disabled:opacity-30"
-                      style={{ border: "1.5px solid rgba(51,51,51,0.15)", background: "#fff", color: "var(--charcoal)" }}
-                    >
-                      ›
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -837,6 +739,6 @@ export default function ProductsListPage() {
           </div>
         </SheetContent>
       </Sheet>
-    </main>
+    </>
   );
 }
