@@ -77,14 +77,12 @@ export default function MerchantInvoicesView() {
     },
   });
 
-  // Backend yeni format: { total, totalRevenue, invoices: [...] }
   const invoices: Invoice[] = Array.isArray(data)
     ? data
     : data?.invoices || data?.data || data?.items || [];
 
   const handleDownload = async (invoiceId: string, invoiceNumber: string) => {
     try {
-      // Backend'den PDF URL'i al, sonra Cloudinary'den indir
       const res = await api.get(
         `/api/merchants/invoices/${invoiceId}/download`,
       );
@@ -94,7 +92,7 @@ export default function MerchantInvoicesView() {
         // Open Cloudinary CDN URL in a new tab
         window.open(pdfUrl, "_blank");
       } else {
-        // Fallback: blob olarak indir
+        // Fallback: download as a blob
         const blobRes = await api.get(
           `/api/merchants/invoices/${invoiceId}/download`,
           { responseType: "blob" },
@@ -149,24 +147,28 @@ export default function MerchantInvoicesView() {
         </p>
       </div>
       {/* Tab Switcher */}
-      <div className="flex gap-1 bg-(--off-white-2) p-1 rounded-xl w-fit">
+      <div role="tablist" className="flex gap-1 bg-(--off-white-2) p-1 rounded-xl w-fit">
         <button
+          role="tab"
+          aria-selected={activeTab === "invoices"}
           onClick={() => setActiveTab("invoices")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             activeTab === "invoices"
               ? "bg-(--bg-surface) text-(--text-primary) shadow-sm"
-              : "text-(--text-secondary) hover:text-(--text-secondary)"
+              : "text-(--text-secondary) hover:text-(--text-primary)"
           }`}
         >
           <Receipt className="w-4 h-4" />
           Invoices
         </button>
         <button
+          role="tab"
+          aria-selected={activeTab === "accounting"}
           onClick={() => setActiveTab("accounting")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             activeTab === "accounting"
               ? "bg-(--bg-surface) text-(--text-primary) shadow-sm"
-              : "text-(--text-secondary) hover:text-(--text-secondary)"
+              : "text-(--text-secondary) hover:text-(--text-primary)"
           }`}
         >
           <BookOpen className="w-4 h-4" />
@@ -511,7 +513,7 @@ export default function MerchantInvoicesView() {
                         {entry.amount >= 0 ? "+" : "-"}
                         {formatCurrency(Math.abs(entry.amount))}
                       </TableCell>
-                      <TableCell className="text-sm text-(--text-secondary) max-w-xs truncate">
+                      <TableCell title={entry.description} className="text-sm text-(--text-secondary) max-w-xs truncate">
                         {entry.description}
                       </TableCell>
                       <TableCell className="font-mono text-xs text-(--text-tertiary)">

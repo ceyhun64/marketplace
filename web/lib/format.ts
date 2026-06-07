@@ -84,6 +84,32 @@ export function formatShortDate(dateStr: string | Date): string {
 }
 
 /**
+ * Compact day + short month — for tight UI like ETA badges and timelines.
+ * @example formatMonthDay("2026-06-22") → "22 Jun"
+ */
+export function formatMonthDay(dateStr: string | Date): string {
+  const date = typeof dateStr === "string" ? new Date(dateStr) : dateStr;
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+  }).format(date);
+}
+
+/**
+ * Compact day + short month + time — for tight UI like event timelines.
+ * @example formatShortDateTime("2026-06-22T14:30:00Z") → "22 Jun, 14:30"
+ */
+export function formatShortDateTime(dateStr: string | Date): string {
+  const date = typeof dateStr === "string" ? new Date(dateStr) : dateStr;
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+/**
  * Relative time (how many minutes/hours/days ago).
  * @example formatRelativeTime("2026-04-21T10:00:00Z") → "1 day ago"
  */

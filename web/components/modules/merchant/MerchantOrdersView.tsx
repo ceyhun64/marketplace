@@ -55,7 +55,7 @@ export default function MerchantOrdersView() {
             value: stats.processing,
             icon: Package,
             color: "text-(--charcoal-mid)",
-            bg: "bg-(--off-white-2)]",
+            bg: "bg-(--off-white-2)",
           },
           {
             label: "Delivered",

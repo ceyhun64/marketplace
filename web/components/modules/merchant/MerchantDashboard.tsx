@@ -18,7 +18,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatCardSkeleton } from "@/components/ui/stat-card-skeleton";
 import { Empty, EmptyMedia, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { useMerchantStats } from "@/queries/useAnalytics";
-import { formatPrice, formatDate } from "@/lib/format";
+import { formatPrice, formatCurrency, formatDate } from "@/lib/format";
+import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/types/enums";
 import type { Order, Product } from "@/types/entities";
 
 function OrderRowSkeleton() {
@@ -87,7 +88,7 @@ export default function MerchantDashboard() {
     inMarket:
       serverStats?.onMarket ??
       offers.filter((o) => o.publishToMarket).length,
-    pendingOrders: orders.length,
+    pendingOrders: ordersData?.stats?.pending ?? orders.length,
   };
 
   const storeName = profile?.storeName ?? profile?.StoreName ?? "My Store";
@@ -341,7 +342,7 @@ export default function MerchantDashboard() {
               >
                 <div>
                   <p className="text-sm font-medium text-(--text-primary)">
-                    #{order.id?.slice(-8).toUpperCase()}
+                    #{order.id?.slice(0, 8).toUpperCase()}
                   </p>
                   <p className="text-xs text-(--text-tertiary)">
                     {formatDate(order.createdAt)}
@@ -349,10 +350,10 @@ export default function MerchantDashboard() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-semibold text-sm text-(--text-primary)">
-                    ${(order.totalAmount ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatCurrency(order.totalAmount ?? 0)}
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded-md font-medium bg-(--off-white-2) text-(--text-secondary) capitalize">
-                    {order.status}
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ORDER_STATUS_COLORS[order.status]}`}>
+                    {ORDER_STATUS_LABELS[order.status]}
                   </span>
                 </div>
               </div>

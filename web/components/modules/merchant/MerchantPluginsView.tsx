@@ -1,10 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatPrice } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Puzzle, Check, DollarSign, Zap, Package, Lock } from "lucide-react";
 import { useMySubscription } from "@/queries/useSubscription";
@@ -41,6 +52,8 @@ export default function MerchantPluginsView() {
   const { data: subscription } = useMySubscription();
   const currentPlan: PlanType = subscription?.planType ?? "BASIC";
 
+  const [deactivateTarget, setDeactivateTarget] = useState<Plugin | null>(null);
+
   const { data: plugins, isLoading } = useQuery<Plugin[]>({
     queryKey: ["merchant-plugins"],
     queryFn: async () => {
@@ -67,6 +80,7 @@ export default function MerchantPluginsView() {
     onSuccess: () => {
       toast.success("Plugin deactivated");
       qc.invalidateQueries({ queryKey: ["merchant-plugins"] });
+      setDeactivateTarget(null);
     },
     onError: () => toast.error("Failed to deactivate plugin"),
   });
@@ -136,14 +150,7 @@ export default function MerchantPluginsView() {
                       size="sm"
                       variant="outline"
                       className="text-xs h-7 rounded-lg border-red-200 text-red-500 hover:bg-red-50"
-                      onClick={() => {
-                        if (
-                          typeof window !== "undefined" &&
-                          window.confirm(`Deactivate "${p.name}"?`)
-                        ) {
-                          unsubscribeMutation.mutate(p.id);
-                        }
-                      }}
+                      onClick={() => setDeactivateTarget(p)}
                       disabled={unsubscribeMutation.isPending}
                     >
                       Deactivate
@@ -223,7 +230,7 @@ export default function MerchantPluginsView() {
                           <span className="text-sm font-semibold text-(--text-primary)">
                             {p.monthlyPrice === 0
                               ? "Free"
-                              : `$${p.monthlyPrice}/mo`}
+                              : `${formatPrice(p.monthlyPrice)}/mo`}
                           </span>
                         </div>
                         {planLocked ? (
@@ -269,6 +276,7 @@ export default function MerchantPluginsView() {
       </div>
 
       {/* Plan upsell banner */}
+      {currentPlan === "BASIC" && (
       <div
         className="rounded-2xl p-5 flex items-center gap-4"
         style={{ background: "var(--charcoal)", color: "#fff" }}
@@ -301,6 +309,32 @@ export default function MerchantPluginsView() {
           Upgrade Plan
         </button>
       </div>
+      )}
+
+      {/* Deactivate confirmation */}
+      <AlertDialog
+        open={!!deactivateTarget}
+        onOpenChange={(open) => !open && setDeactivateTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate &quot;{deactivateTarget?.name}&quot;?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This plugin will stop working immediately and any related features will become unavailable until you reactivate it.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Active</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={unsubscribeMutation.isPending}
+              onClick={() => deactivateTarget && unsubscribeMutation.mutate(deactivateTarget.id)}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {unsubscribeMutation.isPending ? "Deactivating..." : "Deactivate"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

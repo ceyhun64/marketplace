@@ -22,7 +22,7 @@ import {
 } from "@/queries/useSubscription";
 import { CheckCircle, XCircle, Zap, Building2, Star, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import type { PlanType } from "@/types/enums";
+import { PLAN_LABELS, type PlanType } from "@/types/enums";
 
 const FAQ_ITEMS = [
   {
@@ -31,7 +31,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What happens to my products if I downgrade?",
-    a: "If you downgrade to Basic and exceed the 50-product limit, you won't be able to add new products, but your existing products are kept.",
+    a: `If you downgrade to ${PLAN_LABELS.BASIC} and exceed the 50-product limit, you won't be able to add new products, but your existing products are kept.`,
   },
   {
     q: "How does the Marketplace publishing feature work?",
@@ -42,7 +42,7 @@ const FAQ_ITEMS = [
 const PLANS = [
   {
     key: "BASIC" as PlanType,
-    label: "Basic",
+    label: PLAN_LABELS.BASIC,
     icon: Star,
     color: "text-(--text-secondary)",
     bg: "bg-(--bg-sunken)",
@@ -59,7 +59,7 @@ const PLANS = [
   },
   {
     key: "PRO" as PlanType,
-    label: "Pro",
+    label: PLAN_LABELS.PRO,
     icon: Zap,
     color: "text-(--info)",
     bg: "bg-(--info-bg)",
@@ -76,7 +76,7 @@ const PLANS = [
   },
   {
     key: "ENTERPRISE" as PlanType,
-    label: "Enterprise",
+    label: PLAN_LABELS.ENTERPRISE,
     icon: Building2,
     color: "text-(--charcoal-mid)",
     bg: "bg-(--off-white-2)",
@@ -114,7 +114,7 @@ export default function MerchantSubscriptionView() {
     if (plan === currentPlan) return;
     try {
       await upgradePlan.mutateAsync(plan);
-      toast.success(`Plan upgraded to ${plan}`);
+      toast.success(`Plan upgraded to ${PLAN_LABELS[plan]}`);
     } catch {
       toast.error("Upgrade failed. Please try again.");
     }
@@ -159,7 +159,7 @@ export default function MerchantSubscriptionView() {
               <p className="text-xs font-medium text-(--text-tertiary) uppercase tracking-widest">
                 Current Plan
               </p>
-              <p className="text-xl font-bold mt-0.5">{currentPlan}</p>
+              <p className="text-xl font-bold mt-0.5">{PLAN_LABELS[currentPlan]}</p>
               {subscription?.expiresAt && (
                 <p className="text-xs text-(--text-tertiary) mt-1">
                   {subscription.isActive ? "Renews" : "Expires"}:{" "}
@@ -372,8 +372,8 @@ export default function MerchantSubscriptionView() {
             <AlertDialogTitle>Cancel your subscription?</AlertDialogTitle>
             <AlertDialogDescription>
               {subscription?.expiresAt
-                ? `Your ${currentPlan} plan will stay active until ${formatDate(subscription.expiresAt)}, then it won't renew and your store will revert to the Basic plan.`
-                : `Your ${currentPlan} plan will stop renewing and your store will revert to the Basic plan.`}
+                ? `Your ${PLAN_LABELS[currentPlan]} plan will stay active until ${formatDate(subscription.expiresAt)}, then it won't renew and your store will revert to the ${PLAN_LABELS.BASIC} plan.`
+                : `Your ${PLAN_LABELS[currentPlan]} plan will stop renewing and your store will revert to the ${PLAN_LABELS.BASIC} plan.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

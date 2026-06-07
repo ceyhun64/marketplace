@@ -9,7 +9,7 @@ import {
   type WalletTransaction,
   type WithdrawalRequest,
 } from "@/queries/useWallet";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatCurrency } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,11 +33,6 @@ import {
 import { toast } from "sonner";
 
 // -- Helpers -------------------------------------------------------------------
-
-function fmt(n: number) {
-  return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
 
 const TYPE_META: Record<
   WalletTransaction["type"],
@@ -155,7 +150,7 @@ export default function MerchantWalletView() {
         note: withdrawNote.trim() || undefined,
       });
       toast.success(
-        `Withdrawal request for $${amount.toFixed(2)} submitted — pending admin approval.`,
+        `Withdrawal request for ${formatCurrency(amount)} submitted — pending admin approval.`,
       );
       setWithdrawOpen(false);
       resetWithdrawForm();
@@ -195,7 +190,7 @@ export default function MerchantWalletView() {
               iconBg="bg-(--warning-bg)"
               iconColor="text-(--warning)"
               label="Pending (Escrow)"
-              value={fmt(wallet?.pendingBalance ?? 0)}
+              value={formatCurrency(wallet?.pendingBalance ?? 0)}
               sub="Held — not yet cleared"
             />
             <BalanceCard
@@ -203,7 +198,7 @@ export default function MerchantWalletView() {
               iconBg="bg-(--success-bg)"
               iconColor="text-(--success)"
               label="Available Balance"
-              value={fmt(wallet?.availableBalance ?? 0)}
+              value={formatCurrency(wallet?.availableBalance ?? 0)}
               sub="Ready to withdraw"
               highlight
             />
@@ -212,7 +207,7 @@ export default function MerchantWalletView() {
               iconBg="bg-(--off-white-2)"
               iconColor="text-(--text-secondary)"
               label="Total Withdrawn"
-              value={fmt(wallet?.totalWithdrawn ?? 0)}
+              value={formatCurrency(wallet?.totalWithdrawn ?? 0)}
               sub="All time"
             />
             <BalanceCard
@@ -220,7 +215,7 @@ export default function MerchantWalletView() {
               iconBg="bg-(--info-bg)"
               iconColor="text-(--info)"
               label="Total Earned"
-              value={fmt(
+              value={formatCurrency(
                 (wallet?.availableBalance ?? 0) +
                   (wallet?.pendingBalance ?? 0) +
                   (wallet?.totalWithdrawn ?? 0),
@@ -236,7 +231,7 @@ export default function MerchantWalletView() {
         <div className="flex items-start gap-3 rounded-xl border border-(--warning-border) bg-(--warning-bg) px-4 py-3">
           <AlertCircle className="w-4 h-4 text-(--warning) shrink-0 mt-0.5" />
           <p className="text-sm text-(--warning)">
-            <span className="font-semibold">{fmt(wallet!.pendingBalance)}</span>{" "}
+            <span className="font-semibold">{formatCurrency(wallet!.pendingBalance)}</span>{" "}
             is currently held in escrow. Funds are cleared automatically 3 days
             after delivery is confirmed.
           </p>
@@ -248,7 +243,7 @@ export default function MerchantWalletView() {
         <div className="flex items-center justify-between rounded-xl border border-(--success-border) bg-(--success-bg) px-5 py-4">
           <div>
             <p className="text-sm font-semibold text-(--success)">
-              {fmt(wallet!.availableBalance)} available for withdrawal
+              {formatCurrency(wallet!.availableBalance)} available for withdrawal
             </p>
             <p className="text-xs text-(--text-secondary) mt-0.5">
               Funds will be transferred to your registered bank account.
@@ -325,10 +320,10 @@ export default function MerchantWalletView() {
                     <div className="text-right shrink-0">
                       <p className={`text-sm font-bold ${meta.color}`}>
                         {meta.sign === "+" ? "+" : meta.sign === "-" ? "-" : ""}
-                        {fmt(txn.amount)}
+                        {formatCurrency(txn.amount)}
                       </p>
                       <p className="text-[11px] text-(--text-tertiary)">
-                        avail: {fmt(txn.availableAfter)}
+                        avail: {formatCurrency(txn.availableAfter)}
                       </p>
                     </div>
                   </div>
@@ -422,7 +417,7 @@ export default function MerchantWalletView() {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-sm font-bold text-(--text-primary)">
-                        {fmt(req.amount)}
+                        {formatCurrency(req.amount)}
                       </p>
                     </div>
                   </div>
@@ -474,7 +469,7 @@ export default function MerchantWalletView() {
             <p className="text-sm text-(--text-secondary)">
               Available:{" "}
               <span className="font-semibold text-(--success)">
-                {fmt(wallet?.availableBalance ?? 0)}
+                {formatCurrency(wallet?.availableBalance ?? 0)}
               </span>
             </p>
             <p className="text-xs text-(--text-tertiary) -mt-2">

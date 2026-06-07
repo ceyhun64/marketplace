@@ -297,6 +297,7 @@ export default function MerchantReviewsView() {
             {totalPages > 1 && (
               <div className="flex items-center gap-2">
                 <button
+                  aria-label="Previous page"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
                   className="p-1.5 rounded-lg border border-(--border-mid) text-(--text-secondary) hover:bg-(--bg-sunken) disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
@@ -307,6 +308,7 @@ export default function MerchantReviewsView() {
                   Page {page} of {totalPages}
                 </span>
                 <button
+                  aria-label="Next page"
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page >= totalPages}
                   className="p-1.5 rounded-lg border border-(--border-mid) text-(--text-secondary) hover:bg-(--bg-sunken) disabled:opacity-30 disabled:cursor-not-allowed transition-colors"

@@ -74,10 +74,10 @@ export default function MerchantAnalyticsDashboard() {
   }
 
   const chartData = toArray(salesChart).map((d) => ({
-    gun: d.label
+    day: d.label
       ? d.label
       : d.date
-        ? new Date(d.date).toLocaleDateString("en-US", { weekday: "short" })
+        ? new Date(d.date).toLocaleDateString("en-GB", { weekday: "short" })
         : "—",
     marketplace: d.source === "MARKETPLACE" || !d.source ? (d.revenue ?? 0) : 0,
     estore: d.source === "ESTORE" ? (d.revenue ?? 0) : 0,
@@ -414,7 +414,7 @@ export default function MerchantAnalyticsDashboard() {
                         {i + 1}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-(--text-primary) truncate">
+                        <p title={p.productName} className="text-sm font-medium text-(--text-primary) truncate">
                           {p.productName}
                         </p>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">

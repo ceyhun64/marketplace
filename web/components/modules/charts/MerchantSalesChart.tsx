@@ -8,7 +8,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 
-type SalesData = { gun: string; marketplace: number; estore: number };
+type SalesData = { day: string; marketplace: number; estore: number };
 
 const chartConfig = {
   marketplace: {
@@ -36,7 +36,7 @@ export default function MerchantSalesChart({ data }: { data: SalesData[] }) {
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-        <XAxis dataKey="gun" tick={{ fontSize: 12 }} />
+        <XAxis dataKey="day" tick={{ fontSize: 12 }} />
         <YAxis
           tick={{ fontSize: 12 }}
           tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`}

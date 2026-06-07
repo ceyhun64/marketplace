@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatMonthDay, formatShortDateTime } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Truck,
@@ -170,7 +170,7 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
 
   const eta = tracking?.estimatedDelivery ?? shipment.estimatedDelivery;
   const etaShort = eta
-    ? new Date(eta).toLocaleDateString("en-US", { day: "2-digit", month: "short" })
+    ? formatMonthDay(eta)
     : null;
 
   return (
@@ -306,12 +306,7 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
                             )}
                           </div>
                           <span className="text-xs text-(--text-tertiary) shrink-0">
-                            {new Date(event.createdAt).toLocaleString("en-US", {
-                              day: "2-digit",
-                              month: "short",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                            {formatShortDateTime(event.createdAt)}
                           </span>
                         </div>
                       ))}

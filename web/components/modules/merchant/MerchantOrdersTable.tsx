@@ -108,8 +108,17 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
               return (
                 <Fragment key={order.id}>
                   <tr
-                    className="hover:bg-(--bg-sunken) transition-colors cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isExpanded}
+                    className="hover:bg-(--bg-sunken) transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-(--info) focus-visible:-outline-offset-2"
                     onClick={() => setExpandedId(isExpanded ? null : order.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setExpandedId(isExpanded ? null : order.id);
+                      }
+                    }}
                   >
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-1.5">

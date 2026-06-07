@@ -208,7 +208,7 @@ export default function ProductCatalogueTable({
                   <div className="flex items-center gap-3 min-w-0">
                     <ProductThumb src={p.images?.[0]} alt={p.name} />
                     <div className="min-w-0">
-                      <p className="font-medium text-(--text-primary) truncate max-w-45">{p.name}</p>
+                      <p title={p.name} className="font-medium text-(--text-primary) truncate max-w-45">{p.name}</p>
                       <p className="text-xs text-(--text-tertiary) truncate">{p.categoryName ?? "—"}</p>
                     </div>
                   </div>
