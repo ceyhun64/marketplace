@@ -157,7 +157,7 @@ function CategoryCard({
         className="absolute bottom-5 right-6 text-[3.5rem] font-light leading-none select-none pointer-events-none"
         style={{
           fontFamily: "var(--font-display)",
-          color: "var(--border-light)",
+          color: "rgba(30,30,30,0.55)",
         }}
       >
         {String(index + 1).padStart(2, "0")}
