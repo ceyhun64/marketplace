@@ -38,7 +38,7 @@ export default function FeaturedProducts() {
                 className="inline-block w-6 h-px"
                 style={{ background: "var(--red)" }}
               />
-              <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-[var(--charcoal-soft)]">
+              <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-(--charcoal-mid)">
                 Curated Selection
               </span>
             </div>
@@ -77,7 +77,7 @@ export default function FeaturedProducts() {
                 color:
                   activeTab === tab.value
                     ? "var(--charcoal)"
-                    : "var(--charcoal-soft)",
+                    : "var(--charcoal-mid)",
                 background: "none",
                 border: "none",
                 cursor: "pointer",

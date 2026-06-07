@@ -163,23 +163,26 @@ export default function AnnouncementBar() {
 
       {/* Dots */}
       {items.length > 1 && (
-        <div className="hidden sm:flex" style={{ gap: 4, flexShrink: 0 }}>
+        <div className="hidden sm:flex items-center" style={{ flexShrink: 0 }}>
           {items.map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrent(i)}
               aria-label={`Announcement ${i + 1}`}
-              style={{
-                width: i === current ? 16 : 5,
-                height: 5,
-                borderRadius: 999,
-                background: i === current ? "#fff" : "rgba(255,255,255,0.25)",
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
-                transition: "width 0.25s ease, background 0.25s ease",
-              }}
-            />
+              className="relative flex items-center justify-center cursor-pointer border-none p-0 bg-transparent"
+              style={{ width: 24, height: 24 }}
+            >
+              <span
+                aria-hidden="true"
+                className="block rounded-full transition-all duration-300"
+                style={{
+                  width: i === current ? 16 : 5,
+                  height: 5,
+                  borderRadius: 999,
+                  background: i === current ? "#fff" : "rgba(255,255,255,0.25)",
+                }}
+              />
+            </button>
           ))}
         </div>
       )}

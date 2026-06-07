@@ -305,7 +305,7 @@ export default function Footer() {
               style={{
                 fontFamily: "var(--font-body)",
                 fontSize: "0.875rem",
-                color: "var(--charcoal-soft)",
+                color: "var(--charcoal-mid)",
                 lineHeight: 1.6,
               }}
             >
@@ -404,7 +404,7 @@ export default function Footer() {
           style={{
             fontFamily: "var(--font-mono)",
             fontSize: "0.6875rem",
-            color: "var(--charcoal-soft)",
+            color: "var(--charcoal-mid)",
             letterSpacing: "0.05em",
           }}
         >
@@ -423,7 +423,7 @@ export default function Footer() {
               style={{
                 fontFamily: "var(--font-mono)",
                 fontSize: "0.6875rem",
-                color: "var(--charcoal-soft)",
+                color: "var(--charcoal-mid)",
                 textDecoration: "none",
                 letterSpacing: "0.05em",
                 transition: "color var(--duration-fast) var(--ease-out)",
@@ -434,7 +434,7 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="flex gap-2 opacity-50">
+        <div className="flex gap-2 opacity-70">
           {["VISA", "STRIPE", "IYZICO"].map((pay) => (
             <span
               key={pay}

@@ -52,7 +52,7 @@ export default function BecomeSellerSection() {
                 />
                 <span
                   className="font-mono text-[11px] tracking-[0.18em] uppercase"
-                  style={{ color: "var(--charcoal-soft)" }}
+                  style={{ color: "var(--charcoal-mid)" }}
                 >
                   Sell on our platform
                 </span>
@@ -71,7 +71,7 @@ export default function BecomeSellerSection() {
               </h2>
               <p
                 className="text-[0.9375rem] leading-relaxed max-w-md"
-                style={{ color: "var(--charcoal-soft)" }}
+                style={{ color: "var(--charcoal-mid)" }}
               >
                 Join hundreds of merchants already selling on our marketplace.
                 Apply today — our team reviews applications within 1–2 business

@@ -60,7 +60,7 @@ export default function HowItWorksSection() {
               />
               <span
                 className="font-mono text-[11px] tracking-[0.18em] uppercase"
-                style={{ color: "rgba(255,255,255,0.4)" }}
+                style={{ color: "rgba(255,255,255,0.6)" }}
               >
                 How it works
               </span>
@@ -72,7 +72,7 @@ export default function HowItWorksSection() {
                 fontSize: "clamp(2rem, 4vw, 2.75rem)",
               }}
             >
-              Shopping is <em style={{ color: "var(--red)" }}>this simple.</em>
+              Shopping is <em style={{ color: "var(--red-light)" }}>this simple.</em>
             </h2>
           </div>
         </div>
@@ -115,6 +115,7 @@ export default function HowItWorksSection() {
                   {step.icon}
                 </div>
                 <span
+                  aria-hidden="true"
                   className="font-light leading-none"
                   style={{
                     fontFamily: "var(--font-display)",

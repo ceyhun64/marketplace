@@ -196,7 +196,7 @@ export default function HeroSection() {
               style={{
                 fontFamily: "var(--font-body)",
                 fontSize: "1rem",
-                color: "var(--charcoal-soft)",
+                color: "var(--charcoal-mid)",
                 lineHeight: 1.8,
                 marginBottom: "2.5rem",
                 maxWidth: 480,

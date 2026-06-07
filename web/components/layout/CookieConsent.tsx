@@ -221,7 +221,7 @@ export default function CookieConsent() {
                     style={{
                       fontFamily: "var(--font-body)",
                       fontSize: "0.6875rem",
-                      color: "rgba(255,255,255,0.4)",
+                      color: "rgba(255,255,255,0.6)",
                       lineHeight: 1.4,
                       marginTop: 2,
                     }}
@@ -287,7 +287,7 @@ export default function CookieConsent() {
             style={{
               background: "none",
               border: "none",
-              color: "rgba(255,255,255,0.4)",
+              color: "rgba(255,255,255,0.6)",
               fontFamily: "var(--font-body)",
               fontSize: "0.75rem",
               cursor: "pointer",

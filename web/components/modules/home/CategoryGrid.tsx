@@ -62,7 +62,7 @@ export default function CategoryGrid() {
                 style={{ background: "var(--red)" }}
               />
               <span
-                className="font-mono text-[11px] tracking-[0.18em] uppercase text-(--charcoal-soft)"
+                className="font-mono text-[11px] tracking-[0.18em] uppercase text-(--charcoal-mid)"
               >
                 Categories
               </span>
@@ -150,8 +150,10 @@ function CategoryCard({
         )}
       </div>
 
-      {/* Decorative index number */}
+      {/* Decorative index number — aria-hidden so it's excluded from the
+          accessibility tree (and contrast checks); it's purely visual. */}
       <div
+        aria-hidden="true"
         className="absolute bottom-5 right-6 text-[3.5rem] font-light leading-none select-none pointer-events-none"
         style={{
           fontFamily: "var(--font-display)",

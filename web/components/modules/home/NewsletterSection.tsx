@@ -218,7 +218,7 @@ export default function NewsletterSection() {
                       fontSize: "0.6875rem",
                       letterSpacing: "0.12em",
                       textTransform: "uppercase",
-                      color: "var(--charcoal-soft)",
+                      color: "var(--charcoal-mid)",
                       marginBottom: "0.625rem",
                     }}
                   >
@@ -308,7 +308,7 @@ export default function NewsletterSection() {
                     style={{
                       fontFamily: "var(--font-body)",
                       fontSize: "0.6875rem",
-                      color: "var(--charcoal-mist)",
+                      color: "var(--charcoal-mid)",
                       lineHeight: 1.5,
                     }}
                   >
@@ -316,7 +316,7 @@ export default function NewsletterSection() {
                     agree to our{" "}
                     <a
                       href="/privacy"
-                      style={{ color: "var(--charcoal-soft)", textDecoration: "underline" }}
+                      style={{ color: "var(--charcoal-mid)", textDecoration: "underline" }}
                     >
                       Privacy Policy
                     </a>

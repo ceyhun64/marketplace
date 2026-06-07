@@ -541,7 +541,7 @@ export default function Navbar() {
                       ? "var(--red)"
                       : pathname === link.href
                         ? "var(--charcoal)"
-                        : "var(--charcoal-soft)",
+                        : "var(--charcoal-mid)",
                     padding: "0.5rem 0.875rem",
                     borderRadius: "0.5rem",
                     background:
@@ -571,7 +571,7 @@ export default function Navbar() {
                       fontFamily: "var(--font-body)",
                       fontSize: "0.8125rem",
                       fontWeight: 500,
-                      color: "var(--charcoal-soft)",
+                      color: "var(--charcoal-mid)",
                       padding: "0.5rem 0.875rem",
                       borderRadius: "0.5rem",
                       background: "transparent",
@@ -659,7 +659,8 @@ export default function Navbar() {
                     type="button"
                     onClick={() => setSearchOpen(false)}
                     className="ml-2 transition-colors"
-                    style={{ color: "var(--charcoal-soft)" }}
+                    style={{ color: "var(--charcoal-mid)" }}
+                    aria-label="Close search"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -704,7 +705,7 @@ export default function Navbar() {
                 className="hidden lg:flex items-center gap-2 px-3 h-9 rounded-xl border transition-all hover:border-(--border-mid) hover:bg-(--off-white-2)"
                 style={{
                   border: "1px solid var(--border-light)",
-                  color: "var(--charcoal-mist)",
+                  color: "var(--charcoal-mid)",
                   background: "var(--off-white)",
                 }}
                 aria-label="Open search (Ctrl+K)"
@@ -723,7 +724,7 @@ export default function Navbar() {
                   style={{
                     background: "var(--off-white-2)",
                     border: "1px solid var(--border-light)",
-                    color: "var(--charcoal-mist)",
+                    color: "var(--charcoal-mid)",
                   }}
                 >
                   ⌘K

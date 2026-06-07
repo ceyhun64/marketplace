@@ -281,7 +281,7 @@ function StoreCard({ store }: { store: MerchantProfile }) {
               style={{
                 fontFamily: "var(--font-mono)",
                 fontSize: "var(--text-2xs)",
-                color: "var(--charcoal-mist)",
+                color: "var(--charcoal-mid)",
                 textTransform: "uppercase" as const,
                 letterSpacing: "0.1em",
                 marginBottom: 2,
@@ -398,7 +398,7 @@ export default function FeaturedStores() {
                   fontSize: "var(--text-xs)",
                   letterSpacing: "0.18em",
                   textTransform: "uppercase" as const,
-                  color: "var(--charcoal-soft)",
+                  color: "var(--charcoal-mid)",
                 }}
               >
                 Elite Partners
@@ -504,7 +504,7 @@ export default function FeaturedStores() {
                 fontSize: "var(--text-xs)",
                 textTransform: "uppercase" as const,
                 letterSpacing: "0.16em",
-                color: "rgba(200,16,46,0.7)",
+                color: "#ef5e77",
                 display: "block",
                 marginBottom: "0.875rem",
               }}
@@ -523,7 +523,7 @@ export default function FeaturedStores() {
               }}
             >
               Open your store and reach{" "}
-              <em style={{ color: "var(--red)", fontStyle: "italic" }}>
+              <em style={{ color: "var(--red-light)", fontStyle: "italic" }}>
                 millions of customers.
               </em>
             </h3>

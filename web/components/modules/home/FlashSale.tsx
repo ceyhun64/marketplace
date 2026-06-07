@@ -274,6 +274,7 @@ export default function FlashSale() {
         <Link
           href="/deals"
           className="hover:bg-white/20 shrink-0"
+          aria-label="Shop deals"
           style={{
             display: "inline-flex",
             alignItems: "center",

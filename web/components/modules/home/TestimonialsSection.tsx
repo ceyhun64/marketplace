@@ -170,7 +170,7 @@ export default function TestimonialsSection() {
             <span className="inline-block w-6 h-px" style={{ background: "var(--red)" }} />
             <span
               className="font-mono text-[11px] tracking-[0.18em] uppercase"
-              style={{ color: "var(--charcoal-soft)" }}
+              style={{ color: "var(--charcoal-mid)" }}
             >
               Social Proof
             </span>
@@ -193,7 +193,7 @@ export default function TestimonialsSection() {
 
           <p
             className="text-[0.9375rem] leading-relaxed max-w-sm"
-            style={{ color: "var(--charcoal-soft)", fontFamily: "var(--font-body)" }}
+            style={{ color: "var(--charcoal-mid)", fontFamily: "var(--font-body)" }}
           >
             Buyers and sellers share their experiences.
           </p>
@@ -309,18 +309,25 @@ export default function TestimonialsSection() {
               <ChevronLeft size={16} strokeWidth={2} />
             </button>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center">
               {Array.from({ length: maxIndex + 1 }).map((_, i) => (
                 <button
                   key={i}
                   onClick={() => { setActiveIndex(i); startAutoplay(); }}
-                  className="h-1.5 rounded-full border-none p-0 cursor-pointer transition-all duration-300"
-                  style={{
-                    width: i === activeIndex ? 20 : 6,
-                    background: i === activeIndex ? "var(--red)" : "var(--border-mid)",
-                  }}
+                  className="relative flex items-center justify-center cursor-pointer transition-all duration-300 border-none p-0 bg-transparent"
+                  style={{ width: 24, height: 24 }}
                   aria-label={`Go to ${i + 1}`}
-                />
+                >
+                  <span
+                    aria-hidden="true"
+                    className="block rounded-full transition-all duration-300"
+                    style={{
+                      width: i === activeIndex ? 20 : 6,
+                      height: 6,
+                      background: i === activeIndex ? "var(--red)" : "var(--border-mid)",
+                    }}
+                  />
+                </button>
               ))}
             </div>
 
@@ -393,7 +400,7 @@ export default function TestimonialsSection() {
                 className="font-mono uppercase tracking-[0.14em]"
                 style={{
                   fontSize: "clamp(0.5rem, 1.5vw, 0.625rem)",
-                  color: "rgba(255,255,255,0.45)",
+                  color: "rgba(255,255,255,0.65)",
                 }}
               >
                 {s.label}
