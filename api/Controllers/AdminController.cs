@@ -354,6 +354,41 @@ public class AdminController : ControllerBase
         );
     }
 
+    [HttpGet("merchants/{id:guid}")]
+    public async Task<IActionResult> GetMerchantById(Guid id)
+    {
+        var merchant = await _db
+            .MerchantProfiles.Include(m => m.User)
+            .Include(m => m.Subscription)
+            .FirstOrDefaultAsync(m => m.Id == id);
+
+        if (merchant is null)
+            return NotFound(new { message = "Merchant not found." });
+
+        return Ok(
+            new
+            {
+                merchant.Id,
+                merchant.UserId,
+                merchant.StoreName,
+                merchant.Slug,
+                merchant.Description,
+                merchant.LogoUrl,
+                merchant.BannerUrl,
+                merchant.CustomDomain,
+                merchant.DomainVerified,
+                merchant.Latitude,
+                merchant.Longitude,
+                merchant.HandlingHours,
+                merchant.IsSuspended,
+                merchant.IsActive,
+                merchant.CreatedAt,
+                Email = merchant.User.Email,
+                Plan = merchant.Subscription == null ? "Basic" : merchant.Subscription.Plan.ToString(),
+            }
+        );
+    }
+
     [HttpPost("merchants")]
     public async Task<IActionResult> CreateMerchant(
         [FromBody] CreateMerchantDto dto,

@@ -92,7 +92,20 @@ export default function AdminSubscriptionsPage() {
     queryKey: ["admin-merchants-subscriptions"],
     queryFn: async () => {
       const res = await api.get("/api/admin/merchants");
-      return res.data;
+      const raw = res.data;
+      const rawItems: any[] = raw?.items ?? (Array.isArray(raw) ? raw : []);
+      const items: MerchantSubscription[] = rawItems.map((m: any) => ({
+        id: m.id ?? m.merchantId ?? "",
+        merchantId: m.id ?? m.merchantId ?? "",
+        merchantName: m.storeName ?? m.merchantName ?? "",
+        merchantEmail: m.email ?? m.merchantEmail ?? "",
+        plan: (!m.plan || String(m.plan).toLowerCase() === "none" ? "BASIC" : String(m.plan).toUpperCase()) as PlanType,
+        status: m.isActive ? "ACTIVE" : "CANCELLED",
+        startDate: m.createdAt ?? m.startDate ?? "",
+        endDate: m.endDate,
+        monthlyRevenue: m.monthlyRevenue ?? 0,
+      }));
+      return { ...raw, items };
     },
   });
 

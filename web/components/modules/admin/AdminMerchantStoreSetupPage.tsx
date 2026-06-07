@@ -86,7 +86,7 @@ export default function AdminMerchantStoreSetupPage() {
     enabled: !!merchantId,
   });
 
-  const merchant: MerchantProfile | null = data?.data || null;
+  const merchant: MerchantProfile | null = data || null;
 
   useEffect(() => {
     if (merchant) {
