@@ -31,7 +31,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { toast } from "sonner";
-import { Package, Search, UserCheck, Eye, RefreshCw } from "lucide-react";
+import { Package, Search, UserCheck, Eye, RefreshCw, Truck, CheckCircle2, AlertCircle } from "lucide-react";
 import {
   SHIPMENT_STATUS_LABELS,
   SHIPMENT_STATUS_ORDER,
