@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Puzzle, Check, DollarSign, Zap, Package, Lock } from "lucide-react";
+import { useMySubscription } from "@/queries/useSubscription";
+import { PLAN_LABELS, type PlanType } from "@/types/enums";
 
 interface Plugin {
   id: string;
@@ -18,9 +20,11 @@ interface Plugin {
   isSubscribed: boolean;
   isActive: boolean;
   isFeatured: boolean;
-  minimumPlan: string;
+  minimumPlan: PlanType;
   createdAt: string;
 }
+
+const PLAN_ORDER: Record<PlanType, number> = { BASIC: 0, PRO: 1, ENTERPRISE: 2 };
 
 const CATEGORY_COLORS: Record<string, string> = {
   analytics: "bg-(--info-bg) text-(--info)",
@@ -33,6 +37,9 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export default function MerchantPluginsView() {
   const qc = useQueryClient();
+
+  const { data: subscription } = useMySubscription();
+  const currentPlan: PlanType = subscription?.planType ?? "BASIC";
 
   const { data: plugins, isLoading } = useQuery<Plugin[]>({
     queryKey: ["merchant-plugins"],
@@ -179,61 +186,84 @@ export default function MerchantPluginsView() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {availablePlugins.map((p) => (
-              <div
-                key={p.id}
-                className="bg-(--bg-surface) border border-(--border-light) rounded-2xl p-5 shadow-sm hover:border-(--border-mid) transition-colors"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-(--off-white-2) flex items-center justify-center shrink-0">
-                    <Puzzle className="w-5 h-5 text-(--text-secondary)" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-semibold text-(--text-primary)">
-                        {p.name}
-                      </p>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full capitalize ${CATEGORY_COLORS[p.category] ?? "bg-(--off-white-2) text-(--text-secondary)"}`}
-                      >
-                        {p.category}
-                      </span>
+            {availablePlugins.map((p) => {
+              const planLocked = PLAN_ORDER[currentPlan] < PLAN_ORDER[p.minimumPlan];
+              return (
+                <div
+                  key={p.id}
+                  className="bg-(--bg-surface) border border-(--border-light) rounded-2xl p-5 shadow-sm hover:border-(--border-mid) transition-colors"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-(--off-white-2) flex items-center justify-center shrink-0">
+                      <Puzzle className="w-5 h-5 text-(--text-secondary)" />
                     </div>
-                    <p className="text-xs text-(--text-secondary) mt-1 line-clamp-2">
-                      {p.description}
-                    </p>
-                    <div className="flex items-center justify-between mt-3">
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="w-3.5 h-3.5 text-(--text-tertiary)" />
-                        <span className="text-sm font-semibold text-(--text-primary)">
-                          {p.monthlyPrice === 0
-                            ? "Free"
-                            : `$${p.monthlyPrice}/mo`}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-(--text-primary)">
+                          {p.name}
+                        </p>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full capitalize ${CATEGORY_COLORS[p.category] ?? "bg-(--off-white-2) text-(--text-secondary)"}`}
+                        >
+                          {p.category}
                         </span>
+                        {p.minimumPlan !== "BASIC" && (
+                          <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-(--off-white-2) text-(--text-tertiary) flex items-center gap-1">
+                            <Lock className="w-3 h-3" />
+                            Requires {PLAN_LABELS[p.minimumPlan]}
+                          </span>
+                        )}
                       </div>
-                      <Button
-                        size="sm"
-                        className="rounded-xl text-xs h-7 gap-1 text-white"
-                        style={{ background: "var(--red)" }}
-                        onClick={() => subscribeMutation.mutate(p.id)}
-                        disabled={subscribeMutation.isPending}
-                        onMouseEnter={(e) =>
-                          ((e.currentTarget as HTMLElement).style.background =
-                            "var(--red-dark)")
-                        }
-                        onMouseLeave={(e) =>
-                          ((e.currentTarget as HTMLElement).style.background =
-                            "var(--red)")
-                        }
-                      >
-                        <Zap className="w-3 h-3" />
-                        Activate
-                      </Button>
+                      <p className="text-xs text-(--text-secondary) mt-1 line-clamp-2">
+                        {p.description}
+                      </p>
+                      <div className="flex items-center justify-between mt-3">
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="w-3.5 h-3.5 text-(--text-tertiary)" />
+                          <span className="text-sm font-semibold text-(--text-primary)">
+                            {p.monthlyPrice === 0
+                              ? "Free"
+                              : `$${p.monthlyPrice}/mo`}
+                          </span>
+                        </div>
+                        {planLocked ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-xl text-xs h-7 gap-1 border-(--border-mid) text-(--text-secondary)"
+                            onClick={() =>
+                              (window.location.href = "/merchant/subscription")
+                            }
+                          >
+                            <Lock className="w-3 h-3" />
+                            Upgrade to {PLAN_LABELS[p.minimumPlan]}
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            className="rounded-xl text-xs h-7 gap-1 text-white"
+                            style={{ background: "var(--red)" }}
+                            onClick={() => subscribeMutation.mutate(p.id)}
+                            disabled={subscribeMutation.isPending}
+                            onMouseEnter={(e) =>
+                              ((e.currentTarget as HTMLElement).style.background =
+                                "var(--red-dark)")
+                            }
+                            onMouseLeave={(e) =>
+                              ((e.currentTarget as HTMLElement).style.background =
+                                "var(--red)")
+                            }
+                          >
+                            <Zap className="w-3 h-3" />
+                            Activate
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

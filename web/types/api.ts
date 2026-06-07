@@ -255,7 +255,6 @@ export interface UpdateStoreSettingsRequest {
 
 export interface SetDomainRequest {
   domain: string;
-  isSubdomain: boolean;
 }
 
 // ── Merchant DTOs ─────────────────────────────────────────────────────────────

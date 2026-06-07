@@ -2,10 +2,13 @@
 
 import { useMerchantProfile } from "@/queries/useMerchant";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Empty, EmptyMedia, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
+import { Store } from "lucide-react";
 import StoreSettingsForm from "./StoreSettingsForm";
 
 export default function MerchantStoreSettingsView() {
-  const { data, isLoading } = useMerchantProfile();
+  const { data, isLoading, isError, refetch } = useMerchantProfile();
 
   if (isLoading) {
     return (
@@ -21,7 +24,26 @@ export default function MerchantStoreSettingsView() {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <Empty>
+        <EmptyMedia variant="icon">
+          <Store className="w-5 h-5" />
+        </EmptyMedia>
+        <EmptyHeader>
+          <EmptyTitle>{isError ? "Couldn't load store profile" : "No store profile found"}</EmptyTitle>
+          <EmptyDescription>
+            {isError
+              ? "Something went wrong while loading your store settings."
+              : "We couldn't find a store profile for your account."}
+          </EmptyDescription>
+        </EmptyHeader>
+        <Button variant="outline" size="sm" onClick={() => refetch()}>
+          Try Again
+        </Button>
+      </Empty>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -18,6 +18,7 @@ public class SubscriptionDto
     public bool IsActive { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime ExpiresAt { get; set; }
+    public decimal MonthlyPrice { get; set; }
 }
 
 public class SubscribeRequestDto

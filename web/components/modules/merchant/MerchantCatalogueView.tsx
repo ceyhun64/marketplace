@@ -132,8 +132,11 @@ export default function MerchantCatalogueView() {
       sort,
       ...(statusFilter === "pendingApproval" ? { isApproved: false } : {}),
       ...(statusFilter === "outOfStock" ? { outOfStock: true } : {}),
+      ...(publishFilter === "market" ? { publishedToMarket: true } : {}),
+      ...(publishFilter === "store" ? { publishedToStore: true } : {}),
+      ...(publishFilter === "none" ? { unlisted: true } : {}),
     }),
-    [page, debouncedSearch, sort, statusFilter],
+    [page, debouncedSearch, sort, statusFilter, publishFilter],
   );
 
   const { data, isLoading, isFetching } = useMerchantProducts(filters);
@@ -142,19 +145,10 @@ export default function MerchantCatalogueView() {
 
   const allProducts: Product[] = data?.items ?? [];
 
-  const filteredProducts = useMemo(() => {
-    if (publishFilter === "all") return allProducts;
-    if (publishFilter === "market")
-      return allProducts.filter((p) => p.publishToMarket);
-    if (publishFilter === "store")
-      return allProducts.filter((p) => p.publishToStore);
-    if (publishFilter === "none")
-      return allProducts.filter((p) => !p.publishToMarket && !p.publishToStore);
-    return allProducts;
-  }, [allProducts, publishFilter]);
-
   const totalCount = data?.totalCount ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const isFiltered =
+    publishFilter !== "all" || statusFilter !== "all" || !!debouncedSearch;
 
   const stats = useMemo(() => {
     const serverStats = data?.stats;
@@ -335,13 +329,34 @@ export default function MerchantCatalogueView() {
       </div>
 
       {/* Table */}
-      <ProductCatalogueTable
-        products={filteredProducts}
-        loading={isLoading}
-        onEdit={handleEdit}
-        onDelete={(id) => setDeleteConfirm(id)}
-        onTogglePublish={handleTogglePublish}
-      />
+      {isFiltered && !isLoading && allProducts.length === 0 ? (
+        <div className="bg-(--bg-surface) border border-(--border-light) rounded-xl p-12 text-center">
+          <Search className="w-10 h-10 mx-auto mb-3 text-(--text-tertiary) opacity-30" />
+          <p className="text-sm font-medium text-(--text-secondary)">
+            No products match your filters
+          </p>
+          <button
+            onClick={() => {
+              setPublishFilter("all");
+              setStatusFilter("all");
+              setSearch("");
+              setDebouncedSearch("");
+              setPage(1);
+            }}
+            className="mt-3 text-xs text-(--info) hover:underline font-medium"
+          >
+            Clear filters
+          </button>
+        </div>
+      ) : (
+        <ProductCatalogueTable
+          products={allProducts}
+          loading={isLoading}
+          onEdit={handleEdit}
+          onDelete={(id) => setDeleteConfirm(id)}
+          onTogglePublish={handleTogglePublish}
+        />
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -396,28 +411,6 @@ export default function MerchantCatalogueView() {
           </div>
         </div>
       )}
-
-      {/* Empty state (filtered) */}
-      {!isLoading &&
-        filteredProducts.length === 0 &&
-        allProducts.length > 0 && (
-          <div className="bg-(--bg-surface) border border-(--border-light) rounded-xl p-12 text-center">
-            <Search className="w-10 h-10 mx-auto mb-3 text-(--text-tertiary) opacity-30" />
-            <p className="text-sm font-medium text-(--text-secondary)">
-              No products match your filters
-            </p>
-            <button
-              onClick={() => {
-                setPublishFilter("all");
-                setSearch("");
-                setDebouncedSearch("");
-              }}
-              className="mt-3 text-xs text-(--info) hover:underline font-medium"
-            >
-              Clear filters
-            </button>
-          </div>
-        )}
 
       {/* Product Form Modal */}
       {modalOpen && (

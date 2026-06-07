@@ -121,13 +121,23 @@ public class OrdersController(
     {
         var order = await db
             .Orders.AsNoTracking()
-            .Select(o => new { o.Id, o.CustomerId, o.Status })
+            .Select(o => new
+            {
+                o.Id,
+                o.CustomerId,
+                o.Status,
+                MerchantIds = o.Items.Select(i => i.MerchantId).Distinct(),
+            })
             .FirstOrDefaultAsync(o => o.Id == id);
 
         if (order == null)
             return NotFound();
 
         if (currentUser.Role == "Customer" && order.CustomerId != currentUser.UserId)
+            return Forbid();
+
+        if (currentUser.Role == "Merchant" &&
+            (currentUser.MerchantId == null || !order.MerchantIds.Contains(currentUser.MerchantId.Value)))
             return Forbid();
 
         // Query ALL shipments for this order directly — the 1:1 Order.Shipment navigation
@@ -580,14 +590,24 @@ public class OrdersController(
         if (merchantId == null)
             return Forbid();
 
-        var query = db
+        var baseQuery = db
             .Orders.AsNoTracking()
+            .Where(o => o.Items.Any(i => i.MerchantId == merchantId.Value));
+
+        var pendingStatuses = new[] { OrderStatus.Pending, OrderStatus.PaymentConfirmed };
+        var processingStatuses = new[] { OrderStatus.LabelGenerated, OrderStatus.CourierAssigned, OrderStatus.PickedUp, OrderStatus.InTransit };
+
+        var statsTotal = await baseQuery.CountAsync();
+        var statsPending = await baseQuery.CountAsync(o => pendingStatuses.Contains(o.Status));
+        var statsProcessing = await baseQuery.CountAsync(o => processingStatuses.Contains(o.Status));
+        var statsDelivered = await baseQuery.CountAsync(o => o.Status == OrderStatus.Delivered);
+
+        var query = baseQuery
             .Include(o => o.Items)
                 .ThenInclude(i => i.Product)
             .Include(o => o.Customer)
             .Include(o => o.Shipment)
             .Include(o => o.Invoice)
-            .Where(o => o.Items.Any(i => i.MerchantId == merchantId.Value))
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, ignoreCase: true, out var ps))
@@ -610,6 +630,13 @@ public class OrdersController(
                     limit,
                     total,
                     pages = (int)Math.Ceiling((double)total / limit),
+                },
+                stats = new
+                {
+                    total = statsTotal,
+                    pending = statsPending,
+                    processing = statsProcessing,
+                    delivered = statsDelivered,
                 },
             }
         );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCategories } from "@/queries/useCategories";
 import { useCreateProduct, useUpdateProduct } from "@/queries/useProducts";
 import MultiImageUploader from "@/components/ui/multiImageUploader";
@@ -63,6 +63,10 @@ export default function ProductFormModal({
   const [variants, setVariants] = useState<VariantRow[]>([]);
   const [variantAxes, setVariantAxes] = useState<string[]>([]);
   const [savingVariants, setSavingVariants] = useState(false);
+  const [loadingVariants, setLoadingVariants] = useState(false);
+  // Snapshot of variant IDs that existed on the server when the modal opened —
+  // used to detect which ones were removed and need a DELETE on save.
+  const originalVariantIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (product) {
@@ -81,6 +85,62 @@ export default function ProductFormModal({
       setForm(EMPTY_FORM);
     }
   }, [product]);
+
+  // Load existing variants when editing a product, so they can be edited/removed.
+  useEffect(() => {
+    if (!product?.id) {
+      setVariants([]);
+      setVariantAxes([]);
+      originalVariantIds.current = new Set();
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingVariants(true);
+    api
+      .get(`/api/products/${product.id}/variants`)
+      .then(({ data }) => {
+        if (cancelled) return;
+        const rows: VariantRow[] = (data ?? []).map(
+          (v: {
+            id: string;
+            sku: string;
+            attributes?: Record<string, string>;
+            priceOverride?: number | null;
+            stock: number;
+            imageUrl?: string | null;
+            isActive: boolean;
+          }) => ({
+            id: v.id,
+            sku: v.sku ?? "",
+            attributes: v.attributes ?? {},
+            priceOverride: v.priceOverride != null ? String(v.priceOverride) : "",
+            stock: String(v.stock ?? 0),
+            imageUrl: v.imageUrl ?? "",
+            isActive: v.isActive ?? true,
+          }),
+        );
+        const axesSet = new Set<string>();
+        rows.forEach((r) => Object.keys(r.attributes).forEach((k) => axesSet.add(k)));
+        setVariants(rows);
+        setVariantAxes([...axesSet]);
+        originalVariantIds.current = new Set(rows.map((r) => r.id!).filter(Boolean));
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setVariants([]);
+          setVariantAxes([]);
+          originalVariantIds.current = new Set();
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingVariants(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [product?.id]);
 
   const set = <K extends keyof FormState>(key: K, val: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: val }));
@@ -125,24 +185,58 @@ export default function ProductFormModal({
         savedProductId = result?.data?.id ?? result?.id;
       }
 
-      // Persist new variants if any were added
-      if (savedProductId && variants.length > 0) {
+      // Persist variant additions, edits, and removals
+      if (savedProductId) {
         setSavingVariants(true);
+
+        const skippedSkus: string[] = [];
+        const currentIds = new Set<string>();
+
         for (const v of variants) {
-          if (v.id) continue; // already persisted
-          if (!v.sku) continue;
+          if (v.id) currentIds.add(v.id);
+
+          if (!v.sku.trim()) {
+            skippedSkus.push(v.id ? `(existing variant ${v.id.slice(0, 8)})` : "(new variant)");
+            continue;
+          }
+
+          const body = {
+            sku: v.sku,
+            attributes: v.attributes,
+            priceOverride: v.priceOverride ? Number(v.priceOverride) : null,
+            stock: Number(v.stock) || 0,
+            imageUrl: v.imageUrl || null,
+            isActive: v.isActive,
+          };
+
           try {
-            await api.post(`/api/products/${savedProductId}/variants`, {
-              sku: v.sku,
-              attributes: v.attributes,
-              priceOverride: v.priceOverride ? Number(v.priceOverride) : null,
-              stock: Number(v.stock) || 0,
-              imageUrl: v.imageUrl || null,
-            });
+            if (v.id) {
+              await api.put(`/api/products/${savedProductId}/variants/${v.id}`, body);
+            } else {
+              await api.post(`/api/products/${savedProductId}/variants`, body);
+            }
           } catch {
             toast.error(`Failed to save variant ${v.sku}`);
           }
         }
+
+        // Removed from the list → delete on the server
+        for (const id of originalVariantIds.current) {
+          if (!currentIds.has(id)) {
+            try {
+              await api.delete(`/api/products/${savedProductId}/variants/${id}`);
+            } catch {
+              toast.error(`Failed to remove variant ${id.slice(0, 8)}`);
+            }
+          }
+        }
+
+        if (skippedSkus.length > 0) {
+          toast.warning(
+            `Skipped ${skippedSkus.length} variant${skippedSkus.length > 1 ? "s" : ""} without a SKU: ${skippedSkus.join(", ")}`,
+          );
+        }
+
         setSavingVariants(false);
       }
 
@@ -223,14 +317,21 @@ export default function ProductFormModal({
         <div className="p-6 flex flex-col gap-5">
           {/* Variants tab */}
           {activeTab === "variants" && (
-            <ProductVariantEditor
-              productId={product?.id}
-              variants={variants}
-              onChange={setVariants}
-              axes={variantAxes}
-              onAxesChange={setVariantAxes}
-              basePrice={Number(form.price) || 0}
-            />
+            loadingVariants ? (
+              <div className="flex items-center justify-center py-12 text-sm text-(--text-tertiary) gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading variants…
+              </div>
+            ) : (
+              <ProductVariantEditor
+                productId={product?.id}
+                variants={variants}
+                onChange={setVariants}
+                axes={variantAxes}
+                onAxesChange={setVariantAxes}
+                basePrice={Number(form.price) || 0}
+              />
+            )
           )}
 
           {activeTab === "details" && (

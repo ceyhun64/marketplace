@@ -142,6 +142,7 @@ public class MerchantsController : ControllerBase
         [FromQuery] int limit = 20,
         [FromQuery] bool? publishedToMarket = null,
         [FromQuery] bool? publishedToStore = null,
+        [FromQuery] bool? unlisted = null,
         [FromQuery] bool? isApproved = null,
         [FromQuery] bool? outOfStock = null,
         [FromQuery] string? search = null,
@@ -168,6 +169,8 @@ public class MerchantsController : ControllerBase
             query = query.Where(p => p.PublishToMarket == publishedToMarket.Value);
         if (publishedToStore.HasValue)
             query = query.Where(p => p.PublishToStore == publishedToStore.Value);
+        if (unlisted == true)
+            query = query.Where(p => !p.PublishToMarket && !p.PublishToStore);
         if (isApproved.HasValue)
             query = query.Where(p => p.IsApproved == isApproved.Value);
         if (outOfStock == true)
@@ -642,6 +645,88 @@ public class MerchantsController : ControllerBase
             .ToListAsync();
 
         return Ok(topProducts);
+    }
+
+    // ── REVIEWS ──────────────────────────────────────────────────────────────
+
+    [HttpGet("reviews")]
+    public async Task<IActionResult> GetReviews(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20,
+        [FromQuery] int? rating = null,
+        [FromQuery] string? search = null
+    )
+    {
+        var merchant = await GetCurrentMerchantAsync();
+        if (merchant == null)
+            return NotFound(new { message = "Merchant profili bulunamadı." });
+
+        var baseQuery = _db.Reviews
+            .Include(r => r.Product)
+            .Include(r => r.Customer)
+            .Where(r => r.Product.MerchantId == merchant.Id);
+
+        var distribution = await baseQuery
+            .GroupBy(r => r.Rating)
+            .Select(g => new { Rating = g.Key, Count = g.Count() })
+            .ToListAsync();
+        var totalReviews = distribution.Sum(d => d.Count);
+        var averageRating = totalReviews > 0
+            ? distribution.Sum(d => (double)d.Rating * d.Count) / totalReviews
+            : 0;
+        var productsWithReviews = await baseQuery
+            .Select(r => r.ProductId)
+            .Distinct()
+            .CountAsync();
+
+        var query = baseQuery.AsQueryable();
+        if (rating.HasValue)
+            query = query.Where(r => r.Rating == rating.Value);
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(r =>
+                r.Product.Name.Contains(search)
+                || (r.Comment != null && r.Comment.Contains(search))
+                || r.Customer.FirstName.Contains(search)
+                || r.Customer.LastName.Contains(search));
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(r => r.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .Select(r => new
+            {
+                r.Id,
+                r.Rating,
+                r.Title,
+                r.Comment,
+                r.CreatedAt,
+                CustomerName = r.Customer.FirstName + " " + r.Customer.LastName.Substring(0, 1) + ".",
+                Product = new
+                {
+                    r.Product.Id,
+                    r.Product.Name,
+                    r.Product.Images,
+                },
+            })
+            .ToListAsync();
+
+        return Ok(new
+        {
+            data = items,
+            pagination = new { page, limit, total },
+            stats = new
+            {
+                totalReviews,
+                averageRating,
+                productsWithReviews,
+                distribution = new[] { 5, 4, 3, 2, 1 }.Select(star => new
+                {
+                    star,
+                    count = distribution.FirstOrDefault(d => d.Rating == star)?.Count ?? 0,
+                }),
+            },
+        });
     }
 
     [HttpGet("invoices")]

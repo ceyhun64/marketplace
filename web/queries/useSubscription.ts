@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { STALE_TIME } from "@/lib/constants";
 import type {
   Subscription,
+  SubscriptionPlan,
   Invoice,
   Plugin,
   MerchantPlugin,
@@ -73,6 +74,30 @@ export function useUpgradePlan() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.myPlan() });
     },
+  });
+}
+
+export function useCancelSubscription() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.post("/api/subscriptions/cancel"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.myPlan() });
+    },
+  });
+}
+
+/**
+ * Public plan catalogue — used to display real prices/features per plan.
+ */
+export function useSubscriptionPlans() {
+  return useQuery({
+    queryKey: [...subscriptionKeys.all, "plans"] as const,
+    queryFn: async () => {
+      const { data } = await api.get<SubscriptionPlan[]>("/api/subscriptions/plans");
+      return data;
+    },
+    staleTime: STALE_TIME.LONG,
   });
 }
 

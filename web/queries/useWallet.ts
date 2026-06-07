@@ -34,7 +34,28 @@ interface TransactionsResponse {
 
 export interface WithdrawPayload {
   amount: number;
-  reference?: string;
+  bankIban: string;
+  bankAccountName: string;
+  bankName?: string;
+  note?: string;
+}
+
+export interface WithdrawalRequest {
+  id: string;
+  amount: number;
+  bankIban: string;
+  bankAccountName: string;
+  bankName?: string;
+  status: "Pending" | "Approved" | "Rejected" | "Completed";
+  note?: string;
+  adminNote?: string;
+  processedAt?: string;
+  createdAt: string;
+}
+
+interface WithdrawalRequestsResponse {
+  data: WithdrawalRequest[];
+  pagination: { page: number; limit: number; total: number };
 }
 
 // ── Query Keys ────────────────────────────────────────────────────────────────
@@ -44,6 +65,8 @@ export const walletKeys = {
   wallet:       ()                    => [...walletKeys.all, "balance"]              as const,
   transactions: (page: number, limit: number) =>
     [...walletKeys.all, "transactions", page, limit] as const,
+  withdrawals:  (page: number, limit: number) =>
+    [...walletKeys.all, "withdrawals", page, limit] as const,
 };
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
@@ -78,30 +101,26 @@ export function useWithdraw() {
     mutationFn: (payload: WithdrawPayload) =>
       api.post("/api/wallet/withdraw", payload),
 
-    // Optimistic: deduct the amount from availableBalance immediately so the
-    // merchant sees the new balance without waiting for the server round-trip.
-    onMutate: async ({ amount }) => {
-      await qc.cancelQueries({ queryKey: walletKeys.wallet() });
-      const snapshot = qc.getQueryData<MerchantWallet>(walletKeys.wallet());
-
-      qc.setQueryData<MerchantWallet>(walletKeys.wallet(), (old) =>
-        old
-          ? {
-              ...old,
-              availableBalance: Math.max(0, old.availableBalance - amount),
-              totalWithdrawn:   old.totalWithdrawn + amount,
-              updatedAt:        new Date().toISOString(),
-            }
-          : old,
-      );
-
-      return { snapshot };
-    },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.snapshot) qc.setQueryData(walletKeys.wallet(), ctx.snapshot);
-    },
-    onSettled: () => {
+    // No optimistic balance update: the backend only files a Pending
+    // WithdrawalRequest awaiting admin approval — funds are not debited from
+    // availableBalance (and totalWithdrawn is not incremented) until that
+    // request is approved. Optimistically mutating those figures here would
+    // show the merchant a balance that doesn't match the server's truth.
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: walletKeys.all });
     },
+  });
+}
+
+export function useWithdrawalRequests(page = 1, limit = 20) {
+  return useQuery<WithdrawalRequestsResponse>({
+    queryKey: walletKeys.withdrawals(page, limit),
+    queryFn: async () => {
+      const { data } = await api.get(
+        `/api/wallet/withdrawals?page=${page}&limit=${limit}`,
+      );
+      return data;
+    },
+    staleTime: 30_000,
   });
 }

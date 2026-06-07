@@ -1,15 +1,28 @@
 "use client";
 
-import { formatDate } from "@/lib/format";
+import { useState } from "react";
+import { formatDate, formatPrice } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMySubscription, useUpgradePlan } from "@/queries/useSubscription";
-import { CheckCircle, XCircle, Zap, Building2, Star } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  useMySubscription,
+  useUpgradePlan,
+  useCancelSubscription,
+  useSubscriptionPlans,
+} from "@/queries/useSubscription";
+import { CheckCircle, XCircle, Zap, Building2, Star, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { PlanType } from "@/types/enums";
-
-// Subscription entity:
-//   id, merchantId, plan (PlanType), isActive, startDate, endDate?, price
 
 const FAQ_ITEMS = [
   {
@@ -30,7 +43,6 @@ const PLANS = [
   {
     key: "BASIC" as PlanType,
     label: "Basic",
-    price: "Free",
     icon: Star,
     color: "text-(--text-secondary)",
     bg: "bg-(--bg-sunken)",
@@ -48,7 +60,6 @@ const PLANS = [
   {
     key: "PRO" as PlanType,
     label: "Pro",
-    price: "$29/mo",
     icon: Zap,
     color: "text-(--info)",
     bg: "bg-(--info-bg)",
@@ -66,7 +77,6 @@ const PLANS = [
   {
     key: "ENTERPRISE" as PlanType,
     label: "Enterprise",
-    price: "Custom",
     icon: Building2,
     color: "text-(--charcoal-mid)",
     bg: "bg-(--off-white-2)",
@@ -85,10 +95,20 @@ const PLANS = [
 
 export default function MerchantSubscriptionView() {
   const { data: subscription, isLoading } = useMySubscription();
+  const { data: plans } = useSubscriptionPlans();
   const upgradePlan = useUpgradePlan();
+  const cancelSubscription = useCancelSubscription();
 
-  // Subscription.plan is PlanType enum; fall back to BASIC if not loaded
-  const currentPlan: PlanType = subscription?.plan ?? "BASIC";
+  const [confirmDowngradeTo, setConfirmDowngradeTo] = useState<PlanType | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+
+  const currentPlan: PlanType = subscription?.planType ?? "BASIC";
+
+  const planPrice = (key: PlanType): string => {
+    const def = plans?.find((p) => p.planType === key);
+    if (!def) return "—";
+    return def.monthlyPrice === 0 ? "Free" : `${formatPrice(def.monthlyPrice)}/mo`;
+  };
 
   const handleUpgrade = async (plan: PlanType) => {
     if (plan === currentPlan) return;
@@ -97,6 +117,16 @@ export default function MerchantSubscriptionView() {
       toast.success(`Plan upgraded to ${plan}`);
     } catch {
       toast.error("Upgrade failed. Please try again.");
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    try {
+      await cancelSubscription.mutateAsync();
+      toast.success("Subscription cancelled.");
+      setConfirmCancel(false);
+    } catch {
+      toast.error("Failed to cancel subscription. Please try again.");
     }
   };
 
@@ -130,17 +160,16 @@ export default function MerchantSubscriptionView() {
                 Current Plan
               </p>
               <p className="text-xl font-bold mt-0.5">{currentPlan}</p>
-              {/* Subscription uses endDate, not expiresAt */}
-              {subscription?.endDate && (
+              {subscription?.expiresAt && (
                 <p className="text-xs text-(--text-tertiary) mt-1">
-                  Renews:{" "}
-                  {formatDate(subscription.endDate)}
+                  {subscription.isActive ? "Renews" : "Expires"}:{" "}
+                  {formatDate(subscription.expiresAt)}
                 </p>
               )}
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold">
-                {currentPlanDef?.price ?? "—"}
+                {currentPlanDef ? planPrice(currentPlanDef.key) : "—"}
               </p>
               <span
                 className={`text-xs px-2 py-0.5 rounded-full font-medium mt-1 inline-block ${
@@ -151,6 +180,14 @@ export default function MerchantSubscriptionView() {
               >
                 {subscription?.isActive ? "Active" : "Inactive"}
               </span>
+              {subscription?.isActive && currentPlan !== "BASIC" && (
+                <button
+                  onClick={() => setConfirmCancel(true)}
+                  className="block mt-2 text-xs text-(--text-tertiary) hover:text-white underline underline-offset-2 transition-colors"
+                >
+                  Cancel subscription
+                </button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -196,7 +233,7 @@ export default function MerchantSubscriptionView() {
                     </span>
                   )}
                 </div>
-                <p className="text-2xl font-bold text-(--text-primary)">{plan.price}</p>
+                <p className="text-2xl font-bold text-(--text-primary)">{planPrice(plan.key)}</p>
               </CardHeader>
               <CardContent className="space-y-3">
                 <ul className="space-y-2">
@@ -227,7 +264,11 @@ export default function MerchantSubscriptionView() {
                   </button>
                 ) : (
                   <button
-                    onClick={() => handleUpgrade(plan.key)}
+                    onClick={() =>
+                      isDowngrade
+                        ? setConfirmDowngradeTo(plan.key)
+                        : handleUpgrade(plan.key)
+                    }
                     disabled={isActive || upgradePlan.isPending}
                     className={`w-full mt-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
                       isActive
@@ -286,6 +327,70 @@ export default function MerchantSubscriptionView() {
           ))}
         </CardContent>
       </Card>
+
+      {/* Downgrade confirmation */}
+      <AlertDialog
+        open={!!confirmDowngradeTo}
+        onOpenChange={(o) => !o && setConfirmDowngradeTo(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Downgrade to {PLANS.find((p) => p.key === confirmDowngradeTo)?.label}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This takes effect immediately. You&apos;ll lose access to{" "}
+              {currentPlanDef?.label} features such as marketplace publishing,
+              the plugin marketplace, and custom domains, and your product
+              limit will be reduced. Existing products beyond the new limit
+              are kept but you won&apos;t be able to add new ones.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Current Plan</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={upgradePlan.isPending}
+              onClick={async () => {
+                if (confirmDowngradeTo) await handleUpgrade(confirmDowngradeTo);
+                setConfirmDowngradeTo(null);
+              }}
+              className="gap-2"
+            >
+              {upgradePlan.isPending && (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              )}
+              Confirm Downgrade
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cancel subscription confirmation */}
+      <AlertDialog open={confirmCancel} onOpenChange={setConfirmCancel}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel your subscription?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {subscription?.expiresAt
+                ? `Your ${currentPlan} plan will stay active until ${formatDate(subscription.expiresAt)}, then it won't renew and your store will revert to the Basic plan.`
+                : `Your ${currentPlan} plan will stop renewing and your store will revert to the Basic plan.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={cancelSubscription.isPending}
+              onClick={handleCancelSubscription}
+              className="bg-red-600 hover:bg-red-700 text-white gap-2"
+            >
+              {cancelSubscription.isPending && (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              )}
+              Cancel Subscription
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

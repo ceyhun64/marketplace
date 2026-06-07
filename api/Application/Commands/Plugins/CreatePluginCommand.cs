@@ -1,4 +1,5 @@
 using api.Common.DTOs;
+using api.Common.Extensions;
 using api.Domain.Entities;
 using api.Domain.Enums;
 using api.Infrastructure.Persistence;
@@ -65,7 +66,7 @@ public class CreatePluginCommandHandler : IRequestHandler<CreatePluginCommand, C
             MonthlyPrice = plugin.MonthlyPrice,
             IsActive = plugin.IsActive,
             IsFeatured = plugin.IsFeatured,
-            MinimumPlan = plugin.MinimumPlan.ToString(),
+            MinimumPlan = plugin.MinimumPlan.ToApiString(),
             DeveloperName = plugin.DeveloperName,
             DocumentationUrl = plugin.DocumentationUrl,
             CreatedAt = plugin.CreatedAt,

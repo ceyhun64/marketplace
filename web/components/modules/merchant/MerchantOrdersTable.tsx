@@ -268,7 +268,7 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
                   ))}
                   <div className="flex justify-between items-center pt-2 border-t border-(--border-mid) text-sm">
                     <span className="text-(--text-secondary)">
-                      {order.shippingRate === "EXPRESS" ? "⚡ Express" : "📦 Standard"}
+                      {order.shippingRate === "EXPRESS" ? "Express" : "Standard"}
                     </span>
                     <span className="font-bold text-(--text-primary)">Total: {formatPrice(order.totalAmount)}</span>
                   </div>

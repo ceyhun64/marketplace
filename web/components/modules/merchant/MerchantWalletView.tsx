@@ -5,7 +5,9 @@ import {
   useMerchantWallet,
   useWalletTransactions,
   useWithdraw,
+  useWithdrawalRequests,
   type WalletTransaction,
+  type WithdrawalRequest,
 } from "@/queries/useWallet";
 import { formatDateTime } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -93,15 +95,38 @@ function RowSkeleton() {
 
 // -- Main View -----------------------------------------------------------------
 
+const WITHDRAWAL_STATUS_META: Record<
+  WithdrawalRequest["status"],
+  { label: string; color: string; bg: string }
+> = {
+  Pending:   { label: "Pending review",  color: "text-(--warning)", bg: "bg-(--warning-bg)" },
+  Approved:  { label: "Approved",        color: "text-(--info)",    bg: "bg-(--info-bg)" },
+  Completed: { label: "Completed",       color: "text-(--success)", bg: "bg-(--success-bg)" },
+  Rejected:  { label: "Rejected",        color: "text-(--danger)",  bg: "bg-(--danger-bg)" },
+};
+
 export default function MerchantWalletView() {
   const { data: wallet, isLoading: walletLoading } = useMerchantWallet();
   const [page, setPage] = useState(1);
   const { data: txData, isLoading: txLoading } = useWalletTransactions(page);
+  const [requestsPage, setRequestsPage] = useState(1);
+  const { data: requestsData, isLoading: requestsLoading } = useWithdrawalRequests(requestsPage);
   const withdraw = useWithdraw();
 
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [withdrawRef, setWithdrawRef] = useState("");
+  const [bankIban, setBankIban] = useState("");
+  const [bankAccountName, setBankAccountName] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [withdrawNote, setWithdrawNote] = useState("");
+
+  const resetWithdrawForm = () => {
+    setWithdrawAmount("");
+    setBankIban("");
+    setBankAccountName("");
+    setBankName("");
+    setWithdrawNote("");
+  };
 
   const handleWithdraw = async () => {
     const amount = Number(withdrawAmount);
@@ -113,22 +138,39 @@ export default function MerchantWalletView() {
       toast.error("Amount exceeds your available balance.");
       return;
     }
+    if (!bankIban.trim()) {
+      toast.error("Bank IBAN is required.");
+      return;
+    }
+    if (!bankAccountName.trim()) {
+      toast.error("Bank account holder name is required.");
+      return;
+    }
     try {
       await withdraw.mutateAsync({
         amount,
-        reference: withdrawRef || undefined,
+        bankIban: bankIban.trim(),
+        bankAccountName: bankAccountName.trim(),
+        bankName: bankName.trim() || undefined,
+        note: withdrawNote.trim() || undefined,
       });
-      toast.success(`$${amount.toFixed(2)} withdrawal recorded.`);
+      toast.success(
+        `Withdrawal request for $${amount.toFixed(2)} submitted — pending admin approval.`,
+      );
       setWithdrawOpen(false);
-      setWithdrawAmount("");
-      setWithdrawRef("");
-    } catch {
-      toast.error("Withdrawal failed. Please try again.");
+      resetWithdrawForm();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? "Withdrawal request failed. Please try again.");
     }
   };
 
   const transactions = txData?.data ?? [];
   const pagination = txData?.pagination;
+  const withdrawalRequests = requestsData?.data ?? [];
+  const requestsPagination = requestsData?.pagination;
+  const requestsTotalPages = requestsPagination
+    ? Math.max(1, Math.ceil(requestsPagination.total / requestsPagination.limit))
+    : 1;
 
   return (
     <div className="space-y-8">
@@ -324,8 +366,106 @@ export default function MerchantWalletView() {
         </div>
       </div>
 
+      <Separator />
+
+      {/* Withdrawal Requests */}
+      <div>
+        <h2 className="text-sm font-semibold text-(--text-primary) mb-4">
+          Withdrawal Requests
+        </h2>
+        <div className="bg-(--bg-surface) rounded-2xl border border-(--border-light) overflow-hidden">
+          {requestsLoading ? (
+            <div className="divide-y divide-(--border-subtle)">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <RowSkeleton key={i} />
+              ))}
+            </div>
+          ) : withdrawalRequests.length === 0 ? (
+            <div className="py-16 text-center">
+              <ArrowUpCircle className="w-10 h-10 text-(--text-tertiary) opacity-20 mx-auto mb-3" />
+              <p className="text-sm text-(--text-secondary) font-medium">
+                No withdrawal requests yet
+              </p>
+              <p className="text-xs text-(--text-tertiary) mt-1">
+                Submitted requests will appear here with their approval status.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-(--border-subtle)">
+              {withdrawalRequests.map((req) => {
+                const meta = WITHDRAWAL_STATUS_META[req.status];
+                return (
+                  <div
+                    key={req.id}
+                    className="flex items-center gap-4 px-5 py-4 hover:bg-(--bg-sunken) transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${meta.bg} ${meta.color}`}
+                        >
+                          {meta.label}
+                        </span>
+                        <span className="text-[11px] text-(--text-tertiary) font-mono">
+                          {req.bankAccountName} · {req.bankIban}
+                        </span>
+                      </div>
+                      {req.adminNote && (
+                        <p className="text-xs text-(--text-tertiary) mt-1">
+                          Admin note: {req.adminNote}
+                        </p>
+                      )}
+                      <p className="text-[11px] text-(--text-tertiary) mt-0.5">
+                        Requested {formatDateTime(req.createdAt)}
+                        {req.processedAt && ` · Processed ${formatDateTime(req.processedAt)}`}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-bold text-(--text-primary)">
+                        {fmt(req.amount)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {requestsPagination && requestsTotalPages > 1 && (
+            <div className="flex items-center justify-between px-5 py-3 border-t border-(--border-light)">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setRequestsPage((p) => Math.max(1, p - 1))}
+                disabled={requestsPage === 1}
+              >
+                Previous
+              </Button>
+              <span className="text-xs text-(--text-tertiary)">
+                Page {requestsPage} of {requestsTotalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setRequestsPage((p) => Math.min(requestsTotalPages, p + 1))}
+                disabled={requestsPage === requestsTotalPages}
+              >
+                Next
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Withdraw Dialog */}
-      <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
+      <Dialog
+        open={withdrawOpen}
+        onOpenChange={(open) => {
+          setWithdrawOpen(open);
+          if (!open) resetWithdrawForm();
+        }}
+      >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Request Withdrawal</DialogTitle>
@@ -336,6 +476,10 @@ export default function MerchantWalletView() {
               <span className="font-semibold text-(--success)">
                 {fmt(wallet?.availableBalance ?? 0)}
               </span>
+            </p>
+            <p className="text-xs text-(--text-tertiary) -mt-2">
+              This submits a request for admin review — funds stay in your wallet
+              until it's approved and transferred to the bank account below.
             </p>
             <div>
               <Label className="text-sm mb-1 block">Amount ($)</Label>
@@ -350,11 +494,38 @@ export default function MerchantWalletView() {
               />
             </div>
             <div>
-              <Label className="text-sm mb-1 block">Reference (optional)</Label>
+              <Label className="text-sm mb-1 block">Bank Account Holder Name</Label>
               <Input
-                placeholder="Bank account / note"
-                value={withdrawRef}
-                onChange={(e) => setWithdrawRef(e.target.value)}
+                placeholder="Full legal name on the account"
+                value={bankAccountName}
+                onChange={(e) => setBankAccountName(e.target.value)}
+                className="border-(--border-mid)"
+              />
+            </div>
+            <div>
+              <Label className="text-sm mb-1 block">Bank IBAN</Label>
+              <Input
+                placeholder="e.g. TR00 0000 0000 0000 0000 0000 00"
+                value={bankIban}
+                onChange={(e) => setBankIban(e.target.value)}
+                className="border-(--border-mid) font-mono uppercase"
+              />
+            </div>
+            <div>
+              <Label className="text-sm mb-1 block">Bank Name (optional)</Label>
+              <Input
+                placeholder="e.g. Garanti BBVA"
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+                className="border-(--border-mid)"
+              />
+            </div>
+            <div>
+              <Label className="text-sm mb-1 block">Note (optional)</Label>
+              <Input
+                placeholder="Anything the admin should know"
+                value={withdrawNote}
+                onChange={(e) => setWithdrawNote(e.target.value)}
                 className="border-(--border-mid)"
               />
             </div>
@@ -368,7 +539,7 @@ export default function MerchantWalletView() {
               disabled={withdraw.isPending}
               style={{ backgroundColor: "var(--success)", color: "#fff" }}
             >
-              {withdraw.isPending ? "Processing…" : "Confirm Withdrawal"}
+              {withdraw.isPending ? "Submitting…" : "Submit Request"}
             </Button>
           </DialogFooter>
         </DialogContent>

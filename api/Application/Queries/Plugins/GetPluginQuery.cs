@@ -1,4 +1,5 @@
 using api.Common.DTOs;
+using api.Common.Extensions;
 using api.Infrastructure.Persistence;
 using api.Infrastructure.Services;
 using MediatR;
@@ -82,7 +83,7 @@ public class GetPluginsQueryHandler : IRequestHandler<GetPluginsQuery, GetPlugin
                 MonthlyPrice = p.MonthlyPrice,
                 IsActive = p.IsActive,
                 IsFeatured = p.IsFeatured,
-                MinimumPlan = p.MinimumPlan.ToString(),
+                MinimumPlan = p.MinimumPlan.ToApiString(),
                 DeveloperName = p.DeveloperName,
                 DocumentationUrl = p.DocumentationUrl,
                 IsSubscribed = subscribedPluginIds.Contains(p.Id),

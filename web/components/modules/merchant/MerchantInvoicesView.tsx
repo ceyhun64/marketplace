@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { formatDate } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -51,16 +51,6 @@ interface Invoice {
   pdfUrl?: string;
   issuedAt: string;
   source: "MARKETPLACE" | "ESTORE";
-}
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "TRY",
-    currencyDisplay: "symbol",
-  })
-    .format(amount)
-    .replace("TRY", "$");
 }
 
 export default function MerchantInvoicesView() {
@@ -518,7 +508,8 @@ export default function MerchantInvoicesView() {
                             : "text-(--danger)"
                         }`}
                       >
-                        {entry.amount >= 0 ? "+" : ""}${entry.amount.toFixed(2)}
+                        {entry.amount >= 0 ? "+" : "-"}
+                        {formatCurrency(Math.abs(entry.amount))}
                       </TableCell>
                       <TableCell className="text-sm text-(--text-secondary) max-w-xs truncate">
                         {entry.description}

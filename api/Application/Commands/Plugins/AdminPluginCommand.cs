@@ -1,4 +1,5 @@
 using api.Common.DTOs;
+using api.Common.Extensions;
 using api.Domain.Enums;
 using api.Infrastructure.Persistence;
 using MediatR;
@@ -76,7 +77,7 @@ public class UpdateAdminPluginCommandHandler
             MonthlyPrice = plugin.MonthlyPrice,
             IsActive = plugin.IsActive,
             IsFeatured = plugin.IsFeatured,
-            MinimumPlan = plugin.MinimumPlan.ToString(),
+            MinimumPlan = plugin.MinimumPlan.ToApiString(),
             DeveloperName = plugin.DeveloperName,
             DocumentationUrl = plugin.DocumentationUrl,
             CreatedAt = plugin.CreatedAt,

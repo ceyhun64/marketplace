@@ -192,20 +192,30 @@ export function useCancelOrder() {
 
 // ── Merchant Hooks ────────────────────────────────────────────────────────────
 
+interface MerchantIncomingOrdersResponse {
+  orders: Order[];
+  total: number;
+  stats: { total: number; pending: number; processing: number; delivered: number };
+}
+
 export function useMerchantIncomingOrders(status?: OrderStatus) {
   return useQuery({
     queryKey: orderKeys.merchantIncoming(status),
-    queryFn: async () => {
+    queryFn: async (): Promise<MerchantIncomingOrdersResponse> => {
       const params = status ? `?status=${status}` : "";
-      const { data } = await api.get<PaginatedOrdersResponse>(
-        `/api/orders/merchant/incoming${params}`,
-      );
+      const { data } = await api.get<
+        PaginatedOrdersResponse & { stats?: MerchantIncomingOrdersResponse["stats"] }
+      >(`/api/orders/merchant/incoming${params}`);
       if (!Array.isArray(data?.data)) {
         throw new Error(
           `Unexpected merchant orders response shape: ${JSON.stringify(data).slice(0, 200)}`,
         );
       }
-      return data.data;
+      return {
+        orders: data.data,
+        total: data.pagination?.total ?? data.data.length,
+        stats: data.stats ?? { total: 0, pending: 0, processing: 0, delivered: 0 },
+      };
     },
   });
 }

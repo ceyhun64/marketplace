@@ -1,4 +1,5 @@
 using api.Common.DTOs;
+using api.Common.Extensions;
 using api.Domain.Entities;
 using api.Domain.Enums;
 using api.Infrastructure.Persistence;
@@ -51,7 +52,7 @@ public class SubscriptionService : ISubscriptionService
         var plans = PlanDefinitions
             .Select(kvp => new SubscriptionPlanDto
             {
-                PlanType          = kvp.Key.ToString(),
+                PlanType          = kvp.Key.ToApiString(),
                 Name              = kvp.Value.Name,
                 MonthlyPrice      = kvp.Value.Price,
                 Features          = kvp.Value.Features,
@@ -226,10 +227,11 @@ public class SubscriptionService : ISubscriptionService
     // ── Yardımcı ─────────────────────────────────────────────────────────
     private static SubscriptionDto ToDto(Subscription s) => new()
     {
-        Id        = s.Id,
-        PlanType  = s.Plan.ToString(),
-        IsActive  = s.IsActive,
-        StartDate = s.StartDate,
-        ExpiresAt = s.ExpiresAt,
+        Id           = s.Id,
+        PlanType     = s.Plan.ToApiString(),
+        IsActive     = s.IsActive,
+        StartDate    = s.StartDate,
+        ExpiresAt    = s.ExpiresAt,
+        MonthlyPrice = s.MonthlyPrice,
     };
 }

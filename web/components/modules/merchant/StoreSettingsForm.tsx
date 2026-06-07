@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { useUpdateStoreSettings, useSetStoreDomain } from "@/queries/useStore";
+import {
+  useUpdateStoreSettings,
+  useSetStoreDomain,
+  useVerifyDomain,
+} from "@/queries/useStore";
 import ImageUploader from "@/components/ui/imageUploader";
 import type { MerchantProfile } from "@/types/entities";
 import {
@@ -11,8 +15,11 @@ import {
   Store,
   Clock,
   BadgeCheck,
+  ShieldCheck,
   ChevronRight,
 } from "lucide-react";
+
+const PLATFORM_SUFFIX = ".platform.com";
 
 interface Props {
   store: MerchantProfile;
@@ -21,6 +28,7 @@ interface Props {
 export default function StoreSettingsForm({ store }: Props) {
   const updateSettings = useUpdateStoreSettings();
   const setDomain = useSetStoreDomain();
+  const verifyDomain = useVerifyDomain();
 
   const [form, setForm] = useState({
     storeName: store.storeName ?? "",
@@ -30,15 +38,25 @@ export default function StoreSettingsForm({ store }: Props) {
     handlingHours: String(store.handlingHours ?? 24),
   });
 
+  const initialIsSubdomain =
+    !store.customDomain ||
+    !store.customDomain.includes(".") ||
+    store.customDomain.endsWith(PLATFORM_SUFFIX);
+
   const [domainForm, setDomainForm] = useState({
-    domain: store.customDomain ?? "",
-    isSubdomain:
-      !store.customDomain?.includes(".") ||
-      store.customDomain?.endsWith(".platform.com"),
+    domain: initialIsSubdomain
+      ? (store.customDomain ?? "").replace(PLATFORM_SUFFIX, "")
+      : (store.customDomain ?? ""),
+    isSubdomain: initialIsSubdomain,
   });
 
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verifyResult, setVerifyResult] = useState<{
+    verified: boolean;
+    message?: string;
+    dnsRecord?: { type: string; host: string; value: string; ttl?: number };
+  } | null>(null);
 
   const handleSave = async () => {
     setError(null);
@@ -59,15 +77,27 @@ export default function StoreSettingsForm({ store }: Props) {
 
   const handleDomainSave = async () => {
     setError(null);
+    setVerifyResult(null);
     try {
-      await setDomain.mutateAsync({
-        domain: domainForm.domain.trim(),
-        isSubdomain: domainForm.isSubdomain,
-      });
+      const raw = domainForm.domain.trim();
+      const fullDomain = domainForm.isSubdomain
+        ? `${raw}${PLATFORM_SUFFIX}`
+        : raw;
+      await setDomain.mutateAsync({ domain: fullDomain });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (e: any) {
       setError(e?.response?.data?.message ?? "Failed to save domain.");
+    }
+  };
+
+  const handleVerifyDomain = async () => {
+    setError(null);
+    try {
+      const { data } = await verifyDomain.mutateAsync();
+      setVerifyResult(data);
+    } catch (e: any) {
+      setError(e?.response?.data?.message ?? "Domain verification failed.");
     }
   };
 
@@ -328,6 +358,50 @@ export default function StoreSettingsForm({ store }: Props) {
           {setDomain.isPending ? "Saving..." : "Save Domain"}
           {!setDomain.isPending && <ChevronRight className="w-3.5 h-3.5" />}
         </button>
+
+        {/* Verification */}
+        {store.customDomain && !store.domainVerified && (
+          <div className="rounded-xl border border-(--border-mid) bg-(--bg-sunken) p-4 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-(--text-primary)">
+                  Domain not verified yet
+                </p>
+                <p className="text-xs text-(--text-tertiary) mt-0.5">
+                  {store.customDomain.endsWith(PLATFORM_SUFFIX)
+                    ? "Verify your subdomain to activate it."
+                    : "Add the DNS record below, then verify ownership."}
+                </p>
+              </div>
+              <button
+                onClick={handleVerifyDomain}
+                disabled={verifyDomain.isPending}
+                className="shrink-0 flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg border border-(--border-mid) bg-(--bg-surface) text-(--text-primary) hover:border-(--info) hover:text-(--info) transition-all disabled:opacity-40"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                {verifyDomain.isPending ? "Verifying..." : "Verify Domain"}
+              </button>
+            </div>
+
+            {verifyResult && (
+              <div
+                className={`rounded-lg border p-3 text-xs space-y-2 ${
+                  verifyResult.verified
+                    ? "border-emerald-100 bg-(--success-bg) text-(--success)"
+                    : "border-amber-100 bg-(--warning-bg) text-(--warning)"
+                }`}
+              >
+                <p className="font-medium">{verifyResult.message}</p>
+                {verifyResult.dnsRecord && (
+                  <code className="block bg-(--bg-surface) border border-(--border-mid) rounded-lg px-3 py-2 font-mono text-(--info)">
+                    {verifyResult.dnsRecord.type} {verifyResult.dnsRecord.host}{" "}
+                    → {verifyResult.dnsRecord.value}
+                  </code>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </SettingsSection>
     </div>
   );

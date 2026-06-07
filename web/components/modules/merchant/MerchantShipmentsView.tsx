@@ -11,17 +11,18 @@ import {
   MapPin,
   Clock,
   CheckCircle2,
+  XCircle,
   AlertCircle,
   Search,
   ChevronDown,
   ChevronRight,
   ExternalLink,
+  Phone,
 } from "lucide-react";
 import {
   SHIPMENT_STATUS_LABELS,
   SHIPMENT_STATUS_COLORS,
 } from "@/types/enums";
-import type { Shipment, ShipmentStatusEvent } from "@/types/entities";
 import type { ShipmentStatus } from "@/types/enums";
 import {
   Select,
@@ -34,18 +35,31 @@ import {
 interface MerchantShipment {
   id: string;
   orderId: string;
-  orderNumber?: string;
   customerName?: string;
   trackingNumber: string;
   status: ShipmentStatus;
+  estimatedDelivery?: string;
+  labelUrl?: string;
+}
+
+interface TrackingEvent {
+  id: string;
+  status: string;
+  note?: string;
+  location?: string;
+  createdAt: string;
+}
+
+interface OrderTracking {
+  orderId: string;
+  orderStatus: string;
+  trackingNumber?: string;
+  shipmentStatus?: string;
+  estimatedDelivery?: string;
+  labelUrl?: string;
   courierName?: string;
   courierPhone?: string;
-  estimatedDeliveryStart?: string;
-  estimatedDeliveryEnd?: string;
-  actualDeliveredAt?: string;
-  labelUrl?: string;
-  events: ShipmentStatusEvent[];
-  updatedAt?: string;
+  history: TrackingEvent[];
 }
 
 const STATUS_STEPS: ShipmentStatus[] = [
@@ -58,15 +72,52 @@ const STATUS_STEPS: ShipmentStatus[] = [
   "DELIVERED",
 ];
 
-function StatusStepper({ current }: { current: ShipmentStatus }) {
-  const currentIdx = STATUS_STEPS.indexOf(current);
-  const isFailed = current === "FAILED";
+const STEP_LABELS = [
+  "Prepared",
+  "Label",
+  "Courier",
+  "Picked Up",
+  "In Transit",
+  "Out for Delivery",
+  "Delivered",
+];
+
+function StatusStepper({
+  current,
+  history,
+}: {
+  current: ShipmentStatus | string;
+  history?: TrackingEvent[];
+}) {
+  if (current === "FAILED") {
+    // We don't know which step the shipment failed at from the status alone —
+    // derive the last successfully-reached step from the history instead of
+    // guessing, so we never claim progress that didn't happen.
+    const lastReachedIdx = (history ?? [])
+      .map((e) => STATUS_STEPS.indexOf(e.status as ShipmentStatus))
+      .filter((idx) => idx >= 0)
+      .reduce((max, idx) => Math.max(max, idx), -1);
+    const lastReachedLabel =
+      lastReachedIdx >= 0 ? STEP_LABELS[lastReachedIdx] : null;
+
+    return (
+      <div className="flex items-center gap-2 rounded-lg border border-(--red)/30 bg-(--red)/5 px-3 py-2.5">
+        <XCircle className="w-4 h-4 text-(--red) shrink-0" />
+        <span className="text-xs font-medium text-(--red)">
+          Shipment failed
+          {lastReachedLabel && ` — last reached step: "${lastReachedLabel}"`}
+        </span>
+      </div>
+    );
+  }
+
+  const currentIdx = STATUS_STEPS.indexOf(current as ShipmentStatus);
 
   return (
     <div className="flex items-center gap-0 w-full">
       {STATUS_STEPS.map((step, i) => {
-        const done = !isFailed && i <= currentIdx;
-        const active = !isFailed && i === currentIdx;
+        const done = i <= currentIdx;
+        const active = i === currentIdx;
         return (
           <div key={step} className="flex items-center flex-1 last:flex-none">
             <div
@@ -75,8 +126,6 @@ function StatusStepper({ current }: { current: ShipmentStatus }) {
                   ? active
                     ? "bg-(--info) ring-2 ring-(--info-bg)"
                     : "bg-(--success)"
-                  : isFailed && i === currentIdx
-                  ? "bg-(--red)"
                   : "bg-(--off-white-3)"
               }`}
             >
@@ -89,7 +138,7 @@ function StatusStepper({ current }: { current: ShipmentStatus }) {
             {i < STATUS_STEPS.length - 1 && (
               <div
                 className={`h-0.5 flex-1 transition-colors ${
-                  !isFailed && i < currentIdx ? "bg-(--success)" : "bg-(--off-white-3)"
+                  i < currentIdx ? "bg-(--success)" : "bg-(--off-white-3)"
                 }`}
               />
             )}
@@ -107,11 +156,21 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
   const statusColor =
     SHIPMENT_STATUS_COLORS[shipment.status] ?? "bg-(--off-white-2) text-(--text-secondary)";
 
-  const eta = shipment.estimatedDeliveryEnd
-    ? new Date(shipment.estimatedDeliveryEnd).toLocaleDateString("en-US", {
-        day: "2-digit",
-        month: "short",
-      })
+  const { data: tracking, isLoading: trackingLoading } = useQuery({
+    queryKey: ["merchant-shipment-tracking", shipment.orderId],
+    queryFn: async () => {
+      const { data } = await api.get<OrderTracking>(
+        `/api/orders/${shipment.orderId}/tracking`,
+      );
+      return data;
+    },
+    enabled: expanded,
+    staleTime: 60_000,
+  });
+
+  const eta = tracking?.estimatedDelivery ?? shipment.estimatedDelivery;
+  const etaShort = eta
+    ? new Date(eta).toLocaleDateString("en-US", { day: "2-digit", month: "short" })
     : null;
 
   return (
@@ -127,9 +186,15 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
             ) : (
               <ChevronRight className="w-3.5 h-3.5 text-(--text-tertiary)" />
             )}
-            <span className="font-mono text-xs font-bold text-(--info)">
-              {shipment.trackingNumber}
-            </span>
+            {shipment.trackingNumber ? (
+              <span className="font-mono text-xs font-bold text-(--info)">
+                {shipment.trackingNumber}
+              </span>
+            ) : (
+              <span className="text-xs text-(--text-tertiary)">
+                Not yet assigned
+              </span>
+            )}
           </div>
         </td>
         <td className="px-5 py-4 text-sm text-(--text-secondary)">
@@ -142,19 +207,8 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
             {statusLabel}
           </span>
         </td>
-        <td className="px-5 py-4 text-sm text-(--text-secondary)">
-          {shipment.courierName ?? <span className="text-(--text-tertiary)">—</span>}
-        </td>
         <td className="px-5 py-4 text-xs text-(--text-secondary)">
-          {shipment.actualDeliveredAt ? (
-            <span className="text-(--success) font-medium">
-              Teslim: {formatDate(shipment.actualDeliveredAt)}
-            </span>
-          ) : eta ? (
-            `Est. ${eta}`
-          ) : (
-            <span className="text-(--text-tertiary)">—</span>
-          )}
+          {etaShort ? `Est. ${etaShort}` : <span className="text-(--text-tertiary)">—</span>}
         </td>
         <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center gap-2">
@@ -166,7 +220,7 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
                 className="text-xs text-(--info) hover:underline flex items-center gap-1"
               >
                 <ExternalLink className="w-3 h-3" />
-                Etiket
+                Label
               </a>
             )}
           </div>
@@ -175,80 +229,100 @@ function ShipmentRow({ shipment }: { shipment: MerchantShipment }) {
 
       {expanded && (
         <tr className="bg-(--bg-sunken)/60">
-          <td colSpan={6} className="px-5 py-4">
-            {/* Status stepper */}
-            <div className="mb-4">
-              <p className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider mb-3">
-                Kargo Durumu
-              </p>
-              <StatusStepper current={shipment.status} />
-              <div className="flex justify-between mt-1.5">
-                {["Prepared", "Label", "Courier", "Picked Up", "In Transit", "Out for Delivery", "Delivered"].map(
-                  (label) => (
-                    <span key={label} className="text-[10px] text-(--text-tertiary) text-center flex-1">
-                      {label}
-                    </span>
-                  )
-                )}
+          <td colSpan={5} className="px-5 py-4">
+            {trackingLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-1/3" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-2/3" />
               </div>
-            </div>
-
-            {/* Events timeline */}
-            {shipment.events && shipment.events.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider mb-2">
-                  Shipment History
-                </p>
-                <div className="space-y-2">
-                  {shipment.events
-                    .slice()
-                    .reverse()
-                    .map((event, i) => (
-                      <div
-                        key={event.id ?? i}
-                        className="flex items-start gap-3 bg-(--bg-surface) rounded-lg px-4 py-2.5 border border-(--border-light)"
-                      >
-                        <div className="w-1.5 h-1.5 rounded-full bg-(--info) mt-1.5 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-(--text-primary)">
-                            {SHIPMENT_STATUS_LABELS[event.status as ShipmentStatus] ??
-                              event.status}
-                          </p>
-                          {event.note && (
-                            <p className="text-xs text-(--text-secondary) mt-0.5">{event.note}</p>
-                          )}
-                          {event.location && (
-                            <p className="text-xs text-(--text-tertiary) flex items-center gap-1 mt-0.5">
-                              <MapPin className="w-3 h-3" />
-                              {event.location}
-                            </p>
-                          )}
-                        </div>
-                        <span className="text-xs text-(--text-tertiary) shrink-0">
-                          {new Date(event.createdAt).toLocaleString("en-US", {
-                            day: "2-digit",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+            ) : (
+              <>
+                {/* Status stepper */}
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider mb-3">
+                    Shipment Status
+                  </p>
+                  <StatusStepper
+                    current={tracking?.shipmentStatus ?? shipment.status}
+                    history={tracking?.history}
+                  />
+                  {(tracking?.shipmentStatus ?? shipment.status) !== "FAILED" && (
+                    <div className="flex justify-between mt-1.5">
+                      {STEP_LABELS.map((label) => (
+                        <span
+                          key={label}
+                          className="text-[10px] text-(--text-tertiary) text-center flex-1"
+                        >
+                          {label}
                         </span>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
 
-            {/* Courier info */}
-            {(shipment.courierName || shipment.courierPhone) && (
-              <div className="mt-3 flex items-center gap-4 text-xs text-(--text-secondary) bg-(--bg-surface) rounded-lg px-4 py-2.5 border border-(--border-light)">
-                <Truck className="w-4 h-4 text-(--text-tertiary)" />
-                <span className="font-medium text-(--text-secondary)">
-                  {shipment.courierName}
-                </span>
-                {shipment.courierPhone && (
-                  <span>{shipment.courierPhone}</span>
+                {/* Courier info */}
+                {(tracking?.courierName || tracking?.courierPhone) && (
+                  <div className="mb-3 flex items-center gap-4 text-xs text-(--text-secondary) bg-(--bg-surface) rounded-lg px-4 py-2.5 border border-(--border-light)">
+                    <Truck className="w-4 h-4 text-(--text-tertiary)" />
+                    <span className="font-medium text-(--text-secondary)">
+                      {tracking?.courierName ?? "Courier assigned"}
+                    </span>
+                    {tracking?.courierPhone && (
+                      <span className="flex items-center gap-1">
+                        <Phone className="w-3 h-3" />
+                        {tracking.courierPhone}
+                      </span>
+                    )}
+                  </div>
                 )}
-              </div>
+
+                {/* Events timeline */}
+                {tracking?.history && tracking.history.length > 0 ? (
+                  <div>
+                    <p className="text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider mb-2">
+                      Shipment History
+                    </p>
+                    <div className="space-y-2">
+                      {tracking.history.map((event, i) => (
+                        <div
+                          key={event.id ?? i}
+                          className="flex items-start gap-3 bg-(--bg-surface) rounded-lg px-4 py-2.5 border border-(--border-light)"
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-(--info) mt-1.5 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-(--text-primary)">
+                              {SHIPMENT_STATUS_LABELS[event.status as ShipmentStatus] ??
+                                event.status}
+                            </p>
+                            {event.note && (
+                              <p className="text-xs text-(--text-secondary) mt-0.5">{event.note}</p>
+                            )}
+                            {event.location && (
+                              <p className="text-xs text-(--text-tertiary) flex items-center gap-1 mt-0.5">
+                                <MapPin className="w-3 h-3" />
+                                {event.location}
+                              </p>
+                            )}
+                          </div>
+                          <span className="text-xs text-(--text-tertiary) shrink-0">
+                            {new Date(event.createdAt).toLocaleString("en-US", {
+                              day: "2-digit",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-(--text-tertiary)">
+                    No status history yet.
+                  </p>
+                )}
+              </>
             )}
           </td>
         </tr>
@@ -273,23 +347,20 @@ export default function MerchantShipmentsView() {
         ? raw
         : raw?.items ?? raw?.data ?? raw?.orders ?? [];
 
-      // Extract shipments from orders
+      // Extract shipments from orders — only the summary fields the
+      // backend's ShipmentSummaryDto actually returns at this level.
+      // Full courier/timeline details are loaded per-row from the
+      // /api/orders/{id}/tracking endpoint when a row is expanded.
       return orders
         .filter((o: any) => o.shipment)
         .map((o: any) => ({
           id: o.shipment.id,
           orderId: o.id,
           customerName: o.customerName,
-          trackingNumber: o.shipment.trackingNumber ?? `TRK-${o.id.slice(0, 8).toUpperCase()}`,
+          trackingNumber: o.shipment.trackingNumber ?? "",
           status: o.shipment.status as ShipmentStatus,
-          courierName: o.shipment.courierName,
-          courierPhone: o.shipment.courierPhone,
-          estimatedDeliveryStart: o.shipment.estimatedDeliveryStart,
-          estimatedDeliveryEnd: o.shipment.estimatedDeliveryEnd,
-          actualDeliveredAt: o.shipment.actualDeliveredAt,
+          estimatedDelivery: o.shipment.estimatedDelivery,
           labelUrl: o.shipment.labelUrl,
-          events: o.shipment.events ?? [],
-          updatedAt: o.shipment.updatedAt,
         })) as MerchantShipment[];
     },
   });
@@ -324,6 +395,7 @@ export default function MerchantShipmentsView() {
     { value: "IN_TRANSIT", label: "In Transit" },
     { value: "OUT_FOR_DELIVERY", label: "Out for Delivery" },
     { value: "DELIVERED", label: "Delivered" },
+    { value: "FAILED", label: "Failed" },
   ];
 
   return (
@@ -421,7 +493,7 @@ export default function MerchantShipmentsView() {
           <table className="w-full text-sm">
             <thead className="bg-(--bg-sunken) border-b border-(--border-light)">
               <tr>
-                {["Tracking No.", "Customer", "Status", "Courier", "Est. Delivery", ""].map(
+                {["Tracking No.", "Customer", "Status", "Est. Delivery", ""].map(
                   (h) => (
                     <th
                       key={h}
@@ -437,7 +509,7 @@ export default function MerchantShipmentsView() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 6 }).map((_, j) => (
+                    {Array.from({ length: 5 }).map((_, j) => (
                       <td key={j} className="px-5 py-4">
                         <Skeleton className="h-4 w-full rounded" />
                       </td>
@@ -446,7 +518,7 @@ export default function MerchantShipmentsView() {
                 ))
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-16 text-center">
+                  <td colSpan={5} className="py-16 text-center">
                     <Truck className="w-10 h-10 mx-auto mb-3 text-(--border-mid)" />
                     <p className="text-sm font-medium text-(--text-secondary)">
                       No shipments found
@@ -474,7 +546,7 @@ export default function MerchantShipmentsView() {
             About the Shipping Process
           </p>
           <p className="text-xs text-(--info) mt-0.5">
-            Once your order is marked as "Packed", an admin generates the shipping label and assigns a courier. Your tracking number will appear here automatically.
+            Once your order is marked as &quot;Packed&quot;, an admin generates the shipping label and assigns a courier. Your tracking number will appear here automatically.
           </p>
         </div>
       </div>

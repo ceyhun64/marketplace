@@ -19,7 +19,7 @@ import { StatCardSkeleton } from "@/components/ui/stat-card-skeleton";
 import { Empty, EmptyMedia, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { useMerchantStats } from "@/queries/useAnalytics";
 import { formatPrice, formatDate } from "@/lib/format";
-import type { Order } from "@/types/entities";
+import type { Order, Product } from "@/types/entities";
 
 function OrderRowSkeleton() {
   return (
@@ -72,7 +72,7 @@ export default function MerchantDashboard() {
 
   const statsLoading = offersLoading || ordersLoading || analyticsLoading;
 
-  const offers: Order[] =
+  const offers: Product[] =
     offersData?.items ?? offersData?.data ?? offersData ?? [];
   const orders: Order[] =
     ordersData?.items ?? ordersData?.data ?? ordersData ?? [];
@@ -86,7 +86,7 @@ export default function MerchantDashboard() {
       offers.length,
     inMarket:
       serverStats?.onMarket ??
-      (offers as any[]).filter((o) => o.publishToMarket).length,
+      offers.filter((o) => o.publishToMarket).length,
     pendingOrders: orders.length,
   };
 
@@ -177,15 +177,19 @@ export default function MerchantDashboard() {
       color: "text-(--success)",
       bg: "bg-(--success-bg)",
     },
-    {
-      href: `/store/${slug}`,
-      label: "View My Store",
-      desc: "Customer-facing view",
-      icon: Store,
-      color: "text-(--charcoal-mid)",
-      bg: "bg-(--off-white-2)",
-      external: true,
-    },
+    ...(slug
+      ? [
+          {
+            href: `/store/${slug}`,
+            label: "View My Store",
+            desc: "Customer-facing view",
+            icon: Store,
+            color: "text-(--charcoal-mid)",
+            bg: "bg-(--off-white-2)",
+            external: true,
+          },
+        ]
+      : []),
     {
       href: "/merchant/analytics",
       label: "Analytics",

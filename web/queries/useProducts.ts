@@ -35,6 +35,9 @@ export interface ProductFilters {
   sort?: string;
   isApproved?: boolean;
   outOfStock?: boolean;
+  publishedToMarket?: boolean;
+  publishedToStore?: boolean;
+  unlisted?: boolean;
 }
 
 export interface CreateProductDto {
@@ -215,6 +218,9 @@ export function useMerchantProducts(filters?: ProductFilters) {
       if (filters?.sort)                   params.set("sort", filters.sort);
       if (filters?.isApproved !== undefined) params.set("isApproved", String(filters.isApproved));
       if (filters?.outOfStock !== undefined) params.set("outOfStock", String(filters.outOfStock));
+      if (filters?.publishedToMarket !== undefined) params.set("publishedToMarket", String(filters.publishedToMarket));
+      if (filters?.publishedToStore !== undefined) params.set("publishedToStore", String(filters.publishedToStore));
+      if (filters?.unlisted !== undefined) params.set("unlisted", String(filters.unlisted));
       const { data } = await api.get<RawProductsBackend>(`/api/merchants/catalogue?${params}`);
       return normalizeProductsResponse(data, filters);
     },

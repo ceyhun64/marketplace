@@ -221,12 +221,21 @@ export interface Invoice {
 
 export interface Subscription {
   id: string;
-  merchantId: string;
-  plan: PlanType;
+  planType: PlanType;
   isActive: boolean;
   startDate: string;
-  endDate?: string;
-  price: number;
+  expiresAt: string;
+  monthlyPrice: number;
+}
+
+export interface SubscriptionPlan {
+  planType: PlanType;
+  name: string;
+  monthlyPrice: number;
+  features: string[];
+  productLimit?: number | null;
+  marketplaceAccess: boolean;
+  pluginAccess: boolean;
 }
 
 // ── Plugin ───────────────────────────────────────────────────────────────────

@@ -18,27 +18,11 @@ export default function MerchantOrdersView() {
 
   const statusParam = statusFilter === "all" ? undefined : (statusFilter as OrderStatus);
 
-  const { data: filteredOrders = [], isLoading } = useMerchantIncomingOrders(statusParam);
-  const { data: allOrders = [] } = useMerchantIncomingOrders(); // for stats
+  const { data, isLoading } = useMerchantIncomingOrders(statusParam);
 
-  const orders = filteredOrders;
-  const paginationTotal = orders.length;
-
-  const stats = {
-    total: statusFilter === "all" ? paginationTotal : allOrders.length,
-    pending: allOrders.filter((o: any) =>
-      ["PENDING", "PAYMENT_CONFIRMED"].includes(o.status),
-    ).length,
-    processing: allOrders.filter((o: any) =>
-      [
-        "LABEL_GENERATED",
-        "COURIER_ASSIGNED",
-        "PICKED_UP",
-        "IN_TRANSIT",
-      ].includes(o.status),
-    ).length,
-    delivered: allOrders.filter((o: any) => o.status === "DELIVERED").length,
-  };
+  const orders = data?.orders ?? [];
+  const filteredTotal = data?.total ?? orders.length;
+  const stats = data?.stats ?? { total: 0, pending: 0, processing: 0, delivered: 0 };
 
   return (
     <div className="space-y-8">
@@ -104,7 +88,7 @@ export default function MerchantOrdersView() {
           <p className="text-sm font-semibold text-(--text-primary)">
             All Orders
             <span className="ml-2 text-sm font-normal text-(--text-tertiary)">
-              ({paginationTotal} orders)
+              ({filteredTotal} orders)
             </span>
           </p>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
