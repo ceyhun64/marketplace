@@ -143,7 +143,7 @@ export default function AdminCouriersPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-(--text-primary)">Couriers</h1>
           <p className="text-sm text-(--text-tertiary) mt-1">
@@ -159,7 +159,7 @@ export default function AdminCouriersPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {statCards.map((s) => (
           <div
             key={s.label}

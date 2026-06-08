@@ -110,7 +110,7 @@ export default function MerchantReviewsView() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-(--text-primary)">
             Product Reviews
@@ -132,7 +132,7 @@ export default function MerchantReviewsView() {
 
       {/* Stats */}
       {isLoading ? (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-28 rounded-xl" />
           ))}

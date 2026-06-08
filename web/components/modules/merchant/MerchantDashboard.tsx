@@ -212,7 +212,7 @@ export default function MerchantDashboard() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           {profileLoading ? (
             <Skeleton className="h-7 w-48 mb-2" />

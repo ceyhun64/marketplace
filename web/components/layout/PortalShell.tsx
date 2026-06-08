@@ -111,12 +111,12 @@ export function PortalShell({ links, role, children }: PortalShellProps) {
 
       {/*
        * Main content
-       *  - pt-14 on mobile compensates for the 56px fixed top bar
-       *  - lg:pt-0 removes that offset once the sidebar is always visible
+       *  - pt-18 on mobile clears the 56px fixed top bar plus a 16px breathing gap
+       *  - lg:pt-10 removes that offset once the sidebar is always visible
        *  - ml-0 → lg:ml-60 tracks the sidebar width on desktop
        *  - min-w-0 prevents flex child from overflowing the parent
        */}
-      <main className="flex-1 min-w-0 pt-14 lg:pt-10 lg:ml-60 p-4 md:p-6 lg:p-8">
+      <main className="flex-1 min-w-0 pt-18 lg:pt-10 lg:ml-60 p-4 md:p-6 lg:p-8">
         {children}
       </main>
     </div>

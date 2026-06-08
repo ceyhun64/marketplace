@@ -148,19 +148,21 @@ export default function AdminFulfillmentPanel() {
       {/* Table */}
       {isLoading ? (
         <div className="bg-(--bg-surface) border border-(--border-light) rounded-xl overflow-hidden">
-          <table className="w-full">
-            <tbody className="divide-y divide-(--border-subtle)">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 6 }).map((_, j) => (
-                    <td key={j} className="px-5 py-3">
-                      <Skeleton className="h-4 rounded" />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <tbody className="divide-y divide-(--border-subtle)">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: 6 }).map((_, j) => (
+                      <td key={j} className="px-5 py-3">
+                        <Skeleton className="h-4 rounded" />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : !shipments.length ? (
         <div className="bg-(--bg-surface) border border-(--border-light) rounded-xl p-12 text-center text-(--text-tertiary)">
@@ -168,26 +170,27 @@ export default function AdminFulfillmentPanel() {
         </div>
       ) : (
         <div className="bg-(--bg-surface) border border-(--border-light) rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="border-b border-(--border-light) bg-(--bg-sunken)">
-              <tr>
-                {[
-                  "Takip No.",
-                  "Durum",
-                  "Kurye",
-                  "Güncelleme",
-                  "Etiket",
-                  "İşlem",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="px-5 py-3 text-left text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b border-(--border-light) bg-(--bg-sunken)">
+                <tr>
+                  {[
+                    "Takip No.",
+                    "Durum",
+                    "Kurye",
+                    "Güncelleme",
+                    "Etiket",
+                    "İşlem",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className="px-5 py-3 text-left text-xs font-semibold text-(--text-tertiary) uppercase tracking-wide"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
             <tbody className="divide-y divide-(--border-subtle)">
               {(shipments as Shipment[]).map((s) => {
                 const displayStatus = getDisplayStatus(s);
@@ -268,6 +271,7 @@ export default function AdminFulfillmentPanel() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

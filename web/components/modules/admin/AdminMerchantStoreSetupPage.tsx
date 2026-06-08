@@ -374,7 +374,7 @@ export default function AdminMerchantStoreSetupPage() {
             <h2 className="text-sm font-semibold text-(--text-primary)">Location & Fulfillment</h2>
           </div>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="latitude">Latitude</Label>
                 <Input
@@ -431,7 +431,7 @@ export default function AdminMerchantStoreSetupPage() {
         {/* Subscription Plan */}
         <div className="bg-(--bg-surface) rounded-xl border border-(--border-light) p-6">
           <h2 className="text-sm font-semibold text-(--text-primary) mb-5">Subscription Plan</h2>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {(["BASIC", "PRO", "ENTERPRISE"] as const).map((plan) => (
               <label
                 key={plan}

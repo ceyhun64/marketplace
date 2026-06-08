@@ -227,7 +227,7 @@ export default function ProductVariantEditor({
                     {/* Attribute values */}
                     {axes.length > 0 && (
                       <div
-                        className={`grid gap-3 ${axes.length > 2 ? "grid-cols-3" : "grid-cols-2"}`}
+                        className={`grid grid-cols-2 gap-3 ${axes.length > 2 ? "sm:grid-cols-3" : ""}`}
                       >
                         {axes.map((axis) => (
                           <div key={axis}>

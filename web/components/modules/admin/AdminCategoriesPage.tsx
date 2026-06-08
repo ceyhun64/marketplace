@@ -205,7 +205,7 @@ export default function AdminCategoriesPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-(--text-primary)">Categories</h1>
           <p className="text-sm text-(--text-tertiary) mt-1">
@@ -222,7 +222,7 @@ export default function AdminCategoriesPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           {
             label: "Root Categories",
@@ -726,7 +726,7 @@ function CategoryDialog({
           </div>
 
           {/* Sort order + icon */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Sort Order</Label>
               <Input

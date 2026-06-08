@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import {
   useUpdateStoreSettings,
   useSetStoreDomain,
@@ -111,55 +110,20 @@ export default function StoreSettingsForm({ store }: Props) {
       >
         {/* Logo + Banner row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {/* Logo */}
-          <div className="space-y-2">
-            <p className={labelCls}>Store Logo</p>
-            <div className="flex items-center gap-3">
-              <div className="relative w-14 h-14 rounded-2xl border border-(--border-mid) bg-(--bg-sunken) overflow-hidden shrink-0 flex items-center justify-center">
-                {form.logoUrl ? (
-                  <Image
-                    src={form.logoUrl}
-                    alt="logo"
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <span className="text-xl font-bold text-(--text-tertiary) select-none">
-                    {store.storeName.charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
-              <ImageUploader
-                label="Upload"
-                folder="marketplace/logos"
-                onUpload={(r) => setForm((f) => ({ ...f, logoUrl: r.url }))}
-              />
-            </div>
-          </div>
-
-          {/* Banner */}
-          <div className="space-y-2">
-            <p className={labelCls}>Store Banner</p>
-            {form.bannerUrl ? (
-              <div className="relative h-14 rounded-2xl overflow-hidden border border-(--border-mid)">
-                <Image
-                  src={form.bannerUrl}
-                  alt="banner"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ) : (
-              <div className="h-14 rounded-2xl border border-dashed border-(--border-mid) bg-(--bg-sunken) flex items-center justify-center">
-                <span className="text-xs text-(--text-tertiary)">No banner yet</span>
-              </div>
-            )}
-            <ImageUploader
-              label="Upload Banner"
-              folder="marketplace/banners"
-              onUpload={(r) => setForm((f) => ({ ...f, bannerUrl: r.url }))}
-            />
-          </div>
+          <ImageUploader
+            label="Store Logo"
+            folder="marketplace/logos"
+            initialUrl={form.logoUrl}
+            onUpload={(r) => setForm((f) => ({ ...f, logoUrl: r.url }))}
+            onRemove={() => setForm((f) => ({ ...f, logoUrl: "" }))}
+          />
+          <ImageUploader
+            label="Store Banner"
+            folder="marketplace/banners"
+            initialUrl={form.bannerUrl}
+            onUpload={(r) => setForm((f) => ({ ...f, bannerUrl: r.url }))}
+            onRemove={() => setForm((f) => ({ ...f, bannerUrl: "" }))}
+          />
         </div>
 
         <hr className="border-(--border-light)" />

@@ -40,6 +40,7 @@ export default function ProductsTable({
 
   return (
     <div className="bg-(--bg-surface) border border-(--border-mid) rounded-xl overflow-hidden">
+      <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead className="bg-(--bg-sunken) text-xs text-(--text-tertiary) uppercase tracking-wide">
           <tr>
@@ -110,6 +111,7 @@ export default function ProductsTable({
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

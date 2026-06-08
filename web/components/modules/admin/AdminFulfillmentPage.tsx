@@ -147,7 +147,7 @@ export default function AdminFulfillmentPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-(--text-primary)">Fulfillment</h1>
           <p className="text-sm text-(--text-tertiary) mt-1">
@@ -168,7 +168,7 @@ export default function AdminFulfillmentPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           {
             label: "Total Shipments",

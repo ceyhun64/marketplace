@@ -1,7 +1,7 @@
 import MerchantShipmentsView from "@/components/modules/merchant/MerchantShipmentsView";
 
 export const metadata = {
-  title: "Kargo Takip — Merchant",
+  title: "Cargo Tracking — Merchant",
 };
 
 export default function MerchantShipmentsPage() {

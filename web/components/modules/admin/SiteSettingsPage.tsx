@@ -258,7 +258,7 @@ function AnnouncementsTab() {
     <>
       {/* -- Summary stat -- */}
       {!isLoading && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {[
             { label: "Total", value: items.length },
             { label: "Active", value: activeItems.length, accent: true },
@@ -654,7 +654,7 @@ function AnnouncementDialog({
           </div>
 
           {/* CTA row */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wider">
                 CTA Label
@@ -680,7 +680,7 @@ function AnnouncementDialog({
           </div>
 
           {/* Colors row */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-(--text-secondary) uppercase tracking-wider">
                 Background
@@ -1039,7 +1039,7 @@ function HeroTab() {
             subtitle="Primary (search) and optional secondary button"
           >
             <FieldRow label="Primary CTA">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <Input
                   value={form.primaryCtaText}
                   onChange={(e) => set("primaryCtaText", e.target.value)}
@@ -1057,7 +1057,7 @@ function HeroTab() {
             </FieldRow>
             <Separator className="bg-(--border-subtle)" />
             <FieldRow label="Secondary CTA (optional)">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <Input
                   value={form.secondaryCtaText ?? ""}
                   onChange={(e) => set("secondaryCtaText", e.target.value)}
