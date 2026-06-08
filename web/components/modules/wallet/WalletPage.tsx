@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { formatDate } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -47,6 +47,34 @@ interface TransactionsResponse {
   items: Transaction[];
 }
 
+type WithdrawalRequestStatus = "Pending" | "Approved" | "Processing" | "Paid" | "Rejected";
+
+interface WithdrawalRequestItem {
+  id: string;
+  amount: number;
+  bankIban: string;
+  bankAccountName: string;
+  bankName: string | null;
+  status: WithdrawalRequestStatus;
+  note: string | null;
+  adminNote: string | null;
+  processedAt: string | null;
+  createdAt: string;
+}
+
+interface WithdrawalRequestsResponse {
+  data: WithdrawalRequestItem[];
+  pagination: { page: number; limit: number; total: number };
+}
+
+interface RequestWithdrawalPayload {
+  amount: number;
+  bankIban: string;
+  bankAccountName: string;
+  bankName?: string;
+  note?: string;
+}
+
 function useWalletData(enabled: boolean) {
   return useQuery<WalletData>({
     queryKey: ["customer-wallet"],
@@ -70,6 +98,42 @@ function useWalletTransactions(enabled: boolean) {
     staleTime: 1000 * 30,
   });
 }
+
+function useWithdrawalRequests(enabled: boolean) {
+  return useQuery<WithdrawalRequestsResponse>({
+    queryKey: ["customer-wallet-withdrawals"],
+    queryFn: async () => {
+      const { data } = await api.get("/api/customer/wallet/withdrawals?limit=20");
+      return data;
+    },
+    enabled,
+    staleTime: 1000 * 30,
+  });
+}
+
+function useRequestWithdrawal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: RequestWithdrawalPayload) => {
+      const { data } = await api.post("/api/customer/wallet/withdraw", payload);
+      return data;
+    },
+    // No optimistic update — funds aren't debited until admin approval, so the
+    // balance shown must always reflect the server, not a guess made here.
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["customer-wallet"] });
+      queryClient.invalidateQueries({ queryKey: ["customer-wallet-withdrawals"] });
+    },
+  });
+}
+
+const WITHDRAWAL_STATUS_META: Record<WithdrawalRequestStatus, { label: string; color: string; bg: string }> = {
+  Pending:    { label: "Pending review", color: "#b45309", bg: "rgba(234,179,8,0.12)" },
+  Approved:   { label: "Approved",       color: "#0d7a4e", bg: "rgba(13,122,78,0.1)" },
+  Processing: { label: "Processing",     color: "#2563eb", bg: "rgba(37,99,235,0.1)" },
+  Paid:       { label: "Paid",           color: "#0d7a4e", bg: "rgba(13,122,78,0.1)" },
+  Rejected:   { label: "Rejected",       color: "var(--red)", bg: "rgba(200,16,46,0.08)" },
+};
 
 const TOP_UP_AMOUNTS = [50, 100, 200, 500, 1000];
 
@@ -102,12 +166,19 @@ export default function WalletPage() {
   const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"overview" | "topup" | "history" | "withdraw">("overview");
   const [withdrawAmount, setWithdrawAmount] = useState<number | "">("");
+  const [withdrawIban, setWithdrawIban] = useState("");
+  const [withdrawAccountName, setWithdrawAccountName] = useState("");
+  const [withdrawBankName, setWithdrawBankName] = useState("");
+  const [withdrawNote, setWithdrawNote] = useState("");
 
   const { data: walletData, isLoading: walletLoading } = useWalletData(!!user);
   const { data: txData, isLoading: txLoading } = useWalletTransactions(!!user);
+  const { data: withdrawalsData, isLoading: withdrawalsLoading } = useWithdrawalRequests(!!user);
+  const requestWithdrawal = useRequestWithdrawal();
 
   const balance = walletData?.balance ?? 0;
   const transactions = txData?.items ?? [];
+  const withdrawalRequests = withdrawalsData?.data ?? [];
 
   const handlePreset = (amt: number) => {
     setSelectedPreset(amt);
@@ -119,7 +190,37 @@ export default function WalletPage() {
   };
 
   const handleWithdraw = () => {
-    toast.info("Withdrawal integration coming soon. This feature will be available shortly.");
+    if (!withdrawAmount || Number(withdrawAmount) < 10 || Number(withdrawAmount) > balance) return;
+    if (!withdrawIban.trim() || !withdrawAccountName.trim()) {
+      toast.error("Please enter your bank IBAN and account holder name.");
+      return;
+    }
+
+    requestWithdrawal.mutate(
+      {
+        amount: Number(withdrawAmount),
+        bankIban: withdrawIban.trim(),
+        bankAccountName: withdrawAccountName.trim(),
+        bankName: withdrawBankName.trim() || undefined,
+        note: withdrawNote.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Withdrawal request submitted. It's now pending admin review.");
+          setWithdrawAmount("");
+          setWithdrawIban("");
+          setWithdrawAccountName("");
+          setWithdrawBankName("");
+          setWithdrawNote("");
+        },
+        onError: (err: unknown) => {
+          const message =
+            (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+            "Could not submit withdrawal request. Please try again.";
+          toast.error(message);
+        },
+      },
+    );
   };
 
   return (
@@ -527,9 +628,54 @@ export default function WalletPage() {
                       Available: ${balance.toFixed(2)} — Minimum withdrawal $10
                     </p>
                   </div>
+                  <div style={{ marginBottom: "1.5rem" }}>
+                    <label style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--charcoal-mid)", letterSpacing: "0.04em", display: "block", marginBottom: "0.5rem" }}>
+                      BANK ACCOUNT HOLDER NAME
+                    </label>
+                    <Input
+                      type="text"
+                      value={withdrawAccountName}
+                      onChange={(e) => setWithdrawAccountName(e.target.value)}
+                      placeholder="Full name as it appears on the account"
+                    />
+                  </div>
+                  <div style={{ marginBottom: "1.5rem" }}>
+                    <label style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--charcoal-mid)", letterSpacing: "0.04em", display: "block", marginBottom: "0.5rem" }}>
+                      BANK IBAN
+                    </label>
+                    <Input
+                      type="text"
+                      value={withdrawIban}
+                      onChange={(e) => setWithdrawIban(e.target.value.toUpperCase())}
+                      placeholder="e.g. TR00 0000 0000 0000 0000 0000 00"
+                      style={{ textTransform: "uppercase" }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: "1.5rem" }}>
+                    <label style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--charcoal-mid)", letterSpacing: "0.04em", display: "block", marginBottom: "0.5rem" }}>
+                      BANK NAME <span style={{ fontWeight: 400, letterSpacing: 0, textTransform: "none" }}>(optional)</span>
+                    </label>
+                    <Input
+                      type="text"
+                      value={withdrawBankName}
+                      onChange={(e) => setWithdrawBankName(e.target.value)}
+                      placeholder="e.g. Garanti BBVA"
+                    />
+                  </div>
+                  <div style={{ marginBottom: "1.5rem" }}>
+                    <label style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--charcoal-mid)", letterSpacing: "0.04em", display: "block", marginBottom: "0.5rem" }}>
+                      NOTE <span style={{ fontWeight: 400, letterSpacing: 0, textTransform: "none" }}>(optional)</span>
+                    </label>
+                    <Input
+                      type="text"
+                      value={withdrawNote}
+                      onChange={(e) => setWithdrawNote(e.target.value)}
+                      placeholder="Anything the review team should know"
+                    />
+                  </div>
                   <div
                     style={{
-                      display: "flex", alignItems: "center", gap: "0.75rem",
+                      display: "flex", alignItems: "flex-start", gap: "0.75rem",
                       padding: "0.875rem 1rem",
                       background: "var(--off-white)",
                       border: "1.5px solid var(--border-mid)",
@@ -537,31 +683,145 @@ export default function WalletPage() {
                       marginBottom: "1.5rem",
                     }}
                   >
-                    <Banknote style={{ width: 18, height: 18, color: "var(--charcoal-soft)" }} />
-                    <span style={{ fontSize: "0.875rem", color: "var(--charcoal-soft)", fontStyle: "italic" }}>
-                      Bank account integration coming soon
+                    <Banknote style={{ width: 18, height: 18, color: "var(--charcoal-soft)", flexShrink: 0, marginTop: 2 }} />
+                    <span style={{ fontSize: "0.8125rem", color: "var(--charcoal-soft)" }}>
+                      Funds stay in your wallet while the request is reviewed — your balance is only debited once an admin approves it.
                     </span>
                   </div>
                   <button
                     onClick={handleWithdraw}
-                    disabled={!withdrawAmount || Number(withdrawAmount) < 10 || Number(withdrawAmount) > balance}
+                    disabled={
+                      !withdrawAmount ||
+                      Number(withdrawAmount) < 10 ||
+                      Number(withdrawAmount) > balance ||
+                      !withdrawIban.trim() ||
+                      !withdrawAccountName.trim() ||
+                      requestWithdrawal.isPending
+                    }
                     style={{
                       width: "100%",
                       padding: "0.875rem",
-                      background: withdrawAmount && Number(withdrawAmount) >= 10 ? "var(--charcoal)" : "var(--off-white-3)",
-                      color: withdrawAmount && Number(withdrawAmount) >= 10 ? "white" : "var(--charcoal-mist)",
+                      background:
+                        withdrawAmount && Number(withdrawAmount) >= 10 && withdrawIban.trim() && withdrawAccountName.trim()
+                          ? "var(--charcoal)"
+                          : "var(--off-white-3)",
+                      color:
+                        withdrawAmount && Number(withdrawAmount) >= 10 && withdrawIban.trim() && withdrawAccountName.trim()
+                          ? "white"
+                          : "var(--charcoal-mist)",
                       border: "none",
                       borderRadius: 12,
                       fontWeight: 700,
                       fontSize: "0.9375rem",
-                      cursor: withdrawAmount && Number(withdrawAmount) >= 10 ? "pointer" : "not-allowed",
+                      cursor:
+                        withdrawAmount && Number(withdrawAmount) >= 10 && withdrawIban.trim() && withdrawAccountName.trim()
+                          ? "pointer"
+                          : "not-allowed",
                     }}
                   >
-                    Withdraw ${withdrawAmount || "0"} to Bank
+                    {requestWithdrawal.isPending
+                      ? "Submitting…"
+                      : `Request withdrawal of $${withdrawAmount || "0"}`}
                   </button>
                   <p style={{ fontSize: "0.75rem", color: "var(--charcoal-mist)", marginTop: "0.75rem", textAlign: "center" }}>
-                    Withdrawals are processed within 1–3 business days.
+                    Withdrawal requests are reviewed by our team and processed within 1–3 business days of approval.
                   </p>
+                </div>
+
+                {/* Withdrawal request history */}
+                <div
+                  style={{
+                    background: "var(--white)",
+                    border: "1px solid var(--border-light)",
+                    borderRadius: 20,
+                    overflow: "hidden",
+                    marginTop: "1.5rem",
+                  }}
+                >
+                  <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--border-subtle)" }}>
+                    <h3 style={{ fontWeight: 700, fontSize: "1rem", color: "var(--charcoal)" }}>
+                      Withdrawal Requests
+                    </h3>
+                  </div>
+                  {withdrawalsLoading
+                    ? Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", gap: "1rem" }}>
+                          <Skeleton className="w-11 h-11 rounded-full" />
+                          <div style={{ flex: 1 }}>
+                            <Skeleton className="h-4 w-40 mb-2" />
+                            <Skeleton className="h-3 w-28" />
+                          </div>
+                          <Skeleton className="h-5 w-20" />
+                        </div>
+                      ))
+                    : withdrawalRequests.length === 0
+                      ? (
+                          <div style={{ padding: "3rem", textAlign: "center" }}>
+                            <ArrowDownRight style={{ width: 36, height: 36, color: "var(--charcoal-mist)", margin: "0 auto 1rem" }} />
+                            <p style={{ color: "var(--charcoal-soft)" }}>No withdrawal requests yet.</p>
+                          </div>
+                        )
+                      : withdrawalRequests.map((req, i) => {
+                          const meta = WITHDRAWAL_STATUS_META[req.status];
+                          return (
+                            <div
+                              key={req.id}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "1rem",
+                                padding: "1.25rem 1.5rem",
+                                borderBottom: i < withdrawalRequests.length - 1 ? "1px solid var(--border-subtle)" : "none",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: 44, height: 44,
+                                  borderRadius: "50%",
+                                  background: "rgba(200,16,46,0.08)",
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                <ArrowUpRight style={{ width: 18, height: 18, color: "var(--red)" }} />
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontWeight: 600, fontSize: "0.9375rem", color: "var(--charcoal)", marginBottom: "0.2rem" }}>
+                                  {req.bankAccountName} — {req.bankIban}
+                                </div>
+                                <div style={{ fontSize: "0.8125rem", color: "var(--charcoal-mist)" }}>
+                                  {formatDate(req.createdAt)}
+                                  {req.adminNote ? ` · ${req.adminNote}` : ""}
+                                </div>
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "0.75rem",
+                                  fontWeight: 700,
+                                  padding: "0.3rem 0.75rem",
+                                  borderRadius: 999,
+                                  color: meta.color,
+                                  background: meta.bg,
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {meta.label}
+                              </div>
+                              <div
+                                style={{
+                                  fontWeight: 700,
+                                  fontSize: "1.0625rem",
+                                  color: "var(--charcoal)",
+                                  flexShrink: 0,
+                                  minWidth: 90,
+                                  textAlign: "right",
+                                }}
+                              >
+                                ${req.amount.toFixed(2)}
+                              </div>
+                            </div>
+                          );
+                        })}
                 </div>
               </div>
             )}

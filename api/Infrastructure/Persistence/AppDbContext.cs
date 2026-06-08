@@ -57,6 +57,7 @@ public class AppDbContext : DbContext
 
     // ── Customer Wallet / Referrals / Coupons ────────────────────────────────
     public DbSet<CustomerTransaction> CustomerTransactions => Set<CustomerTransaction>();
+    public DbSet<CustomerWithdrawalRequest> CustomerWithdrawalRequests => Set<CustomerWithdrawalRequest>();
     public DbSet<Coupon> Coupons => Set<Coupon>();
     public DbSet<Referral> Referrals => Set<Referral>();
 
@@ -614,6 +615,19 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<CustomerTransaction>().Property(t => t.Amount).HasColumnType("decimal(18,2)");
         modelBuilder.Entity<User>().Property(u => u.WalletBalance).HasColumnType("decimal(18,2)");
+
+        // ── CustomerWithdrawalRequest ─────────────────────────────────────────
+        modelBuilder
+            .Entity<CustomerWithdrawalRequest>()
+            .HasIndex(w => new { w.CustomerId, w.Status });
+        modelBuilder.Entity<CustomerWithdrawalRequest>().Property(w => w.Status).HasConversion<string>();
+        modelBuilder.Entity<CustomerWithdrawalRequest>().Property(w => w.Amount).HasColumnType("decimal(18,2)");
+        modelBuilder
+            .Entity<CustomerWithdrawalRequest>()
+            .HasOne(w => w.Customer)
+            .WithMany()
+            .HasForeignKey(w => w.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // ── Coupon ────────────────────────────────────────────────────────────
         modelBuilder.Entity<Coupon>().HasIndex(c => c.Code).IsUnique();
