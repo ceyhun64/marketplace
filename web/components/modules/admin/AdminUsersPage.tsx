@@ -30,13 +30,12 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { DataPagination } from "@/components/ui/data-pagination";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { toast } from "sonner";
 import {
   Users,
   Search,
   RefreshCw,
-  Shield,
   ShieldCheck,
   ShieldOff,
   UserCheck,
@@ -64,7 +63,6 @@ interface User {
   accountStatus: AccountStatus;
   isDeleted: boolean;
   createdAt: string;
-  lastLoginAt?: string;
 }
 
 interface PaginatedUsers {
@@ -488,14 +486,6 @@ export default function AdminUsersPage() {
                     Joined {formatDate(selectedUser.createdAt)}
                   </span>
                 </div>
-                {selectedUser.lastLoginAt && (
-                  <div className="flex items-center gap-3 text-(--text-secondary)">
-                    <Shield className="w-4 h-4 text-(--text-tertiary) shrink-0" />
-                    <span>
-                      Last login: {formatDateTime(selectedUser.lastLoginAt)}
-                    </span>
-                  </div>
-                )}
                 <div className="flex items-center gap-3 text-(--text-tertiary) text-xs font-mono">
                   <span className="text-(--charcoal-mist)">ID:</span>
                   <span>{selectedUser.id}</span>

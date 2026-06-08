@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -101,8 +101,8 @@ export default function AdminSubscriptionsPage() {
         merchantEmail: m.email ?? m.merchantEmail ?? "",
         plan: (!m.plan || String(m.plan).toLowerCase() === "none" ? "BASIC" : String(m.plan).toUpperCase()) as PlanType,
         status: m.isActive ? "ACTIVE" : "CANCELLED",
-        startDate: m.createdAt ?? m.startDate ?? "",
-        endDate: m.endDate,
+        startDate: m.subscriptionStartDate ?? m.createdAt ?? "",
+        endDate: m.subscriptionEndDate,
         monthlyRevenue: m.monthlyRevenue ?? 0,
       }));
       return { ...raw, items };
@@ -184,7 +184,7 @@ export default function AdminSubscriptionsPage() {
           },
           {
             label: "Monthly Revenue",
-            value: `$${stats.mrr.toLocaleString()}`,
+            value: formatCurrency(stats.mrr),
             icon: TrendingUp,
             color: "text-(--success)",
             bg: "bg-(--success-bg)",

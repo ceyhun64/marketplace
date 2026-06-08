@@ -28,6 +28,13 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+// Backend returns Plan as PascalCase ("Basic"/"Pro"/"Enterprise");
+// the radio options below are keyed by SCREAMING_SNAKE_CASE PlanType.
+function normalizePlan(plan?: string): "BASIC" | "PRO" | "ENTERPRISE" {
+  const upper = (plan || "BASIC").toUpperCase();
+  return upper === "PRO" || upper === "ENTERPRISE" ? upper : "BASIC";
+}
+
 interface MerchantProfile {
   id: string;
   userId: string;
@@ -100,7 +107,7 @@ export default function AdminMerchantStoreSetupPage() {
         latitude: merchant.latitude?.toString() || "",
         longitude: merchant.longitude?.toString() || "",
         handlingHours: merchant.handlingHours?.toString() || "24",
-        plan: merchant.plan || "BASIC",
+        plan: normalizePlan(merchant.plan),
       });
     }
   }, [merchant]);

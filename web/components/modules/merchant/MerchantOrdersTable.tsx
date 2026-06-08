@@ -103,7 +103,7 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
           <tbody className="divide-y divide-(--border-subtle)">
             {orders.map((order) => {
               const isExpanded = expandedId === order.id;
-              const canPack = order.status === "PAYMENT_CONFIRMED";
+              const canPack = order.status === "PENDING" || order.status === "PAYMENT_CONFIRMED";
 
               return (
                 <Fragment key={order.id}>
@@ -205,7 +205,7 @@ export default function MerchantOrdersTable({ orders, loading }: Props) {
       <div className="sm:hidden divide-y divide-(--border-subtle)">
         {orders.map((order) => {
           const isExpanded = expandedId === order.id;
-          const canPack = order.status === "PAYMENT_CONFIRMED";
+          const canPack = order.status === "PENDING" || order.status === "PAYMENT_CONFIRMED";
 
           return (
             <div key={order.id} className="p-4 space-y-3">

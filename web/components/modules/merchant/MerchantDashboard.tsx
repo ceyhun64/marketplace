@@ -19,7 +19,12 @@ import { StatCardSkeleton } from "@/components/ui/stat-card-skeleton";
 import { Empty, EmptyMedia, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { useMerchantStats } from "@/queries/useAnalytics";
 import { formatPrice, formatCurrency, formatDate } from "@/lib/format";
-import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/types/enums";
+import {
+  ORDER_STATUS_LABELS,
+  ORDER_STATUS_COLORS,
+  PLAN_LABELS,
+  type PlanType,
+} from "@/types/enums";
 import type { Order, Product } from "@/types/entities";
 
 function OrderRowSkeleton() {
@@ -93,11 +98,14 @@ export default function MerchantDashboard() {
 
   const storeName = profile?.storeName ?? profile?.StoreName ?? "My Store";
   const slug = profile?.slug ?? profile?.Slug;
-  const plan =
+  // Backend serializes plan as SCREAMING_SNAKE_CASE ("BASIC"/"PRO"/"ENTERPRISE")
+  const plan = (
     profile?.subscriptionPlan ??
     profile?.Subscription?.Plan ??
     profile?.subscription?.plan ??
-    "Basic";
+    "BASIC"
+  ).toUpperCase() as PlanType;
+  const planLabel = PLAN_LABELS[plan] ?? plan;
 
   const revenueDisplay = analyticsStats
     ? formatPrice(analyticsStats.totalRevenue)
@@ -143,13 +151,13 @@ export default function MerchantDashboard() {
   ];
 
   const planBadgeStyle =
-    plan === "Enterprise"
+    plan === "ENTERPRISE"
       ? {
           border: "1px solid rgba(200,16,46,0.4)",
           color: "var(--red)",
           background: "var(--red-muted)",
         }
-      : plan === "Pro"
+      : plan === "PRO"
         ? {
             border: "1px solid rgba(59,130,246,0.4)",
             color: "#3b82f6",
@@ -224,9 +232,9 @@ export default function MerchantDashboard() {
                 className="text-xs px-2.5 py-1 rounded-full font-medium"
                 style={planBadgeStyle}
               >
-                {plan} Plan
+                {planLabel} Plan
               </span>
-              {plan === "Basic" && (
+              {plan === "BASIC" && (
                 <Link href="/merchant/subscription">
                   <button
                     className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all"

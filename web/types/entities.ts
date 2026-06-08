@@ -46,6 +46,8 @@ export interface MerchantProfile {
   currentPlan?: string;
   /** Alias — mapped from currentPlan for backward compatibility */
   subscriptionPlan?: PlanType;
+  /** PascalCase plan name ("Basic"/"Pro"/"Enterprise"/"none") from GET /api/admin/merchants */
+  plan?: string;
   subscriptionId?: string;
   planExpiresAt?: string;
   createdAt: string;
@@ -78,6 +80,8 @@ export interface Product {
   description: string;
   categoryId: string;
   categoryName?: string;
+  /** Category display name — field returned by GET /api/merchants/catalogue */
+  category?: string;
   images: string[];
   tags: string[];
   price: number;

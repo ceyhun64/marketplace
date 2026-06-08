@@ -209,7 +209,7 @@ export default function ProductCatalogueTable({
                     <ProductThumb src={p.images?.[0]} alt={p.name} />
                     <div className="min-w-0">
                       <p title={p.name} className="font-medium text-(--text-primary) truncate max-w-45">{p.name}</p>
-                      <p className="text-xs text-(--text-tertiary) truncate">{p.categoryName ?? "—"}</p>
+                      <p className="text-xs text-(--text-tertiary) truncate">{p.category ?? p.categoryName ?? "—"}</p>
                     </div>
                   </div>
                 </td>
@@ -285,7 +285,7 @@ export default function ProductCatalogueTable({
               <ProductThumb src={p.images?.[0]} alt={p.name} />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-(--text-primary) text-sm leading-snug line-clamp-2">{p.name}</p>
-                <p className="text-xs text-(--text-tertiary) mt-0.5">{p.categoryName ?? "—"}</p>
+                <p className="text-xs text-(--text-tertiary) mt-0.5">{p.category ?? p.categoryName ?? "—"}</p>
               </div>
               <div className="shrink-0">
                 <ApprovalBadge approved={p.isApproved} />

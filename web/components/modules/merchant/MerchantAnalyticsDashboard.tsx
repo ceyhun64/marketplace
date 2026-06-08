@@ -73,15 +73,26 @@ export default function MerchantAnalyticsDashboard() {
     return [];
   }
 
-  const chartData = toArray(salesChart).map((d) => ({
-    day: d.label
+  // Backend returns one row per (label, source) pair — e.g. "Mon"/MARKETPLACE
+  // and "Mon"/ESTORE as separate entries. Merge them by label into a single
+  // point per period, otherwise the chart alternates marketplace-only and
+  // estore-only points and renders as a sawtooth.
+  const chartByDay = new Map<
+    string,
+    { day: string; marketplace: number; estore: number }
+  >();
+  for (const d of toArray(salesChart)) {
+    const day = d.label
       ? d.label
       : d.date
         ? new Date(d.date).toLocaleDateString("en-GB", { weekday: "short" })
-        : "—",
-    marketplace: d.source === "MARKETPLACE" || !d.source ? (d.revenue ?? 0) : 0,
-    estore: d.source === "ESTORE" ? (d.revenue ?? 0) : 0,
-  }));
+        : "—";
+    const entry = chartByDay.get(day) ?? { day, marketplace: 0, estore: 0 };
+    if (d.source === "ESTORE") entry.estore += d.revenue ?? 0;
+    else entry.marketplace += d.revenue ?? 0;
+    chartByDay.set(day, entry);
+  }
+  const chartData = Array.from(chartByDay.values());
 
   // -- KPI definitions ----------------------------------------------------------
 

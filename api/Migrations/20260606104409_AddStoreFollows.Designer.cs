@@ -14,8 +14,8 @@ using api.Infrastructure.Persistence;
 namespace api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260606104409_AddCustomerWalletCouponReferral")]
-    partial class AddCustomerWalletCouponReferral
+    [Migration("20260606104409_AddStoreFollows")]
+    partial class AddStoreFollows
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

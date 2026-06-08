@@ -20,6 +20,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -41,6 +51,7 @@ import {
   ToggleRight,
   DollarSign,
   Package,
+  Loader2,
 } from "lucide-react";
 
 interface Plugin {
@@ -84,6 +95,7 @@ export default function AdminPluginsPage() {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editPlugin, setEditPlugin] = useState<Plugin | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Plugin | null>(null);
   const [form, setForm] = useState<PluginFormData>(EMPTY_FORM);
 
   const { data: plugins, isLoading } = useQuery<Plugin[]>({
@@ -437,15 +449,7 @@ export default function AdminPluginsPage() {
                           size="sm"
                           variant="ghost"
                           className="h-7 w-7 p-0 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => {
-                            if (
-                              confirm(
-                                `Delete plugin "${p.name}"? This cannot be undone.`,
-                              )
-                            ) {
-                              deleteMutation.mutate(p.id);
-                            }
-                          }}
+                          onClick={() => setDeleteTarget(p)}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
@@ -466,6 +470,38 @@ export default function AdminPluginsPage() {
           </div>
         )}
       </div>
+
+      {/* -- Delete confirmation -- */}
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => !o && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete plugin?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {`Delete plugin "${deleteTarget?.name}"? This cannot be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteMutation.isPending}
+              onClick={() =>
+                deleteMutation.mutate(deleteTarget!.id, {
+                  onSuccess: () => setDeleteTarget(null),
+                })
+              }
+              className="bg-red-600 hover:bg-red-700 text-white gap-2"
+            >
+              {deleteMutation.isPending && (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              )}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

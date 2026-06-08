@@ -137,8 +137,11 @@ export function useAdminMerchantList() {
   return useQuery({
     queryKey: merchantKeys.adminList(),
     queryFn: async () => {
-      const { data } = await api.get<MerchantProfile[]>("/api/admin/merchants");
-      return data;
+      // /api/admin/merchants → { total, page, limit, items: MerchantProfile[] }
+      const { data } = await api.get<{ items: MerchantProfile[] }>(
+        "/api/admin/merchants",
+      );
+      return data.items;
     },
   });
 }

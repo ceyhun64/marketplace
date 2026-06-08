@@ -637,9 +637,7 @@ export default function AdminProductsPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-sm text-(--text-secondary)">
-                        {(product as any).category ??
-                          (product as any).categoryName ??
-                          "—"}
+                        {product.categoryName || "—"}
                       </TableCell>
                       <TableCell className="text-sm text-(--text-secondary)">
                         {(product as any).merchant?.storeName ??

@@ -354,7 +354,7 @@ export default function AdminCommissionPage() {
                 hint="Stripe flat per-transaction charge"
                 value={getValue("paymentProcessingFlatFee")}
                 onChange={(v) => set("paymentProcessingFlatFee", v)}
-                prefix={data?.currencyCode ?? "$"}
+                prefix={data?.currencyCode ?? "TRY"}
               />
             </>
           )}
@@ -382,7 +382,7 @@ export default function AdminCommissionPage() {
                 hint="Free tier — e-store access only"
                 value={getValue("subscriptionBasicMonthly")}
                 onChange={(v) => set("subscriptionBasicMonthly", v)}
-                prefix={data?.currencyCode ?? "$"}
+                prefix={data?.currencyCode ?? "TRY"}
                 suffix="/mo"
               />
               <SettingRow
@@ -390,7 +390,7 @@ export default function AdminCommissionPage() {
                 hint="Marketplace listing + plugins"
                 value={getValue("subscriptionProMonthly")}
                 onChange={(v) => set("subscriptionProMonthly", v)}
-                prefix={data?.currencyCode ?? "$"}
+                prefix={data?.currencyCode ?? "TRY"}
                 suffix="/mo"
               />
               <SettingRow
@@ -398,7 +398,7 @@ export default function AdminCommissionPage() {
                 hint="Custom domain + priority support + SLA"
                 value={getValue("subscriptionEnterpriseMonthly")}
                 onChange={(v) => set("subscriptionEnterpriseMonthly", v)}
-                prefix={data?.currencyCode ?? "$"}
+                prefix={data?.currencyCode ?? "TRY"}
                 suffix="/mo"
               />
             </>

@@ -8,6 +8,14 @@ import { PLAN_LABELS, PLAN_COLORS } from "@/types/enums";
 import { useAdminMerchantList } from "@/queries/useMerchant";
 import api from "@/lib/api";
 import type { MerchantProfile } from "@/types/entities";
+import type { PlanType } from "@/types/enums";
+
+// Backend returns Plan as PascalCase ("Basic"/"Pro"/"Enterprise"/"none");
+// shared PLAN_LABELS/PLAN_COLORS are keyed by SCREAMING_SNAKE_CASE PlanType.
+function normalizePlan(plan?: string): PlanType {
+  if (!plan || plan.toLowerCase() === "none") return "BASIC";
+  return plan.toUpperCase() as PlanType;
+}
 
 // -- Skeleton ------------------------------------------------------------------
 
@@ -117,8 +125,8 @@ export default function AdminMerchantsTable() {
                 </td>
                 {/* Plan */}
                 <td className="px-5 py-3">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${PLAN_COLORS[(m.subscriptionPlan ?? m.currentPlan ?? "BASIC") as keyof typeof PLAN_COLORS]}`}>
-                    {PLAN_LABELS[(m.subscriptionPlan ?? m.currentPlan ?? "BASIC") as keyof typeof PLAN_LABELS]}
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${PLAN_COLORS[normalizePlan(m.plan) as keyof typeof PLAN_COLORS]}`}>
+                    {PLAN_LABELS[normalizePlan(m.plan) as keyof typeof PLAN_LABELS]}
                   </span>
                 </td>
                 {/* Domain */}
@@ -185,8 +193,8 @@ export default function AdminMerchantsTable() {
 
             {/* Row 2: Plan + Domain + Date */}
             <div className="flex items-center gap-3 flex-wrap">
-              <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${PLAN_COLORS[(m.subscriptionPlan ?? m.currentPlan ?? "BASIC") as keyof typeof PLAN_COLORS]}`}>
-                {PLAN_LABELS[(m.subscriptionPlan ?? m.currentPlan ?? "BASIC") as keyof typeof PLAN_LABELS]}
+              <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${PLAN_COLORS[normalizePlan(m.plan) as keyof typeof PLAN_COLORS]}`}>
+                {PLAN_LABELS[normalizePlan(m.plan) as keyof typeof PLAN_LABELS]}
               </span>
               {m.customDomain && (
                 <span className="font-mono text-[11px] text-(--info) flex items-center gap-1">

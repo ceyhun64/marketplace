@@ -334,11 +334,15 @@ public class AdminController : ControllerBase
                 m.StoreName,
                 m.Slug,
                 m.IsActive,
+                m.IsSuspended,
                 m.CustomDomain,
                 m.DomainVerified,
                 m.CreatedAt,
                 Email = m.User.Email,
                 Plan = m.Subscription == null ? "none" : m.Subscription.Plan.ToString(),
+                MonthlyRevenue = m.Subscription == null ? 0 : m.Subscription.MonthlyPrice,
+                SubscriptionStartDate = m.Subscription == null ? (DateTime?)null : m.Subscription.StartDate,
+                SubscriptionEndDate = m.Subscription == null ? (DateTime?)null : m.Subscription.ExpiresAt,
                 ProductCount = m.Products.Count(p => !p.IsDeleted),
             })
             .ToListAsync();
@@ -656,7 +660,9 @@ public class AdminController : ControllerBase
         [FromBody] AdminStoreSetupDto dto
     )
     {
-        var merchant = await _db.MerchantProfiles.FindAsync(merchantId);
+        var merchant = await _db
+            .MerchantProfiles.Include(m => m.Subscription)
+            .FirstOrDefaultAsync(m => m.Id == merchantId);
         if (merchant == null)
             return NotFound(new { message = "Merchant not found." });
 
@@ -676,6 +682,36 @@ public class AdminController : ControllerBase
             merchant.Latitude = dto.Latitude.Value;
         if (dto.Longitude.HasValue)
             merchant.Longitude = dto.Longitude.Value;
+
+        // Plan change — update or create Subscription record
+        if (
+            !string.IsNullOrEmpty(dto.Plan)
+            && Enum.TryParse<PlanType>(dto.Plan, ignoreCase: true, out var newPlan)
+        )
+        {
+            if (merchant.Subscription is not null)
+            {
+                merchant.Subscription.Plan = newPlan;
+                merchant.Subscription.UpdatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                _db.Subscriptions.Add(
+                    new Subscription
+                    {
+                        Id = Guid.NewGuid(),
+                        MerchantId = merchant.Id,
+                        Plan = newPlan,
+                        IsActive = true,
+                        StartDate = DateTime.UtcNow,
+                        ExpiresAt = DateTime.UtcNow.AddYears(10),
+                        AutoRenew = true,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow,
+                    }
+                );
+            }
+        }
 
         merchant.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
@@ -1011,6 +1047,7 @@ public class AdminController : ControllerBase
                 u.Email,
                 u.FirstName,
                 u.LastName,
+                u.Phone,
                 Role          = u.Role.ToString(),
                 AccountStatus = u.AccountStatus.ToString(),
                 IsEmailVerified = u.IsVerified,
@@ -1102,7 +1139,8 @@ public record AdminStoreSetupDto(
     string? BannerUrl,
     int? HandlingHours,
     double? Latitude,
-    double? Longitude
+    double? Longitude,
+    string? Plan
 );
 
 public record AuditLogEntry(

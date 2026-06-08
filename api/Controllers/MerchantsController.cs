@@ -1,3 +1,4 @@
+using api.Common.Extensions;
 using api.Domain.Entities;
 using api.Domain.Enums;
 using api.Infrastructure.Persistence;
@@ -59,7 +60,7 @@ public class MerchantsController : ControllerBase
                 merchant.IsActive,
                 IsSuspended = !merchant.IsActive,
                 merchant.CreatedAt,
-                SubscriptionPlan = merchant.Subscription?.Plan.ToString() ?? "BASIC",
+                SubscriptionPlan = merchant.Subscription?.Plan.ToApiString() ?? "BASIC",
                 SubscriptionId = merchant.Subscription?.Id,
                 User = new { merchant.User.Email },
                 Subscription = merchant.Subscription == null

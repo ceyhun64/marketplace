@@ -336,6 +336,9 @@ export default function MerchantShipmentsView() {
       // Fetch merchant orders with shipment info
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
+      // This view filters/searches client-side with no pagination UI — request
+      // a large page so shipments beyond the backend's default limit=20 aren't dropped.
+      params.set("limit", "100");
       const res = await api.get(`/api/orders/merchant/incoming?${params}`);
       const raw = res.data;
       const orders = Array.isArray(raw)
