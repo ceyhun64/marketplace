@@ -675,6 +675,15 @@ static async Task EnsureMigrationHistoryConsistentAsync(AppDbContext db, Microso
     const string baselineMigration = "20260604080556_InitialCreate";
     const string efVersion = "10.0.0";
 
+    // Later migrations whose target table can end up created (and committed) on the
+    // database without the corresponding __EFMigrationsHistory row — e.g. when a
+    // previous deploy attempt applied the migration but crashed/restarted before (or
+    // during) recording it. Each entry's table is used as a proxy for "already applied".
+    var additionalMigrations = new (string MigrationId, string ProxyTable)[]
+    {
+        ("20260606104409_AddStoreFollows", "StoreFollows"),
+    };
+
     var conn = db.Database.GetDbConnection();
     await conn.OpenAsync();
     try
@@ -710,6 +719,35 @@ static async Task EnsureMigrationHistoryConsistentAsync(AppDbContext db, Microso
             logger.LogInformation(
                 "Existing schema detected — marked {Migration} as applied in migration history.",
                 baselineMigration);
+
+        // Reconcile any later migrations whose proxy table already exists but whose
+        // history row is missing (partially-applied migration from a crashed deploy).
+        foreach (var (migrationId, proxyTable) in additionalMigrations)
+        {
+            await using var tableCheckCmd = conn.CreateCommand();
+            tableCheckCmd.CommandText =
+                "SELECT COUNT(*) FROM information_schema.tables " +
+                "WHERE table_schema = 'public' AND table_name = @tableName";
+            tableCheckCmd.Parameters.Add(new Npgsql.NpgsqlParameter("tableName", proxyTable));
+            var tableExists = Convert.ToInt64(await tableCheckCmd.ExecuteScalarAsync()) > 0;
+
+            if (!tableExists) continue;
+
+            await using var reconcileCmd = conn.CreateCommand();
+            reconcileCmd.CommandText =
+                "INSERT INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") " +
+                "SELECT @migrationId, @efVersion " +
+                "WHERE NOT EXISTS (" +
+                "  SELECT 1 FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\" = @migrationId)";
+            reconcileCmd.Parameters.Add(new Npgsql.NpgsqlParameter("migrationId", migrationId));
+            reconcileCmd.Parameters.Add(new Npgsql.NpgsqlParameter("efVersion", efVersion));
+            var reconcileRows = await reconcileCmd.ExecuteNonQueryAsync();
+
+            if (reconcileRows > 0)
+                logger.LogInformation(
+                    "Existing table {Table} detected without a migration history row — marked {Migration} as applied.",
+                    proxyTable, migrationId);
+        }
     }
     finally
     {

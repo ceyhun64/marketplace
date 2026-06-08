@@ -249,14 +249,16 @@ export function Sidebar({
 
       {/* -- Mobile sidebar — Sheet for < lg ------------------------------- */}
       {/*
-       * SheetContent close button is styled for the dark theme via
-       * the [&>button:first-of-type] selector targeting the direct-child
-       * Radix close button rendered by shadcn's SheetContent.
+       * SheetContent's close button defaults to a light-theme look
+       * (off-white background) which renders as a near-invisible white
+       * blob on our dark charcoal sidebar — overridden for the dark
+       * theme via the [&>button:first-of-type] selector targeting the
+       * direct-child Radix close button rendered by shadcn's SheetContent.
        */}
       <Sheet open={mobileOpen} onOpenChange={onMobileOpenChange}>
         <SheetContent
           side="left"
-          className="w-60 p-0 flex flex-col border-0 [&>button:first-of-type]:text-white/50 [&>button:first-of-type]:hover:text-white [&>button:first-of-type]:ring-offset-0"
+          className="w-60 p-0 flex flex-col border-0 [&>button:first-of-type]:bg-white/10 [&>button:first-of-type]:hover:bg-white/20 [&>button:first-of-type]:text-white/70 [&>button:first-of-type]:hover:text-white [&>button:first-of-type]:ring-offset-0"
           style={{ background: "var(--charcoal)" }}
         >
           {SidebarBrand}
