@@ -83,20 +83,33 @@ static string ToNpgsql(string url, bool isDevelopment)
 // ── Helper: redis:// URL or StackExchange connection string → SE.Redis config ──
 static string ToRedis(string url)
 {
+    string connStr;
+
     // If the value is already a StackExchange.Redis connection string
     // (e.g. "redis:6379,password=xxx" from docker-compose), return as-is.
     // StackExchange.Redis accepts "host:port" and "host:port,password=xxx" natively.
     if (!url.StartsWith("redis://",  StringComparison.OrdinalIgnoreCase) &&
         !url.StartsWith("rediss://", StringComparison.OrdinalIgnoreCase))
-        return url;
+    {
+        connStr = url;
+    }
+    else
+    {
+        // URL format: redis://[:password@]host[:port]
+        var uri      = new Uri(url);
+        var host     = uri.Host;
+        var port     = uri.Port > 0 ? uri.Port : 6379;
+        var password = uri.UserInfo.Contains(':') ? uri.UserInfo.Split(':')[1] : uri.UserInfo;
+        connStr = string.IsNullOrEmpty(password) ? $"{host}:{port}" : $"{host}:{port},password={password}";
+    }
 
-    // URL format: redis://[:password@]host[:port]
-    var uri      = new Uri(url);
-    var host     = uri.Host;
-    var port     = uri.Port > 0 ? uri.Port : 6379;
-    var password = uri.UserInfo.Contains(':') ? uri.UserInfo.Split(':')[1] : uri.UserInfo;
+    // abortConnect=false: ConnectionMultiplexer.Connect() returns a disconnected
+    // multiplexer instead of throwing when Redis is unreachable at startup.
+    // Individual operations still fail, but we catch those at the call site.
+    if (!connStr.Contains("abortConnect", StringComparison.OrdinalIgnoreCase))
+        connStr += ",abortConnect=false";
 
-    return string.IsNullOrEmpty(password) ? $"{host}:{port}" : $"{host}:{port},password={password}";
+    return connStr;
 }
 
 try
@@ -234,7 +247,7 @@ try
         opt.AddPolicy("AdminOnly", p => p.RequireRole("Admin"));
         opt.AddPolicy("MerchantOnly", p => p.RequireRole("Merchant"));
         opt.AddPolicy("CourierOnly", p => p.RequireRole("Courier"));
-        opt.AddPolicy("CustomerOnly", p => p.RequireRole("Customer"));
+        opt.AddPolicy("CustomerOnly", p => p.RequireRole("Customer", "Merchant", "Admin", "Courier"));
         opt.AddPolicy("AdminOrMerchant", p => p.RequireRole("Admin", "Merchant"));
         opt.AddPolicy("AdminOrCourier", p => p.RequireRole("Admin", "Courier")); // ← EKLE
     });
@@ -380,6 +393,7 @@ try
     builder.Services.AddScoped<IStockReservationService, StockReservationService>();
     builder.Services.AddScoped<ILabelGeneratorService, LabelGeneratorService>();
     builder.Services.AddScoped<INotificationService, NotificationService>();
+    builder.Services.AddScoped<IAuditService, AuditService>();
     builder.Services.AddScoped<IPaymentService, PaymentService>();
     builder.Services.AddScoped<ICourierService, CourierService>();
     builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();

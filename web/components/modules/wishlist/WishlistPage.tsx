@@ -11,6 +11,7 @@ import {
   LogIn,
   Share2,
   ShoppingCart,
+  Store,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
@@ -23,6 +24,8 @@ import { useLocalWishlist } from "@/hooks/use-wishlist-local";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { formatPrice } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 function WishlistSkeleton() {
   return (
@@ -93,69 +96,107 @@ function GuestWishlist() {
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {items.map((item) => (
-          <div
-            key={item.productId}
-            className="bg-white rounded-2xl overflow-hidden shadow-sm border border-black/5 group"
-          >
-            {/* Image */}
-            <div className="aspect-square relative flex items-center justify-center bg-gray-50">
-              {item.productImage ? (
-                <img
-                  src={item.productImage}
-                  alt={item.productName}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <ShoppingBag className="w-12 h-12 text-(--charcoal)/20" />
-              )}
-              <button
-                onClick={() => {
-                  local.removeItem(item.productId);
-                  toast.success(`${item.productName} removed from wishlist.`);
-                }}
-                className="absolute top-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-(--red) shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:bg-(--red) hover:text-white"
-                aria-label="Remove from wishlist"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+        {items.map((item) => {
+          const inCart = hasItem(item.productId);
+          return (
+            <div
+              key={item.productId}
+              className="group relative flex flex-col overflow-hidden bg-white transition-all duration-300 hover:-translate-y-0.5"
+              style={{
+                borderRadius: "var(--radius-lg)",
+                border: "1px solid var(--border-light)",
+                boxShadow: "var(--shadow-sm)",
+              }}
+            >
+              {/* Red sweep */}
+              <div
+                className="absolute inset-x-0 top-0 h-0.75 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 z-10"
+                style={{ background: "var(--red)" }}
+              />
 
-            {/* Content */}
-            <div className="p-5">
-              <h3 className="font-bold text-(--charcoal) mb-1 leading-tight">
-                {item.productName}
-              </h3>
-
-              <div className="flex items-center justify-between mt-3">
-                {item.price != null ? (
-                  <span className="text-xl font-bold font-heading text-(--charcoal)">
-                    ${item.price.toFixed(2)}
-                  </span>
+              {/* Image */}
+              <Link href={`/product/${item.productId}`} className="relative block aspect-square overflow-hidden bg-white">
+                {item.productImage ? (
+                  <img
+                    src={item.productImage}
+                    alt={item.productName}
+                    className="w-full h-full object-contain p-2 transition-transform duration-300 group-hover:scale-105"
+                    loading="lazy"
+                  />
                 ) : (
-                  <span className="text-sm text-(--charcoal-soft)">—</span>
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ShoppingBag className="w-12 h-12 text-(--charcoal)/20" />
+                  </div>
                 )}
-                <Button
+              </Link>
+
+              {/* Remove overlay */}
+              <div className="absolute right-2.5 top-2.5 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <button
                   onClick={() => {
-                    addItem({
-                      offerId: item.productId,
-                      productId: item.productId,
-                      productName: item.productName,
-                      productImage: item.productImage,
-                      price: item.price ?? 0,
-                      merchantId: "",
-                    });
-                    toast.success(`${item.productName} added to cart!`);
+                    local.removeItem(item.productId);
+                    toast.success(`${item.productName} removed from wishlist.`);
                   }}
-                  disabled={hasItem(item.productId)}
-                  className="rounded-full bg-(--charcoal) hover:bg-(--red) text-white text-xs font-bold px-5 h-9 transition-all disabled:opacity-60"
+                  className="flex items-center justify-center w-10 h-10 rounded-full shadow-sm transition-all duration-200"
+                  style={{
+                    background: "rgba(255,255,255,0.9)",
+                    border: "1px solid rgba(200,16,46,0.35)",
+                    backdropFilter: "blur(4px)",
+                  }}
+                  aria-label="Remove from wishlist"
                 >
-                  {hasItem(item.productId) ? "In Cart ✓" : "Add to Cart"}
-                </Button>
+                  <Trash2 className="w-4 h-4 text-(--red)" />
+                </button>
+              </div>
+
+              {/* Info */}
+              <div className="flex flex-1 flex-col gap-2 p-3.5">
+                <Link href={`/product/${item.productId}`} className="group/title block">
+                  <h3
+                    className="line-clamp-2 text-sm font-bold leading-snug transition-colors duration-150 text-(--charcoal) group-hover/title:text-(--red)"
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    {item.productName}
+                  </h3>
+                </Link>
+
+                <div className="mt-auto flex items-center justify-between gap-2">
+                  {item.price != null ? (
+                    <span className="text-base font-bold text-(--charcoal) num">
+                      {formatPrice(item.price)}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-(--charcoal-soft)">—</span>
+                  )}
+                  <button
+                    onClick={() => {
+                      addItem({
+                        offerId: item.productId,
+                        productId: item.productId,
+                        productName: item.productName,
+                        productImage: item.productImage,
+                        price: item.price ?? 0,
+                        merchantId: "",
+                      });
+                      toast.success(`${item.productName} added to cart!`);
+                    }}
+                    disabled={inCart}
+                    className={cn(
+                      "h-11 w-11 sm:h-9 sm:w-9 shrink-0 flex items-center justify-center rounded-lg border transition-all duration-150",
+                      inCart
+                        ? "bg-(--red) border-(--red) text-white"
+                        : "border-[rgba(51,51,51,0.15)] bg-transparent text-(--charcoal) hover:bg-(--red) hover:border-(--red) hover:text-white",
+                      "disabled:cursor-not-allowed",
+                    )}
+                    aria-label="Add to cart"
+                  >
+                    <ShoppingCart className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="mt-8 flex items-center justify-between">
@@ -335,74 +376,132 @@ function AuthWishlist() {
       )}
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className="bg-white rounded-2xl overflow-hidden shadow-sm border border-black/5 group"
-          >
-            {/* Image */}
-            <div className="aspect-square relative flex items-center justify-center bg-gray-50">
-              {item.product.images?.[0] ? (
-                <img
-                  src={item.product.images[0]}
-                  alt={item.product.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <ShoppingBag className="w-12 h-12 text-(--charcoal)/20" />
-              )}
-              <button
-                onClick={() => handleRemove(item.productId, item.product.name)}
-                disabled={removeMutation.isPending}
-                className="absolute top-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-(--red) shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:bg-(--red) hover:text-white"
-                aria-label="Remove from wishlist"
-              >
-                {removeMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+        {items.map((item) => {
+          const inCart = hasItem(item.productId);
+          const isOutOfStock = item.product.stock === 0;
+          const isLowStock = item.product.stock > 0 && item.product.stock <= 5;
+          const coverImage = item.product.images?.[0] ?? null;
+          const href = `/product/${item.productId}`;
+
+          return (
+            <div
+              key={item.id}
+              className="group relative flex flex-col overflow-hidden bg-white transition-all duration-300 hover:-translate-y-0.5"
+              style={{
+                borderRadius: "var(--radius-lg)",
+                border: "1px solid var(--border-light)",
+                boxShadow: "var(--shadow-sm)",
+              }}
+            >
+              {/* Red sweep */}
+              <div
+                className="absolute inset-x-0 top-0 h-0.75 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 z-10"
+                style={{ background: "var(--red)" }}
+              />
+
+              {/* Image */}
+              <Link href={href} className="relative block aspect-square overflow-hidden bg-white">
+                {coverImage ? (
+                  <img
+                    src={coverImage}
+                    alt={item.product.name}
+                    className={cn(
+                      "w-full h-full object-contain p-2 transition-transform duration-300 group-hover:scale-105",
+                      isOutOfStock && "opacity-60 grayscale",
+                    )}
+                    loading="lazy"
+                  />
                 ) : (
-                  <Trash2 className="w-4 h-4" />
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ShoppingBag className="w-12 h-12 text-(--charcoal)/20" />
+                  </div>
                 )}
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-5">
-              <Link
-                href={`/store/${item.product.merchant.slug}`}
-                className="text-xs font-mono text-(--charcoal-mid) font-bold uppercase tracking-wider hover:underline"
-              >
-                {item.product.merchant.storeName}
+                {isOutOfStock && (
+                  <div
+                    className="absolute inset-0 flex items-center justify-center backdrop-blur-sm"
+                    style={{ background: "rgba(245,245,243,0.7)" }}
+                  >
+                    <span
+                      className="rounded-full px-3 py-1 text-xs font-mono font-medium tracking-wide"
+                      style={{ background: "rgba(51,51,51,0.08)", color: "var(--charcoal-soft)" }}
+                    >
+                      Out of Stock
+                    </span>
+                  </div>
+                )}
               </Link>
-              <h3 className="font-bold text-(--charcoal) mt-1 mb-3 leading-tight">
-                {item.product.name}
-              </h3>
 
-              <div className="flex items-center justify-between">
-                <span className="text-xl font-bold font-heading text-(--charcoal)">
-                  ${item.product.price.toFixed(2)}
-                </span>
-                <Button
-                  onClick={() => handleAddToCart(item)}
-                  disabled={hasItem(item.productId)}
-                  className="rounded-full bg-(--charcoal) hover:bg-(--red) text-white text-xs font-bold px-5 h-9 transition-all disabled:opacity-60"
+              {/* Remove overlay */}
+              <div className="absolute right-2.5 top-2.5 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <button
+                  onClick={() => handleRemove(item.productId, item.product.name)}
+                  disabled={removeMutation.isPending}
+                  className="flex items-center justify-center w-10 h-10 rounded-full shadow-sm transition-all duration-200"
+                  style={{
+                    background: "rgba(255,255,255,0.9)",
+                    border: "1px solid rgba(200,16,46,0.35)",
+                    backdropFilter: "blur(4px)",
+                  }}
+                  aria-label="Remove from wishlist"
                 >
-                  {hasItem(item.productId) ? "In Cart ✓" : "Add to Cart"}
-                </Button>
+                  {removeMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-(--red)" />
+                  ) : (
+                    <Trash2 className="w-4 h-4 text-(--red)" />
+                  )}
+                </button>
               </div>
 
-              {item.product.stock <= 3 && item.product.stock > 0 && (
-                <p className="text-xs text-(--red) font-semibold mt-2">
-                  Only {item.product.stock} left!
-                </p>
-              )}
-              {item.product.stock === 0 && (
-                <p className="text-xs text-gray-400 font-semibold mt-2">
-                  Out of Stock
-                </p>
-              )}
+              {/* Info */}
+              <div className="flex flex-1 flex-col gap-2 p-3.5">
+                <Link
+                  href={`/store/${item.product.merchant.slug}`}
+                  className="flex items-center gap-1 text-[11px] font-mono tracking-wide transition-colors hover:text-(--red)"
+                  style={{ color: "var(--charcoal-soft)" }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Store className="h-3 w-3 shrink-0" />
+                  {item.product.merchant.storeName}
+                </Link>
+
+                <Link href={href} className="group/title block">
+                  <h3
+                    className="line-clamp-2 text-sm font-bold leading-snug transition-colors duration-150 text-(--charcoal) group-hover/title:text-(--red)"
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    {item.product.name}
+                  </h3>
+                </Link>
+
+                <div className="mt-auto flex items-center justify-between gap-2">
+                  <span className="text-base font-bold text-(--charcoal) num">
+                    {formatPrice(item.product.price)}
+                  </span>
+                  <button
+                    onClick={() => handleAddToCart(item)}
+                    disabled={isOutOfStock || inCart}
+                    className={cn(
+                      "h-11 w-11 sm:h-9 sm:w-9 shrink-0 flex items-center justify-center rounded-lg border transition-all duration-150",
+                      inCart
+                        ? "bg-(--red) border-(--red) text-white"
+                        : "border-[rgba(51,51,51,0.15)] bg-transparent text-(--charcoal) hover:bg-(--red) hover:border-(--red) hover:text-white",
+                      "disabled:opacity-40 disabled:cursor-not-allowed",
+                    )}
+                    aria-label="Add to cart"
+                  >
+                    <ShoppingCart className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+
+                {isLowStock && (
+                  <p className="font-mono text-[10px] font-medium tracking-wide" style={{ color: "var(--red)" }}>
+                    Only {item.product.stock} left!
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="mt-8 flex justify-end">

@@ -69,7 +69,19 @@ public class IdempotencyMiddleware
         var cacheKey = $"idempotency:{idempotencyKey}";
 
         // ── Check for existing cached response ───────────────────────────────
-        var cached = await cache.GetAsync(cacheKey);
+        byte[]? cached = null;
+        try
+        {
+            cached = await cache.GetAsync(cacheKey);
+        }
+        catch (Exception ex)
+        {
+            // Redis unavailable — skip idempotency check and let the request proceed.
+            _logger.LogWarning(ex, "Idempotency cache read failed for key={Key}; proceeding without dedup.", idempotencyKey);
+            await _next(ctx);
+            return;
+        }
+
         if (cached != null)
         {
             var payload = IdempotencyPayload.Deserialize(cached);
@@ -105,16 +117,23 @@ public class IdempotencyMiddleware
                     responseBody
                 );
 
-                await cache.SetAsync(
-                    cacheKey,
-                    payload.Serialize(),
-                    new DistributedCacheEntryOptions
-                    {
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24),
-                    });
+                try
+                {
+                    await cache.SetAsync(
+                        cacheKey,
+                        payload.Serialize(),
+                        new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24),
+                        });
 
-                _logger.LogDebug(
-                    "Idempotency cached: key={Key} status={Status}", idempotencyKey, ctx.Response.StatusCode);
+                    _logger.LogDebug(
+                        "Idempotency cached: key={Key} status={Status}", idempotencyKey, ctx.Response.StatusCode);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Idempotency cache write failed for key={Key}; response still sent.", idempotencyKey);
+                }
             }
 
             // Write buffered response to actual client

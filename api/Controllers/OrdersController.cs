@@ -19,7 +19,10 @@ public class OrdersController(
     AppDbContext db,
     ICurrentUserService currentUser,
     IMediator mediator,
-    IPaymentService paymentService
+    IPaymentService paymentService,
+    INotificationService notifications,
+    IAuditService audit,
+    ILogger<OrdersController> logger
 ) : ControllerBase
 {
     // ─── CUSTOMER ──────────────────────────────────────────────
@@ -234,6 +237,7 @@ public class OrdersController(
         if (!new[] { OrderStatus.Pending, OrderStatus.PaymentConfirmed }.Contains(order.Status))
             return BadRequest(new { message = "Order cannot be cancelled at this stage." });
 
+        var wasPaymentConfirmed = order.Status == OrderStatus.PaymentConfirmed;
         order.Status = OrderStatus.Cancelled;
         order.CancellationReason = dto.Reason;
         order.UpdatedAt = DateTime.UtcNow;
@@ -293,10 +297,27 @@ public class OrdersController(
 
         await db.SaveChangesAsync();
 
-        // Best-effort: cancel any open Stripe PaymentIntent so it doesn't linger
-        // in the dashboard. Fires after the DB commit so cancellation failures
-        // never block the order cancellation response.
-        _ = paymentService.TryCancelPaymentIntentAsync(id);
+        // ── Stripe: cancel intent OR refund depending on payment state ─────────
+        // PaymentConfirmed → payment was captured; issue a full refund.
+        // Pending         → PaymentIntent was never captured; cancel it instead.
+        // Both fire after DB commit so failures never block the cancellation.
+        if (wasPaymentConfirmed)
+        {
+            _ = Task.Run(async () =>
+            {
+                var result = await paymentService.RefundAsync(
+                    id,
+                    new RefundRequestDto { Amount = 0, Reason = "Customer cancellation" }
+                );
+                if (!result.Success)
+                    // Non-fatal: order is cancelled in DB; admin must issue refund manually.
+                    logger.LogError("Refund failed for cancelled order {OrderId}: {Message}", id, result.Message);
+            });
+        }
+        else
+        {
+            _ = paymentService.TryCancelPaymentIntentAsync(id);
+        }
 
         return Ok(new { message = "Order cancelled." });
     }
@@ -721,11 +742,31 @@ public class OrdersController(
         if (!Enum.TryParse<OrderStatus>(dto.Status, ignoreCase: true, out var newStatus))
             return BadRequest(new { message = "Invalid order status." });
 
+        // State machine: only allow forward transitions and admin overrides.
+        if (!OrderStatusTransitions.IsAllowed(order.Status, newStatus))
+            return BadRequest(new
+            {
+                message = $"Cannot transition from '{order.Status.ToApiString()}' to '{newStatus.ToApiString()}'."
+            });
+
+        var oldStatusLabel = order.Status.ToApiString();
         order.Status = newStatus;
         order.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
 
-        return Ok(new { message = "Order status updated.", status = newStatus.ToApiString() });
+        // Notify customer asynchronously — best-effort, non-blocking.
+        var statusLabel = newStatus.ToApiString();
+        _ = notifications.SendOrderStatusNotificationAsync(id, $"Your order status has been updated to: {statusLabel}");
+
+        _ = audit.LogAsync(
+            action: "order.status_changed",
+            resourceType: "Order",
+            resourceId: id.ToString(),
+            oldValue: oldStatusLabel,
+            newValue: statusLabel,
+            actorId: currentUser.UserId);
+
+        return Ok(new { message = "Order status updated.", status = statusLabel });
     }
 
     // ─── HELPER ────────────────────────────────────────────────

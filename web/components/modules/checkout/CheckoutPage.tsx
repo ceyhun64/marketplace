@@ -562,7 +562,7 @@ export default function CheckoutPage() {
     setCreatingOrder(true);
     setOrderError(null);
     try {
-      const { data } = await api.post<{ orderId: string }>(
+      const { data } = await api.post<{ id: string }>(
         "/api/orders",
         {
           items: items.map((i) => ({
@@ -581,7 +581,7 @@ export default function CheckoutPage() {
       if (address.fullName && address.addressLine && address.city && address.postalCode && address.phone) {
         setShippingAddress(address as ShippingAddress);
       }
-      setOrderResult(data.orderId, "");
+      setOrderResult(data.id, "");
       goNext();
     } catch (err: any) {
       setOrderError(

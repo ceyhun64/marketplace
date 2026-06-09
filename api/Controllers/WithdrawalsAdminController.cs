@@ -20,12 +20,14 @@ public class WithdrawalsAdminController : ControllerBase
     private readonly AppDbContext _db;
     private readonly IWalletService _wallet;
     private readonly ICurrentUserService _currentUser;
+    private readonly IAuditService _audit;
 
-    public WithdrawalsAdminController(AppDbContext db, IWalletService wallet, ICurrentUserService currentUser)
+    public WithdrawalsAdminController(AppDbContext db, IWalletService wallet, ICurrentUserService currentUser, IAuditService audit)
     {
         _db = db;
         _wallet = wallet;
         _currentUser = currentUser;
+        _audit = audit;
     }
 
     /// <summary>GET /api/admin/withdrawals — List all withdrawal requests</summary>
@@ -113,6 +115,13 @@ public class WithdrawalsAdminController : ControllerBase
 
         await _db.SaveChangesAsync();
 
+        _ = _audit.LogAsync(
+            action: "withdrawal.approved",
+            resourceType: "WithdrawalRequest",
+            resourceId: id.ToString(),
+            newValue: $"{{\"amount\":{request.Amount},\"merchantId\":\"{request.MerchantId}\"}}",
+            actorId: _currentUser.UserId);
+
         return Ok(new { message = "Withdrawal approved and funds debited.", requestId = id });
     }
 
@@ -134,6 +143,13 @@ public class WithdrawalsAdminController : ControllerBase
         request.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
+
+        _ = _audit.LogAsync(
+            action: "withdrawal.rejected",
+            resourceType: "WithdrawalRequest",
+            resourceId: id.ToString(),
+            newValue: $"{{\"note\":\"{dto.Note}\"}}",
+            actorId: _currentUser.UserId);
 
         return Ok(new { message = "Withdrawal request rejected.", requestId = id });
     }

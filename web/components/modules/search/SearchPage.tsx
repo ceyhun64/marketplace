@@ -480,13 +480,13 @@ export default function SearchPage() {
       const rawItems: any[] = data?.items ?? data?.data ?? (Array.isArray(data) ? data : []);
       const products: Product[] = rawItems.map((p: any) => ({
         id:                p.id ?? "",
-        merchantId:        p.merchantId ?? "",
+        merchantId:        p.merchantId ?? p.merchant?.id ?? "",
         merchantStoreName: p.merchantStoreName ?? p.merchant?.storeName ?? "",
         merchantSlug:      p.merchantSlug ?? p.merchant?.slug ?? "",
         name:              p.name ?? "",
         description:       p.description ?? "",
-        categoryId:        p.categoryId ?? "",
-        categoryName:      p.categoryName ?? p.category?.name ?? "",
+        categoryId:        p.categoryId ?? p.category?.id ?? "",
+        categoryName:      p.categoryName ?? p.categorySlug ?? p.category?.name ?? "",
         images:            p.images ?? [],
         tags:              p.tags ?? [],
         price:             p.price ?? 0,

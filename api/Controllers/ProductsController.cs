@@ -545,9 +545,16 @@ public class ProductsController : ControllerBase
         if (!string.IsNullOrEmpty(subcategory))
             query = query.Where(p => p.Category != null && p.Category.Slug == subcategory);
 
-        // Tag filtresi
+        // Tag filtresi — frontend sends comma-separated "foo,bar" OR repeated params
         if (tags != null && tags.Count > 0)
-            query = query.Where(p => p.Tags.Any(t => tags.Contains(t)));
+        {
+            var normalizedTags = tags
+                .SelectMany(t => t.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                .Where(t => t.Length > 0)
+                .ToList();
+            if (normalizedTags.Count > 0)
+                query = query.Where(p => p.Tags.Any(t => normalizedTags.Contains(t)));
+        }
 
         // Fiyat aralığı
         if (minPrice.HasValue)
@@ -558,38 +565,32 @@ public class ProductsController : ControllerBase
         // Sıralama
         query = sort switch
         {
-            "price_asc" => query.OrderBy(p => p.Price),
+            "price_asc"  => query.OrderBy(p => p.Price),
             "price_desc" => query.OrderByDescending(p => p.Price),
-            _ => query.OrderByDescending(p => p.CreatedAt),
+            "popular"    => query.OrderByDescending(p => p.Stock),
+            _            => query.OrderByDescending(p => p.CreatedAt),
         };
 
         var total = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling(total / (double)limit);
         var results = await query
             .Skip((page - 1) * limit)
             .Take(limit)
             .Select(p => new
             {
                 p.Id,
+                p.MerchantId,
+                p.CategoryId,
                 p.Name,
                 p.Description,
                 p.Images,
                 p.Tags,
                 p.Price,
                 p.Stock,
-                Category = p.Category == null
-                    ? null
-                    : new
-                    {
-                        p.Category.Id,
-                        p.Category.Name,
-                        p.Category.Slug,
-                    },
-                Merchant = new
-                {
-                    p.Merchant.Id,
-                    p.Merchant.StoreName,
-                    p.Merchant.Slug,
-                },
+                CategoryName = p.Category == null ? null : p.Category.Name,
+                CategorySlug = p.Category == null ? null : p.Category.Slug,
+                MerchantStoreName = p.Merchant.StoreName,
+                MerchantSlug      = p.Merchant.Slug,
             })
             .ToListAsync();
 
@@ -597,6 +598,7 @@ public class ProductsController : ControllerBase
             new
             {
                 total,
+                totalPages,
                 page,
                 limit,
                 items = results,

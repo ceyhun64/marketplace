@@ -104,6 +104,13 @@ public class WalletController : ControllerBase
         if (string.IsNullOrWhiteSpace(dto.BankAccountName))
             return BadRequest(new { message = "Bank account name is required." });
 
+        // Merchant must be active and have completed Stripe onboarding (identity verified).
+        var merchant = await _db.MerchantProfiles.FindAsync(merchantId.Value);
+        if (merchant == null || !merchant.IsActive)
+            return BadRequest(new { message = "Your merchant account is not active." });
+        if (!merchant.StripeOnboardingComplete)
+            return BadRequest(new { message = "Please complete your Stripe onboarding before requesting a payout." });
+
         // Use a Serializable transaction so that two concurrent withdrawal requests
         // for the same merchant cannot both pass the balance check and both be saved.
         // Serializable isolation ensures the pending-total read and the INSERT are atomic:

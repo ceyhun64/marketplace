@@ -49,6 +49,9 @@ public class AppDbContext : DbContext
     public DbSet<CommissionRule> CommissionRules => Set<CommissionRule>();
     public DbSet<WithdrawalRequest> WithdrawalRequests => Set<WithdrawalRequest>();
 
+    // ── Audit ─────────────────────────────────────────────────────────────────
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
     // ── Returns & Disputes ────────────────────────────────────────────────────
     public DbSet<ReturnRequest> ReturnRequests => Set<ReturnRequest>();
     public DbSet<ReturnRequestItem> ReturnRequestItems => Set<ReturnRequestItem>();

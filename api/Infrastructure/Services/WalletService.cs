@@ -245,6 +245,16 @@ public class WalletService : IWalletService
         string operationName,
         Func<Task> operation)
     {
+        // When called within an existing ambient transaction (e.g., the Serializable
+        // transaction in CreateOrderCommandHandler), starting another transaction on the
+        // same DbContext connection throws. The ambient transaction already provides
+        // >= RepeatableRead isolation, so run directly and let the caller handle commit/rollback.
+        if (_db.Database.CurrentTransaction != null)
+        {
+            await operation();
+            return;
+        }
+
         for (var attempt = 1; attempt <= MaxConcurrencyRetries; attempt++)
         {
             await using var tx = await _db.Database.BeginTransactionAsync(
