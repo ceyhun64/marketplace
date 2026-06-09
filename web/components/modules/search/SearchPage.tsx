@@ -36,6 +36,7 @@ import { useHybridWishlist } from "@/hooks/use-hybrid-wishlist";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/format";
 import { ProductCard as SharedProductCard } from "@/components/modules/store/ProductCard";
+import api from "@/lib/api";
 
 // --- Types --------------------------------------------------------------------
 
@@ -459,60 +460,66 @@ export default function SearchPage() {
 
   // -- Fetch ------------------------------------------------------------------
   const fetchResults = useCallback(async () => {
+    // No active filters — show the "What are you looking for?" prompt
+    if (!q && !category && !minPrice && !maxPrice && !tags) {
+      setResults(null);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setOffline(false);
     try {
-      const p = new URLSearchParams();
-      if (q)        p.set("q", q);
-      if (category) p.set("category", category);
-      if (minPrice) p.set("minPrice", minPrice);
-      if (maxPrice) p.set("maxPrice", maxPrice);
-      if (tags)     p.set("tags", tags);
-      if (sort && sort !== "relevance") p.set("sort", sort);
-      p.set("page", String(page));
-      p.set("limit", "20");
+      const { data } = await api.get("/api/products/search", {
+        params: {
+          ...(q        && { q }),
+          ...(category && { category }),
+          ...(minPrice && { minPrice }),
+          ...(maxPrice && { maxPrice }),
+          ...(tags     && { tags }),
+          ...(sort && sort !== "relevance" && { sort }),
+          page,
+          limit: 20,
+        },
+      });
 
-      const res  = await fetch(`/api/products/search?${p.toString()}`);
-      if (!res.ok) throw new Error(`Search failed (${res.status})`);
-      const data = await res.json();
-
-      const rawItems: any[] = data?.items ?? data?.data ?? (Array.isArray(data) ? data : []);
+      const rawItems: any[] = data?.items ?? (Array.isArray(data) ? data : []);
       const products: Product[] = rawItems.map((p: any) => ({
         id:                p.id ?? "",
-        merchantId:        p.merchantId ?? p.merchant?.id ?? "",
-        merchantStoreName: p.merchantStoreName ?? p.merchant?.storeName ?? "",
-        merchantSlug:      p.merchantSlug ?? p.merchant?.slug ?? "",
+        merchantId:        p.merchantId ?? "",
+        merchantStoreName: p.merchantStoreName ?? "",
+        merchantSlug:      p.merchantSlug ?? "",
         name:              p.name ?? "",
         description:       p.description ?? "",
-        categoryId:        p.categoryId ?? p.category?.id ?? "",
-        categoryName:      p.categoryName ?? p.categorySlug ?? p.category?.name ?? "",
+        categoryId:        p.categoryId ?? "",
+        categoryName:      p.categoryName ?? "",
         images:            p.images ?? [],
         tags:              p.tags ?? [],
         price:             p.price ?? 0,
         oldPrice:          p.oldPrice ?? undefined,
         stock:             p.stock ?? 0,
-        publishToMarket:   p.publishToMarket ?? true,
-        publishToStore:    p.publishToStore ?? true,
-        isApproved:        p.isApproved ?? true,
-        isDeleted:         p.isDeleted ?? false,
+        publishToMarket:   true,
+        publishToStore:    true,
+        isApproved:        true,
+        isDeleted:         false,
         createdAt:         p.createdAt ?? "",
-        score:             p._score ?? p.score,
-        highlights:        p.highlight ?? p.highlights,
+        score:             p.score,
+        highlights:        p.highlights,
       }));
 
       setResults({
         items:      products,
-        total:      data?.total ?? data?.Total ?? products.length,
+        total:      data?.total ?? products.length,
         page:       data?.page ?? page,
         totalPages: data?.totalPages ?? Math.ceil((data?.total ?? products.length) / 20),
         facets:     data?.facets,
-        queryTime:  data?.took ?? data?.queryTime,
+        queryTime:  data?.queryTime,
         suggestion: data?.suggestion,
       });
-    } catch (err) {
+    } catch (err: any) {
       if (!navigator.onLine) setOffline(true);
-      setError(err instanceof Error ? err.message : "Failed to load results.");
+      setError(err?.response?.data?.message ?? err?.message ?? "Failed to load results.");
     } finally {
       setLoading(false);
     }
@@ -520,11 +527,10 @@ export default function SearchPage() {
 
   // Fetch categories
   useEffect(() => {
-    fetch("/api/categories")
-      .then((r) => r.json())
-      .then((data) => {
-        const cats: Category[] = data?.items ?? data?.data ?? (Array.isArray(data) ? data : []);
-        setCategories(cats.filter((c) => !c.parentId));
+    api.get("/api/categories")
+      .then(({ data }) => {
+        const cats: Category[] = Array.isArray(data) ? data : (data?.items ?? []);
+        setCategories(cats.filter((c: any) => !c.parentId));
       })
       .catch(() => {});
   }, []);

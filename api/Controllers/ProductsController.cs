@@ -521,14 +521,28 @@ public class ProductsController : ControllerBase
             .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && p.Stock > 0)
             .AsQueryable();
 
-        // Full-text search — GIN-indexed tsvector (prefix matching per token)
         if (!string.IsNullOrEmpty(q))
         {
-            var tsQuery = string.Join(" & ",
-                q.Trim()
-                 .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                 .Select(t => t + ":*"));
-            query = query.Where(p => p.SearchVector!.Matches(EF.Functions.ToTsQuery("english", tsQuery)));
+            var qTrimmed = q.Trim();
+            // Strip non-word characters (e.g. "USB-C" → "USBC") to prevent to_tsquery syntax errors
+            var tokens = qTrimmed
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(t => System.Text.RegularExpressions.Regex.Replace(t, @"[^\p{L}\p{N}]", ""))
+                .Where(t => t.Length > 0)
+                .ToList();
+
+            if (tokens.Count > 0)
+            {
+                var tsQuery = string.Join(" & ", tokens.Select(t => t + ":*"));
+                query = query.Where(p =>
+                    (p.SearchVector != null && p.SearchVector.Matches(EF.Functions.ToTsQuery("english", tsQuery)))
+                    || EF.Functions.ILike(p.Name, $"%{qTrimmed}%")
+                );
+            }
+            else
+            {
+                query = query.Where(p => EF.Functions.ILike(p.Name, $"%{qTrimmed}%"));
+            }
         }
 
         // Kategori filtresi (ana kategori slug'ı — hem ana hem alt dahil)
