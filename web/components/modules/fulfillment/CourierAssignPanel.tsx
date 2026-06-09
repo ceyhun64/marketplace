@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Bike } from "lucide-react";
 import {
   useCouriers,
   useAssignCourier,
@@ -147,8 +148,8 @@ export default function CourierAssignPanel({ shipment, onClose }: Props) {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-[var(--charcoal-mid)]/10 flex items-center justify-center text-base">
-                        🚴
+                      <div className="w-9 h-9 rounded-full bg-[var(--charcoal-mid)]/10 flex items-center justify-center">
+                        <Bike className="w-4 h-4 text-[var(--charcoal-mid)]" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm text-[var(--charcoal)]">

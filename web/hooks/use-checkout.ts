@@ -24,6 +24,10 @@ interface CheckoutState {
   isSubmitting: boolean;
   error: string | null;
 
+  // Applied coupon (set from CartPage, consumed by CheckoutPage)
+  appliedCouponCode: string | null;
+  appliedCouponDiscount: number;
+
   // ── Actions ────────────────────────────────────────────────────────────────
   setStep: (step: CheckoutStep) => void;
   nextStep: () => void;
@@ -34,6 +38,8 @@ interface CheckoutState {
   setOrderResult: (orderId: string, paymentToken: string) => void;
   setSubmitting: (v: boolean) => void;
   setError: (msg: string | null) => void;
+  setAppliedCoupon: (code: string, discount: number) => void;
+  clearCoupon: () => void;
   reset: () => void;
 }
 
@@ -68,6 +74,8 @@ export const useCheckout = create<CheckoutState>((set, get) => ({
   paymentToken: null,
   isSubmitting: false,
   error: null,
+  appliedCouponCode: null,
+  appliedCouponDiscount: 0,
 
   setStep: (step) => set({ step }),
   nextStep: () => set({ step: nextStepOf(get().step) }),
@@ -82,6 +90,11 @@ export const useCheckout = create<CheckoutState>((set, get) => ({
   setSubmitting: (v) => set({ isSubmitting: v }),
   setError: (msg) => set({ error: msg }),
 
+  setAppliedCoupon: (code, discount) =>
+    set({ appliedCouponCode: code, appliedCouponDiscount: discount }),
+  clearCoupon: () =>
+    set({ appliedCouponCode: null, appliedCouponDiscount: 0 }),
+
   reset: () =>
     set({
       step: "cart",
@@ -92,6 +105,8 @@ export const useCheckout = create<CheckoutState>((set, get) => ({
       paymentToken: null,
       isSubmitting: false,
       error: null,
+      appliedCouponCode: null,
+      appliedCouponDiscount: 0,
     }),
 }));
 

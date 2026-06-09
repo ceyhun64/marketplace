@@ -1,6 +1,19 @@
 "use client";
 
 import {
+  Clock,
+  Tag,
+  User,
+  Package,
+  Truck,
+  Navigation,
+  CheckCircle2,
+  XCircle,
+  Check,
+  Bike,
+  MapPin,
+} from "lucide-react";
+import {
   SHIPMENT_STATUS_LABELS,
   SHIPMENT_STATUS_ORDER,
   type ShipmentStatus,
@@ -20,15 +33,15 @@ interface Props {
   isFailed?: boolean;
 }
 
-const STATUS_ICONS: Record<ShipmentStatus, string> = {
-  PENDING: "🕐",
-  LABEL_GENERATED: "🏷️",
-  COURIER_ASSIGNED: "👤",
-  PICKED_UP: "📦",
-  IN_TRANSIT: "🚚",
-  OUT_FOR_DELIVERY: "🏃",
-  DELIVERED: "✅",
-  FAILED: "❌",
+const STATUS_ICONS: Record<ShipmentStatus, React.ElementType> = {
+  PENDING: Clock,
+  LABEL_GENERATED: Tag,
+  COURIER_ASSIGNED: User,
+  PICKED_UP: Package,
+  IN_TRANSIT: Truck,
+  OUT_FOR_DELIVERY: Navigation,
+  DELIVERED: CheckCircle2,
+  FAILED: XCircle,
 };
 
 export default function TrackingTimeline({
@@ -77,8 +90,8 @@ export default function TrackingTimeline({
       {/* Courier Info */}
       {courierName && (
         <div className="flex items-center gap-4 bg-white border border-gray-200 rounded-2xl p-4">
-          <div className="w-12 h-12 rounded-full bg-[var(--charcoal-mid)]/10 flex items-center justify-center text-xl">
-            🚴
+          <div className="w-12 h-12 rounded-full bg-[var(--charcoal-mid)]/10 flex items-center justify-center">
+            <Bike className="w-5 h-5 text-[var(--charcoal-mid)]" />
           </div>
           <div className="flex-1">
             <p className="font-semibold text-[var(--charcoal)]">{courierName}</p>
@@ -102,16 +115,21 @@ export default function TrackingTimeline({
             <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--charcoal-soft)]">
               Kurye
             </p>
-            <p
-              className={`text-xs font-medium mt-0.5 ${
-                currentStatus === "DELIVERED"
-                  ? "text-[var(--chart-3)]"
-                  : "text-[var(--red)]"
-              }`}
-            >
-              {STATUS_ICONS[currentStatus]}{" "}
-              {SHIPMENT_STATUS_LABELS[currentStatus]}
-            </p>
+            {(() => {
+              const Icon = STATUS_ICONS[currentStatus];
+              return (
+                <p
+                  className={`text-xs font-medium mt-0.5 flex items-center gap-1 justify-end ${
+                    currentStatus === "DELIVERED"
+                      ? "text-[var(--chart-3)]"
+                      : "text-[var(--red)]"
+                  }`}
+                >
+                  <Icon className="w-3 h-3" />
+                  {SHIPMENT_STATUS_LABELS[currentStatus]}
+                </p>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -127,18 +145,18 @@ export default function TrackingTimeline({
             (status, idx) => {
               const isDone = currentIdx >= idx && !isFailed;
               const isCurrent = currentStatus === status && !isFailed;
-              // Find the event for this status
               const event = events.find((e) => e.status === status);
               const isLast =
                 idx ===
                 SHIPMENT_STATUS_ORDER.filter((s) => s !== "FAILED").length - 1;
+              const Icon = STATUS_ICONS[status];
 
               return (
                 <div key={status} className="flex gap-4">
                   {/* Connector line + dot */}
                   <div className="flex flex-col items-center">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0 border-2 transition-all ${
+                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 transition-all ${
                         isCurrent
                           ? "border-[var(--red)] bg-[var(--red)] text-white shadow-lg shadow-[var(--red)]/20 scale-110"
                           : isDone
@@ -146,7 +164,11 @@ export default function TrackingTimeline({
                             : "border-gray-200 bg-gray-50 text-gray-300"
                       }`}
                     >
-                      {isDone && !isCurrent ? "✓" : STATUS_ICONS[status]}
+                      {isDone && !isCurrent ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <Icon className="w-4 h-4" />
+                      )}
                     </div>
                     {!isLast && (
                       <div
@@ -183,8 +205,9 @@ export default function TrackingTimeline({
                           </p>
                         )}
                         {event.location && (
-                          <p className="text-xs text-[var(--charcoal-mid)] mt-0.5 font-mono">
-                            📍 {event.location}
+                          <p className="text-xs text-[var(--charcoal-mid)] mt-0.5 font-mono flex items-center gap-1">
+                            <MapPin className="w-3 h-3 shrink-0" />
+                            {event.location}
                           </p>
                         )}
                       </div>
@@ -200,8 +223,8 @@ export default function TrackingTimeline({
           {/* Failed state */}
           {isFailed && (
             <div className="flex gap-4 mt-2">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0 border-2 border-red-400 bg-red-50 text-red-500">
-                ❌
+              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 border-red-400 bg-red-50 text-red-500">
+                <XCircle className="w-4 h-4" />
               </div>
               <div className="pt-1">
                 <p className="text-sm font-semibold text-red-500">

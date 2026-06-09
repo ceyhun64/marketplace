@@ -6,6 +6,7 @@ import {
   Clock,
   ChevronRight,
   Home,
+  Zap,
 } from "lucide-react";
 import { FlashSaleFilteredGrid } from "@/components/modules/flash-sale/FlashSaleFilteredGrid";
 
@@ -83,8 +84,7 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
 
 // -- Scrolling ticker ----------------------------------------------------------
 const TICKER_MSG =
-  "⚡ FLASH SALE IS LIVE — Up to 50% off on selected products — " +
-  "Limited stock — Free shipping over $500 — Don't miss out — ";
+  "FLASH SALE IS LIVE — Up to 50% off on selected products — Limited stock — Free shipping over $500 — Don't miss out — ";
 
 function Ticker() {
   return (
@@ -238,10 +238,10 @@ export default function FlashSalePage() {
               >
                 <Clock className="w-3.5 h-3.5" />
                 <span
-                  className="text-[11px] uppercase tracking-[2px] font-bold"
+                  className="text-[11px] uppercase tracking-[2px] font-bold inline-flex items-center gap-1"
                   style={{ color: isUrgent ? "#ff4466" : "rgba(255,255,255,0.35)" }}
                 >
-                  {isUrgent ? "⚡ Ending soon!" : "Sale ends in"}
+                  {isUrgent ? <><Zap className="w-3 h-3" />Ending soon!</> : "Sale ends in"}
                 </span>
               </div>
               <div

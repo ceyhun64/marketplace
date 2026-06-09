@@ -122,7 +122,7 @@ export default function CourierDashboardPage() {
             {profileLoading ? (
               <Skeleton className="h-7 w-40" />
             ) : (
-              `Hi, ${profile?.fullName?.split(" ")[0] ?? "Courier"} 👋`
+              `Hi, ${profile?.fullName?.split(" ")[0] ?? "Courier"}`
             )}
           </h1>
           <p className="text-sm text-(--text-tertiary) mt-1">

@@ -29,8 +29,8 @@ export const ORDER_PAGE_SIZE = 15;
 // ── Shipping ──────────────────────────────────────────────────────────────────
 
 export const SHIPPING_COSTS = {
-  EXPRESS: 49.9,
-  REGULAR: 19.9,
+  EXPRESS: 59.9,
+  REGULAR: 29.9,
 } as const;
 
 /** Average courier speed used in Haversine ETA calculations (km/h) */

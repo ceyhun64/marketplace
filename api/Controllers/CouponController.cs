@@ -18,6 +18,7 @@ public class CouponController : ControllerBase
     }
 
     [HttpPost("validate")]
+    [Authorize]
     public async Task<IActionResult> Validate([FromBody] ValidateCouponDto dto)
     {
         var code = dto.Code.Trim().ToUpperInvariant();

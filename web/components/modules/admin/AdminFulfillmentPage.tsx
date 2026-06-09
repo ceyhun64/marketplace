@@ -31,7 +31,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { toast } from "sonner";
-import { Package, Search, UserCheck, Eye, RefreshCw, Truck, CheckCircle2, AlertCircle } from "lucide-react";
+import { Package, Search, UserCheck, Eye, RefreshCw, Truck, CheckCircle2, AlertCircle, Zap } from "lucide-react";
 import {
   SHIPMENT_STATUS_LABELS,
   SHIPMENT_STATUS_ORDER,
@@ -330,7 +330,7 @@ export default function AdminFulfillmentPage() {
                       className={`text-xs font-medium px-2 py-0.5 rounded-md ${shipment.shippingRate === "EXPRESS" ? "bg-(--warning-bg) text-(--warning)" : "bg-(--off-white-2) text-(--text-secondary)"}`}
                     >
                       {shipment.shippingRate === "EXPRESS"
-                        ? "⚡ Express"
+                        ? <span className="inline-flex items-center gap-1"><Zap className="w-3 h-3" />Express</span>
                         : "Regular"}
                     </span>
                   </TableCell>

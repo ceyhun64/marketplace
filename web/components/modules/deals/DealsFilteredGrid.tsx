@@ -377,7 +377,7 @@ function ActiveChips({
       label: `${formatPrice(priceRange[0])} – ${priceRange[1] >= PRICE_MAX ? formatPrice(PRICE_MAX) + "+" : formatPrice(priceRange[1])}`,
       onRemove: () => { onPriceRange([0, PRICE_MAX]); onPriceCommit([0, PRICE_MAX]); },
     });
-  if (minRating > 0)  chips.push({ label: `${minRating}+ ★`, onRemove: () => onRating(0) });
+  if (minRating > 0)  chips.push({ label: `${minRating}+ Stars`, onRemove: () => onRating(0) });
   if (inStockOnly)    chips.push({ label: "In stock", onRemove: () => onInStock(false) });
   (filters.tags ?? []).forEach((t) =>
     chips.push({ label: t, onRemove: () => onFilter("tags", (filters.tags ?? []).filter((x) => x !== t) || undefined) })

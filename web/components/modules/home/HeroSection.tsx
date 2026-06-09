@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Truck, Store, ChevronRight, ArrowRight } from "lucide-react";
+import { Search, Truck, Store, ChevronRight, ArrowRight, Package } from "lucide-react";
 import { useHeroSettings, type HeroSettings } from "@/queries/useSiteSettings";
 
 // -- Fallback — mirrors the seeded DB defaults --------------------------------
@@ -377,10 +377,9 @@ export default function HeroSection() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 64,
                 }}
               >
-                📦
+                <Package size={56} color="var(--charcoal-soft)" strokeWidth={1} />
               </div>
               <div style={{ padding: "1.5rem" }}>
                 <div

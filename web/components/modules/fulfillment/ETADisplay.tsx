@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { Map, CalendarDays } from "lucide-react";
 import { calculateEta, getEtaLabel, type EtaParams } from "@/lib/shipping";
 import { formatEtaWindow, formatPrice } from "@/lib/format";
 import { SHIPPING_COSTS } from "@/lib/constants";
@@ -86,7 +87,7 @@ export default function ETADisplay({
 
       {/* Distance info */}
       <div className="flex items-center gap-2 text-xs text-[var(--charcoal-soft)]">
-        <span>🗺️</span>
+        <Map className="w-3.5 h-3.5 shrink-0" />
         <span>
           Tahmini mesafe:{" "}
           <strong className="text-[var(--charcoal)]">
@@ -141,7 +142,7 @@ export default function ETADisplay({
                     {description}
                   </p>
                   <p className="text-xs font-mono text-[var(--chart-3)] mt-1">
-                    📅 {getEtaLabel(rate, eta.totalHours)}
+                    <CalendarDays className="w-3 h-3 inline mr-1" />{getEtaLabel(rate, eta.totalHours)}
                   </p>
                   <p className="text-[11px] text-[var(--charcoal-soft)] mt-0.5 font-mono">
                     {deliveryWindow}

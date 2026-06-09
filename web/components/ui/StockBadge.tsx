@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, TrendingUp, Zap } from "lucide-react";
+import { AlertTriangle, TrendingUp, Zap, Flame, Check } from "lucide-react";
 
 interface StockBadgeProps {
   stock: number;
@@ -166,7 +166,9 @@ export function StockBar({ stock, max = 100 }: { stock: number; max?: number }) 
             color: "var(--charcoal-soft)",
           }}
         >
-          {critical ? "⚡ Critical stock" : low ? "🔥 Low stock" : "✓ In stock"}
+          <span className="flex items-center gap-1">
+            {critical ? <><Zap className="w-3 h-3" /> Critical stock</> : low ? <><Flame className="w-3 h-3" /> Low stock</> : <><Check className="w-3 h-3" /> In stock</>}
+          </span>
         </span>
         <span
           style={{

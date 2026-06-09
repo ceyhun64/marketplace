@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import {
   ArrowLeft, Package, MapPin, Clock, Printer, CheckCircle2,
-  Truck, FileText, Navigation, LocateFixed, Wifi, WifiOff,
+  Truck, FileText, Navigation, LocateFixed, Wifi, WifiOff, Zap,
 } from "lucide-react";
 import { useUpdateCourierLocation } from "@/queries/useCouriers";
 
@@ -297,7 +297,7 @@ export default function CourierShipmentDetailPage() {
           <div className="flex items-center justify-between text-sm">
             <span className="text-(--text-secondary)">Shipping Type</span>
             <span className={`font-semibold ${shipment.shippingRate === "EXPRESS" ? "text-(--warning)" : "text-(--text-primary)"}`}>
-              {shipment.shippingRate === "EXPRESS" ? "⚡ Express" : "Standard"}
+              {shipment.shippingRate === "EXPRESS" ? <span className="inline-flex items-center gap-1"><Zap className="w-3 h-3" />Express</span> : "Standard"}
             </span>
           </div>
         </div>

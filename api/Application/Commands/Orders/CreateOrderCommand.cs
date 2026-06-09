@@ -179,6 +179,46 @@ public class CreateOrderCommandHandler
             // the free-shipping threshold check uses the correct cart value.
             var shippingCost = _shippingCalculator.CalculateOrderShipping(total, shippingRate);
 
+            // ── Coupon validation & discount ──────────────────────────────────
+            // Validated inside the Serializable transaction so the usage-limit
+            // check and the UsageCount increment are atomic — no double-spending.
+            decimal discountAmount = 0m;
+            string? appliedCouponCode = null;
+
+            if (!string.IsNullOrWhiteSpace(dto.CouponCode))
+            {
+                var couponCode = dto.CouponCode.Trim().ToUpperInvariant();
+                var coupon = await _context.Coupons
+                    .FirstOrDefaultAsync(c => c.Code == couponCode && c.IsActive, cancellationToken);
+
+                if (coupon == null)
+                    return ServiceResult<OrderDto>.Fail("Coupon code not found or inactive.");
+
+                if (coupon.ExpiresAt.HasValue && coupon.ExpiresAt.Value < DateTime.UtcNow)
+                    return ServiceResult<OrderDto>.Fail("This coupon has expired.");
+
+                if (coupon.UsageLimit.HasValue && coupon.UsageCount >= coupon.UsageLimit.Value)
+                    return ServiceResult<OrderDto>.Fail("This coupon has reached its usage limit.");
+
+                if (total < coupon.MinOrderAmount)
+                    return ServiceResult<OrderDto>.Fail(
+                        $"Minimum order amount for this coupon is ${coupon.MinOrderAmount:F2}.");
+
+                discountAmount = coupon.DiscountType == "percentage"
+                    ? Math.Round(total * (coupon.DiscountValue / 100m), 2)
+                    : coupon.DiscountValue;
+
+                if (coupon.MaxDiscount.HasValue)
+                    discountAmount = Math.Min(discountAmount, coupon.MaxDiscount.Value);
+
+                discountAmount = Math.Min(discountAmount, total); // cannot exceed subtotal
+
+                coupon.UsageCount += 1;
+                appliedCouponCode = coupon.Code;
+            }
+
+            var finalTotal = total + shippingCost - discountAmount;
+
             order = new Order
             {
                 Id = Guid.NewGuid(),
@@ -187,7 +227,9 @@ public class CreateOrderCommandHandler
                 Status = OrderStatus.Pending,
                 ShippingRate = shippingRate,
                 ShippingAmount = shippingCost,
-                TotalAmount = total + shippingCost,
+                CouponCode = appliedCouponCode,
+                DiscountAmount = discountAmount,
+                TotalAmount = finalTotal,
                 RecipientName = dto.ShippingAddress.FullName,
                 RecipientPhone = dto.ShippingAddress.Phone,
                 AddressLine = dto.ShippingAddress.AddressLine,
@@ -283,6 +325,8 @@ public class CreateOrderCommandHandler
                 Id = order.Id,
                 Status = order.Status.ToString(),
                 TotalAmount = order.TotalAmount,
+                DiscountAmount = order.DiscountAmount,
+                CouponCode = order.CouponCode,
                 ShippingRate = order.ShippingRate.ToString(),
                 CreatedAt = order.CreatedAt,
                 Items = orderItems

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useCart, useCartSummary } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
+import { useCheckout } from "@/hooks/use-checkout";
 import { SHIPPING_COSTS } from "@/lib/constants";
 import { formatPrice } from "@/lib/format";
 import { toast } from "sonner";
@@ -48,6 +49,7 @@ export default function CartPage() {
   const [couponApplied, setCouponApplied] = useState(false);
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponLoading, setCouponLoading] = useState(false);
+  const { setAppliedCoupon, clearCoupon } = useCheckout();
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   const handleCheckout = () => {
@@ -76,6 +78,7 @@ export default function CartPage() {
       });
       setCouponDiscount(data.calculatedDiscount);
       setCouponApplied(true);
+      setAppliedCoupon(coupon.trim().toUpperCase(), data.calculatedDiscount);
       toast.success(`Coupon applied! You save $${data.calculatedDiscount.toFixed(2)}`);
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? "Invalid coupon code.";
@@ -520,6 +523,7 @@ export default function CartPage() {
                       setCouponApplied(false);
                       setCoupon("");
                       setCouponDiscount(0);
+                      clearCoupon();
                     }}
                     className="font-mono text-[11px] transition-colors bg-transparent border-none cursor-pointer text-(--charcoal-soft) hover:text-(--red)"
                   >

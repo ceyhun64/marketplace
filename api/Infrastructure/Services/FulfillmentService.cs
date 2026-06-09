@@ -100,21 +100,23 @@ public class FulfillmentService : IFulfillmentService
             newStatus
         );
 
-        // On DELIVERED: move VendorOrder funds into escrow (pending settlement)
+        // On DELIVERED: settle escrow — move funds from PendingBalance to AvailableBalance.
+        // HoldEscrowAsync was already called when the order was created; calling it again
+        // here would double-count the PendingBalance. SettleVendorOrderAsync is the correct
+        // follow-up: it decrements PendingBalance and increments AvailableBalance.
         if (newStatus == ShipmentStatus.Delivered)
         {
-            // Fire-and-forget: hold escrow per vendor order (VendorOrder.Status already Delivered above)
             _ = Task.Run(async () =>
             {
                 foreach (var vo in vendorOrders.Where(v => v.SettledAt == null))
                 {
                     try
                     {
-                        await _walletService.HoldEscrowAsync(vo);
+                        await _walletService.SettleVendorOrderAsync(vo);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Escrow hold failed: VendorOrderId={Id}", vo.Id);
+                        _logger.LogError(ex, "Escrow settlement failed: VendorOrderId={Id}", vo.Id);
                     }
                 }
             });
@@ -194,7 +196,7 @@ public class FulfillmentService : IFulfillmentService
             Status           = ShipmentStatus.Pending,
             TrackingNumber   = trackingNumber,
             EstimatedDelivery = DateTime.UtcNow.AddDays(
-                rate == ShippingRate.Express ? 1 : 3),
+                rate == ShippingRate.Express ? 2 : 5),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };

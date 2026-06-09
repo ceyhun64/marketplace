@@ -2,23 +2,26 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle2, Store, Heart, Loader2 } from "lucide-react";
+import {
+  ArrowUpRight, CheckCircle2, Store, Heart, Loader2,
+  Zap, Leaf, Home, PersonStanding, Shirt, UtensilsCrossed, BookOpen, ShoppingBag,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useStoreList } from "@/queries/useStore";
 import { useStoreFollowStatus, useFollowStore } from "@/queries/useStoreFollow";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { MerchantProfile } from "@/types/entities";
 
-function getStoreEmoji(storeName: string): string {
+function getStoreIcon(storeName: string): React.ElementType {
   const name = storeName.toLowerCase();
-  if (name.includes("tech") || name.includes("elektron")) return "⚡";
-  if (name.includes("beauty") || name.includes("kozmet")) return "🌿";
-  if (name.includes("home") || name.includes("ev")) return "🏠";
-  if (name.includes("sport") || name.includes("spor")) return "🏃";
-  if (name.includes("fashion") || name.includes("giyim")) return "👗";
-  if (name.includes("food") || name.includes("yemek")) return "🍽️";
-  if (name.includes("book") || name.includes("kitap")) return "📚";
-  return "🛍️";
+  if (name.includes("tech") || name.includes("elektron")) return Zap;
+  if (name.includes("beauty") || name.includes("kozmet")) return Leaf;
+  if (name.includes("home") || name.includes("ev")) return Home;
+  if (name.includes("sport") || name.includes("spor")) return PersonStanding;
+  if (name.includes("fashion") || name.includes("giyim")) return Shirt;
+  if (name.includes("food") || name.includes("yemek")) return UtensilsCrossed;
+  if (name.includes("book") || name.includes("kitap")) return BookOpen;
+  return ShoppingBag;
 }
 
 function StoreCardSkeleton() {
@@ -116,7 +119,7 @@ function CardFollowButton({ slug, storeName }: { slug: string; storeName: string
 }
 
 function StoreCard({ store }: { store: MerchantProfile }) {
-  const emoji = getStoreEmoji(store.storeName);
+  const StoreIcon = getStoreIcon(store.storeName);
   return (
     <div
       style={{
@@ -189,7 +192,7 @@ function StoreCard({ store }: { store: MerchantProfile }) {
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           ) : (
-            <span style={{ fontSize: 24 }}>{emoji}</span>
+            <StoreIcon className="w-6 h-6 text-(--red)" />
           )}
         </div>
         <div

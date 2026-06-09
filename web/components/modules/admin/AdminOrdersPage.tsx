@@ -40,6 +40,7 @@ import {
   Package,
   Eye,
   RefreshCw,
+  Zap,
 } from "lucide-react";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { ORDER_STATUS_LABELS, type OrderStatus } from "@/types/enums";
@@ -415,8 +416,8 @@ export default function AdminOrdersPage() {
                   </p>
                   <p>
                     {selectedOrder.shippingRate === "EXPRESS"
-                      ? "⚡ Express"
-                      : "📦 Standard"}
+                      ? <span className="inline-flex items-center gap-1"><Zap className="w-3 h-3" />Express</span>
+                      : <span className="inline-flex items-center gap-1"><Package className="w-3 h-3" />Standard</span>}
                   </p>
                 </div>
                 {selectedOrder.shipment?.trackingNumber && (

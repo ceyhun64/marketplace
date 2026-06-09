@@ -443,6 +443,7 @@ public class AppDbContext : DbContext
         // ── decimal precision ─────────────────────────────────────────────────
         modelBuilder.Entity<Order>().Property(o => o.TotalAmount).HasColumnType("decimal(18,2)");
         modelBuilder.Entity<Order>().Property(o => o.ShippingAmount).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<Order>().Property(o => o.DiscountAmount).HasColumnType("decimal(18,2)");
         modelBuilder.Entity<OrderItem>().Property(i => i.UnitPrice).HasColumnType("decimal(18,2)");
         modelBuilder.Entity<Product>().Property(p => p.Price).HasColumnType("decimal(18,2)");
         modelBuilder

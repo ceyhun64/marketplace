@@ -17,6 +17,8 @@ import {
   CheckCircle2,
   Package,
   AlertCircle,
+  Lock,
+  RotateCcw,
 } from "lucide-react";
 import api from "@/lib/api";
 import { CITY_COORDINATES } from "@/lib/constants";
@@ -516,6 +518,7 @@ export default function CheckoutPage() {
     setError: setOrderError,
     setShippingAddress,
     reset: resetCheckout,
+    appliedCouponCode,
   } = useCheckout();
 
   // Stable idempotency key: one UUID per checkout session so that retrying
@@ -570,6 +573,7 @@ export default function CheckoutPage() {
           shippingAddress: address,
           shippingRate,
           source: "MARKETPLACE",
+          ...(appliedCouponCode ? { couponCode: appliedCouponCode } : {}),
         },
         { headers: { "X-Idempotency-Key": idempotencyKey.current } },
       );
@@ -652,7 +656,7 @@ export default function CheckoutPage() {
               color: "#2d7a4f",
             }}
           >
-            <span>🔒</span>
+            <Lock className="w-3 h-3" />
             SSL Secured
           </div>
         </div>
@@ -768,23 +772,23 @@ export default function CheckoutPage() {
             >
               {[
                 {
-                  icon: "🔒",
+                  Icon: Lock,
                   title: "Secure Payment",
                   desc: "256-bit SSL encryption",
                 },
                 {
-                  icon: "📦",
+                  Icon: Package,
                   title: "Fast Delivery",
                   desc: "Real-time order tracking",
                 },
                 {
-                  icon: "↩️",
+                  Icon: RotateCcw,
                   title: "Easy Returns",
                   desc: "14-day return policy",
                 },
               ].map((badge) => (
                 <div key={badge.title} className="flex items-center gap-3">
-                  <span className="text-lg">{badge.icon}</span>
+                  <badge.Icon className="w-4 h-4 shrink-0 text-(--charcoal-soft)" />
                   <div>
                     <p
                       className="text-[12px] font-bold text-(--charcoal)"

@@ -1017,7 +1017,7 @@ export default function SearchPage() {
           {/* Empty state */}
           {!loading && results && results.items.length === 0 && (
             <div className="text-center py-20">
-              <div className="text-5xl mb-5">🔍</div>
+              <div className="w-16 h-16 rounded-full bg-(--off-white-2) flex items-center justify-center mx-auto mb-5"><Search className="w-7 h-7 text-(--charcoal-soft)" /></div>
               <h2 className="font-bold text-xl mb-2" style={{ color: "var(--charcoal)", fontFamily: "var(--font-display)" }}>
                 No results found
               </h2>

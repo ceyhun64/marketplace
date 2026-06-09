@@ -3,55 +3,65 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import {
+  Check,
+  ClipboardList,
+  Bike,
+  Package,
+  Truck,
+  MapPin,
+  PackageCheck,
+  AlertTriangle,
+} from "lucide-react";
 import { useOrderTracking } from "@/queries/useOrders";
 import type { ShipmentStatus } from "@/types/enums";
 
 const STEPS: {
   status: ShipmentStatus;
   label: string;
-  icon: string;
+  Icon: React.ElementType;
   desc: string;
 }[] = [
   {
     status: "PENDING",
     label: "Payment Confirmed",
-    icon: "✓",
+    Icon: Check,
     desc: "Your payment was received successfully",
   },
   {
     status: "LABEL_GENERATED",
     label: "Preparing",
-    icon: "📋",
+    Icon: ClipboardList,
     desc: "Shipping label generated",
   },
   {
     status: "COURIER_ASSIGNED",
     label: "Courier Assigned",
-    icon: "🏍",
+    Icon: Bike,
     desc: "Courier is on the way to pick up your order",
   },
   {
     status: "PICKED_UP",
     label: "Picked Up",
-    icon: "📦",
+    Icon: Package,
     desc: "Courier has picked up your order",
   },
   {
     status: "IN_TRANSIT",
     label: "In Transit",
-    icon: "🚚",
+    Icon: Truck,
     desc: "Your order is on its way",
   },
   {
     status: "OUT_FOR_DELIVERY",
     label: "Out for Delivery",
-    icon: "📍",
+    Icon: MapPin,
     desc: "Courier is heading to your address",
   },
   {
     status: "DELIVERED",
     label: "Delivered",
-    icon: "🎉",
+    Icon: PackageCheck,
     desc: "Your order has been delivered",
   },
 ];
@@ -185,7 +195,7 @@ export default function TrackingPage() {
           >
             {isDelivered ? (
               <div className="text-center">
-                <p className="text-3xl mb-1">🎉</p>
+                <PackageCheck className="w-10 h-10 text-green-600 mx-auto mb-2" />
                 <p className="font-bold text-green-800 text-lg">
                   Your Order Has Been Delivered
                 </p>
@@ -251,9 +261,9 @@ export default function TrackingPage() {
                   <div key={step.status} className="flex gap-4">
                     <div className="flex flex-col items-center">
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0 transition-all ${done ? (active ? "bg-gray-900 text-white ring-4 ring-gray-200" : "bg-gray-900 text-white") : "bg-gray-100 text-gray-300"}`}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all ${done ? (active ? "bg-gray-900 text-white ring-4 ring-gray-200" : "bg-gray-900 text-white") : "bg-gray-100 text-gray-300"}`}
                       >
-                        {done ? (active ? step.icon : "✓") : ""}
+                        {done ? (active ? <step.Icon className="w-4 h-4" /> : <Check className="w-4 h-4" />) : null}
                       </div>
                       {idx < STEPS.length - 1 && (
                         <div
@@ -280,7 +290,7 @@ export default function TrackingPage() {
           </div>
         ) : (
           <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-center">
-            <p className="text-2xl mb-2">⚠️</p>
+            <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-2" />
             <p className="font-bold text-red-800">Delivery Failed</p>
             <p className="text-sm text-red-600 mt-1">
               The courier could not complete delivery. Please contact support.

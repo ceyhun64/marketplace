@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Package,
+  PackageCheck,
   Truck,
   MapPin,
   Clock,
@@ -12,6 +13,12 @@ import {
   ExternalLink,
   ShoppingBag,
   FileText,
+  ClipboardList,
+  CheckCircle2,
+  Tag,
+  User,
+  Check,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,16 +43,16 @@ import {
 
 // -- Order lifecycle steps — Milestone 2 state machine ------------------------
 
-const LIFECYCLE_STEPS: { status: OrderStatus; label: string; icon: string }[] =
+const LIFECYCLE_STEPS: { status: OrderStatus; label: string; Icon: React.ElementType }[] =
   [
-    { status: "PENDING", label: "Order Placed", icon: "📋" },
-    { status: "PAYMENT_CONFIRMED", label: "Payment Confirmed", icon: "✅" },
-    { status: "LABEL_GENERATED", label: "Label Generated", icon: "🏷️" },
-    { status: "COURIER_ASSIGNED", label: "Courier Assigned", icon: "👤" },
-    { status: "PICKED_UP", label: "Picked Up", icon: "📦" },
-    { status: "IN_TRANSIT", label: "In Transit", icon: "🚚" },
-    { status: "OUT_FOR_DELIVERY", label: "Out for Delivery", icon: "📍" },
-    { status: "DELIVERED", label: "Delivered", icon: "🎉" },
+    { status: "PENDING", label: "Order Placed", Icon: ClipboardList },
+    { status: "PAYMENT_CONFIRMED", label: "Payment Confirmed", Icon: CheckCircle2 },
+    { status: "LABEL_GENERATED", label: "Label Generated", Icon: Tag },
+    { status: "COURIER_ASSIGNED", label: "Courier Assigned", Icon: User },
+    { status: "PICKED_UP", label: "Picked Up", Icon: Package },
+    { status: "IN_TRANSIT", label: "In Transit", Icon: Truck },
+    { status: "OUT_FOR_DELIVERY", label: "Out for Delivery", Icon: MapPin },
+    { status: "DELIVERED", label: "Delivered", Icon: PackageCheck },
   ];
 
 const STATUS_ORDER: OrderStatus[] = LIFECYCLE_STEPS.map((s) => s.status);
@@ -102,7 +109,7 @@ function OrderProgress({ status }: { status: OrderStatus }) {
                         : "bg-gray-100 text-gray-300"
                   }`}
                 >
-                  {isDone ? (isCurrent ? step.icon : "✓") : ""}
+                  {isDone ? (isCurrent ? <step.Icon className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />) : null}
                 </div>
                 {!isLast && (
                   <div
@@ -311,9 +318,11 @@ export default function OrderDetailPage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-900">
-                  {order.shippingRate === "EXPRESS"
-                    ? "⚡ Express Shipping"
-                    : "📦 Standard Shipping"}
+                  <span className="flex items-center gap-1.5">
+                    {order.shippingRate === "EXPRESS"
+                      ? <><Zap className="w-3.5 h-3.5 text-amber-500" /> Express Shipping</>
+                      : <><Package className="w-3.5 h-3.5 text-gray-500" /> Standard Shipping</>}
+                  </span>
                 </p>
                 <p className="text-xs text-gray-400 mt-0.5">
                   Shipping: {formatPrice(order.shippingCost ?? 0)}

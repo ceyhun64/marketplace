@@ -11,6 +11,8 @@ public class OrderDto
     public string Status { get; set; } = string.Empty;
     public decimal TotalAmount { get; set; }
     public decimal ShippingCost { get; set; }
+    public decimal DiscountAmount { get; set; }
+    public string? CouponCode { get; set; }
     public decimal VatAmount { get; set; }
     public string ShippingRate { get; set; } = string.Empty;
     public string? PaymentId { get; set; }
@@ -71,6 +73,7 @@ public class CreateOrderDto
     public ShippingAddressDto ShippingAddress { get; set; } = new();
     public string ShippingRate { get; set; } = "REGULAR";
     public string Source { get; set; } = "MARKETPLACE";
+    public string? CouponCode { get; set; }
 }
 
 public class UpdateOrderStatusDto

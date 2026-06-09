@@ -3,6 +3,7 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
+import { ImageIcon } from "lucide-react";
 import {
   useCloudinaryUpload,
   UploadResult,
@@ -138,7 +139,7 @@ export default function ImageUploader({
             transition-colors
           "
         >
-          <span className="text-3xl">🖼️</span>
+          <ImageIcon className="w-10 h-10 text-gray-400" />
           <p className="text-sm text-gray-500">
             Drag and drop or{" "}
             <span className="text-blue-500 font-medium">click</span>

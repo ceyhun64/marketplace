@@ -199,7 +199,7 @@ export default function BestsellersPage() {
               </div>
               <div className="grid md:grid-cols-3 gap-4">
                 {sortedProducts.slice(0, 3).map((product, i) => {
-                  const medals = ["🥇", "🥈", "🥉"];
+                  const medalColors = ["text-yellow-400", "text-gray-400", "text-amber-600"];
                   const borderColors = [
                     "rgba(250,204,21,0.4)",
                     "rgba(209,213,219,0.4)",
@@ -215,8 +215,8 @@ export default function BestsellersPage() {
                         boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
                       }}
                     >
-                      <div className="absolute top-3 left-3 z-20 text-2xl pointer-events-none select-none">
-                        {medals[i]}
+                      <div className="absolute top-3 left-3 z-20 pointer-events-none select-none">
+                        <Trophy className={`w-6 h-6 ${medalColors[i]}`} fill="currentColor" />
                       </div>
                       <ProductCard product={product} context="marketplace" />
                     </div>

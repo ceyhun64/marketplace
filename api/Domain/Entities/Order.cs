@@ -29,6 +29,10 @@ public class Order
     public bool IsPaid { get; set; } = false;
     public DateTime? PaidAt { get; set; }
 
+    // Coupon discount applied at order placement
+    public string? CouponCode { get; set; }
+    public decimal DiscountAmount { get; set; } = 0m;
+
     public string? CancellationReason { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

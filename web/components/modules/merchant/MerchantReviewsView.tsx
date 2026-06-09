@@ -184,8 +184,8 @@ export default function MerchantReviewsView() {
                     : 0;
                 return (
                   <div key={star} className="flex items-center gap-2 text-xs">
-                    <span className="w-4 text-(--text-secondary) font-medium shrink-0">
-                      {star}★
+                    <span className="w-4 text-(--text-secondary) font-medium shrink-0 inline-flex items-center">
+                      {star}<Star className="w-3 h-3 ml-0.5 fill-current" />
                     </span>
                     <div className="flex-1 h-1.5 bg-(--off-white-2) rounded-full overflow-hidden">
                       <div
@@ -229,7 +229,7 @@ export default function MerchantReviewsView() {
                     : "bg-(--bg-surface) border border-(--border-mid) text-(--text-secondary) hover:border-(--border-mid)"
                 }`}
               >
-                {f === "all" ? "All" : `${f} ★`}
+                {f === "all" ? "All" : <span className="inline-flex items-center gap-0.5">{f}<Star className="w-3 h-3 fill-current" /></span>}
               </button>
             ))}
           </div>

@@ -119,8 +119,8 @@ export default async function StoreProductPage({
                   priority
                 />
               ) : (
-                <div className="h-full flex items-center justify-center text-6xl text-muted-foreground">
-                  📦
+                <div className="h-full flex items-center justify-center text-muted-foreground">
+                  <Package className="w-16 h-16" strokeWidth={1} />
                 </div>
               )}
             </div>

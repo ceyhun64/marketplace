@@ -665,7 +665,7 @@ public class PaymentService : IPaymentService
                     TrackingNumber = GenerateTrackingNumber(),
                     Status = api.Domain.Enums.ShipmentStatus.Pending,
                     EstimatedDelivery = DateTime.UtcNow.AddDays(
-                        order.ShippingRate == api.Domain.Enums.ShippingRate.Express ? 1 : 3
+                        order.ShippingRate == api.Domain.Enums.ShippingRate.Express ? 2 : 5
                     ),
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,

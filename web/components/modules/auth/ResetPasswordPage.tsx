@@ -7,7 +7,7 @@ import api from "@/lib/api";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { KeyRound, ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
+import { KeyRound, ArrowLeft, CheckCircle2, Loader2, Link2 } from "lucide-react";
 import PasswordInput from "@/components/ui/password-input";
 
 function ResetPasswordForm() {
@@ -65,7 +65,7 @@ function ResetPasswordForm() {
 
         <div className="w-full max-w-105 relative text-center">
           <div className="bg-white border border-(--border-light) rounded-[40px] p-10 md:p-14 shadow-(--shadow-lg)">
-            <div className="text-5xl mb-6">🔗</div>
+            <div className="w-16 h-16 rounded-full bg-(--charcoal-subtle) flex items-center justify-center mx-auto mb-6"><Link2 className="w-7 h-7 text-(--charcoal-soft)" /></div>
             <h1 className="font-heading text-[2rem] font-normal text-(--charcoal) mb-3 tracking-tight">
               Invalid Link
             </h1>

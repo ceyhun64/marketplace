@@ -298,7 +298,7 @@ public class FulfillmentController(
         var deliveryStart = pickupStart.AddHours(transitHoursInt);
         var deliveryEnd = pickupEnd.AddHours(transitHoursInt);
 
-        decimal shippingCost = rate == ShippingRate.Express ? 49.9m : 19.9m;
+        decimal shippingCost = shippingCalculator.CalculateOrderShipping(0m, rate);
 
         return Ok(
             new

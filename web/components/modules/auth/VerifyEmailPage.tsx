@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Loader2, MailCheck } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, MailCheck, Link2 } from "lucide-react";
 
 type VerifyState = "loading" | "success" | "error" | "missing_token";
 
@@ -43,7 +43,7 @@ function VerifyEmailContent() {
   if (state === "missing_token") {
     return (
       <Card>
-        <div className="text-5xl mb-6">🔗</div>
+        <div className="w-16 h-16 rounded-full bg-(--charcoal-subtle) flex items-center justify-center mx-auto mb-6"><Link2 className="w-7 h-7 text-(--charcoal-soft)" /></div>
         <h1 className="font-heading text-[2rem] font-normal text-(--charcoal) mb-3 tracking-tight">
           Invalid Link
         </h1>

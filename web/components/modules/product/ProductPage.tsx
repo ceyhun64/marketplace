@@ -16,6 +16,7 @@ import {
   Info,
   Eye,
   ShoppingCart,
+  Sparkles,
   Award,
   BadgeCheck,
   ShieldCheck,
@@ -1758,7 +1759,7 @@ export default function ProductDetailPage() {
                   >
                     <Percent size={13} />
                     {bulkDiscount.hasDiscount
-                      ? `🎉 Bulk Discount Applied — ${bulkDiscount.discountRate}% Off!`
+                      ? <><Sparkles size={13} className="inline mr-1" />Bulk Discount Applied — {bulkDiscount.discountRate}% Off!</>
                       : "Bulk Pricing Available"}
                   </div>
                   <p
@@ -1824,7 +1825,7 @@ export default function ProductDetailPage() {
                     fontFamily: "var(--font-mono)",
                   }}
                 >
-                  🛒 {product.meta.purchaseCount.toLocaleString()} sold
+                  <ShoppingCart className="w-3 h-3 inline mr-1" />{product.meta.purchaseCount.toLocaleString()} sold
                 </span>
               )}
             </div>

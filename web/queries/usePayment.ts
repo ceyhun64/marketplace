@@ -51,6 +51,9 @@ export function useInitiateCheckout() {
       const { data } = await api.post<CheckoutResponse>(
         "/api/payments/checkout",
         body,
+        // Idempotency key scoped to this orderId: retrying the same order never
+        // creates a second PaymentIntent if the first request already succeeded.
+        { headers: { "X-Idempotency-Key": `initiate_${body.orderId}` } },
       );
       return data;
     },
@@ -67,6 +70,7 @@ export function useConfirmPayment() {
       const { data } = await api.post<{ orderId: string; message: string }>(
         "/api/payments/confirm",
         body,
+        { headers: { "X-Idempotency-Key": `confirm_${body.orderId}` } },
       );
       return data;
     },

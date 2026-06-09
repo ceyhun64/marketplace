@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Check, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/format";
 import { PLAN_LABELS, PLAN_COLORS } from "@/types/enums";
@@ -135,8 +136,8 @@ export default function AdminMerchantsTable() {
                     <div className="flex items-center gap-1">
                       <span className="font-mono text-xs text-(--info)">{m.customDomain}</span>
                       {m.domainVerified
-                        ? <span className="text-(--success) text-xs">✓</span>
-                        : <span className="text-(--warning) text-xs">⏳</span>}
+                        ? <Check className="w-3.5 h-3.5 text-(--success)" />
+                        : <Clock className="w-3.5 h-3.5 text-(--warning)" />}
                     </div>
                   ) : (
                     <span className="text-xs text-(--charcoal-mist)">—</span>
@@ -199,7 +200,7 @@ export default function AdminMerchantsTable() {
               {m.customDomain && (
                 <span className="font-mono text-[11px] text-(--info) flex items-center gap-1">
                   {m.customDomain}
-                  {m.domainVerified ? " ✓" : " ⏳"}
+                  {m.domainVerified ? <Check className="w-3 h-3 text-(--success)" /> : <Clock className="w-3 h-3 text-(--warning)" />}
                 </span>
               )}
               {m.createdAt && (

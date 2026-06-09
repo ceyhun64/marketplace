@@ -16,6 +16,7 @@ import {
   Package,
   Star,
   X,
+  Zap,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
@@ -330,8 +331,8 @@ function OrderCard({ order, onReview }: { order: Order; onReview: (item: OrderIt
                 {order.source === "MARKETPLACE" ? "Marketplace" : "E-Store"}
                 {" · "}
                 {order.shippingRate === "EXPRESS"
-                  ? "⚡ Express"
-                  : "📦 Standard"}
+                  ? <span className="inline-flex items-center gap-1"><Zap className="w-3 h-3" />Express</span>
+                  : <span className="inline-flex items-center gap-1"><Package className="w-3 h-3" />Standard</span>}
               </span>
             </div>
 
@@ -425,7 +426,7 @@ function OrderCard({ order, onReview }: { order: Order; onReview: (item: OrderIt
                 fontFamily: "var(--font-mono)",
               }}
             >
-              {order.shippingRate === "EXPRESS" ? "⚡ Express" : "📦 Standard"}
+              {order.shippingRate === "EXPRESS" ? <span className="inline-flex items-center gap-1"><Zap className="w-3 h-3" />Express</span> : <span className="inline-flex items-center gap-1"><Package className="w-3 h-3" />Standard</span>}
             </span>
           </div>
 

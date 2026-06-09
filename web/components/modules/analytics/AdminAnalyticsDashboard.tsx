@@ -12,6 +12,16 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import {
+  Banknote,
+  ShoppingCart,
+  Store,
+  Users,
+  Truck,
+  CheckCircle2,
+  Timer,
+  Package,
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useAdminOverview,
@@ -41,25 +51,25 @@ export default function AdminAnalyticsDashboard() {
               {
                 label: "Toplam GMV",
                 value: overview ? formatPrice(overview.totalGmv) : "—",
-                icon: "💰",
+                Icon: Banknote,
                 color: "var(--chart-3)",
               },
               {
                 label: "Total Orders",
                 value: overview?.totalOrders ?? "—",
-                icon: "🛒",
+                Icon: ShoppingCart,
                 color: "var(--charcoal-mid)",
               },
               {
                 label: "Merchant Count",
                 value: overview?.totalMerchants ?? "—",
-                icon: "🏪",
+                Icon: Store,
                 color: "var(--red)",
               },
               {
                 label: "Customer Count",
                 value: overview?.totalCustomers ?? "—",
-                icon: "👥",
+                Icon: Users,
                 color: "var(--chart-4)",
               },
               {
@@ -67,7 +77,7 @@ export default function AdminAnalyticsDashboard() {
                 value: overview
                   ? `${Math.round(overview.averageDeliveryHours)}s`
                   : "—",
-                icon: "🚚",
+                Icon: Truck,
                 color: "var(--charcoal-mid)",
               },
               {
@@ -75,16 +85,16 @@ export default function AdminAnalyticsDashboard() {
                 value: overview
                   ? formatPercent(overview.fulfillmentSuccessRate)
                   : "—",
-                icon: "✅",
+                Icon: CheckCircle2,
                 color: "var(--chart-3)",
               },
-            ].map(({ label, value, icon, color }) => (
+            ].map(({ label, value, Icon, color }) => (
               <div
                 key={label}
                 className="bg-white border border-gray-200 rounded-xl p-5"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xl">{icon}</span>
+                  <Icon className="w-4 h-4" style={{ color }} />
                   <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--charcoal-soft)]">
                     {label}
                   </p>
@@ -176,21 +186,23 @@ export default function AdminAnalyticsDashboard() {
               {
                 label: "Ort. Teslimat Süresi",
                 value: `${fulfillment.averageDeliveryHours ?? 0}s`,
-                icon: "⏱️",
+                Icon: Timer,
               },
               {
                 label: "Başarı Oranı",
                 value: formatPercent(fulfillment.successRate ?? 0),
-                icon: "✅",
+                Icon: CheckCircle2,
               },
               {
                 label: "Toplam Teslimat",
                 value: fulfillment.totalDeliveries ?? "—",
-                icon: "📦",
+                Icon: Package,
               },
-            ].map(({ label, value, icon }) => (
-              <div key={label} className="text-center p-4  rounded-xl">
-                <div className="text-2xl mb-1">{icon}</div>
+            ].map(({ label, value, Icon }) => (
+              <div key={label} className="text-center p-4 rounded-xl">
+                <div className="flex justify-center mb-1">
+                  <Icon className="w-6 h-6 text-[var(--charcoal-soft)]" />
+                </div>
                 <p className="text-xl font-bold font-heading text-[var(--charcoal)]">
                   {value}
                 </p>
