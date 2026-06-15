@@ -65,7 +65,8 @@ public class AdminStoreSetupTests : IDisposable
             BannerUrl: "https://cdn.example.com/banner.jpg",
             HandlingHours: 48,
             Latitude: 41.0082,
-            Longitude: 28.9784
+            Longitude: 28.9784,
+            Plan: null
         );
 
         // Act
@@ -106,7 +107,8 @@ public class AdminStoreSetupTests : IDisposable
             BannerUrl: null,
             HandlingHours: null,
             Latitude: null,
-            Longitude: null
+            Longitude: null,
+            Plan: null
         );
 
         // Act
@@ -130,7 +132,7 @@ public class AdminStoreSetupTests : IDisposable
         var before = DateTime.UtcNow.AddSeconds(-1);
         var merchantId = await SeedMerchantAsync(updatedAt: before);
 
-        var dto = new AdminStoreSetupDto("Yeni Ad", null, null, null, null, null, null, null);
+        var dto = new AdminStoreSetupDto("Yeni Ad", null, null, null, null, null, null, null, null);
 
         // Act
         await _controller.SetupMerchantStore(merchantId, dto);
@@ -150,7 +152,7 @@ public class AdminStoreSetupTests : IDisposable
     {
         // Arrange
         var merchantId = await SeedMerchantAsync();
-        var dto = new AdminStoreSetupDto("Test", null, null, null, null, null, null, null);
+        var dto = new AdminStoreSetupDto("Test", null, null, null, null, null, null, null, null);
 
         // Act
         var result = await _controller.SetupMerchantStore(merchantId, dto) as OkObjectResult;
@@ -177,7 +179,7 @@ public class AdminStoreSetupTests : IDisposable
         );
         var before = DateTime.UtcNow.AddSeconds(-1);
 
-        var dto = new AdminStoreSetupDto(null, null, null, null, null, null, null, null);
+        var dto = new AdminStoreSetupDto(null, null, null, null, null, null, null, null, null);
 
         // Act
         var result = await _controller.SetupMerchantStore(merchantId, dto);
@@ -199,7 +201,7 @@ public class AdminStoreSetupTests : IDisposable
     {
         // Arrange
         var nonExistentId = Guid.NewGuid();
-        var dto = new AdminStoreSetupDto(null, null, null, null, null, null, null, null);
+        var dto = new AdminStoreSetupDto(null, null, null, null, null, null, null, null, null);
 
         // Act
         var result = await _controller.SetupMerchantStore(nonExistentId, dto);
@@ -221,6 +223,7 @@ public class AdminStoreSetupTests : IDisposable
 
         var dto = new AdminStoreSetupDto(
             "Güncellenmiş Hedef",
+            null,
             null,
             null,
             null,

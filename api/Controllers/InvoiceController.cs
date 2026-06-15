@@ -297,36 +297,42 @@ public class InvoicesController(
         var order = await db
             .Orders.Include(o => o.Items)
             .Include(o => o.Customer)
+            .Include(o => o.Invoices)
             .FirstOrDefaultAsync(o => o.Id == orderId);
 
         if (order == null)
             return NotFound(new ApiResponse<string>("Sipariş bulunamadı."));
 
-        var existing = await db.Invoices.FirstOrDefaultAsync(i => i.OrderId == orderId);
-        if (existing != null)
-            return Conflict(new ApiResponse<string>("Bu sipariş için fatura zaten mevcut."));
+        var vendorOrderCount = await db.VendorOrders.CountAsync(vo => vo.OrderId == orderId);
+        if (vendorOrderCount > 0 && order.Invoices.Count >= vendorOrderCount)
+            return Conflict(new ApiResponse<string>("Bu sipariş için fatura(lar) zaten mevcut."));
 
         try
         {
-            var invoice = await invoiceGenerator.GenerateAndSaveAsync(order);
+            var invoices = await invoiceGenerator.GenerateAndSaveAsync(order);
+            var orderNumber = order.Id.ToString().Substring(0, 8).ToUpper();
+            var source = order.Source.ToString().ToUpper();
+
             return Ok(
-                new ApiResponse<InvoiceSummaryDto>(
-                    new InvoiceSummaryDto
-                    {
-                        Id = invoice.Id,
-                        InvoiceNumber = invoice.InvoiceNumber,
-                        OrderId = invoice.OrderId,
-                        OrderNumber = order.Id.ToString().Substring(0, 8).ToUpper(),
-                        MerchantStoreName = invoice.MerchantStoreName,
-                        CustomerName = invoice.CustomerFullName,
-                        SubTotal = invoice.SubTotal,
-                        VatRate = invoice.VatRate,
-                        VatAmount = invoice.VatAmount,
-                        TotalAmount = invoice.TotalAmount,
-                        PdfUrl = invoice.PdfUrl,
-                        IssuedAt = invoice.IssuedAt,
-                        Source = order.Source.ToString().ToUpper(),
-                    }
+                new ApiResponse<List<InvoiceSummaryDto>>(
+                    invoices
+                        .Select(invoice => new InvoiceSummaryDto
+                        {
+                            Id = invoice.Id,
+                            InvoiceNumber = invoice.InvoiceNumber,
+                            OrderId = invoice.OrderId,
+                            OrderNumber = orderNumber,
+                            MerchantStoreName = invoice.MerchantStoreName,
+                            CustomerName = invoice.CustomerFullName,
+                            SubTotal = invoice.SubTotal,
+                            VatRate = invoice.VatRate,
+                            VatAmount = invoice.VatAmount,
+                            TotalAmount = invoice.TotalAmount,
+                            PdfUrl = invoice.PdfUrl,
+                            IssuedAt = invoice.IssuedAt,
+                            Source = source,
+                        })
+                        .ToList()
                 )
             );
         }
@@ -358,7 +364,12 @@ public class InvoicesController(
             IsSent = i.IsSent,
             IssuedAt = i.IssuedAt,
             LineItems =
-                i.Order?.Items.Select(item => new InvoiceLineItemDto
+                (
+                    i.VendorOrderId.HasValue
+                        ? i.Order?.Items.Where(item => item.VendorOrderId == i.VendorOrderId)
+                        : i.Order?.Items
+                )
+                    ?.Select(item => new InvoiceLineItemDto
                     {
                         ProductName = item.ProductName,
                         Quantity = item.Quantity,

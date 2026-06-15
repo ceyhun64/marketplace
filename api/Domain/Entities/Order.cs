@@ -41,5 +41,7 @@ public class Order
     public User Customer { get; set; } = null!;
     public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
     public Shipment? Shipment { get; set; }
-    public Invoice? Invoice { get; set; }
+
+    /// <summary>One invoice per VendorOrder — multi-vendor orders have one invoice per merchant.</summary>
+    public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
 }

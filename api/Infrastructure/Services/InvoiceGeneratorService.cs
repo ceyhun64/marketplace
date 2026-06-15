@@ -32,7 +32,7 @@ public class InvoiceGeneratorService : IInvoiceGeneratorService
 
     // ── Herkese açık API ──────────────────────────────────────────────────────
 
-    public async Task<Invoice> GenerateAndSaveAsync(Order order)
+    public async Task<List<Invoice>> GenerateAndSaveAsync(Order order)
     {
         var fullOrder =
             await _db
@@ -41,87 +41,136 @@ public class InvoiceGeneratorService : IInvoiceGeneratorService
                 .FirstOrDefaultAsync(o => o.Id == order.Id)
             ?? order;
 
-        var firstMerchantId = fullOrder.Items.FirstOrDefault()?.MerchantId;
-        var merchant = firstMerchantId.HasValue
-            ? await _db
-                .MerchantProfiles.Include(m => m.User)
-                .FirstOrDefaultAsync(m => m.Id == firstMerchantId.Value)
-            : null;
+        var vendorOrders = await _db.VendorOrders
+            .Where(vo => vo.OrderId == fullOrder.Id)
+            .ToListAsync();
 
-        var subTotal = fullOrder.Items.Sum(i => i.LineTotal);
+        var existingInvoices = await _db.Invoices
+            .Where(i => i.OrderId == fullOrder.Id)
+            .ToListAsync();
+
+        var allInvoices = new List<Invoice>(existingInvoices);
+        var newInvoices = new List<Invoice>();
+
+        var orderSubTotal = fullOrder.Items.Sum(i => i.LineTotal);
         var vatRate = 0.20m;
-        var vatAmount = Math.Round(subTotal * vatRate, 2);
-        var total = subTotal + vatAmount + fullOrder.ShippingAmount;
 
-        var invoiceNumber = await GenerateInvoiceNumberAsync();
-
-        var invoice = new Invoice
+        foreach (var vendorOrder in vendorOrders)
         {
-            InvoiceNumber = invoiceNumber,
-            OrderId = fullOrder.Id,
-            MerchantId = merchant?.Id ?? Guid.Empty,
-            CustomerId = fullOrder.CustomerId,
-            SubTotal = subTotal,
-            VatRate = vatRate,
-            VatAmount = vatAmount,
-            ShippingAmount = fullOrder.ShippingAmount,
-            TotalAmount = total,
-            MerchantStoreName = merchant?.StoreName ?? "Marketplace",
-            MerchantAddress = $"{merchant?.Address}, {merchant?.City}",
-            CustomerFullName =
-                $"{fullOrder.Customer?.FirstName} {fullOrder.Customer?.LastName}".Trim(),
-            CustomerEmail = fullOrder.Customer?.Email ?? string.Empty,
-            CustomerAddress =
-                $"{fullOrder.RecipientName} — {fullOrder.AddressLine}, {fullOrder.District}, {fullOrder.City}",
-            IssuedAt = DateTime.UtcNow,
-        };
+            if (existingInvoices.Any(i => i.VendorOrderId == vendorOrder.Id))
+                continue;
 
-        _db.Invoices.Add(invoice);
+            var items = fullOrder.Items.Where(i => i.VendorOrderId == vendorOrder.Id).ToList();
+            if (items.Count == 0)
+                continue;
 
-        _db.AccountingEntries.Add(
-            new AccountingEntry
+            var merchant = await _db
+                .MerchantProfiles.Include(m => m.User)
+                .FirstOrDefaultAsync(m => m.Id == vendorOrder.MerchantId);
+
+            var subTotal = items.Sum(i => i.LineTotal);
+
+            // Proportional allocation of order-level shipping & coupon discount by this
+            // merchant's share of the order subtotal, so the per-vendor invoices
+            // reconcile back to the order total.
+            var share = orderSubTotal > 0 ? subTotal / orderSubTotal : 0m;
+            var shippingShare = Math.Round(fullOrder.ShippingAmount * share, 2);
+            var discountShare = Math.Round(fullOrder.DiscountAmount * share, 2);
+
+            var taxableAmount = subTotal - discountShare;
+            var vatAmount = Math.Round(taxableAmount * vatRate, 2);
+            var total = taxableAmount + vatAmount + shippingShare;
+
+            var invoiceNumber = await GenerateInvoiceNumberAsync();
+
+            var invoice = new Invoice
             {
-                InvoiceId = invoice.Id,
+                InvoiceNumber = invoiceNumber,
                 OrderId = fullOrder.Id,
+                VendorOrderId = vendorOrder.Id,
                 MerchantId = merchant?.Id ?? Guid.Empty,
-                EntryType = "SALE",
-                Amount = total,
-                Description =
-                    $"Sipariş #{fullOrder.Id.ToString()[..8].ToUpper()} — {fullOrder.Items.Count} ürün",
-                PaymentReference = fullOrder.PaymentId,
-            }
-        );
+                CustomerId = fullOrder.CustomerId,
+                SubTotal = subTotal,
+                VatRate = vatRate,
+                VatAmount = vatAmount,
+                ShippingAmount = shippingShare,
+                TotalAmount = total,
+                MerchantStoreName = merchant?.StoreName ?? "Marketplace",
+                MerchantAddress = $"{merchant?.Address}, {merchant?.City}",
+                CustomerFullName =
+                    $"{fullOrder.Customer?.FirstName} {fullOrder.Customer?.LastName}".Trim(),
+                CustomerEmail = fullOrder.Customer?.Email ?? string.Empty,
+                CustomerAddress =
+                    $"{fullOrder.RecipientName} — {fullOrder.AddressLine}, {fullOrder.District}, {fullOrder.City}",
+                IssuedAt = DateTime.UtcNow,
+            };
+
+            _db.Invoices.Add(invoice);
+
+            _db.AccountingEntries.Add(
+                new AccountingEntry
+                {
+                    InvoiceId = invoice.Id,
+                    OrderId = fullOrder.Id,
+                    MerchantId = merchant?.Id ?? Guid.Empty,
+                    EntryType = "SALE",
+                    Amount = total,
+                    Description =
+                        $"Sipariş #{fullOrder.Id.ToString()[..8].ToUpper()} — {items.Count} ürün",
+                    PaymentReference = fullOrder.PaymentId,
+                }
+            );
+
+            newInvoices.Add(invoice);
+            allInvoices.Add(invoice);
+        }
+
+        if (newInvoices.Count == 0)
+            return allInvoices;
 
         await _db.SaveChangesAsync();
 
-        try
+        foreach (var invoice in newInvoices)
         {
-            var pdfBytes = await GeneratePdfBytesAsync(invoice, fullOrder.Items.ToList());
-            var pdfUrl = await UploadToCloudinaryAsync(pdfBytes, invoice.InvoiceNumber);
-            invoice.PdfUrl = pdfUrl;
-            invoice.IsSent = true;
-            await _db.SaveChangesAsync();
-
-            if (!string.IsNullOrEmpty(invoice.CustomerEmail))
+            try
             {
-                await _notification.SendEmailAsync(
-                    invoice.CustomerEmail,
-                    $"Faturanız Hazır — {invoice.InvoiceNumber}",
-                    BuildInvoiceEmailBody(invoice)
-                );
+                var items = fullOrder.Items.Where(i => i.VendorOrderId == invoice.VendorOrderId).ToList();
+                var pdfBytes = await GeneratePdfBytesAsync(invoice, items);
+                var pdfUrl = await UploadToCloudinaryAsync(pdfBytes, invoice.InvoiceNumber);
+                invoice.PdfUrl = pdfUrl;
+                invoice.IsSent = true;
+
+                if (!string.IsNullOrEmpty(invoice.CustomerEmail))
+                {
+                    await _notification.SendEmailAsync(
+                        invoice.CustomerEmail,
+                        $"Faturanız Hazır — {invoice.InvoiceNumber}",
+                        BuildInvoiceEmailBody(invoice)
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fatura PDF üretimi/yükleme başarısız: {InvoiceId}", invoice.Id);
             }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Fatura PDF üretimi/yükleme başarısız: {InvoiceId}", invoice.Id);
-        }
 
-        return invoice;
+        await _db.SaveChangesAsync();
+
+        return allInvoices;
     }
 
     public Task<byte[]> GeneratePdfBytesAsync(Invoice invoice)
     {
-        var items = invoice.Order?.Items?.ToList() ?? [];
+        var allItems = invoice.Order?.Items?.ToList() ?? [];
+
+        // Invoices generated before the per-vendor split have VendorOrderId == null
+        // and their items were never tagged with VendorOrderId either — include
+        // everything for those. New invoices show only this merchant's items.
+        var items = invoice.VendorOrderId.HasValue
+            ? allItems.Where(i => i.VendorOrderId == invoice.VendorOrderId).ToList()
+            : allItems;
+
         return GeneratePdfBytesAsync(invoice, items);
     }
 

@@ -190,6 +190,10 @@ public class CourierDispatchJob
 
         await _db.SaveChangesAsync();
 
+        // Remove from the shared pool so this courier isn't double-assigned to
+        // another shipment later in the same dispatch run.
+        couriers.Remove(chosen);
+
         _logger.LogInformation(
             "Courier auto-dispatched: ShipmentId={ShipmentId} CourierId={CourierId} Distance={Distance:F1}km",
             shipment.Id, chosen.Id, ranked.First().DistanceKm);

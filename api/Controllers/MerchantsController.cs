@@ -17,16 +17,19 @@ public class MerchantsController : ControllerBase
     private readonly AppDbContext _db;
     private readonly ICurrentUserService _currentUser;
     private readonly IConfiguration _config;
+    private readonly ISubscriptionGuard _subscriptionGuard;
 
     public MerchantsController(
         AppDbContext db,
         ICurrentUserService currentUser,
-        IConfiguration config
+        IConfiguration config,
+        ISubscriptionGuard subscriptionGuard
     )
     {
         _db = db;
         _currentUser = currentUser;
         _config = config;
+        _subscriptionGuard = subscriptionGuard;
     }
 
     // ── PROFILE ──────────────────────────────────────────────────────────────
@@ -160,7 +163,7 @@ public class MerchantsController : ControllerBase
         var statsOnMarket = await allProductsQuery.CountAsync(p => p.PublishToMarket);
         var statsOnStore = await allProductsQuery.CountAsync(p => p.PublishToStore);
         var statsPendingApproval = await allProductsQuery.CountAsync(p => !p.IsApproved);
-        var statsOutOfStock = await allProductsQuery.CountAsync(p => p.Stock == 0);
+        var statsOutOfStock = await allProductsQuery.CountAsync(p => p.Stock == 0 && !p.Variants.Any(v => v.IsActive && v.Stock > 0));
         var statsTotal = await allProductsQuery.CountAsync();
 
         // Filtered query for pagination
@@ -175,7 +178,7 @@ public class MerchantsController : ControllerBase
         if (isApproved.HasValue)
             query = query.Where(p => p.IsApproved == isApproved.Value);
         if (outOfStock == true)
-            query = query.Where(p => p.Stock == 0);
+            query = query.Where(p => p.Stock == 0 && !p.Variants.Any(v => v.IsActive && v.Stock > 0));
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(p => p.Name.Contains(search) || p.Description.Contains(search));
 
@@ -279,6 +282,16 @@ public class MerchantsController : ControllerBase
                     }
                 );
         }
+
+        // ── Plan gate: marketplace publish requires Pro+ ─────────────────────
+        if ((dto.PublishToMarket ?? false) && !await _subscriptionGuard.CanPublishToMarketAsync(merchant.Id))
+            return BadRequest(
+                new
+                {
+                    message = $"Mevcut planınız ({plan}) ile marketplace'te ürün yayınlayamazsınız. Lütfen planınızı yükseltin.",
+                    requiredPlan = "Pro",
+                }
+            );
 
         var product = new Product
         {
@@ -447,6 +460,19 @@ public class MerchantsController : ControllerBase
 
         if (product == null)
             return NotFound(new { message = "Ürün bulunamadı." });
+
+        // ── Plan gate: marketplace publish requires Pro+ ─────────────────────
+        if (dto.PublishToMarket == true && !await _subscriptionGuard.CanPublishToMarketAsync(merchant.Id))
+        {
+            var plan = merchant.Subscription?.Plan ?? PlanType.Basic;
+            return BadRequest(
+                new
+                {
+                    message = $"Mevcut planınız ({plan}) ile marketplace'te ürün yayınlayamazsınız. Lütfen planınızı yükseltin.",
+                    requiredPlan = "Pro",
+                }
+            );
+        }
 
         if (dto.PublishToMarket.HasValue)
             product.PublishToMarket = dto.PublishToMarket.Value;

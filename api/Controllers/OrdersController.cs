@@ -20,6 +20,7 @@ public class OrdersController(
     ICurrentUserService currentUser,
     IMediator mediator,
     IPaymentService paymentService,
+    IWalletService walletService,
     INotificationService notifications,
     IAuditService audit,
     ILogger<OrdersController> logger
@@ -63,7 +64,7 @@ public class OrdersController(
             .Include(o => o.Items)
                 .ThenInclude(i => i.Product)
             .Include(o => o.Shipment)
-            .Include(o => o.Invoice)
+            .Include(o => o.Invoices)
             .Where(o => o.CustomerId == currentUser.UserId);
 
         if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, ignoreCase: true, out var ps))
@@ -101,7 +102,7 @@ public class OrdersController(
                     .ThenInclude(p => p.Category)
             .Include(o => o.Shipment)
                 .ThenInclude(s => s!.StatusHistory)
-            .Include(o => o.Invoice)
+            .Include(o => o.Invoices)
             .FirstOrDefaultAsync(o => o.Id == id);
 
         if (order == null)
@@ -248,12 +249,19 @@ public class OrdersController(
         var vendorOrders = await db.VendorOrders.Where(vo => vo.OrderId == id).ToListAsync();
 
         var terminalStatuses = new[] { OrderStatus.Delivered, OrderStatus.Cancelled };
+        var vendorOrdersToReleaseEscrow = new List<VendorOrder>();
         foreach (var vo in vendorOrders)
         {
             if (!terminalStatuses.Contains(vo.Status))
             {
                 vo.Status = OrderStatus.Cancelled;
                 vo.UpdatedAt = DateTime.UtcNow;
+
+                // Escrow was held at order-creation time (HoldEscrowAsync); if it hasn't
+                // been settled yet, the held amount must be returned to the merchant's
+                // PendingBalance so cancelled orders don't leave phantom escrow behind.
+                if (vo.SettledAt == null)
+                    vendorOrdersToReleaseEscrow.Add(vo);
             }
         }
 
@@ -296,6 +304,23 @@ public class OrdersController(
         }
 
         await db.SaveChangesAsync();
+
+        // ── Release held escrow for cancelled vendor orders ─────────────────────
+        // Runs after the main save so wallet retries (which manage their own
+        // transaction) don't interleave with the order/vendor-order/stock changes.
+        foreach (var vo in vendorOrdersToReleaseEscrow)
+        {
+            try
+            {
+                await walletService.ReleaseEscrowAsync(vo);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex,
+                    "Escrow release failed: VendorOrderId={VendorOrderId} OrderId={OrderId}",
+                    vo.Id, id);
+            }
+        }
 
         // ── Stripe: cancel intent OR refund depending on payment state ─────────
         // PaymentConfirmed → payment was captured; issue a full refund.
@@ -375,8 +400,8 @@ public class OrdersController(
                 ShipmentStatus = o.Shipment != null ? (ShipmentStatus?)o.Shipment.Status : null,
                 ShipmentEstimatedDelivery = o.Shipment != null ? (DateTime?)o.Shipment.EstimatedDelivery : null,
                 ShipmentLabelUrl = o.Shipment != null ? o.Shipment.LabelUrl : null,
-                InvoiceNumber = o.Invoice != null ? o.Invoice.InvoiceNumber : null,
-                VatAmount = o.Invoice != null ? (decimal?)o.Invoice.VatAmount : null,
+                InvoiceNumber = o.Invoices.OrderBy(inv => inv.IssuedAt).Select(inv => inv.InvoiceNumber).FirstOrDefault(),
+                VatAmount = o.Invoices.Any() ? (decimal?)o.Invoices.Sum(inv => inv.VatAmount) : null,
                 FirstMerchantId = o.Items.Select(i => (Guid?)i.MerchantId).FirstOrDefault(),
                 FirstMerchantStoreName = o.Items.Select(i => i.Product.Merchant.StoreName)
                     .FirstOrDefault()
@@ -642,7 +667,7 @@ public class OrdersController(
                 .ThenInclude(i => i.Product)
             .Include(o => o.Customer)
             .Include(o => o.Shipment)
-            .Include(o => o.Invoice)
+            .Include(o => o.Invoices)
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, ignoreCase: true, out var ps))
@@ -771,8 +796,11 @@ public class OrdersController(
 
     // ─── HELPER ────────────────────────────────────────────────
 
-    private static OrderDto MapOrderToDto(Order order) =>
-        new()
+    private static OrderDto MapOrderToDto(Order order)
+    {
+        var primaryInvoice = order.Invoices.OrderBy(i => i.IssuedAt).FirstOrDefault();
+
+        return new()
         {
             Id = order.Id,
             CustomerId = order.CustomerId,
@@ -787,7 +815,7 @@ public class OrdersController(
             Status = order.Status.ToApiString(),
             TotalAmount = order.TotalAmount,
             ShippingCost = order.ShippingAmount,
-            VatAmount = order.Invoice?.VatAmount ?? 0,
+            VatAmount = order.Invoices.Sum(i => i.VatAmount),
             ShippingRate = order.ShippingRate.ToApiString(),
             PaymentId = order.PaymentId,
             ShippingAddress = new ShippingAddressDto
@@ -825,10 +853,14 @@ public class OrdersController(
                         LabelUrl = order.Shipment.LabelUrl,
                     },
             // Milestone 3: Auto QuestPDF invoice — generated when payment is confirmed
-            InvoiceId = order.Invoice?.Id,
-            InvoiceNumber = order.Invoice?.InvoiceNumber,
-            InvoicePdfUrl = order.Invoice?.PdfUrl,
+            // For multi-vendor orders, the "primary" (earliest-issued) invoice is
+            // surfaced here for backward compatibility; full per-merchant invoice
+            // details are available via GET /api/invoices.
+            InvoiceId = primaryInvoice?.Id,
+            InvoiceNumber = primaryInvoice?.InvoiceNumber,
+            InvoicePdfUrl = primaryInvoice?.PdfUrl,
             CreatedAt = order.CreatedAt,
             UpdatedAt = order.UpdatedAt,
         };
+    }
 }

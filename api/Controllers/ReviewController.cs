@@ -139,7 +139,7 @@ public class ReviewController : ControllerBase
 
             // Sadece kendi yorumunu silebilir (Admin tüm yorumları silebilir)
             var userRole = _currentUser.Role;
-            if (review.CustomerId != userId && userRole != "admin")
+            if (review.CustomerId != userId && userRole != "Admin")
                 return Forbid();
 
             _db.Reviews.Remove(review);

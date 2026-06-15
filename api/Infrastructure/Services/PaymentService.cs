@@ -595,7 +595,35 @@ public class PaymentService : IPaymentService
 
         order.Status = OrderStatus.Failed;
         order.UpdatedAt = DateTime.UtcNow;
+
+        // ── Release held escrow for this order's vendor orders ──────────────────
+        // HoldEscrowAsync runs at order-creation time, before payment is confirmed,
+        // so a failed payment must give that PendingBalance back to the merchants.
+        var vendorOrders = await _db.VendorOrders
+            .Where(vo => vo.OrderId == orderId && vo.SettledAt == null)
+            .ToListAsync();
+
+        foreach (var vo in vendorOrders)
+        {
+            vo.Status = OrderStatus.Failed;
+            vo.UpdatedAt = DateTime.UtcNow;
+        }
+
         await _db.SaveChangesAsync();
+
+        foreach (var vo in vendorOrders)
+        {
+            try
+            {
+                await _wallet.ReleaseEscrowAsync(vo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Escrow release failed: VendorOrderId={VendorOrderId} OrderId={OrderId}",
+                    vo.Id, orderId);
+            }
+        }
 
         _logger.LogWarning(
             "❌ Payment failed: OrderId={OrderId} IntentId={IntentId}",
@@ -745,9 +773,12 @@ public class PaymentService : IPaymentService
 
                     if (orderForInvoice != null)
                     {
-                        var invoice = await invoiceGen.GenerateAndSaveAsync(orderForInvoice);
-                        if (!string.IsNullOrEmpty(invoice.PdfUrl))
-                            await notification.SendInvoiceEmailAsync(capturedOrderId, invoice.PdfUrl);
+                        var invoices = await invoiceGen.GenerateAndSaveAsync(orderForInvoice);
+                        foreach (var invoice in invoices)
+                        {
+                            if (!string.IsNullOrEmpty(invoice.PdfUrl))
+                                await notification.SendInvoiceEmailAsync(capturedOrderId, invoice.PdfUrl);
+                        }
                     }
 
                     await notification.SendOrderStatusNotificationAsync(

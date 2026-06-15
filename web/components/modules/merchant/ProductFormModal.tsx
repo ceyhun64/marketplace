@@ -338,9 +338,11 @@ export default function ProductFormModal({
             <>
               {/* Images */}
               <MultiImageUploader
+                key={product?.id ?? "new"}
                 label="Product Images"
                 folder="marketplace/products"
                 maxFiles={6}
+                initialUrls={product?.images ?? []}
                 onUpdate={(urls) => set("images", urls)}
               />
 

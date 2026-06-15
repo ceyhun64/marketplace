@@ -73,6 +73,12 @@ public class CreateProductCommandHandler
                 throw new InvalidOperationException(
                     $"Ürün limitinize ulaştınız ({limit}). Daha fazla ürün eklemek için planınızı yükseltin."
                 );
+
+            // ── Plan gate: marketplace publish requires Pro+ ──────────────────
+            if (request.PublishToMarket && !await _subscriptionGuard.CanPublishToMarketAsync(merchantId))
+                throw new InvalidOperationException(
+                    "Mevcut planınızla marketplace'te ürün yayınlayamazsınız. Lütfen planınızı yükseltin."
+                );
         }
 
         var product = new Product

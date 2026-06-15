@@ -79,7 +79,10 @@ public class AppDbContext : DbContext
         // Each VendorOrder gets at most one Shipment
         modelBuilder.Entity<Shipment>().HasIndex(s => s.VendorOrderId).IsUnique();
         modelBuilder.Entity<Invoice>().HasIndex(i => i.InvoiceNumber).IsUnique();
-        modelBuilder.Entity<Invoice>().HasIndex(i => i.OrderId).IsUnique();
+        // OrderId is NO LONGER unique — one Order can have many Invoices (one per VendorOrder)
+        modelBuilder.Entity<Invoice>().HasIndex(i => i.OrderId);
+        // Each VendorOrder gets at most one Invoice
+        modelBuilder.Entity<Invoice>().HasIndex(i => i.VendorOrderId).IsUnique();
         modelBuilder.Entity<Subscription>().HasIndex(s => s.MerchantId).IsUnique();
         modelBuilder.Entity<MerchantWallet>().HasIndex(w => w.MerchantId).IsUnique();
         modelBuilder.Entity<ProductVariant>().HasIndex(v => new { v.ProductId, v.SKU }).IsUnique();
@@ -241,12 +244,20 @@ public class AppDbContext : DbContext
             .WithOne(s => s.Order)
             .HasForeignKey<Shipment>(s => s.OrderId);
 
-        // ── Order → Invoice (1:1) ─────────────────────────────────────────────
+        // ── Order → Invoices (1:N, one per VendorOrder) ───────────────────────
         modelBuilder
             .Entity<Order>()
-            .HasOne(o => o.Invoice)
+            .HasMany(o => o.Invoices)
             .WithOne(i => i.Order)
-            .HasForeignKey<Invoice>(i => i.OrderId)
+            .HasForeignKey(i => i.OrderId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ── VendorOrder → Invoice (1:1) ────────────────────────────────────────
+        modelBuilder
+            .Entity<Invoice>()
+            .HasOne(i => i.VendorOrder)
+            .WithMany()
+            .HasForeignKey(i => i.VendorOrderId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // ── Invoice → AccountingEntries (1:N) ─────────────────────────────────

@@ -58,7 +58,7 @@ public class StoreController : ControllerBase
                 m.HandlingHours,
                 m.CreatedAt,
                 ProductCount = m.Products.Count(p =>
-                    p.PublishToStore && p.Stock > 0 && !p.IsDeleted
+                    p.PublishToStore && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0)) && !p.IsDeleted
                 ),
                 AverageRating = m.Products
                     .SelectMany(p => p.Reviews)
@@ -109,7 +109,7 @@ public class StoreController : ControllerBase
                 m.DomainVerified,
                 m.CreatedAt,
                 ProductCount = m.Products.Count(p =>
-                    p.PublishToStore && p.Stock > 0 && !p.IsDeleted
+                    p.PublishToStore && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0)) && !p.IsDeleted
                 ),
             })
             .FirstOrDefaultAsync();
@@ -140,7 +140,7 @@ public class StoreController : ControllerBase
                 m.City,
                 m.CreatedAt,
                 ProductCount = m.Products.Count(p =>
-                    p.PublishToStore && p.Stock > 0 && !p.IsDeleted
+                    p.PublishToStore && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0)) && !p.IsDeleted
                 ),
             })
             .FirstOrDefaultAsync();
@@ -164,7 +164,7 @@ public class StoreController : ControllerBase
                     m.City,
                     m.CreatedAt,
                     ProductCount = m.Products.Count(p =>
-                        p.PublishToStore && p.Stock > 0 && !p.IsDeleted
+                        p.PublishToStore && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0)) && !p.IsDeleted
                     ),
                 })
                 .FirstOrDefaultAsync();
@@ -201,7 +201,7 @@ public class StoreController : ControllerBase
             .Products.Include(p => p.Category)
             .Include(p => p.Merchant)
             .Where(p =>
-                p.MerchantId == merchant.Id && p.PublishToStore && p.Stock > 0 && !p.IsDeleted
+                p.MerchantId == merchant.Id && p.PublishToStore && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0)) && !p.IsDeleted
             )
             .AsQueryable();
 

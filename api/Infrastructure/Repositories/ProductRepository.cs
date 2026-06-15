@@ -30,7 +30,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
     {
         var query = _set.Include(p => p.Category)
             .Include(p => p.Merchant)
-            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && p.Stock > 0)
+            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0)))
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -73,7 +73,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
     ) =>
         await _set.Include(p => p.Category)
             .Include(p => p.Merchant)
-            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && p.Stock > 0)
+            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0)))
             .OrderByDescending(p => p.CreatedAt)
             .Take(limit)
             .ToListAsync(ct);

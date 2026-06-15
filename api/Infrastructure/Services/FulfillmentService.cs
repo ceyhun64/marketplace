@@ -72,23 +72,33 @@ public class FulfillmentService : IFulfillmentService
             }
         );
 
-        var order = await _db.Orders.FindAsync(shipment.OrderId);
-        if (order != null)
-        {
-            order.Status = MapToOrderStatus(newStatus);
-            order.UpdatedAt = DateTime.UtcNow;
-        }
+        var mappedOrderStatus = MapToOrderStatus(newStatus);
 
-        // Mirror status to all VendorOrders for this shipment's order
+        // Update only the VendorOrder this shipment belongs to — per-merchant
+        // shipments must not bleed their status into sibling merchants' sub-orders.
+        // Legacy single-shipment orders (VendorOrderId == null) fall back to mirroring all.
         var vendorOrders = await _db.VendorOrders
             .Where(vo => vo.OrderId == shipment.OrderId)
             .ToListAsync();
 
-        var mappedOrderStatus = MapToOrderStatus(newStatus);
-        foreach (var vo in vendorOrders)
+        var updatedVendorOrders = shipment.VendorOrderId.HasValue
+            ? vendorOrders.Where(vo => vo.Id == shipment.VendorOrderId.Value).ToList()
+            : vendorOrders;
+
+        foreach (var vo in updatedVendorOrders)
         {
             vo.Status = mappedOrderStatus;
             vo.UpdatedAt = DateTime.UtcNow;
+        }
+
+        // Mirror to the parent Order only once every VendorOrder has reached this
+        // status — otherwise the order-level status would prematurely jump ahead
+        // of sibling merchants whose shipments haven't progressed yet.
+        var order = await _db.Orders.FindAsync(shipment.OrderId);
+        if (order != null && vendorOrders.Count > 0 && vendorOrders.All(vo => vo.Status == mappedOrderStatus))
+        {
+            order.Status = mappedOrderStatus;
+            order.UpdatedAt = DateTime.UtcNow;
         }
 
         await _db.SaveChangesAsync();
@@ -104,11 +114,13 @@ public class FulfillmentService : IFulfillmentService
         // HoldEscrowAsync was already called when the order was created; calling it again
         // here would double-count the PendingBalance. SettleVendorOrderAsync is the correct
         // follow-up: it decrements PendingBalance and increments AvailableBalance.
+        // Only settle the VendorOrder(s) this shipment actually transitioned —
+        // sibling merchants' sub-orders are unaffected until their own shipment delivers.
         if (newStatus == ShipmentStatus.Delivered)
         {
             _ = Task.Run(async () =>
             {
-                foreach (var vo in vendorOrders.Where(v => v.SettledAt == null))
+                foreach (var vo in updatedVendorOrders.Where(v => v.SettledAt == null))
                 {
                     try
                     {

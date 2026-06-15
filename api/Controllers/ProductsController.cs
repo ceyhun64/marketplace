@@ -19,16 +19,20 @@ public class ProductsController : ControllerBase
     private readonly IConfiguration _config;
     private readonly ILogger<ProductsController> _logger;
 
+    private readonly ISubscriptionGuard _subscriptionGuard;
+
     public ProductsController(
         AppDbContext db,
         IMediator mediator,
         IConfiguration config,
-        ILogger<ProductsController> logger)
+        ILogger<ProductsController> logger,
+        ISubscriptionGuard subscriptionGuard)
     {
         _db = db;
         _mediator = mediator;
         _config = config;
         _logger = logger;
+        _subscriptionGuard = subscriptionGuard;
     }
 
     // ── PUBLIC ──────────────────────────────────────────────────────────────
@@ -51,7 +55,7 @@ public class ProductsController : ControllerBase
             .Products.Include(p => p.Category)
                 .ThenInclude(c => c!.Parent)
             .Include(p => p.Merchant)
-            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && p.Stock > 0)
+            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0)))
             .AsQueryable();
 
         // Kategori filtresi: ana kategori slug'ına göre (hem ana hem alt kategoriler dahil)
@@ -199,7 +203,7 @@ public class ProductsController : ControllerBase
                 && !p.IsDeleted
                 && p.IsApproved
                 && p.PublishToMarket
-                && p.Stock > 0
+                && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0))
             )
             .OrderByDescending(p => p.CreatedAt)
             .Take(8)
@@ -226,7 +230,7 @@ public class ProductsController : ControllerBase
                 && !p.IsDeleted
                 && p.IsApproved
                 && p.PublishToMarket
-                && p.Stock > 0
+                && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0))
             )
             .OrderByDescending(p => p.CreatedAt)
             .Take(8)
@@ -449,7 +453,7 @@ public class ProductsController : ControllerBase
     {
         var product = await _db
             .Products.Include(p => p.Merchant)
-            .Where(p => p.Id == id && !p.IsDeleted && p.IsApproved && p.Stock > 0)
+            .Where(p => p.Id == id && !p.IsDeleted && p.IsApproved && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0)))
             .Select(p => new
             {
                 OfferId = p.Id,
@@ -481,7 +485,7 @@ public class ProductsController : ControllerBase
     {
         var offers = await _db
             .Products.Include(p => p.Merchant)
-            .Where(p => p.Id == id && !p.IsDeleted && p.IsApproved && p.Stock > 0)
+            .Where(p => p.Id == id && !p.IsDeleted && p.IsApproved && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0)))
             .Select(p => new
             {
                 Id = p.Id,
@@ -518,7 +522,7 @@ public class ProductsController : ControllerBase
             .Products.Include(p => p.Category)
                 .ThenInclude(c => c!.Parent)
             .Include(p => p.Merchant)
-            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && p.Stock > 0)
+            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0)))
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(q))
@@ -626,7 +630,7 @@ public class ProductsController : ControllerBase
     {
         var products = await _db
             .Products.Include(p => p.Merchant)
-            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && p.Stock > 0)
+            .Where(p => !p.IsDeleted && p.PublishToMarket && p.IsApproved && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0)))
             .OrderByDescending(p => p.CreatedAt)
             .Take(limit)
             .Select(p => new
@@ -837,6 +841,18 @@ public class ProductsController : ControllerBase
             if (merchant == null || product.MerchantId != merchant.Id)
                 return Forbid();
 
+            // ── Plan gate: marketplace publish requires Pro+ ─────────────────
+            if (dto.PublishToMarket == true && !await _subscriptionGuard.CanPublishToMarketAsync(merchant.Id))
+            {
+                var plan = merchant.Subscription?.Plan ?? api.Domain.Enums.PlanType.Basic;
+                return BadRequest(
+                    new
+                    {
+                        message = $"Mevcut planınız ({plan}) ile marketplace'te ürün yayınlayamazsınız. Lütfen planınızı yükseltin.",
+                        requiredPlan = "Pro",
+                    }
+                );
+            }
         }
 
         if (dto.Name != null)
@@ -1079,7 +1095,7 @@ public class ProductsController : ControllerBase
                     && !p.IsDeleted
                     && p.IsApproved
                     && p.PublishToMarket
-                    && p.Stock > 0
+                    && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0))
                 )
                 .OrderByDescending(p => p.CreatedAt)
                 .Take(4)
@@ -1111,7 +1127,7 @@ public class ProductsController : ControllerBase
                 && !p.IsDeleted
                 && p.IsApproved
                 && p.PublishToMarket
-                && p.Stock > 0
+                && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0))
             )
             .Select(p => new
             {

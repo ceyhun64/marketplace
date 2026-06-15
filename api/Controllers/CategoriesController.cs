@@ -60,7 +60,7 @@ public class CategoriesController : ControllerBase
 
         var products = await _db.Products
             .Include(p => p.Merchant)
-            .Where(p => !p.IsDeleted && p.IsApproved && categoryIds.Contains(p.CategoryId) && p.Stock > 0)
+            .Where(p => !p.IsDeleted && p.IsApproved && categoryIds.Contains(p.CategoryId) && (p.Stock > 0 || p.Variants.Any(v => v.IsActive && v.Stock > 0)))
             .OrderByDescending(p => p.CreatedAt)
             .Skip((page - 1) * limit)
             .Take(limit)

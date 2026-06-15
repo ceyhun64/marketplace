@@ -33,25 +33,26 @@ public class AnalyticsService : IAnalyticsService
             )
             .ToListAsync();
 
-        var merchantOrders = items.GroupBy(i => i.Order).Select(g => g.Key).ToList();
-
-        // Kanal ayrımlı periyot verisi — Marketplace + EStore ayrı kayıt olarak döner
-        var salesByPeriod = merchantOrders
-            .GroupBy(o =>
+        // Kanal ayrımlı periyot verisi — Marketplace + EStore ayrı kayıt olarak döner.
+        // Revenue is this merchant's own line-item total (LineTotal), not the
+        // full Order.TotalAmount — a multi-vendor order's total belongs to all
+        // merchants in it, not just this one.
+        var salesByPeriod = items
+            .GroupBy(i =>
             (
                 Label: period.ToLower() switch
                 {
-                    "daily" => o.CreatedAt.ToString("HH:00"),
-                    "weekly" => o.CreatedAt.DayOfWeek.ToString(),
-                    _ => o.CreatedAt.ToString("yyyy-MM-dd"),
+                    "daily" => i.Order.CreatedAt.ToString("HH:00"),
+                    "weekly" => i.Order.CreatedAt.DayOfWeek.ToString(),
+                    _ => i.Order.CreatedAt.ToString("yyyy-MM-dd"),
                 },
-                Source: o.Source == OrderSource.Marketplace ? "MARKETPLACE" : "ESTORE"
+                Source: i.Order.Source == OrderSource.Marketplace ? "MARKETPLACE" : "ESTORE"
             ))
             .Select(g => new SalesPeriodDto
             {
                 Label = g.Key.Label,
-                Revenue = g.Sum(o => o.TotalAmount),
-                OrderCount = g.Count(),
+                Revenue = g.Sum(i => i.LineTotal),
+                OrderCount = g.Select(i => i.OrderId).Distinct().Count(),
                 Source = g.Key.Source,
             })
             .OrderBy(x => x.Label)
@@ -60,8 +61,8 @@ public class AnalyticsService : IAnalyticsService
 
         return new MerchantSalesDto
         {
-            TotalRevenue = merchantOrders.Sum(o => o.TotalAmount),
-            TotalOrders = merchantOrders.Count,
+            TotalRevenue = items.Sum(i => i.LineTotal),
+            TotalOrders = items.Select(i => i.OrderId).Distinct().Count(),
             SalesByPeriod = salesByPeriod,
         };
     }
@@ -71,34 +72,37 @@ public class AnalyticsService : IAnalyticsService
     {
         var merchantId = await GetMerchantIdAsync();
 
-        var orders = await _db
+        var items = await _db
             .OrderItems.Include(i => i.Order)
             .Where(i =>
                 i.MerchantId == merchantId
                 && i.Order.Status != OrderStatus.Cancelled
                 && i.Order.Status != OrderStatus.Failed
             )
-            .Select(i => i.Order)
-            .Distinct()
             .ToListAsync();
 
-        var marketplace = orders.Where(o => o.Source == OrderSource.Marketplace).ToList();
-        var estore = orders.Where(o => o.Source == OrderSource.EStore).ToList();
-        int total = marketplace.Count + estore.Count;
+        // Revenue is this merchant's own line-item total, not Order.TotalAmount —
+        // a multi-vendor order's total belongs to all merchants in it.
+        var marketplace = items.Where(i => i.Order.Source == OrderSource.Marketplace).ToList();
+        var estore = items.Where(i => i.Order.Source == OrderSource.EStore).ToList();
+
+        var marketplaceOrders = marketplace.Select(i => i.OrderId).Distinct().Count();
+        var estoreOrders = estore.Select(i => i.OrderId).Distinct().Count();
+        int total = marketplaceOrders + estoreOrders;
 
         return new MarketplaceComparisonDto
         {
             Marketplace = new ChannelStatsDto
             {
-                Revenue = marketplace.Sum(o => o.TotalAmount),
-                Orders = marketplace.Count,
-                ConversionRate = total == 0 ? 0 : Math.Round((double)marketplace.Count / total * 100, 2),
+                Revenue = marketplace.Sum(i => i.LineTotal),
+                Orders = marketplaceOrders,
+                ConversionRate = total == 0 ? 0 : Math.Round((double)marketplaceOrders / total * 100, 2),
             },
             Estore = new ChannelStatsDto
             {
-                Revenue = estore.Sum(o => o.TotalAmount),
-                Orders = estore.Count,
-                ConversionRate = total == 0 ? 0 : Math.Round((double)estore.Count / total * 100, 2),
+                Revenue = estore.Sum(i => i.LineTotal),
+                Orders = estoreOrders,
+                ConversionRate = total == 0 ? 0 : Math.Round((double)estoreOrders / total * 100, 2),
             },
         };
     }

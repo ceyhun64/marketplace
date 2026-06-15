@@ -1391,8 +1391,6 @@ export default function ProductDetailPage() {
       toast.error("Product information not found.");
       return;
     }
-    setIsAddingToCart(true);
-
     // Variant system: require selection if JSONB variants exist
     if (apiVariants.length > 0 && !selectedVariant) {
       toast.error("Please select your variant options.");
@@ -1415,6 +1413,8 @@ export default function ProductDetailPage() {
       toast.error("Selected size is out of stock.");
       return;
     }
+
+    setIsAddingToCart(true);
 
     const bulkDiscount = calculateBulkDiscount();
     let basePrice =

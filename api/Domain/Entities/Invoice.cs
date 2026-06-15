@@ -8,6 +8,12 @@ public class Invoice
     public string InvoiceNumber { get; set; } = string.Empty;
 
     public Guid OrderId { get; set; }
+
+    /// <summary>FK to the merchant-scoped sub-order this invoice was generated for.
+    /// One invoice per VendorOrder — multi-vendor orders get one invoice per merchant.
+    /// Null only for invoices generated before the per-vendor split.</summary>
+    public Guid? VendorOrderId { get; set; }
+
     public Guid MerchantId { get; set; }
     public Guid CustomerId { get; set; }
 
@@ -34,6 +40,7 @@ public class Invoice
 
     // Navigation
     public Order Order { get; set; } = null!;
+    public VendorOrder? VendorOrder { get; set; }
     public MerchantProfile Merchant { get; set; } = null!;
     public User Customer { get; set; } = null!;
     public ICollection<AccountingEntry> AccountingEntries { get; set; } =

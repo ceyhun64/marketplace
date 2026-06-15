@@ -133,6 +133,48 @@ public class WalletService : IWalletService
                 vendorOrder.MerchantId, amount, vendorOrder.Id);
         });
 
+    public Task ReleaseEscrowAsync(VendorOrder vendorOrder) =>
+        ExecuteWithWalletRetryAsync(nameof(ReleaseEscrowAsync), async () =>
+        {
+            var wallet = await GetOrCreateWalletAsync(vendorOrder.MerchantId);
+
+            var amount = Math.Min(vendorOrder.MerchantNetAmount, wallet.PendingBalance);
+            if (amount <= 0)
+            {
+                _logger.LogWarning(
+                    "Escrow release skipped (zero/negative amount): VendorOrderId={Id}", vendorOrder.Id);
+                return;
+            }
+
+            var txn = new WalletTransaction
+            {
+                Id              = Guid.NewGuid(),
+                WalletId        = wallet.Id,
+                MerchantId      = vendorOrder.MerchantId,
+                Type            = "ESCROW_RELEASE",
+                Amount          = amount,
+                PendingBefore   = wallet.PendingBalance,
+                AvailableBefore = wallet.AvailableBalance,
+                OrderId         = vendorOrder.OrderId,
+                VendorOrderId   = vendorOrder.Id,
+                Notes           = $"Escrow released for cancelled/failed vendor order {vendorOrder.Id}",
+                CreatedAt       = DateTime.UtcNow,
+            };
+
+            wallet.PendingBalance -= amount;
+            wallet.UpdatedAt       = DateTime.UtcNow;
+
+            txn.PendingAfter   = wallet.PendingBalance;
+            txn.AvailableAfter = wallet.AvailableBalance;
+
+            _db.WalletTransactions.Add(txn);
+            await _db.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Escrow released: MerchantId={MerchantId} Amount={Amount} VendorOrderId={VendorOrderId}",
+                vendorOrder.MerchantId, amount, vendorOrder.Id);
+        });
+
     public Task DebitRefundAsync(Guid merchantId, decimal amount, Guid orderId, string reference) =>
         ExecuteWithWalletRetryAsync(nameof(DebitRefundAsync), async () =>
         {
