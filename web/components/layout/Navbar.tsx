@@ -119,6 +119,13 @@ const DASHBOARD_HREF: Record<UserRole, string> = {
   customer: "/profile",
 };
 
+const DASHBOARD_LABEL: Record<UserRole, string> = {
+  admin: "Admin Panel",
+  merchant: "Merchant Portal",
+  courier: "Courier Dashboard",
+  customer: "Profile",
+};
+
 // -- Sub-components ------------------------------------------------------------
 
 function LogoMark() {
@@ -866,7 +873,7 @@ export default function Navbar() {
                           }}
                         >
                           <LayoutDashboard className="w-3.5 h-3.5" />
-                          Dashboard
+                          {DASHBOARD_LABEL[user.role]}
                         </Link>
                       </DropdownMenuItem>
                     )}
@@ -1111,7 +1118,7 @@ export default function Navbar() {
                         {
                           href: DASHBOARD_HREF[user.role],
                           icon: LayoutDashboard,
-                          label: "Dashboard",
+                          label: DASHBOARD_LABEL[user.role],
                         },
                       ]
                     : []),

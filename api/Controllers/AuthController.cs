@@ -128,7 +128,7 @@ public class AuthController : ControllerBase
         if (user.AccountStatus == AccountStatus.PendingApproval)
             return Unauthorized(
                 new MessageResponse(
-                    "Hesabınız henüz onaylanmadı. Lütfen yönetici onayını bekleyin.",
+                    "Your account is pending admin approval. You will receive an email once it has been reviewed.",
                     false
                 )
             );
@@ -136,13 +136,13 @@ public class AuthController : ControllerBase
         if (user.AccountStatus == AccountStatus.Rejected)
             return Unauthorized(
                 new MessageResponse(
-                    $"Başvurunuz reddedildi. Detay: {user.RejectionReason ?? "Belirtilmedi"}",
+                    $"Your application was not approved.{(string.IsNullOrEmpty(user.RejectionReason) ? "" : $" Reason: {user.RejectionReason}")}",
                     false
                 )
             );
 
         if (user.AccountStatus == AccountStatus.Suspended)
-            return Unauthorized(new MessageResponse("Hesabınız askıya alınmıştır.", false));
+            return Unauthorized(new MessageResponse("Your account has been suspended. Please contact support.", false));
 
         var (accessToken, refreshToken, expiresAt) = await IssueTokens(user);
 
@@ -370,10 +370,10 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> RegisterMerchant([FromBody] MerchantApplyRequest req)
     {
         if (await _db.Users.AnyAsync(u => u.Email == req.Email.ToLower()))
-            return Conflict(new MessageResponse("Bu e-posta adresi zaten kullanılıyor.", false));
+            return Conflict(new MessageResponse("An account with this email address already exists.", false));
 
         if (await _db.MerchantProfiles.AnyAsync(m => m.Slug == req.Slug))
-            return Conflict(new MessageResponse("Bu mağaza URL'i (slug) zaten kullanımda.", false));
+            return Conflict(new MessageResponse("This store URL is already taken. Please choose a different one.", false));
 
         var user = new User
         {
@@ -421,16 +421,16 @@ public class AuthController : ControllerBase
                 {
                     await _notification.SendEmailAsync(
                         adminEmail,
-                        "Yeni Merchant Başvurusu",
+                        "New Merchant Application",
                         $"""
-                        Yeni bir merchant başvurusu geldi:
+                        A new merchant application has been submitted:
 
-                        Ad Soyad : {user.FirstName} {user.LastName}
-                        E-posta  : {user.Email}
-                        Mağaza   : {merchant.StoreName} ({merchant.Slug})
+                        Name     : {user.FirstName} {user.LastName}
+                        Email    : {user.Email}
+                        Store    : {merchant.StoreName} ({merchant.Slug})
 
-                        Onaylamak veya reddetmek için yönetim panelini ziyaret edin:
-                        {frontendUrl}/admin/merchants/pending
+                        To review, approve, or reject this application, visit:
+                        {frontendUrl}/admin/merchants?tab=pending
                         """
                     );
                 }
@@ -444,7 +444,7 @@ public class AuthController : ControllerBase
         return StatusCode(
             201,
             new MessageResponse(
-                "Başvurunuz alındı. Yönetici onayından sonra hesabınız aktifleştirilecektir."
+                "Application received. Your account will be activated once approved by an administrator."
             )
         );
     }
