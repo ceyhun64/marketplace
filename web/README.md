@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Marketplace — Web (Next.js frontend)
 
-## Getting Started
+This is the Next.js 16 (App Router) frontend for the Marketplace & Fulfillment
+platform. It serves the Consumer, Merchant, Courier, and Admin experiences from a
+single app and talks to the ASP.NET Core API in `../api`.
 
-First, run the development server:
+> The authoritative, full-stack documentation (architecture, environment
+> variables, API reference, deployment) lives in the repository root
+> [`../README.md`](../README.md). This file only covers running the web app.
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000 (plain `next dev`)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Set `NEXT_PUBLIC_API_URL` to the API base URL (default in `lib/api.ts` is
+`http://localhost:5010`, matching the API's `launchSettings.json`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Script | Command | Purpose |
+| ------ | ------- | ------- |
+| `npm run dev` | `next dev` | Development server |
+| `npm run build` | `next build` | Production build (`output: 'standalone'`) |
+| `npm run start` | `next start` | Serve the production build |
+| `npm run lint` | `eslint` | Lint |
+| `npm run test` | `jest` | Run tests |
+| `npm run test:watch` | `jest --watch` | Watch mode |
+| `npm run test:coverage` | `jest --coverage` | Coverage |
 
-## Learn More
+## Key directories
 
-To learn more about Next.js, take a look at the following resources:
+- `app/` — App Router segments (`admin/`, `merchant/`, `courier/`, public storefront) and `app/api/` route handlers (`auth`, `health`, `revalidate`, `upload`).
+- `queries/` — TanStack Query hooks (one file per domain area).
+- `lib/` — `api.ts` (Axios client + token refresh), `auth.ts` (token storage), `signalr.ts`, `cloudinary.ts`, formatting/utilities.
+- `hooks/` — cart, auth, checkout, compare, SignalR tracking, etc.
+- `proxy.ts` — middleware: JWT role guard for protected areas + `*.<domain>` store-subdomain rewrite.
+- `__tests__/` — Jest + Testing Library tests.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Environment variables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See the root [`../README.md`](../README.md) (section "Environment Variables →
+Web") for the full list. The public ones are `NEXT_PUBLIC_API_URL`,
+`NEXT_PUBLIC_SIGNALR_HUB`, `NEXT_PUBLIC_SITE_URL`, and
+`NEXT_PUBLIC_PLATFORM_DOMAIN`.
